@@ -234,6 +234,11 @@ def mls_boot() -> None:
         ("stats_backfill", lambda: __import__(
             "src.live.mls_stats", fromlist=["x"]).ingest_match_stats(
                 with_players=False, skip_existing=True)),
+        # ESPN<->Sportec player id bridge from per-match participants
+        # (99.5% on starters). No-op until player rows exist; skip_covered
+        # keeps re-boots cheap. Additive identity — no model effect.
+        ("player_bridge", lambda: __import__(
+            "src.live.player_bridge", fromlist=["x"]).build_bridge()),
         ("market_map", lambda: __import__(
             "src.live.markets", fromlist=["x"]).discover_and_map()),
     )
@@ -311,6 +316,15 @@ def mls_stats_job() -> None:
                   f"{r.get('player_rows')} player rows")
     except Exception as exc:
         print(f"[mls-stats] error: {exc}")
+    # extend the ESPN<->Sportec bridge to any newly-seen players (cheap:
+    # skip_covered fetches only matches with an unmapped participant)
+    try:
+        from src.live import player_bridge
+        b = player_bridge.build_bridge()
+        if b.get("newly_mapped"):
+            print(f"[mls-bridge] mapped {b['newly_mapped']} players")
+    except Exception as exc:
+        print(f"[mls-bridge] error: {exc}")
 
 
 def mls_t10_job() -> None:

@@ -1698,3 +1698,73 @@ class TestMlsStatsIngestion:
         goals = model_mls.fit(rows, as_of)
         same = model_mls.fit(rows, as_of, xg_by_fixture=xg, xg_alpha=0.0)
         assert goals["ratings"] == same["ratings"]
+
+
+class TestPlayerBridge:
+    def test_match_name_precision_ladder(self):
+        from src.live import player_bridge as pb
+        espn = [(e, pb._norm(n), pb._toks(n)) for e, n in [
+            ("1", "Diego Rossi"), ("2", "Cucho Hernández"),
+            ("3", "Evander"), ("4", "Aidan Morris")]]
+        assert pb.match_name("Diego Rossi", espn) == "1"        # exact
+        assert pb.match_name("Cucho Hernandez", espn) == "2"    # accent
+        assert pb.match_name("Evander Da Silva", espn) == "3"   # mononym
+        assert pb.match_name("A. Morris", espn) == "4"          # last uniq
+        assert pb.match_name("Lionel Messi", espn) is None      # no match
+
+    def _seed(self, s):
+        identity.seed_teams(CANNED_ESPN)
+        clb = identity.resolve_espn_name("Columbus Crew")
+        nyc = identity.resolve_espn_name("New York City FC")
+        fx = Fixture(competition_slug="mls-2026", espn_event_id="e700",
+                     home_team_id=clb.id, away_team_id=nyc.id,
+                     current_kickoff_utc=datetime(2026, 5, 1, tzinfo=UTC),
+                     status="post", home_goals=1, away_goals=0)
+        s.add(fx)
+        s.flush()
+        from src.live.models import MlsPlayerMatchStat
+        for pid, nm, side in [("MLS-OBJ-1", "Diego Rossi", "home"),
+                              ("MLS-OBJ-2", "Cucho Hernández", "home"),
+                              ("MLS-OBJ-3", "Alonso Martinez", "away")]:
+            s.add(MlsPlayerMatchStat(
+                fixture_id=fx.id, sportec_player_id=pid, player_name=nm,
+                side=side, minutes=90))
+        s.commit()
+        return fx
+
+    def test_build_bridge_maps_by_participants(self, live_session,
+                                               monkeypatch):
+        from src.live import player_bridge as pb
+        from src.live.models import Player
+        self._seed(live_session)
+        monkeypatch.setattr(pb, "THROTTLE_SECONDS", 0)
+        monkeypatch.setattr(pb, "_summary_participants", lambda ev: [
+            ("espn-11", "Diego Rossi"), ("espn-12", "Cucho Hernandez"),
+            ("espn-13", "Alonso Martínez"), ("espn-14", "Some Sub")])
+        res = pb.build_bridge()
+        assert res["newly_mapped"] == 3 and res["conflicts"] == 0
+        by = {p.sportec_id: p.espn_id
+              for p in live_session.query(Player).all()}
+        assert by["MLS-OBJ-1"] == "espn-11"
+        assert by["MLS-OBJ-2"] == "espn-12"      # accent-normalized
+        assert by["MLS-OBJ-3"] == "espn-13"
+        cov = pb.bridge_coverage()
+        assert cov["mapped"] == 3 and cov["coverage"] == 1.0
+
+    def test_build_bridge_idempotent_and_skips_covered(self, live_session,
+                                                       monkeypatch):
+        from src.live import player_bridge as pb
+        self._seed(live_session)
+        monkeypatch.setattr(pb, "THROTTLE_SECONDS", 0)
+        calls = {"n": 0}
+
+        def fake(ev):
+            calls["n"] += 1
+            return [("espn-11", "Diego Rossi"), ("espn-12", "Cucho Hernandez"),
+                    ("espn-13", "Alonso Martinez")]
+        monkeypatch.setattr(pb, "_summary_participants", fake)
+        pb.build_bridge()
+        first = calls["n"]
+        # second run: all mapped -> skip_covered avoids the ESPN fetch
+        pb.build_bridge()
+        assert calls["n"] == first          # no additional fetch
