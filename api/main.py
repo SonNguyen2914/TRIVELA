@@ -175,8 +175,17 @@ def mls_match(event_id: str):
         model = live_runs.model_for_event(event_id)
     except Exception as exc:
         print(f"[mls] model section failed for {event_id}: {exc}")
+    lineup = None
+    try:                # nor on the lineup view (display context only)
+        from src import mls as _mls
+        from src.live import lineup_view
+        raw = _mls.raw_summary(event_id)
+        if raw:
+            lineup = lineup_view.build(raw)
+    except Exception as exc:
+        print(f"[mls] lineup section failed for {event_id}: {exc}")
     return {"match": out, "book": book, "books": books, "model": model,
-            "generated_at": utcnow().isoformat()}
+            "lineups": lineup, "generated_at": utcnow().isoformat()}
 
 
 @app.post("/api/admin/mls/sweep")

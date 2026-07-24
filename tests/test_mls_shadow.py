@@ -1768,3 +1768,92 @@ class TestPlayerBridge:
         # second run: all mapped -> skip_covered avoids the ESPN fetch
         pb.build_bridge()
         assert calls["n"] == first          # no additional fetch
+
+
+def _summary_with_xi(starters_home=11, starters_away=11,
+                     home_names=("Diego Rossi",)):
+    """Canned ESPN summary: header competitors + rosters."""
+    def roster(side, n, names):
+        out = []
+        for i in range(n):
+            nm = names[i] if i < len(names) else f"{side} P{i}"
+            out.append({"starter": True, "jersey": str(i + 1),
+                        "position": {"abbreviation": "G" if i == 0 else "M"},
+                        "athlete": {"id": f"espn-{side}-{i}",
+                                    "displayName": nm}})
+        out.append({"starter": False, "jersey": "30",
+                    "position": {"abbreviation": "F"},
+                    "athlete": {"id": f"espn-{side}-sub",
+                                "displayName": f"{side} Sub"}})
+        return out
+    return {
+        "header": {"competitions": [{"competitors": [
+            {"homeAway": "home", "team": {"abbreviation": "CLB"}},
+            {"homeAway": "away", "team": {"abbreviation": "NYC"}}]}]},
+        "rosters": [
+            {"homeAway": "home", "formation": "4-3-3",
+             "roster": roster("home", starters_home, list(home_names))},
+            {"homeAway": "away", "formation": "4-2-3-1",
+             "roster": roster("away", starters_away, [])}],
+    }
+
+
+class TestLineupView:
+    def _seed_strength(self, s, star_starts: bool):
+        """CLB with a clear top attacker; optionally inside the XI."""
+        from src.live.models import MlsPlayerMatchStat, Player
+        identity.seed_teams(CANNED_ESPN)
+        clb = identity.resolve_espn_name("Columbus Crew")
+        nyc = identity.resolve_espn_name("New York City FC")
+        for i in range(4):          # 4 appearances at high xG
+            fx = Fixture(competition_slug="mls-2026",
+                         espn_event_id=f"e80{i}", home_team_id=clb.id,
+                         away_team_id=nyc.id, status="post",
+                         current_kickoff_utc=datetime(2026, 4, i + 1,
+                                                      tzinfo=UTC),
+                         home_goals=1, away_goals=0)
+            s.add(fx)
+            s.flush()
+            s.add(MlsPlayerMatchStat(
+                fixture_id=fx.id, team_id=clb.id, side="home",
+                sportec_player_id="MLS-OBJ-STAR", player_name="Diego Rossi",
+                minutes=90, xg=0.8))
+        # the bridge points the star at a slot that is (or isn't) in the XI
+        s.add(Player(competition_slug="mls-2026",
+                     espn_id="espn-home-0" if star_starts else "espn-nobody",
+                     name="Diego Rossi", sportec_id="MLS-OBJ-STAR"))
+        s.commit()
+
+    def test_absence_flagged_when_key_player_missing(self, live_session):
+        from src.live import lineup_view
+        self._seed_strength(live_session, star_starts=False)
+        v = lineup_view.build(_summary_with_xi())
+        home = v["home"]
+        assert home["released"] is True and len(home["starters"]) == 11
+        assert home["formation"] == "4-3-3"
+        assert [a["name"] for a in home["key_absences"]] == ["Diego Rossi"]
+        assert home["key_absences"][0]["status"] == "out"
+
+    def test_no_absence_when_key_player_starts(self, live_session):
+        from src.live import lineup_view
+        self._seed_strength(live_session, star_starts=True)
+        v = lineup_view.build(_summary_with_xi())
+        assert v["home"]["key_absences"] == []
+        star = [x for x in v["home"]["starters"]
+                if x["name"] == "Diego Rossi"]
+        assert star and star[0]["xg90"] == 0.8
+
+    def test_unreleased_lineup_reports_no_absences(self, live_session):
+        """A lineup that isn't out yet must NOT render every key player as
+        missing — an absence is a claim, made only once an XI exists."""
+        from src.live import lineup_view
+        self._seed_strength(live_session, star_starts=False)
+        v = lineup_view.build(_summary_with_xi(starters_home=0,
+                                               starters_away=0))
+        assert v["home"]["released"] is False
+        assert v["home"]["key_absences"] == []
+
+    def test_no_rosters_yields_empty_view(self, live_session):
+        from src.live import lineup_view
+        v = lineup_view.build({"header": {}, "rosters": []})
+        assert v["home"] is None and v["away"] is None
