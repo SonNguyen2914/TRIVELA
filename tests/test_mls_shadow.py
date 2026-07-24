@@ -1699,6 +1699,41 @@ class TestMlsStatsIngestion:
         same = model_mls.fit(rows, as_of, xg_by_fixture=xg, xg_alpha=0.0)
         assert goals["ratings"] == same["ratings"]
 
+    def test_xg_uses_its_own_lighter_shrink_than_goals(self, live_session,
+                                                       monkeypatch):
+        """xG carries its own, much lighter prior than goals. k=24 (swept
+        for noisy GOALS) flattened the league's best xG side to near
+        average and let home advantage outrank it — the MIN/VAN anomaly
+        reported Jul 24. A lighter xG prior must let a strong team's own
+        record actually move its rating."""
+        _, _, fx, ko = self._seed(live_session)
+        mls_stats = self._patch(monkeypatch, ko)
+        mls_stats.ingest_match_stats(gte="2026-04-01", lte="2026-06-01")
+        xg = mls_stats.team_xg_map()
+        from src.live.db import get_session
+        s = get_session()
+        rows = model_mls._completed(s)
+        s.close()
+        as_of = datetime(2026, 7, 1, tzinfo=UTC)
+        # the goals prior stays heavy; the xG prior is materially lighter
+        assert model_mls.XG_SHRINK_GAMES < model_mls.SHRINK_GAMES
+
+        home = None
+        light = model_mls.fit(rows, as_of, xg_by_fixture=xg, xg_alpha=1.0,
+                              xg_shrink=2.0)
+        heavy = model_mls.fit(rows, as_of, xg_by_fixture=xg, xg_alpha=1.0,
+                              xg_shrink=48.0)
+        home = fx.home_team_id
+        # the home side out-created its opponent (1.80 xG vs 0.90), so a
+        # lighter prior must rate its attack FURTHER above league average
+        assert (light["ratings"][home]["attack"]
+                > heavy["ratings"][home]["attack"])
+        # and the heavy prior must sit closer to the 1.0 league average
+        assert abs(heavy["ratings"][home]["attack"] - 1.0) \
+            < abs(light["ratings"][home]["attack"] - 1.0)
+        # the shrink actually used is recorded for the audit trail
+        assert light["xg_shrink"] == 2.0
+
 
 class TestPlayerBridge:
     def test_match_name_precision_ladder(self):

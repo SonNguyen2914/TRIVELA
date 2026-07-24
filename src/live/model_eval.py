@@ -56,7 +56,8 @@ LADDER = {
             "desc": "+ win% (results) blend into the 3-way"},
     "M3": {"use_ratings": True, "recency": True, "shrink": 24.0,
            "win_blend": True, "xg_from_config": True,
-           "desc": "+ provider xG-based attack/defence ratings"},
+           "desc": "+ provider xG attack/defence ratings (own lighter "
+                   "shrink — xG is far less noisy than goals)"},
 }
 FUTURE_RUNGS = {
     "M4": "availability / lineup effects — player stats captured "
@@ -98,7 +99,7 @@ def fit_variant(fixtures, as_of, cfg: dict,
     so the M3 rung measures exactly the deployed feature."""
     if not fixtures:
         return None
-    from src.live.model_mls import RESULT_SHRINK
+    from src.live.model_mls import RESULT_SHRINK, XG_SHRINK_GAMES
     # xG weight: an explicit cfg value (offline sweeps) wins; otherwise the
     # M3 rung tracks the deployed config so the ladder measures what ships
     xg_alpha = cfg.get("xg_alpha")
@@ -106,6 +107,9 @@ def fit_variant(fixtures, as_of, cfg: dict,
         import config as _cfg
         xg_alpha = _cfg.MLS_XG_RATING_ALPHA
     xg_alpha = float(xg_alpha or 0.0)
+    # xG carries its OWN, lighter prior than goals (see XG_SHRINK_GAMES);
+    # a sweep may override it explicitly
+    xg_shrink = float(cfg.get("xg_shrink", XG_SHRINK_GAMES))
     gf, ga, wsum, games = {}, {}, {}, {}
     xgf, xga, xwsum = {}, {}, {}
     wins, draws, losses = {}, {}, {}
@@ -160,8 +164,9 @@ def fit_variant(fixtures, as_of, cfg: dict,
             dfc = (ga[team] / league + k) / (w + k)
             xw = xwsum.get(team, 0.0)
             if xg_alpha > 0 and xw > 0 and league_xg > 0:
-                atk_x = (xgf[team] / league_xg + k) / (xw + k)
-                dfc_x = (xga[team] / league_xg + k) / (xw + k)
+                kx = xg_shrink
+                atk_x = (xgf[team] / league_xg + kx) / (xw + kx)
+                dfc_x = (xga[team] / league_xg + kx) / (xw + kx)
                 atk = (1 - xg_alpha) * atk + xg_alpha * atk_x
                 dfc = (1 - xg_alpha) * dfc + xg_alpha * dfc_x
             ratings[team] = {"attack": atk, "defence": dfc,

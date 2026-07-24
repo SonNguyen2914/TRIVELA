@@ -1,0 +1,121 @@
+{
+  "title": "MLS xG-rating shrinkage re-sweep (k tuned for xG, not goals)",
+  "generated_at": "2026-07-24T23:20:49.067426+00:00",
+  "trigger": "Son spotted the model favouring MIN (9th) over VAN (1st) at MIN 39.0% vs VAN 37.5% while the market said MIN 25.1% / VAN 50.7%.",
+  "diagnosis": "The xG ratings inherited SHRINK_GAMES=24, swept for GOALS. With ~7.4 recency-weighted games a team kept only 24% of its own rating: VAN (best xGD in MLS, +1.52/g; unshrunk attack 1.544 defence 0.685) was flattened to attack 1.128 defence 0.926, and MIN home advantage (x1.297) outranked it.",
+  "sweep_logloss_by_k": {
+    "0.5": 1.0503,
+    "1": 1.0489,
+    "2": 1.0473,
+    "3": 1.0466,
+    "4": 1.0464,
+    "5": 1.0466,
+    "6": 1.0469,
+    "8": 1.0477,
+    "10": 1.0487,
+    "24": 1.054
+  },
+  "chosen": {
+    "xg_shrink_games": 6.0,
+    "reason": "clean INTERIOR optimum k=4-6 (curve turns back up below k=3, so not an edge artefact); k=6 takes ~all the gain on the conservative side. Goals keep k=24 (k=6 LOST for goals)."
+  },
+  "ladder_after": {
+    "variants": {
+      "M0": {
+        "log_loss": 1.0776,
+        "brier": 0.653,
+        "rps": 0.2349,
+        "desc": "league scoring + venue split"
+      },
+      "M1": {
+        "log_loss": 1.1658,
+        "brier": 0.6954,
+        "rps": 0.255,
+        "desc": "team ratings, equal-weighted, minimal pooling"
+      },
+      "M2": {
+        "log_loss": 1.0697,
+        "brier": 0.6469,
+        "rps": 0.2322,
+        "desc": "+ recency + partial pooling (mls-2026-v0)"
+      },
+      "M2W": {
+        "log_loss": 1.0611,
+        "brier": 0.6401,
+        "rps": 0.2285,
+        "desc": "+ win% (results) blend into the 3-way"
+      },
+      "M3": {
+        "log_loss": 1.0469,
+        "brier": 0.6298,
+        "rps": 0.2241,
+        "desc": "+ provider xG attack/defence ratings (own lighter shrink \u2014 xG is far less noisy than goals)"
+      }
+    },
+    "edges": {
+      "M2_vs_M0": {
+        "delta_log_loss": 0.0079,
+        "ci95": [
+          -0.0123,
+          0.0274
+        ],
+        "significant": false
+      },
+      "M2_vs_M1": {
+        "delta_log_loss": 0.0961,
+        "ci95": [
+          0.0245,
+          0.1773
+        ],
+        "significant": true
+      },
+      "M1_vs_M0": {
+        "delta_log_loss": -0.0883,
+        "ci95": [
+          -0.1884,
+          0.0004
+        ],
+        "significant": false
+      },
+      "M2W_vs_M2": {
+        "delta_log_loss": 0.0085,
+        "ci95": [
+          -0.0067,
+          0.0243
+        ],
+        "significant": false
+      },
+      "M2W_vs_M0": {
+        "delta_log_loss": 0.0164,
+        "ci95": [
+          -0.0089,
+          0.0412
+        ],
+        "significant": false
+      },
+      "M3_vs_M2W": {
+        "delta_log_loss": 0.0143,
+        "ci95": [
+          -0.0029,
+          0.0326
+        ],
+        "significant": false
+      },
+      "M3_vs_M0": {
+        "delta_log_loss": 0.0307,
+        "ci95": [
+          -0.0062,
+          0.0671
+        ],
+        "significant": false
+      }
+    },
+    "n_scored": 162
+  },
+  "effect_on_reported_fixture": {
+    "before_k24": "MIN 38.9% draw 24.0% VAN 37.1%",
+    "after_k6": "MIN 33.9% draw 24.2% VAN 42.0%",
+    "market": "MIN 25.1% draw 24.1% VAN 50.7%"
+  },
+  "caveat": "Still shadow evidence: M3 vs baseline +0.0307 CI[-0.0062,+0.0671] is NOT significant at n=162. Model remains more conservative than the market, which is expected of a shrunk model."
+}
