@@ -252,6 +252,116 @@ class TestScoutingParsers:
                                                  "events": []}]}) == []
 
 
+class TestScoutingScoreOrientation:
+    """The scouting block showed a LOSS as a win (reported Jul 24, 2026).
+
+    ESPN's lastFiveGames `score` string is WINNER-FIRST — a 0-1 home
+    defeat arrives as "1-0" — so rendering it beside the perspective
+    result letter inverted every defeat. Wins and draws looked fine,
+    which is why it survived. These tests pin the derived, perspective-
+    first scores AND the self-consistency invariant that catches any
+    future provider reordering automatically."""
+
+    # a real-shaped payload: MIN lost 0-1 at home, VAN lost 3-4 away —
+    # both delivered by ESPN winner-first
+    _PAYLOAD = {"lastFiveGames": [
+        {"team": {"displayName": "Minnesota United FC", "abbreviation": "MIN"},
+         "events": [
+             {"gameResult": "L", "score": "1-0", "homeTeamScore": "0",
+              "awayTeamScore": "1", "atVs": "vs", "gameDate": "2026-05-14",
+              "opponent": {"abbreviation": "COL"}},
+             {"gameResult": "D", "score": "2-2", "homeTeamScore": "2",
+              "awayTeamScore": "2", "atVs": "vs", "gameDate": "2026-05-10",
+              "opponent": {"abbreviation": "ATX"}},
+             {"gameResult": "L", "score": "2-1", "homeTeamScore": "2",
+              "awayTeamScore": "1", "atVs": "@", "gameDate": "2026-05-16",
+              "opponent": {"abbreviation": "NE"}}]},
+        {"team": {"displayName": "Vancouver Whitecaps", "abbreviation": "VAN"},
+         "events": [
+             {"gameResult": "W", "score": "3-2", "homeTeamScore": "2",
+              "awayTeamScore": "3", "atVs": "@", "gameDate": "2026-05-14",
+              "opponent": {"abbreviation": "DAL"}},
+             {"gameResult": "L", "score": "4-3", "homeTeamScore": "4",
+              "awayTeamScore": "3", "atVs": "@", "gameDate": "2026-07-22",
+              "opponent": {"abbreviation": "CIN"}}]}]}
+
+    def test_scores_are_perspective_first_not_winner_first(self):
+        five = mls._parse_last_five(self._PAYLOAD)
+        min_games = {g["opponent"]: g for g in five[0]["games"]}
+        # the reported bug: shown as "1-0" beside an L
+        assert min_games["COL"]["team_score"] == 0
+        assert min_games["COL"]["opponent_score"] == 1
+        # away defeat, ESPN said "2-1"
+        assert min_games["NE"]["team_score"] == 1
+        assert min_games["NE"]["opponent_score"] == 2
+        assert min_games["ATX"]["team_score"] == 2      # draw unchanged
+        van = {g["opponent"]: g for g in five[1]["games"]}
+        assert van["DAL"]["team_score"] == 3            # away win
+        assert van["CIN"]["team_score"] == 3            # away defeat 3-4
+        assert van["CIN"]["opponent_score"] == 4
+
+    def test_result_letter_always_agrees_with_shown_scores(self):
+        """The systemic guard: W/L/D must match the two numbers beside it,
+        in EVERY scouting row. Any provider reordering fails here."""
+        assert mls.scoreline_disagreements(self._PAYLOAD) == []
+
+    def test_audit_catches_provider_drift(self):
+        """The guard must fire when the provider's own letter disagrees
+        with its scores — the early warning that ESPN changed semantics
+        again. The PAGE stays correct regardless (the letter it renders is
+        derived from these same scores)."""
+        broken = {"lastFiveGames": [
+            {"team": {"abbreviation": "MIN"},
+             "events": [{"gameResult": "W", "score": "1-0",
+                         "homeTeamScore": "0", "awayTeamScore": "1",
+                         "atVs": "vs",             # home, scored 0, conceded 1
+                         "opponent": {"abbreviation": "COL"}}]}]}
+        bad = mls.scoreline_disagreements(broken)
+        assert len(bad) == 1
+        assert bad[0]["provider_result"] == "W"
+        assert bad[0]["derived"] == "L" and bad[0]["team_score"] == 0
+        # and the rendered row shows the DERIVED result, not the bad label
+        g = mls._parse_last_five(broken)[0]["games"][0]
+        assert g["result"] == "L" and g["team_score"] == 0
+
+    def test_displayed_letter_cannot_contradict_displayed_scores(self):
+        """The structural guarantee: whatever the provider says, the W/L/D
+        the page renders is computed from the two numbers beside it."""
+        for payload in (self._PAYLOAD, {"lastFiveGames": [
+                {"team": {"abbreviation": "X"},
+                 "events": [{"gameResult": "W", "homeTeamScore": "1",
+                             "awayTeamScore": "3", "atVs": "vs",
+                             "opponent": {"abbreviation": "Y"}}]}]}):
+            for t in mls._parse_last_five(payload):
+                for g in t["games"]:
+                    ts, os_ = g["team_score"], g["opponent_score"]
+                    if ts is None or os_ is None:
+                        continue
+                    expect = "W" if ts > os_ else "L" if ts < os_ else "D"
+                    assert g["result"] == expect
+
+    def test_audit_covers_h2h_rows_too(self):
+        series = {"seasonseries": [{"type": "head-to-head", "events": [
+            {"date": "2026-03-15T00:00:00Z",
+             "statusType": {"completed": True},
+             "competitors": [
+                 {"homeAway": "home", "winner": True, "score": "6",
+                  "team": {"abbreviation": "VAN"}},
+                 {"homeAway": "away", "winner": False, "score": "0",
+                  "team": {"abbreviation": "MIN"}}]}]}]}
+        assert mls.scoreline_disagreements(series) == []
+
+    def test_missing_scores_are_skipped_not_guessed(self):
+        payload = {"lastFiveGames": [
+            {"team": {"abbreviation": "MIN"},
+             "events": [{"gameResult": "L", "score": "1-0", "atVs": "vs",
+                         "opponent": {"abbreviation": "COL"}}]}]}
+        g = mls._parse_last_five(payload)[0]["games"][0]
+        assert g["team_score"] is None and g["opponent_score"] is None
+        # unknown scores must not be reported as a disagreement
+        assert mls.scoreline_disagreements(payload) == []
+
+
 class TestModelKeyParser:
     """Ticker-tail -> model probability key (never label text)."""
 
