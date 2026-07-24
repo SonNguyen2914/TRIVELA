@@ -181,6 +181,76 @@ class TestScoutingParsers:
         h = mls._parse_h2h(d)
         assert h[0]["result"] == "W" and h[0]["perspective"] == "CLB"
 
+    # ESPN dropped `headToHeadGames` and moved the data to `seasonseries`
+    # (observed live Jul 24, 2026) — H2H vanished from the match page. The
+    # parser reads BOTH shapes; these pin the new one so a silent upstream
+    # rename can't empty the section again unnoticed.
+    _SERIES = {"seasonseries": [{
+        "type": "head-to-head", "seriesLabel": "Head-to-Head",
+        "events": [
+            {"date": "2025-11-08T23:00:00Z",
+             "statusType": {"completed": True},
+             "competitors": [
+                 {"homeAway": "home", "winner": True, "score": "2",
+                  "team": {"abbreviation": "CIN"}},
+                 {"homeAway": "away", "winner": False, "score": "1",
+                  "team": {"abbreviation": "CLB"}}]},
+            {"date": "2025-11-02T23:30:00Z",
+             "statusType": {"completed": True},
+             "competitors": [
+                 {"homeAway": "home", "winner": True, "score": "4",
+                  "team": {"abbreviation": "CLB"}},
+                 {"homeAway": "away", "winner": False, "score": "0",
+                  "team": {"abbreviation": "CIN"}}]},
+            {"date": "2026-08-01T23:30:00Z",       # future, not played
+             "statusType": {"completed": False},
+             "competitors": [
+                 {"homeAway": "home", "score": None,
+                  "team": {"abbreviation": "CIN"}},
+                 {"homeAway": "away", "score": None,
+                  "team": {"abbreviation": "CLB"}}]}]}]}
+
+    def test_h2h_reads_seasonseries_after_espn_rename(self):
+        h = mls._parse_h2h(self._SERIES)
+        # only COMPLETED meetings (the scheduled one is excluded)
+        assert len(h) == 2
+        # perspective = home side of the most recent meeting
+        assert {g["perspective"] for g in h} == {"CIN"}
+        # home win for the perspective team, scores in match home-away order
+        assert h[0]["result"] == "W" and h[0]["at_vs"] == "vs"
+        assert h[0]["home_score"] == "2" and h[0]["away_score"] == "1"
+        assert h[0]["opponent"] == "CLB"
+        # away loss: CLB were home and won 4-0
+        assert h[1]["result"] == "L" and h[1]["at_vs"] == "@"
+        assert h[1]["home_score"] == "4" and h[1]["away_score"] == "0"
+
+    def test_h2h_legacy_field_still_wins_when_present(self):
+        both = dict(self._SERIES)
+        both["headToHeadGames"] = [
+            {"team": {"abbreviation": "CLB"},
+             "events": [{"gameResult": "W", "homeTeamScore": "1",
+                         "awayTeamScore": "0", "atVs": "vs",
+                         "gameDate": "2026-05-20",
+                         "opponent": {"abbreviation": "NYC"}}]}]
+        h = mls._parse_h2h(both)
+        assert len(h) == 1 and h[0]["perspective"] == "CLB"
+
+    def test_h2h_draw_and_empty_cases(self):
+        draw = {"seasonseries": [{"type": "head-to-head", "events": [
+            {"date": "2026-05-17T23:15:00Z",
+             "statusType": {"completed": True},
+             "competitors": [
+                 {"homeAway": "home", "winner": False, "score": "1",
+                  "team": {"abbreviation": "CLB"}},
+                 {"homeAway": "away", "winner": False, "score": "1",
+                  "team": {"abbreviation": "CIN"}}]}]}]}
+        assert mls._parse_h2h(draw)[0]["result"] == "D"
+        assert mls._parse_h2h({}) == []
+        assert mls._parse_h2h({"seasonseries": []}) == []
+        # a series with no completed meetings yields nothing, not a crash
+        assert mls._parse_h2h({"seasonseries": [{"type": "head-to-head",
+                                                 "events": []}]}) == []
+
 
 class TestModelKeyParser:
     """Ticker-tail -> model probability key (never label text)."""

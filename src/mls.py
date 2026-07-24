@@ -378,14 +378,19 @@ def _parse_last_five(d: dict) -> list[dict]:
 
 
 def _parse_h2h(d: dict) -> list[dict]:
-    """headToHeadGames -> recent meetings, from the first team's view."""
-    groups = d.get("headToHeadGames") or []
-    if not groups:
-        return []
-    team = (groups[0].get("team") or {}).get("abbreviation")
-    out = []
-    for e in (groups[0].get("events") or [])[:6]:
-        out.append({
+    """Recent meetings between the two clubs, from one team's view.
+
+    ESPN RENAMED this feed (observed Jul 24, 2026): the old
+    `headToHeadGames` block is gone and the data now arrives as
+    `seasonseries` (a list whose head-to-head entry carries `events` with
+    per-competitor scores). Both shapes are parsed — legacy first, so a
+    restored old field keeps working — and both emit the SAME contract the
+    match page renders: perspective/result/home_score/away_score/at_vs/
+    opponent/date."""
+    legacy = d.get("headToHeadGames") or []
+    if legacy:
+        team = (legacy[0].get("team") or {}).get("abbreviation")
+        return [{
             "perspective": team,
             "result": e.get("gameResult"),
             "home_score": e.get("homeTeamScore"),
@@ -393,6 +398,48 @@ def _parse_h2h(d: dict) -> list[dict]:
             "at_vs": e.get("atVs"),
             "opponent": (e.get("opponent") or {}).get("abbreviation"),
             "date": e.get("gameDate"),
+        } for e in (legacy[0].get("events") or [])[:6]]
+
+    series = [s for s in (d.get("seasonseries") or [])
+              if (s.get("type") or "").lower() in
+              ("head-to-head", "headtohead")] or (d.get("seasonseries") or [])
+    if not series:
+        return []
+    events = [e for e in (series[0].get("events") or [])
+              if (e.get("statusType") or {}).get("completed")]
+    if not events:
+        return []
+    # perspective = the team in THIS fixture we describe results from; use
+    # the home side of the most recent meeting so `at_vs` is meaningful
+    persp = None
+    for c in (events[0].get("competitors") or []):
+        if c.get("homeAway") == "home":
+            persp = (c.get("team") or {}).get("abbreviation")
+    out = []
+    for e in events[:6]:
+        comps = {c.get("homeAway"): c for c in (e.get("competitors") or [])}
+        home, away = comps.get("home") or {}, comps.get("away") or {}
+        h_ab = (home.get("team") or {}).get("abbreviation")
+        a_ab = (away.get("team") or {}).get("abbreviation")
+        if persp is None:
+            persp = h_ab
+        # result + venue marker from the PERSPECTIVE team's side
+        me = home if h_ab == persp else away
+        opp = away if h_ab == persp else home
+        if me.get("winner"):
+            result = "W"
+        elif opp.get("winner"):
+            result = "L"
+        else:
+            result = "D"
+        out.append({
+            "perspective": persp,
+            "result": result,
+            "home_score": home.get("score"),
+            "away_score": away.get("score"),
+            "at_vs": "vs" if h_ab == persp else "@",
+            "opponent": a_ab if h_ab == persp else h_ab,
+            "date": e.get("date"),
         })
     return out
 
