@@ -180,6 +180,12 @@ class Player(LiveBase):
     espn_id = Column(String(16), unique=True)
     name = Column(String(96))
     position = Column(String(8))
+    # the ESPN<->Sportec identity bridge (validated 99.5% on starters by
+    # matching per-match participant lists). Lets a released ESPN lineup be
+    # priced against a player's Sportec strength history. Indexed, not
+    # unique-constrained: one-to-one is enforced in the builder so a bad
+    # match can be corrected without a migration.
+    sportec_id = Column(String(32), index=True)
 
 
 class LineupSnapshot(LiveBase):

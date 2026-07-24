@@ -320,9 +320,14 @@ def mls_stats_coverage():
     stats (and provider xG) and player stats for. The verifiable answer to
     'do we have all the stats?'. Public read-only, 60s cache."""
     from src.mls import _cached
+
+    def _run():
+        from src.live import mls_stats, player_bridge
+        cov = mls_stats.coverage()
+        cov["player_id_bridge"] = player_bridge.bridge_coverage()
+        return cov
     try:
-        from src.live import mls_stats
-        return _cached("mls_stats_coverage", 60, mls_stats.coverage) or {}
+        return _cached("mls_stats_coverage", 60, _run) or {}
     except Exception as exc:
         print(f"[mls] stats-coverage failed: {exc}")
         raise HTTPException(503, "stats-coverage unavailable")
