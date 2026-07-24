@@ -366,24 +366,109 @@ def match_summary(event_id: str) -> dict | None:
 
 # --- match hub: scouting + the fixture's own Kalshi book -------------------
 
+def _last_five_scores(e: dict) -> tuple[int | None, int | None]:
+    """This team's goals and the opponent's, for one lastFiveGames event.
+
+    ESPN's `score` STRING is WINNER-FIRST (the higher score leads),
+    NOT the team's own score first and NOT home-away order. Rendering it
+    beside the perspective result letter inverted every defeat: a 0-1
+    home loss displayed as "L 1-0", which reads as a win (reported Jul 24,
+    2026). Wins and draws happen to look right, which is exactly why it
+    survived so long.
+
+    The authoritative fields are homeTeamScore/awayTeamScore plus atVs
+    ("vs" = this team was home, "@" = away); derive both sides from those
+    and never trust the pre-formatted string."""
+    def _num(v):
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return None
+    home, away = _num(e.get("homeTeamScore")), _num(e.get("awayTeamScore"))
+    if home is None or away is None:
+        return None, None
+    at_home = e.get("atVs") == "vs"
+    return (home, away) if at_home else (away, home)
+
+
 def _parse_last_five(d: dict) -> list[dict]:
-    """lastFiveGames -> per team: form string + recent results."""
+    """lastFiveGames -> per team: form string + recent results.
+
+    Emits `team_score`/`opponent_score` (this team's goals first) so the
+    UI never has to reinterpret a provider string. `score` is retained
+    verbatim as raw provenance only — it must not be displayed."""
     out = []
     for t in d.get("lastFiveGames") or []:
         evs = t.get("events") or []
-        out.append({
-            "team": (t.get("team") or {}).get("displayName"),
-            "abbrev": (t.get("team") or {}).get("abbreviation"),
-            "form": " ".join(e.get("gameResult", "?") for e in evs[:5]),
-            "games": [{
-                "result": e.get("gameResult"),
-                "score": e.get("score"),
+        games = []
+        for e in evs[:5]:
+            ts, os_ = _last_five_scores(e)
+            # DERIVE the W/L/D from the very numbers displayed next to it,
+            # so the letter and the scoreline cannot contradict each other
+            # no matter how the provider reorders its fields. The provider's
+            # own letter is kept only for drift detection.
+            if ts is not None and os_ is not None:
+                result = "W" if ts > os_ else "L" if ts < os_ else "D"
+            else:
+                result = e.get("gameResult")
+            games.append({
+                "result": result,
+                "provider_result": e.get("gameResult"),   # audit only
+                "team_score": ts,
+                "opponent_score": os_,
+                "score": e.get("score"),      # raw provider string; unused
                 "at_vs": e.get("atVs"),
                 "opponent": (e.get("opponent") or {}).get("abbreviation"),
                 "date": e.get("gameDate"),
-            } for e in evs[:5]],
+            })
+        out.append({
+            "team": (t.get("team") or {}).get("displayName"),
+            "abbrev": (t.get("team") or {}).get("abbreviation"),
+            "form": " ".join(g["result"] or "?" for g in games),
+            "games": games,
         })
     return out
+
+
+def scoreline_disagreements(summary: dict) -> list[dict]:
+    """Self-consistency audit for every scouting row we render: does the
+    W/L/D letter agree with the two scores shown next to it?
+
+    This is the systemic guard against the class of bug that hit twice —
+    a provider silently reordering or renaming score fields. Any
+    disagreement is returned (empty list = consistent), so a test can
+    fail loudly instead of the UI quietly showing a loss as a win."""
+    bad = []
+    for t in _parse_last_five(summary):
+        for g in t["games"]:
+            ts, os_ = g["team_score"], g["opponent_score"]
+            provider = g.get("provider_result")
+            if ts is None or os_ is None or not provider:
+                continue
+            # what the scores say vs what the provider labelled it. The UI
+            # renders the derived value, so a mismatch here is PROVIDER
+            # DRIFT to investigate, never a wrong number on the page.
+            expect = "W" if ts > os_ else "L" if ts < os_ else "D"
+            if expect != provider:
+                bad.append({"block": "last_five", "team": t["abbrev"],
+                            "opponent": g["opponent"],
+                            "provider_result": provider, "derived": expect,
+                            "team_score": ts, "opponent_score": os_})
+    for g in _parse_h2h(summary):
+        h, a, r = g["home_score"], g["away_score"], g["result"]
+        try:
+            h, a = int(h), int(a)
+        except (TypeError, ValueError):
+            continue
+        # scores are in match home-away order; at_vs says which side the
+        # perspective team was on
+        ts, os_ = (h, a) if g["at_vs"] == "vs" else (a, h)
+        expect = "W" if ts > os_ else "L" if ts < os_ else "D"
+        if expect != r:
+            bad.append({"block": "h2h", "team": g["perspective"],
+                        "opponent": g["opponent"], "result": r,
+                        "team_score": ts, "opponent_score": os_})
+    return bad
 
 
 def _parse_h2h(d: dict) -> list[dict]:
@@ -432,10 +517,21 @@ def _parse_h2h(d: dict) -> list[dict]:
         a_ab = (away.get("team") or {}).get("abbreviation")
         if persp is None:
             persp = h_ab
-        # result + venue marker from the PERSPECTIVE team's side
+        # result from the SCORES shown next to it (falling back to the
+        # provider's winner flag only when a score is missing), so the
+        # letter can never contradict the numbers on the page
         me = home if h_ab == persp else away
         opp = away if h_ab == persp else home
-        if me.get("winner"):
+
+        def _n(v):
+            try:
+                return int(v)
+            except (TypeError, ValueError):
+                return None
+        my_s, opp_s = _n(me.get("score")), _n(opp.get("score"))
+        if my_s is not None and opp_s is not None:
+            result = "W" if my_s > opp_s else "L" if my_s < opp_s else "D"
+        elif me.get("winner"):
             result = "W"
         elif opp.get("winner"):
             result = "L"
