@@ -338,6 +338,15 @@ def team_colors() -> dict[str, dict]:
     return _cached("team_colors", 3600, fetch) or {}
 
 
+def raw_summary(event_id: str) -> dict | None:
+    """The RAW ESPN summary payload, cached separately from the parsed
+    view. The lineup section needs fields parse_summary doesn't keep
+    (rosters), and sharing one cache keeps it to one upstream fetch."""
+    return _cached(f"rawsum:{event_id}", 30,
+                   lambda: _get_json(f"{ESPN_BASE}/summary",
+                                     {"event": event_id}))
+
+
 def match_summary(event_id: str) -> dict | None:
     """One match's live stat page. 30s cache (it IS the live view)."""
     def fetch():
