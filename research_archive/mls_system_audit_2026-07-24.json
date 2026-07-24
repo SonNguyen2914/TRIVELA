@@ -1,0 +1,38 @@
+{
+  "title": "MLS system audit \u2014 parameters, per-team ratings, data integrity, system health",
+  "generated_at": "2026-07-24T23:54:09.222828+00:00",
+  "trigger": "After the xG-shrinkage bug (parameter tuned for the goals model, inherited by the xG model), Son asked for a thorough audit of that error class and the whole system.",
+  "parameter_audit": {
+    "method": "re-swept every tuned constant on the 162-match walk-forward UNDER THE CURRENT xG model",
+    "MLS_WIN_BLEND_ALPHA=0.30": "PASS \u2014 still at the optimum (flat 0.20-0.30)",
+    "HALF_LIFE_DAYS=90": "PASS \u2014 flat optimum 45-120d",
+    "MIN_GAMES=5": "PASS",
+    "RESULT_SHRINK=8": "FLAGGED \u2014 kept improving toward the sweep edge, which led to the finding below",
+    "XG_SHRINK_GAMES=6": "the fix made earlier today; every k in 3-8 beats k=24 by ~0.007 (whole region, not a knife-edge)"
+  },
+  "FINDING_win_blend_is_damping_not_information": {
+    "evidence": {
+      "pure xG no blend": 1.0506,
+      "win% prior a=0.30 (deployed)": 1.0469,
+      "FLAT 1/3 prior a=0.30": 1.0445,
+      "temperature T=1.3": 1.0432
+    },
+    "interpretation": "A FLAT prior beats the real win/draw/loss prior, so the deployed win% blend carries no team information \u2014 its whole benefit is damping an overconfident model.",
+    "honest_test": "With alpha fitted WALK-FORWARD (only past matches, as production must), win% scores 1.0514 vs raw 1.0506 = -0.0007: the +0.0038 was hindsight from choosing alpha on the same 162 matches. Temperature likewise collapses from +0.0037 to +0.0001.",
+    "verdict": "The win% blend is NOT a validated feature. Its label overstates what it does. Left deployed pending Son decision; effect is within noise either way."
+  },
+  "calibration": {
+    "home_win": "pred 46.8% vs actual 45.7%",
+    "draw": "pred 23.5% vs actual 24.1%",
+    "away_win": "pred 29.7% vs actual 30.2%",
+    "verdict": "well calibrated, no systematic bias"
+  },
+  "per_team": "all 30 teams: 100% xG coverage, ratings present, shrinkage now uniform ~40-45% (was ~76%). VAN correctly strongest, SKC weakest. No mis-rated team.",
+  "model_vs_market": "14 upcoming fixtures, mean max-disagreement 0.049; only 2 favourite-flips, both near coin-flips. MIN/VAN now agrees on direction.",
+  "data_integrity": "13 checks PASS (pairing, score agreement, xg_against mirroring, side attachment, orphans, GK flags, bridge uniqueness, fixture resolution). 1 FAIL -> All-Star fixture.",
+  "FINDING_all_star_readiness_blocker": {
+    "issue": "ESPN MLS feed includes MLS All-Stars vs Liga MX All-Stars (event 401864004, 2026-07-30). Non-club sides -> team ids NULL, no KXMLSGAME market. The readiness invariant would have counted it as an unmapped upcoming fixture and raised a BLOCKER (shadow_ready=false) when it entered the 48h window on Jul 28.",
+    "fix": "non-club fixtures excluded from the upcoming set (they are not shadow-predictable by construction); regression test fails without the fix. Deployed @832b2ff."
+  },
+  "system_health": "470 backend tests + 6 e2e green; single migration head; 16/16 prod endpoints HTTP 200; money LOCKED (real_money_signals=false, nothing sets approved_for_real_money=True)."
+}
