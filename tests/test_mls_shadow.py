@@ -1549,6 +1549,26 @@ class TestPredictionRuns:
         assert c["teams"] == 4 and c["fixtures"] == 25
         assert c["completed_fixtures"] == 24 and c["t10_locks"] == 0
 
+    def test_all_star_fixture_is_not_a_readiness_blocker(self, live_session):
+        """ESPN's MLS feed carries the All-Star game (MLS All-Stars vs
+        Liga MX All-Stars), whose sides are not clubs — identity leaves
+        both team ids NULL and no KXMLSGAME market exists. It is not
+        shadow-predictable, so it must NOT count as an 'unmapped upcoming
+        fixture' and raise a false readiness blocker (audit, Jul 24)."""
+        self._seed_playable(live_session)
+        before = runs.shadow_counts()
+        live_session.add(Fixture(
+            competition_slug="mls-2026", espn_event_id="401864004",
+            home_team_id=None, away_team_id=None,      # not real clubs
+            current_kickoff_utc=datetime.now(UTC) + timedelta(hours=20),
+            status="pre", venue="Bank of America Stadium"))
+        live_session.commit()
+        after = runs.shadow_counts()
+        assert after["unmapped_upcoming"] == before["unmapped_upcoming"]
+        assert after["upcoming_48h"] == before["upcoming_48h"]
+        # and it must not have introduced a blocker
+        assert len(after["blockers"]) == len(before["blockers"])
+
 
 # --- official MLS stats ingestion + xG ratings ---------------------------
 

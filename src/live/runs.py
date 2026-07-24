@@ -431,13 +431,23 @@ def shadow_counts() -> dict:
                              .order_by(ModelApprovalDecision.id.desc())
                              .first())
         # upcoming fixtures (48h) whose teams lack an approved mapped
-        # market event — the invariant the decision doc asked for
+        # market event — the invariant the decision doc asked for.
+        # NON-CLUB fixtures are excluded: ESPN's MLS feed carries the
+        # All-Star game (MLS All-Stars vs Liga MX All-Stars — event
+        # 401864004, 2026-07-30), whose "teams" are not clubs, so identity
+        # correctly refuses to map them and no KXMLSGAME market exists.
+        # They are not shadow-predictable by construction (the model
+        # already skips them), so counting them as "unmapped" would have
+        # raised a FALSE readiness blocker the moment that game entered
+        # the 48h window — i.e. Jul 28 (found by audit Jul 24).
         horizon = _now() + timedelta(hours=48)
         upcoming = [f for f in s.query(Fixture)
                     .filter_by(competition_slug="mls-2026", status="pre")
                     .all()
                     if f.current_kickoff_utc
-                    and _utc(f.current_kickoff_utc) <= horizon]
+                    and _utc(f.current_kickoff_utc) <= horizon
+                    and f.home_team_id is not None
+                    and f.away_team_id is not None]
         unmapped_upcoming = [
             f.espn_event_id for f in upcoming
             if not s.query(MarketEvent).filter_by(
