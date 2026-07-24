@@ -44,6 +44,18 @@ MIN_GAMES = 5               # a team needs history before it's rated
 # 3-way into the simulated 3-way by this weight. alpha is measured on the
 # walk-forward ladder (M2 vs M2W) — deploy the weight that actually helps.
 RESULT_SHRINK = 8.0
+# xG ratings get their OWN, much lighter shrinkage. k=24 above was swept
+# for GOALS, which are noisy enough that a season's raw GF/GA must be
+# pulled hard toward the mean (k=6 LOST to baseline there). Provider xG is
+# a far lower-variance per-match estimate, so the same prior weight throws
+# away most of the signal: with ~7.4 recency-weighted games it left a team
+# only 24% of its own rating, flattening the league's best xG side (VAN,
+# +1.52 xGD/game) to near-average and letting home advantage outrank it.
+# Re-swept Jul 24 on the same 162-match walk-forward with xG ratings on:
+# monotonic gain from k=24 down to a clean INTERIOR optimum at k=4-6
+# (+0.0076 log loss, turning back up below k=3). k=6 takes essentially all
+# of it while staying the more conservative side of the optimum.
+XG_SHRINK_GAMES = float(os.getenv("MLS_XG_SHRINK_GAMES", "6.0"))
 
 
 def _weight(days_ago: float) -> float:
@@ -68,7 +80,8 @@ def _utc(dt):
 
 
 def fit(fixtures, as_of, xg_by_fixture: dict | None = None,
-        xg_alpha: float = 0.0) -> dict | None:
+        xg_alpha: float = 0.0,
+        xg_shrink: float | None = None) -> dict | None:
     """Ratings + league parameters from a list of completed fixtures.
     Pure function of its inputs — the walk-forward validator calls it
     with prior-only slices.
@@ -145,11 +158,13 @@ def fit(fixtures, as_of, xg_by_fixture: dict | None = None,
         k = SHRINK_GAMES
         atk = (gf[team] / league_gpg + k) / (w + k)
         dfc = (ga[team] / league_gpg + k) / (w + k)
-        # blend in an xG-based rating (each shrunk on its own xG sample)
+        # blend in an xG-based rating (each shrunk on its own xG sample,
+        # with the LIGHTER xG prior — see XG_SHRINK_GAMES)
         xw = xw_sum.get(team, 0.0)
         if xg_alpha > 0 and xw > 0 and league_xg > 0:
-            atk_x = (xgf[team] / league_xg + k) / (xw + k)
-            dfc_x = (xga[team] / league_xg + k) / (xw + k)
+            kx = xg_shrink if xg_shrink is not None else XG_SHRINK_GAMES
+            atk_x = (xgf[team] / league_xg + kx) / (xw + kx)
+            dfc_x = (xga[team] / league_xg + kx) / (xw + kx)
             atk = (1 - xg_alpha) * atk + xg_alpha * atk_x
             dfc = (1 - xg_alpha) * dfc + xg_alpha * dfc_x
         ratings[team] = {"attack": atk, "defence": dfc,
@@ -168,6 +183,8 @@ def fit(fixtures, as_of, xg_by_fixture: dict | None = None,
         "league_gpg": league_gpg,
         "league_xg": league_xg,
         "xg_alpha": xg_alpha,
+        "xg_shrink": (xg_shrink if xg_shrink is not None
+                      else XG_SHRINK_GAMES),
         # fraction of team-match observations (2 per fixture) carrying xG
         "xg_coverage": round(txg_w / (2 * tot_w), 3) if tot_w else 0.0,
         # fitted venue split: home teams score tot_home/tot_w per game
@@ -353,6 +370,7 @@ def build_input_artifact(fixture, model: dict,
             # xG-rating provenance (ratings already bake the blend in, so
             # replay from team_ratings is unaffected — these are audit)
             "xg_rating_alpha": model.get("xg_alpha", 0.0),
+            "xg_shrink_games": model.get("xg_shrink"),
             "xg_coverage": model.get("xg_coverage", 0.0),
         },
         "league": {
