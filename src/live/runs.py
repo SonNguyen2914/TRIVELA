@@ -56,6 +56,12 @@ def _input_quality(model: dict, lineup: dict | None) -> dict:
     return q
 
 
+# how recent a COMPLETE registry sweep must be for a canonical lock to
+# trust the local contract universe (V9.3 eval F6). Discovery runs every
+# 10 minutes, so 6h is generous while still refusing a stale registry.
+REGISTRY_MAX_AGE_HOURS = 6
+
+
 def _write_run(s, fixture, run_type: str, model: dict, mv: ModelVersion,
                canonical: bool = False, snapshot: dict | None = None,
                lineup: dict | None = None) -> PredictionRun | None:
@@ -172,6 +178,28 @@ def _write_run(s, fixture, run_type: str, model: dict, mv: ModelVersion,
         run.failure_reason = f"probabilities sum {total:.4f}"
         s.commit()
         return None
+    # V9.3 eval F6: a canonical lock's completeness was self-referential —
+    # "everything known LOCALLY was captured", even if discovery itself was
+    # truncated. Require a recent COMPLETE registry sweep so the expected
+    # universe is externally established, not defined by whatever the local
+    # registry happened to contain.
+    if canonical:
+        from src.live.models import RegistryDiscovery
+        reg = (s.query(RegistryDiscovery)
+               .filter_by(competition_slug="mls-2026", provider="kalshi",
+                          complete=True)
+               .order_by(RegistryDiscovery.id.desc()).first())
+        fresh_reg = bool(
+            reg and reg.completed_at
+            and (_now() - _utc(reg.completed_at))
+            <= timedelta(hours=REGISTRY_MAX_AGE_HOURS))
+        if not fresh_reg:
+            run.status = "failed"
+            run.failure_reason = (
+                "no complete kalshi registry discovery within "
+                f"{REGISTRY_MAX_AGE_HOURS}h (F6)")[:500]
+            s.commit()
+            return None
     # V9.3 eval F5: a CANONICAL lock claims the model was joined to the
     # frozen market. Refuse completion unless all three game legs actually
     # carry a market contract AND a frozen quote — previously a lock with
