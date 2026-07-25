@@ -41,11 +41,10 @@ def _parse_dt(iso: str | None):
 
 def _observe(s, endpoint: str, payload: dict) -> int:
     raw = json.dumps(payload, sort_keys=True)
+    from src.live.evidence import pack_payload
     obs = SourceObservation(
         source="espn", endpoint=endpoint,
-        content_hash=hashlib.sha256(raw.encode()).hexdigest(),
-        payload_json=raw[:config.OBSERVATION_PAYLOAD_MAX_BYTES],
-        observed_at=_now())
+        observed_at=_now(), **pack_payload(raw))
     s.add(obs)
     s.flush()
     return obs.id

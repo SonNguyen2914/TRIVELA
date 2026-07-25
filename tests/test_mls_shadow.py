@@ -2300,6 +2300,54 @@ class TestV93ExecutionFidelity:
         assert summ["estimate_only"]["settled_fills"] == 1
         assert Decimal(summ["estimate_only"]["settled_pnl_dollars"]) != 0
 
+    def test_f11_complete_payload_is_retained_and_verifiable(self):
+        """A content hash without the bytes cannot be verified or replayed
+        through a corrected parser. The 8 KB preview cap (shipped during
+        the DiskFull incident) cost exactly that; compression restores the
+        complete body for LESS space than the truncated stub."""
+        import json as _j
+
+        from src.live import evidence
+        big = _j.dumps({"rows": [{"i": i, "v": "x" * 60} for i in range(400)]})
+        assert len(big) > 20000
+        packed = evidence.pack_payload(big)
+        assert packed["payload_bytes"] == len(big.encode())
+        assert packed["payload_encoding"] == "gzip+base64"
+        # the preview is truncated, the retained evidence is NOT
+        assert len(packed["payload_json"]) <= config.OBSERVATION_PAYLOAD_MAX_BYTES
+        assert len(packed["payload_compressed"]) < len(big)
+
+        obs = SimpleNamespace(**packed)
+        assert evidence.unpack_payload(obs) == big
+        assert evidence.verify_payload(obs) is True
+        # a legacy row with only a preview must report "cannot verify",
+        # never a false pass
+        legacy = SimpleNamespace(payload_compressed=None,
+                                 content_hash=packed["content_hash"])
+        assert evidence.verify_payload(legacy) is None
+
+    def test_f11_tamper_is_detected(self):
+        from src.live import evidence
+        packed = evidence.pack_payload('{"a": 1}')
+        tampered = SimpleNamespace(**{**packed, "content_hash": "0" * 64})
+        assert evidence.verify_payload(tampered) is False
+
+    def test_f12_price_grid_is_frozen_with_the_quote(self):
+        """Kalshi can change a market's price structure mid-lifecycle, so a
+        stored price is only interpretable against the grid valid then."""
+        from src.live.markets import _quote_row
+        m = {"ticker": "KXMLSGAME-x-H", "yes_ask": 45, "yes_bid": 44,
+             "price_level_structure": "linear_cent",
+             "price_ranges": [{"start": "0.0000", "end": "1.0000",
+                               "step": "0.0100"}]}
+        q = _quote_row(m, 1, 1, snapshot_id=1)
+        assert q.price_level_structure == "linear_cent"
+        assert "0.0100" in q.price_ranges_json
+        # absent grid metadata must not fabricate one
+        q2 = _quote_row({"ticker": "t", "yes_ask": 45}, 1, 1, snapshot_id=1)
+        assert q2.price_level_structure is None
+        assert q2.price_ranges_json is None
+
     def test_f5_audit_linkage_is_not_vacuous(self, live_session):
         """A canonical lock with ZERO market-linked contracts used to pass
         the whole audit, because all([]) is True."""
