@@ -27,17 +27,58 @@ from src.live.db import get_session, plane_ready
 from src.live.models import (Competition, CorpusExport, Fixture,
                              LineupEntry, LineupSnapshot, MarketContract,
                              MarketDepthLevel, MarketEvent, MarketQuote,
-                             MarketSnapshot, ModelInputArtifact,
-                             ModelVersion, PaperFill, PaperSignal, Player,
-                             PredictionContract, PredictionRun, Team,
+                             MarketSnapshot, MlsPlayerMatchStat,
+                             MlsTeamMatchStat, ModelApprovalDecision,
+                             ModelInputArtifact, ModelVersion, PaperFill,
+                             PaperSignal, Player, PredictionContract,
+                             PredictionRun, RegistryDiscovery, Team,
                              TeamAlias)
 
-CORPUS_SCHEMA = "corpus-v1"
+# v2 (V9.3 eval F10): adds the RESEARCH plane — approval decisions,
+# registry sweeps, official per-match team/player stats and the exact
+# selected model parameters — so the corpus can regenerate the
+# model-DEVELOPMENT result, not only replay a final run.
+CORPUS_SCHEMA = "corpus-v2"
 _GIT_REV = os.getenv("RAILWAY_GIT_COMMIT_SHA", "")[:40]
 
 
 def _now():
     return datetime.now(timezone.utc)
+
+
+def _model_parameters() -> dict:
+    """The exact deployed model configuration + what each constant was
+    SELECTED AGAINST (V9.3 eval F7/F10). A corpus that omits this cannot
+    regenerate the model-development result, and an approval that omits it
+    cannot say what it approved."""
+    import config
+
+    from src.live import model_mls
+    return {
+        "model_version": model_mls.MODEL_NAME,
+        "engine_signature": model_mls.engine_signature()["signature_hash"],
+        "artifact_schema": model_mls.INPUT_ARTIFACT_SCHEMA,
+        "parameters": {
+            "xg_rating_alpha": config.MLS_XG_RATING_ALPHA,
+            "xg_shrink_games": model_mls.XG_SHRINK_GAMES,
+            "goals_shrink_games": model_mls.SHRINK_GAMES,
+            "half_life_days": model_mls.HALF_LIFE_DAYS,
+            "min_games": model_mls.MIN_GAMES,
+            "calibration_alpha": config.MLS_CALIBRATION_ALPHA,
+            "mls_goal_dispersion_cv": config.MLS_GOAL_DISPERSION_CV,
+            "wc26_goal_dispersion_cv": config.GOAL_DISPERSION_CV,
+            "n_simulations": config.N_SIMULATIONS,
+        },
+        "selection_protocol": {
+            "method": "rolling-origin walk-forward, match-cluster bootstrap",
+            "sample": "the season's completed top-division fixtures",
+            "primary_metric": "3-way log loss vs the M0 league/venue baseline",
+            "limitation": ("hyperparameters were swept on THIS sample, so "
+                           "the reported interval is conditional on the "
+                           "selected model and excludes model-selection "
+                           "uncertainty (V9.3 eval F8)"),
+        },
+    }
 
 
 def _dump(obj) -> dict:
@@ -123,6 +164,23 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             # audit carries missed_locks + failed_snapshots = the
             # anti-survivorship-bias record
             "audit.json": live_audit.lock_audit(),
+            # --- RESEARCH plane (V9.3 eval F10) ---------------------------
+            # The run-replay sections above let a reader reproduce a FINAL
+            # run. They do not let anyone regenerate the model-DEVELOPMENT
+            # result: the ladder, the parameter sweeps, or the approval.
+            # These objects close that gap, so the corpus is self-contained
+            # for the research claim and not just the prediction claim.
+            "model_approval_decisions.json": [
+                _dump(x) for x in s.query(ModelApprovalDecision).all()],
+            "registry_discovery.json": [
+                _dump(x) for x in s.query(RegistryDiscovery).all()],
+            "mls_team_match_stats.json": [
+                _dump(x) for x in s.query(MlsTeamMatchStat).all()],
+            "mls_player_match_stats.json": [
+                _dump(x) for x in s.query(MlsPlayerMatchStat).all()],
+            # the exact parameters the deployed model was selected with,
+            # so a reader can re-run the sweeps rather than trust them
+            "model_parameters.json": _model_parameters(),
         }
         files = {}
         for name, data in sections.items():
