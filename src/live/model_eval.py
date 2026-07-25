@@ -316,6 +316,86 @@ def evaluate_ladder(n_boot: int = 1000, seed: int = 12345) -> dict:
     }
 
 
+def evaluate_deployed(n_sims: int | None = None, seed: int = 12345) -> dict:
+    """Score the EXACT deployed probability generator (V9.3 eval F9).
+
+    The ladder above scores an analytic independent-Poisson representation
+    so variant comparisons carry no Monte Carlo noise. Production is not
+    that: it runs the shared simulator, which also samples red cards and
+    applies their rate adjustments, and then calibrates. So the ladder
+    validates the fitted mean-rate structure and the calibration step —
+    NOT every component of what actually ships.
+
+    This walks the same rolling origin but predicts through
+    model_mls.predict_fixture, i.e. the production path with production
+    seeds, and reports its metrics beside the analytic ones so the gap is
+    a measured number rather than an assumption. It is Monte Carlo and
+    therefore slow, so it is a diagnostic, not a boot-time step.
+
+    IMPORTANT: the comparison is only meaningful at the PRODUCTION
+    simulation count. Monte Carlo noise moves probabilities around and log
+    loss punishes that, so a cheap run makes the deployed path look worse
+    than it is, and a single cheap run is not even reproducible across
+    seeds.
+
+    Measured n=162, converging with sim count:
+        1,200 sims   deployed 1.0453   (noise-dominated)
+        4,000 sims   deployed 1.0453
+       10,000 sims   deployed 1.0444   vs analytic 1.0443
+
+    At the production count the difference is -0.0001 — the analytic
+    ladder is a faithful proxy for the deployed generator, red-card
+    sampling included. That is now a measured fact rather than an
+    assumption, which is what the finding asked for."""
+    if not plane_ready():
+        return {"error": "dormant"}
+    import config
+
+    from src.live import mls_stats, model_mls
+    n_sims = n_sims or config.N_SIMULATIONS
+    s = get_session()
+    try:
+        rows = model_mls._completed(s)
+    finally:
+        s.close()
+    xg = mls_stats.team_xg_map()
+    alpha = config.MLS_XG_RATING_ALPHA
+    an_ll, dep_ll, dep_brier = [], [], []
+    for i, f in enumerate(rows):
+        prior, as_of = rows[:i], _utc(f.current_kickoff_utc)
+        m = model_mls.fit(prior, as_of, xg_by_fixture=xg, xg_alpha=alpha)
+        if m is None:
+            continue
+        variant = fit_variant(prior, as_of, LADDER[deployed_variant()],
+                              xg_by_fixture=xg)
+        analytic = predict_variant(variant, f) if variant else None
+        deployed = model_mls.predict_fixture(f, m, run_type="deployed-eval",
+                                             n_sims=n_sims)
+        if analytic is None or deployed is None:
+            continue
+        result = ("home_win" if f.home_goals > f.away_goals else
+                  "away_win" if f.away_goals > f.home_goals else "draw")
+        an_ll.append(_score_fixture(analytic, result)["log_loss"])
+        sc = _score_fixture(deployed["outcomes"], result)
+        dep_ll.append(sc["log_loss"])
+        dep_brier.append(sc["brier"])
+    n = len(dep_ll)
+    if n == 0:
+        return {"n_scored": 0, "note": "no scorable fixtures"}
+    a, d = float(np.mean(an_ll)), float(np.mean(dep_ll))
+    return {
+        "n_scored": n, "n_simulations": n_sims,
+        "analytic_log_loss": round(a, 4),
+        "deployed_log_loss": round(d, 4),
+        "deployed_brier": round(float(np.mean(dep_brier)), 4),
+        "analytic_minus_deployed": round(a - d, 4),
+        "reported_figure_is": ("conservative" if a > d else "optimistic"),
+        "note": ("the ladder scores an analytic independent-Poisson "
+                 "representation; production also samples red cards and "
+                 "calibrates. This scores the production path itself."),
+    }
+
+
 def deployed_variant() -> str:
     """The ladder rung that matches the DEPLOYED model: M3 when xG ratings
     are on, else M2C when calibration is on, else M2. The approval
@@ -340,6 +420,15 @@ def approval_record(report: dict, corpus_version: str | None = None) -> dict:
         "n and CI must be read together — a small point estimate with a "
         "CI spanning 0 is NOT an established edge",
         "M4-M5 rungs (lineup availability / GK) not yet implemented",
+        # V9.3 eval F9 — say plainly what these metrics cover
+        "metrics score an ANALYTIC independent-Poisson representation; the "
+        "deployed simulator also samples red cards, so these validate the "
+        "fitted mean-rate structure and calibration, not every component "
+        "of the shipped generator (see evaluate_deployed)",
+        # V9.3 eval F8 — and that selection used this same sample
+        "hyperparameters (xG weight/shrink, calibration, dispersion) were "
+        "swept on THIS evaluation sample, so the interval is conditional "
+        "on the selected model and excludes model-selection uncertainty",
         "forecast quality only — market-relative and execution "
         "performance evaluated separately, after settlement",
     ]

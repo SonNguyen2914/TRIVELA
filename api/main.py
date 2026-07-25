@@ -242,6 +242,19 @@ def mls_admin_storage(request: Request):
     return out
 
 
+@app.get("/api/admin/mls/deployed-eval")
+def mls_admin_deployed_eval(request: Request, sims: int = Query(3000)):
+    """Operator-only: score the EXACT deployed probability generator
+    (V9.3 eval F9). The public ladder scores an analytic
+    independent-Poisson representation; production also samples red cards
+    and calibrates. Monte Carlo and therefore slow — a diagnostic, never a
+    boot step."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import model_eval
+    return model_eval.evaluate_deployed(n_sims=max(500, min(sims, 10000)))
+
+
 @app.get("/api/mls/slate")
 def mls_slate(date: str | None = Query(None, pattern=r"^\d{8}$")):
     """The slate scorecard (V8.1 eval step 2): every fixture on a
