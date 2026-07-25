@@ -208,6 +208,39 @@ def mls_admin_sweep(request: Request, force: bool = Query(False)):
             "generated_at": utcnow().isoformat()}
 
 
+@app.get("/api/admin/mls/storage")
+def mls_admin_storage(request: Request):
+    """Operator-only, READ-ONLY: what is consuming the live-plane volume.
+    Added after a DiskFull incident (Jul 25) in which every prediction
+    write failed while the sweep reported only {"created": 0} — there was
+    no way to see that the volume was full."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from sqlalchemy import text
+
+    from src.live.db import get_engine
+    eng = get_engine()
+    if eng is None:
+        return {"dormant": True}
+    out: dict = {}
+    with eng.connect() as c:
+        try:
+            out["database_bytes"] = c.execute(text(
+                "SELECT pg_database_size(current_database())")).scalar()
+            rows = c.execute(text(
+                "SELECT relname, pg_total_relation_size(c.oid) AS bytes, "
+                "n_live_tup FROM pg_class c "
+                "JOIN pg_namespace n ON n.oid = c.relnamespace "
+                "LEFT JOIN pg_stat_user_tables s ON s.relid = c.oid "
+                "WHERE n.nspname='public' AND c.relkind='r' "
+                "ORDER BY bytes DESC LIMIT 15")).fetchall()
+            out["tables"] = [{"table": r[0], "bytes": int(r[1] or 0),
+                              "rows": int(r[2] or 0)} for r in rows]
+        except Exception as exc:          # sqlite (tests) has no pg_*
+            out["error"] = str(exc)[:200]
+    return out
+
+
 @app.get("/api/mls/slate")
 def mls_slate(date: str | None = Query(None, pattern=r"^\d{8}$")):
     """The slate scorecard (V8.1 eval step 2): every fixture on a
