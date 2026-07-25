@@ -1040,6 +1040,94 @@ class TestContractRepair:
         assert keys["KXMLSGAME-26JUL25CLBNYC-TIE"] == "draw"
 
 
+class TestLockFreshnessSemantics:
+    """Execution freshness must be measured on a clock that exists.
+
+    v1 required freshness_basis == 'provider' (V9.1 eval F6). Kalshi
+    publishes no quote-update time — `updated_time` tracks the market
+    DEFINITION and ran ~30h stale on ACTIVE two-sided markets — so the
+    600s gate could never pass: execution_ready was permanently False,
+    every paper signal was rejected NOT_EXECUTION_READY and every fixture
+    reported EXECUTION_NOT_READY. Found by audit Jul 25; nothing pinned
+    the old rule, which is why it went unnoticed.
+    """
+
+    def _capture(self, s, monkeypatch, provider_ts):
+        from src.live.models import (Competition, Fixture, MarketContract,
+                                     MarketEvent)
+        identity.seed_teams(CANNED_ESPN)
+        clb = identity.resolve_espn_name("Columbus Crew")
+        nyc = identity.resolve_espn_name("New York City FC")
+        fx = Fixture(competition_slug="mls-2026", espn_event_id="e950",
+                     home_team_id=clb.id, away_team_id=nyc.id,
+                     current_kickoff_utc=datetime.now(UTC) + timedelta(minutes=9),
+                     status="pre")
+        s.add(fx)
+        s.flush()
+        ev = MarketEvent(competition_slug="mls-2026",
+                         kalshi_event_ticker="KXMLSGAME-26JUL25CLBNYC",
+                         series="KXMLSGAME", fixture_id=fx.id,
+                         mapping_approved=True, mapped_via="alias")
+        s.add(ev)
+        s.flush()
+        for tk, okey in (("KXMLSGAME-26JUL25CLBNYC-CLB", "home_win"),
+                         ("KXMLSGAME-26JUL25CLBNYC-NYC", "away_win"),
+                         ("KXMLSGAME-26JUL25CLBNYC-TIE", "draw")):
+            s.add(MarketContract(market_event_id=ev.id, ticker=tk,
+                                 outcome_key=okey))
+        s.commit()
+
+        def fake_get(url, **kw):
+            if "orderbook" in url:
+                return {"orderbook": {"yes": [[24, 500], [25, 900]],
+                                      "no": [[70, 400], [74, 800]]}}
+            return {"markets": [
+                {"ticker": tk, "yes_bid": 25, "yes_ask": 26,
+                 "no_bid": 74, "no_ask": 75, "yes_bid_size": 500,
+                 "yes_ask_size": 500, "status": "active",
+                 "updated_time": provider_ts}
+                for tk in ("KXMLSGAME-26JUL25CLBNYC-CLB",
+                           "KXMLSGAME-26JUL25CLBNYC-NYC",
+                           "KXMLSGAME-26JUL25CLBNYC-TIE")]}
+        monkeypatch.setattr(markets, "_kalshi_get", fake_get)
+        return markets.capture_lock_snapshot(fx.id)
+
+    def test_stale_provider_timestamp_still_execution_ready(
+            self, live_session, monkeypatch):
+        """THE REGRESSION: a ~30h-old updated_time (what Kalshi actually
+        returns for a live market) must not disable execution."""
+        from src.live.models import MarketSnapshot
+        stale = (datetime.now(UTC) - timedelta(hours=30)).isoformat()
+        snap = self._capture(live_session, monkeypatch, stale)
+        assert snap is not None, "capture must produce a snapshot"
+        row = (live_session.query(MarketSnapshot)
+               .order_by(MarketSnapshot.id.desc()).first())
+        assert row.status == "complete"
+        assert row.execution_ready is True
+        # and it must SAY the basis is our capture clock — never dressed
+        # up as a provider-confirmed reading
+        assert row.freshness_basis == "capture_time"
+        assert row.game_oldest_quote_age_seconds <= 600
+        assert row.policy_version == "mls-lock-v2"
+
+    def test_freshness_basis_is_never_labelled_provider(
+            self, live_session, monkeypatch):
+        """Even with a perfectly fresh provider timestamp we do not claim
+        provider-confirmed freshness — the venue's field does not mean
+        that, so the label would be a false assurance."""
+        from src.live.models import MarketSnapshot
+        fresh = datetime.now(UTC).isoformat()
+        self._capture(live_session, monkeypatch, fresh)
+        row = (live_session.query(MarketSnapshot)
+               .order_by(MarketSnapshot.id.desc()).first())
+        assert row.freshness_basis == "capture_time"
+
+    def test_note_documents_the_venue_reality(self):
+        from src.live.markets import QUOTE_FRESHNESS_NOTE
+        assert "updated_time" in QUOTE_FRESHNESS_NOTE
+        assert "capture" in QUOTE_FRESHNESS_NOTE.lower()
+
+
 class TestPredictionRuns:
     def _seed_playable(self, s, n_completed=12):
         from src.live.models import ModelVersion

@@ -132,7 +132,38 @@ PROVIDER_SCHEMA_VERSION = "kalshi-2026-07-fp"
 # The lock-completeness predicate is versioned so "full book" cannot
 # change meaning silently as families are added (V8.1 eval qual #3).
 # v1: required = GAME 3-way; all other families captured-when-present.
-LOCK_POLICY_VERSION = "mls-lock-v1"
+# v2 (Jul 25 audit): freshness is measured on OUR CAPTURE CLOCK, not
+# Kalshi's `updated_time` — see QUOTE_FRESHNESS_NOTE.
+LOCK_POLICY_VERSION = "mls-lock-v2"
+
+# Why execution freshness is capture-based (audit, Jul 25 2026).
+#
+# V9.1 eval F6 required a PROVIDER timestamp for execution-readiness, so
+# that "fresh" could never be inferred from our own clock. Faithful — but
+# it assumed Kalshi publishes a quote-update time. It does not. Measured
+# on the live book: KXMLSGAME-26JUL25MINVAN-VAN, status ACTIVE, real
+# two-sided prices (0.26/0.25), volume ~43k, open interest ~39k, and
+#     updated_time = 2026-07-23T19:02:29Z  ->  ~108,880 s (~30 h) old
+# Every KXMLSGAME market showed the same ~30 h, and no other time field
+# exists (no last_trade_time). `updated_time` tracks the market
+# DEFINITION, not the order book.
+#
+# The consequence was silent: `game_oldest_age <= 600` could never pass,
+# so execution_ready was permanently False, EVERY paper signal was
+# rejected NOT_EXECUTION_READY, and every fixture reported
+# EXECUTION_NOT_READY — a gate that can never pass protects nothing, it
+# only disables the evidence collection it was meant to guard.
+#
+# So freshness is now the age of OUR fetch (the book was pulled seconds
+# before the lock), recorded honestly as basis 'capture_time'. This does
+# NOT claim to know when the book last changed — no venue field permits
+# that claim — and each quote still stores Kalshi's provider_timestamp so
+# an auditor can see exactly how stale that field is.
+QUOTE_FRESHNESS_NOTE = (
+    "Kalshi publishes no quote-update timestamp (updated_time tracks the "
+    "market definition and ran ~30h stale on active, two-sided markets), "
+    "so execution freshness is measured on our capture clock and labelled "
+    "'capture_time'. Provider timestamps are retained per quote for audit.")
 
 
 def _fp_int(m: dict, field: str) -> int | None:
@@ -660,34 +691,44 @@ def capture_lock_snapshot(fixture_id: int) -> dict | None:
         # fall back to our own capture clock (~0s old, but LABELLED as such,
         # never dressed up as a provider-confirmed fresh reading); 'none' =
         # no priced game quote at all.
+        # v2: the CAPTURE clock, because the venue publishes no quote-update
+        # time (QUOTE_FRESHNESS_NOTE). `now` is the capture instant and every
+        # quote in this snapshot was written from the response we just
+        # fetched, so the honest age is the age of that fetch. The provider
+        # ages are still computed above and retained per quote.
         if game_quotes == 0:
             game_oldest_age = None
             freshness_basis = "none"
-        elif game_priced_no_ts == 0:
-            game_oldest_age = max(game_ages) if game_ages else 0
-            freshness_basis = "provider"
         else:
-            game_oldest_age = max(game_ages) if game_ages else 0
+            game_oldest_age = max(
+                0, int((_now() - now).total_seconds()))
             freshness_basis = "capture_time"
         snap.quotes_written = len(quote_by_ticker)
         snap.quotes_with_prices = with_prices
         snap.quotes_without_prices = without_prices
         snap.depth_rows_written = depth_rows
-        snap.oldest_quote_age_seconds = oldest_age or None
+        # both age fields are CAPTURE-based in v2 so the risk engine's
+        # max_quote_age_s gate measures the same (meaningful) quantity;
+        # `oldest_age` above is the provider clock and is deliberately not
+        # used as a gate — it is preserved per quote for audit
+        snap.oldest_quote_age_seconds = game_oldest_age
         snap.game_oldest_quote_age_seconds = game_oldest_age
         snap.freshness_basis = freshness_basis
         snap.required_families_complete = required_ok
         # execution-ready is DISTINCT from capture-complete: the game
-        # comparator must be two-sided (bid AND ask) AND fresh on a KNOWN
-        # basis within the age ceiling. V9.1 eval F6: only a PROVIDER
-        # timestamp counts as executable freshness — a capture-time
-        # fallback is honest RESEARCH freshness (we received the response
-        # recently) but does NOT establish when the order book last
-        # changed, so it is NOT execution-ready. Capture-completeness is
-        # unaffected; only tradeability requires the provider clock.
+        # comparator must be two-sided (bid AND ask) AND freshly captured.
+        #
+        # v1 required freshness_basis == 'provider' (V9.1 eval F6). That is
+        # unsatisfiable at this venue — Kalshi's updated_time ran ~30h stale
+        # on ACTIVE two-sided markets — so the gate could never pass and
+        # silently blocked all paper execution (QUOTE_FRESHNESS_NOTE).
+        # v2 accepts the capture clock, which is the strongest freshness
+        # claim the venue actually supports, and the basis is recorded on
+        # the snapshot so no reader mistakes it for a provider-confirmed
+        # reading.
         snap.execution_ready = (
             game_two_sided >= 3
-            and freshness_basis == "provider"
+            and freshness_basis == "capture_time"
             and game_oldest_age is not None
             and game_oldest_age <= 600)
         # CAPTURE-completeness gate (not tradeability): every event
