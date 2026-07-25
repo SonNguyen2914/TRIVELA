@@ -1,0 +1,21 @@
+{
+  "title": "MLS system audit #4 \u2014 coverage-driven sweep of every remaining module",
+  "generated_at": "2026-07-25T02:55:18.101252+00:00",
+  "method": "inventoried all 46 modules by LOC vs test references to find genuinely untouched code, rather than choosing areas by intuition; then exercised each thin module functionally.",
+  "orchestration": "all 5 MLS scheduler jobs invoked and run clean (mls_stats_job ingested 20 matches + mapped 2 players live). All 7 WC26/legacy jobs run clean too.",
+  "investigated_and_cleared": {
+    "INTEGRITY_FAILED on 4 locks": "STALE ARTIFACTS, not a defect \u2014 those locks were captured 2026-07-23 in a DB with 0 approval decisions, predating the V9 approval feature. The F9 gate now refuses to create a canonical lock without an approved decision, and prod holds decision 182. A test already asserts a FRESH lock passes all_pass incl. approval-decision reference + engine signature; still green after today changes.",
+    "lock policy v2 vs the audit": "audit checks snapshot_policy_version for PRESENCE (bool), not a pinned string, so bumping mls-lock-v1 -> v2 does not break lock integrity checks",
+    "bracket resolver alert spam": "IDEMPOTENT \u2014 8 alerts on a fresh DB run, 0 on the second run; no repeat announcements in prod",
+    "model_cache (0 test refs)": "not dead code \u2014 used in 8 call sites; process-local dict, bounded by market count",
+    "paper signals rejected NOT_EXECUTION_READY": "pre-fix artifacts from the old lock policy; notably one carried net_edge +0.0241 and WOULD have filled, confirming the v2 fix unblocks real execution"
+  },
+  "passed": {
+    "scheduler jobs": "12/12 invoke cleanly",
+    "observability.metrics / risk.assess / slate.slate_report": "all return well-formed reports; slate qualification invariants all true (no duplicate canonical locks, no post-kickoff locks, every fixture classified)",
+    "frontend pages": "/bet-suggester?league=mls, /bet-suggester, /bet-suggester/bots all render with ZERO console errors",
+    "settlement": "win/loss/draw + exact Decimal P&L verified in round 3"
+  },
+  "tests": "477 backend + 6 e2e + 3 page-health green",
+  "remaining_untestable": "settlement against a REAL completed fixture, and the in-play live path under an actual live match \u2014 both only exercisable once Saturday matches kick off and resolve."
+}
