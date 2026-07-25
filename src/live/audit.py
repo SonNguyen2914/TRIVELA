@@ -93,8 +93,20 @@ def _lock_checks(s, f, lock, n_locks, current_engine=None) -> dict:
         "required_families_complete": bool(
             snap and snap.required_families_complete),
         "contracts_unique_by_outcome": len(okeys) == len(set(okeys)),
-        "priced_contracts_quote_linked": all(
+        # V9.3 eval F5: `priced` filters to contracts that already have a
+        # market_contract_id, so all([]) made this VACUOUSLY TRUE — a
+        # canonical lock with ZERO market links passed the whole audit
+        # while proving no model-to-market join at all. The check now
+        # requires it to be non-empty AND demands all three game legs be
+        # mapped to a contract and a FROZEN quote by name.
+        "priced_contracts_quote_linked": bool(priced) and all(
             c.market_quote_id is not None for c in priced),
+        "three_way_market_linked": all(
+            any(c.outcome_key == k
+                and c.market_contract_id is not None
+                and c.market_quote_id is not None
+                for c in contracts)
+            for k in ("home_win", "draw", "away_win")),
         "model_version_present": lock.model_version_id is not None,
         "model_approved_at_run": bool(lock.model_approved_at_run),
         # the run must reference the EXACT immutable approval decision that

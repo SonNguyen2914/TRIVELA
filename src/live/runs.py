@@ -172,6 +172,22 @@ def _write_run(s, fixture, run_type: str, model: dict, mv: ModelVersion,
         run.failure_reason = f"probabilities sum {total:.4f}"
         s.commit()
         return None
+    # V9.3 eval F5: a CANONICAL lock claims the model was joined to the
+    # frozen market. Refuse completion unless all three game legs actually
+    # carry a market contract AND a frozen quote — previously a lock with
+    # zero market links completed and then passed the audit vacuously.
+    if canonical:
+        missing = [k for k in ("home_win", "draw", "away_win")
+                   if not (mapped.get(k)
+                           and quote_by_ticker.get(
+                               ticker_by_mc.get(mapped.get(k), "")))]
+        if missing:
+            run.status = "failed"
+            run.failure_reason = (
+                "canonical lock missing market contract/quote for: "
+                + ",".join(missing))[:500]
+            s.commit()
+            return None
     run.status = "complete"
     run.canonical = canonical
     run.completed_at = _now()

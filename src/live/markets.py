@@ -16,6 +16,8 @@ import re
 import time
 from datetime import date, datetime, timedelta, timezone
 
+from decimal import Decimal
+
 import requests
 
 from src.live import identity
@@ -246,18 +248,28 @@ def _depth_levels(ob_payload: dict, keep: int = DEPTH_KEEP
     fp = ob_payload.get("orderbook_fp")
     if isinstance(fp, dict):
         for side, key in (("yes", "yes_dollars"), ("no", "no_dollars")):
-            parsed: list[tuple[int, int, str, str]] = []
+            parsed: list[tuple[Decimal, int, int, str, str]] = []
             for lvl in (fp.get(key) or []):
                 try:
-                    parsed.append((int(round(float(lvl[0]) * 100)),
+                    exact = Decimal(str(lvl[0]))
+                    parsed.append((exact, int(round(float(lvl[0]) * 100)),
                                    int(float(lvl[1])),
                                    str(lvl[0]), str(lvl[1])))
-                except (TypeError, ValueError, IndexError):
+                except (ArithmeticError, TypeError, ValueError, IndexError):
                     continue
             # best bids = highest price; keep top `keep` after an explicit
-            # sort (never trust the provider's array order)
+            # sort (never trust the provider's array order).
+            #
+            # Sort on the EXACT Decimal, never the derived cent (V9.3 eval
+            # F1): Kalshi's fixed-point fields carry subpenny prices and
+            # finer price grids are being rolled out, so many levels can
+            # share one rounded cent. Sorting on the rounded value left
+            # ties in provider order, which kept the FIRST ten and dropped
+            # the true best — e.g. 0.5300..0.5311 all round to 53c and the
+            # real best bid 0.5311 was discarded. Display cents are derived
+            # only AFTER the levels are chosen.
             parsed.sort(key=lambda x: x[0], reverse=True)
-            for price_c, size, pd, sf in parsed[:keep]:
+            for _exact, price_c, size, pd, sf in parsed[:keep]:
                 rows.append((side, price_c, size, pd, sf))
         return rows
     legacy = ob_payload.get("orderbook")
