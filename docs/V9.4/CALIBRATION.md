@@ -144,7 +144,7 @@ whose absence caused three of the four V9.3 defects:
 - **In-sample tuning.** Every sweep above selects a parameter on the same
   162 matches. The approval record now STATES this (V9.3 eval F8): the
   interval is conditional on the selected model and excludes
-  model-selection uncertainty. Finding 2 in [`AUDIT-FINDINGS.md`](AUDIT-FINDINGS.md) shows
+  model-selection uncertainty. Finding 2 in [`AUDIT-FINDINGS.md`](../V9.3/AUDIT-FINDINGS.md) (V9.3) shows
   precisely how much that can inflate an apparent edge (+0.0038 → −0.0007
   when fitted honestly). Read every gain here as optimistic.
 
