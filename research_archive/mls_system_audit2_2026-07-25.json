@@ -1,0 +1,38 @@
+{
+  "title": "MLS deep system audit #2 \u2014 prop calibration, dispersion, invariants, security",
+  "generated_at": "2026-07-25T01:00:21.645375+00:00",
+  "MAJOR_FINDING_goal_dispersion": {
+    "issue": "GOAL_DISPERSION_CV=0.30 is a WC26-sourced constant that the MLS model inherited. Widening the goal spread inflates P(0 goals) per side, which suppresses BTTS and the overs.",
+    "evidence_deployed_props_vs_actual": {
+      "btts": "57.3% predicted vs 66.0-67.3% actual (-10.0pp)",
+      "over_1_5": "-4.5pp",
+      "over_2_5": "-4.2pp",
+      "over_3_5": "-3.7pp"
+    },
+    "mechanism": "at lam 1.72/1.55, cv 0.30 raises P(home=0) 18.0%->20.2% and P(away=0) 21.2%->23.3%, dropping BTTS 64.6%->61.2%; mean total is unchanged (mean-1 multipliers), only the SHAPE moves",
+    "walk_forward_prop_logloss_by_cv": {
+      "0.0": "+0.0277 vs deployed",
+      "0.1": "+0.0183",
+      "0.2": "+0.0187",
+      "0.3": "0 (deployed)"
+    },
+    "fix": "config.MLS_GOAL_DISPERSION_CV=0.0, injected per-simulator; WC26 keeps GOAL_DISPERSION_CV=0.30 so the archive replays bit-for-bit. Engine signature now records the MLS value (replay reads it).",
+    "note": "monotonic in cv and mechanistically explained; still in-sample tuned like every other parameter here"
+  },
+  "FINDING_props_correctly_excluded_from_calibration": {
+    "question": "the 3-way is calibrated (shrunk toward uniform) but 50 of 53 markets are raw \u2014 is that a bug?",
+    "answer": "NO. Measured: props are slightly UNDER-confident (bias -2 to -6pp), and shrinking them toward 0.5 makes log-loss monotonically WORSE (0.588 -> 0.604). Excluding props from calibration is correct.",
+    "residual": "displayed scorelines (raw) disagree with the displayed 3-way (calibrated) by 3-9pp; a display-coherence issue, not a wrong number \u2014 the gap tracks the calibration formula to within 0.01"
+  },
+  "lambda_bias": "predicted mean total 3.264 vs actual 3.438 (-0.174/match). A leak-free multiplicative correction was tested and REJECTED: it fixes the mean but overshoots over2.5 (-0.0083) and slightly hurts the 3-way.",
+  "passed": {
+    "replay": "v5 artifacts replay the calibration and legacy v4 artifacts still replay their frozen win% prior exactly \u2014 historical locks reproduce byte-for-byte",
+    "money_lock": "code-level: approved_for_real_money never set anywhere; NO order-placement path exists; paper.py makes zero HTTP calls",
+    "security": "all 3 admin endpoints reject no-token and bad-token with 403; storage endpoint leaks no secrets",
+    "paper_fees": "Kalshi fee formula exact to the centicent across 2000 fuzzed orders + edge cases (P=0,1; C=0,negative)",
+    "datetimes": "no unnormalised datetime comparisons in live code; no implausible kickoffs",
+    "probability_invariants": "3-way sums to 1; margin nesting, totals monotonicity, team-total monotonicity, first-goal partition all hold across 16 fixtures",
+    "silent_handlers": "82 inventoried; the 6 live-plane write-path handlers all report upward (the one that did not caused the Jul 25 DiskFull incident and was fixed)"
+  },
+  "tests": "472 backend + 6 e2e green"
+}

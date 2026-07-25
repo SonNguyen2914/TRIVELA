@@ -334,7 +334,11 @@ def engine_signature() -> dict:
     from src.models.xg_model import SET_PIECE_BASELINE
     constants = {
         "set_piece_baseline": SET_PIECE_BASELINE,
-        "goal_dispersion_cv": config.GOAL_DISPERSION_CV,
+        # the dispersion THIS model actually simulates under — MLS uses its
+        # own measured value, not the WC26 default. Recording the wrong one
+        # would both mis-fingerprint the engine and make replay_from_artifact
+        # (which reads this key) reconstruct a different simulator.
+        "goal_dispersion_cv": config.MLS_GOAL_DISPERSION_CV,
         "red_card_own_mult": RED_CARD_OWN_MULT,
         "red_card_opp_mult": RED_CARD_OPP_MULT,
         "red_card_risk_default": 0.06,
@@ -463,7 +467,8 @@ def replay_from_artifact(document: dict,
 
     sim = MatchSimulator(
         n_simulations=n_sims or sim_cfg.get("draws"),
-        seed=sim_cfg.get("seed"))
+        seed=sim_cfg.get("seed"),
+        dispersion_cv=eng.get("goal_dispersion_cv"))
     out = sim.simulate(raw(tr["home"], "home"),
                        raw(tr["away"], "away"), stage="group")
     # reproduce the PUBLISHED 3-way from whatever post-processing the
@@ -487,7 +492,8 @@ def predict_fixture(fixture, model: dict, run_type: str = "scheduled",
         return None
     from src.models.simulator import MatchSimulator
     sim = MatchSimulator(n_simulations=n_sims,
-                         seed=seed_for(fixture, run_type))
+                         seed=seed_for(fixture, run_type),
+                         dispersion_cv=config.MLS_GOAL_DISPERSION_CV)
     out = sim.simulate(home, away, stage="group")
     # CALIBRATE the 3-way (never the props/scorelines): the simulation is
     # overconfident, so shrink it toward uniform by the measured weight

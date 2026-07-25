@@ -97,6 +97,17 @@ MLS_CALIBRATION_ALPHA = float(os.getenv("MLS_CALIBRATION_ALPHA", "0.25"))
 # keeps the payload human-inspectable without unbounded growth.
 OBSERVATION_PAYLOAD_MAX_BYTES = int(
     os.getenv("OBSERVATION_PAYLOAD_MAX_BYTES", "8192"))
+
+# MLS goal-rate dispersion, SEPARATE from the WC26 GOAL_DISPERSION_CV
+# below. Dispersion widens the per-match goal spread, which inflates
+# P(0 goals) for each side and therefore suppresses BTTS and the overs.
+# Inheriting WC26's 0.30 made the MLS props materially wrong (audit
+# Jul 25: BTTS predicted 57.3% vs 66.0% actual; overs 4pp under). Swept
+# on the 162-match walk-forward with the real simulator — prop log-loss
+# improves MONOTONICALLY as dispersion falls (cv 0.3 -> 0.0 = +0.0277
+# total, ~2x the entire xG gain) and the 3-way improves slightly too.
+# WC26 keeps its own value: the archive must replay bit-for-bit.
+MLS_GOAL_DISPERSION_CV = float(os.getenv("MLS_GOAL_DISPERSION_CV", "0.0"))
 # deprecated alias — the old name, kept so an existing env override is not
 # silently ignored. Remove once no deploy sets it.
 MLS_WIN_BLEND_ALPHA = float(os.getenv("MLS_WIN_BLEND_ALPHA", "0.0"))

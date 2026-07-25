@@ -1719,6 +1719,32 @@ class TestMlsStatsIngestion:
         same = model_mls.fit(rows, as_of, xg_by_fixture=xg, xg_alpha=0.0)
         assert goals["ratings"] == same["ratings"]
 
+    def test_mls_dispersion_is_separate_from_wc26(self):
+        """GOAL_DISPERSION_CV=0.30 is WC26's. Inheriting it for MLS
+        suppressed BTTS/overs (audit Jul 25: BTTS 57.3% predicted vs 66.0%
+        actual) because widening the goal spread inflates P(0 goals) per
+        side. MLS carries its own measured value; WC26's must not move,
+        and the engine signature must record the one actually used."""
+        import config as _cfg
+        from src.models.simulator import MatchSimulator
+        # per-league override is respected, WC26 default untouched
+        assert MatchSimulator(dispersion_cv=None).dispersion_cv is None
+        assert MatchSimulator(dispersion_cv=0.0).dispersion_cv == 0.0
+        # dispersion demonstrably suppresses BTTS (the mechanism)
+        raw = {"attack": 1.0, "defence": 1.0, "form": 0.5, "fatigue": 0.0,
+               "set_piece_threat": 1.0, "red_card_risk": 0.0, "elo": 1500.0,
+               "league_base": 1.7, "venue_mult": 1.0}
+        wide = MatchSimulator(n_simulations=20000, seed=5,
+                              dispersion_cv=0.30).simulate(raw, raw)
+        flat = MatchSimulator(n_simulations=20000, seed=5,
+                              dispersion_cv=0.0).simulate(raw, raw)
+        assert flat["props"]["btts"] > wide["props"]["btts"]
+        # the signature records the MLS value, so replay rebuilds the
+        # SAME simulator (a WC26 value here would silently diverge)
+        sig = model_mls.engine_signature()
+        assert sig["constants"]["goal_dispersion_cv"] == \
+            _cfg.MLS_GOAL_DISPERSION_CV
+
     def test_calibration_shrinks_toward_uniform_not_win_rates(self):
         """The 3-way calibration replaced the old win% blend. The Jul 24
         audit showed that term carried no team information — a flat anchor
