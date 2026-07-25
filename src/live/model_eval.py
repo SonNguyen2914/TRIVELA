@@ -51,11 +51,15 @@ LADDER = {
            "desc": "team ratings, equal-weighted, minimal pooling"},
     "M2": {"use_ratings": True, "recency": True, "shrink": 24.0,
            "desc": "+ recency + partial pooling (mls-2026-v0)"},
-    "M2W": {"use_ratings": True, "recency": True, "shrink": 24.0,
-            "win_blend": True,
-            "desc": "+ win% (results) blend into the 3-way"},
+    # M2C replaced the old "M2W" win%-blend rung: the Jul 24 audit showed
+    # that term carried no team information (a flat anchor beat the real
+    # win/draw/loss prior at the same weight), so what it actually did —
+    # correcting overconfidence — is now named and measured as such.
+    "M2C": {"use_ratings": True, "recency": True, "shrink": 24.0,
+            "calibrate": True,
+            "desc": "+ calibration (shrink the 3-way toward uniform)"},
     "M3": {"use_ratings": True, "recency": True, "shrink": 24.0,
-           "win_blend": True, "xg_from_config": True,
+           "calibrate": True, "xg_from_config": True,
            "desc": "+ provider xG attack/defence ratings (own lighter "
                    "shrink — xG is far less noisy than goals)"},
 }
@@ -181,7 +185,7 @@ def fit_variant(fixtures, as_of, cfg: dict,
             "venue_away": (tot_away / tot_w) / league,
             "ratings": ratings, "results": results,
             "use_ratings": cfg["use_ratings"],
-            "win_blend": cfg.get("win_blend", False)}
+            "calibrate": cfg.get("calibrate", False)}
 
 
 def predict_variant(model: dict, fixture) -> dict | None:
@@ -200,12 +204,10 @@ def predict_variant(model: dict, fixture) -> dict | None:
         lam_h = model["league"] * lh_v
         lam_a = model["league"] * la_v
     three = analytic_3way(lam_h, lam_a)
-    if model.get("win_blend"):
+    if model.get("calibrate"):
         import config
-        from src.live.model_mls import blend_with_results, results_prior
-        prior = results_prior(model, fixture.home_team_id,
-                              fixture.away_team_id)
-        three = blend_with_results(three, prior, config.MLS_WIN_BLEND_ALPHA)
+        from src.live.model_mls import calibrate
+        three = calibrate(three, config.MLS_CALIBRATION_ALPHA)
     return three
 
 
@@ -284,8 +286,8 @@ def evaluate_ladder(n_boot: int = 1000, seed: int = 12345) -> dict:
     # match-cluster bootstrap: resample fixtures with replacement
     rng = np.random.default_rng(seed)
     pairs = [("M2", "M0"), ("M2", "M1"), ("M1", "M0"),
-             ("M2W", "M2"), ("M2W", "M0"),
-             ("M3", "M2W"), ("M3", "M0")]
+             ("M2C", "M2"), ("M2C", "M0"),
+             ("M3", "M2C"), ("M3", "M0")]
     boot = {f"{a}_vs_{b}": [] for a, b in pairs}
     for _ in range(n_boot):
         idx = rng.integers(0, n, n)
@@ -316,20 +318,20 @@ def evaluate_ladder(n_boot: int = 1000, seed: int = 12345) -> dict:
 
 def deployed_variant() -> str:
     """The ladder rung that matches the DEPLOYED model: M3 when xG ratings
-    are on, else M2W when the win% blend is on, else M2. The approval
+    are on, else M2C when calibration is on, else M2. The approval
     decision evaluates THIS variant so the persisted edge reflects what
     actually ships."""
     import config
     if config.MLS_XG_RATING_ALPHA > 0:
         return "M3"
-    return "M2W" if config.MLS_WIN_BLEND_ALPHA > 0 else "M2"
+    return "M2C" if config.MLS_CALIBRATION_ALPHA > 0 else "M2"
 
 
 def approval_record(report: dict, corpus_version: str | None = None) -> dict:
     """The model-approval decision record (V8.1 eval Phase 6). Shadow
     approval means 'safe to collect prospective evidence', explicitly
     NOT 'edge established' — and this record never grants a higher mode.
-    Evaluates the DEPLOYED variant (M2W when the win% blend is on)."""
+    Evaluates the DEPLOYED variant (M3 when xG ratings are on)."""
     dv = deployed_variant()
     m2 = (report.get("variants") or {}).get(dv, {})
     e = (report.get("edges") or {}).get(f"{dv}_vs_M0", {})

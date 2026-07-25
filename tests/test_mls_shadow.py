@@ -733,7 +733,7 @@ class TestSlateReport:
         cap = past - timedelta(minutes=8)
         live_session.add_all([
             ModelInputArtifact(
-                id=1, schema_version="model-input-v4", content_hash="h",
+                id=1, schema_version="model-input-v5", content_hash="h",
                 document_json=_json.dumps(
                     {"engine": {"signature_hash": _current_engine_sig()}})),
             MarketSnapshot(id=1, fixture_id=3, captured_at=cap,
@@ -800,7 +800,7 @@ class TestSlateReport:
                     current_kickoff_utc=base + timedelta(minutes=5),
                     status="pre"),
             ModelInputArtifact(
-                id=1, schema_version="model-input-v4", content_hash="h",
+                id=1, schema_version="model-input-v5", content_hash="h",
                 document_json=_json.dumps(
                     {"engine": {"signature_hash": _current_engine_sig()}})),
             MarketSnapshot(id=2, fixture_id=7,
@@ -897,8 +897,8 @@ class TestModelLadderEval:
         live_session.commit()
         rep = model_eval.evaluate_ladder(n_boot=300)
         assert rep["n_scored"] > 10
-        assert set(rep["variants"]) == {"M0", "M1", "M2", "M2W", "M3"}
-        for name in ("M0", "M1", "M2", "M2W", "M3"):
+        assert set(rep["variants"]) == {"M0", "M1", "M2", "M2C", "M3"}
+        for name in ("M0", "M1", "M2", "M2C", "M3"):
             assert 0 < rep["variants"][name]["log_loss"] < 5
         edge = rep["edges"]["M2_vs_M0"]
         assert "ci95" in edge and len(edge["ci95"]) == 2
@@ -906,15 +906,15 @@ class TestModelLadderEval:
         # M2 (ratings+recency) should not lose to M0 (no team info) here
         assert rep["variants"]["M2"]["log_loss"] <= \
             rep["variants"]["M0"]["log_loss"] + 0.02
-        # the win% blend is scored with its own CI vs M2
-        assert "ci95" in rep["edges"]["M2W_vs_M2"]
+        # calibration is scored with its own CI vs M2
+        assert "ci95" in rep["edges"]["M2C_vs_M2"]
         # the xG rung is scored with its own CI vs the deployed win% model;
-        # with no ingested xG it degrades gracefully to M2W (edge ~ 0)
-        assert "ci95" in rep["edges"]["M3_vs_M2W"]
+        # with no ingested xG it degrades gracefully to M2C (edge ~ 0)
+        assert "ci95" in rep["edges"]["M3_vs_M2C"]
 
     def test_approval_record_never_exceeds_shadow(self, live_session):
         from src.live import model_eval
-        dv = model_eval.deployed_variant()   # M2W when win-blend is on
+        dv = model_eval.deployed_variant()   # M3 when xG ratings are on
         rec = model_eval.approval_record(
             {"eval_version": "x", "n_scored": 5,
              "variants": {dv: {"log_loss": 1.0, "brier": 0.6}},
@@ -1409,7 +1409,7 @@ class TestPredictionRuns:
         assert art.content_hash == run.input_snapshot_hash
         import json
         doc = json.loads(art.document_json)
-        assert doc["schema_version"] == "model-input-v4"
+        assert doc["schema_version"] == "model-input-v5"
         assert doc["team_ratings"]["home"] and doc["team_ratings"]["away"]
         assert doc["simulation"]["seed"] == run.simulation_seed
         assert len(doc["source_fixtures"]) >= 5
@@ -1451,7 +1451,7 @@ class TestPredictionRuns:
         assert rep["max_delta"] < 1e-6
         # V9 pre-slate: the engine signature is surfaced and matches (same
         # process), and the artifact schema is v2
-        assert rep["artifact_schema"] == "model-input-v4"
+        assert rep["artifact_schema"] == "model-input-v5"
         assert rep["stored_engine_signature_hash"]
         assert (rep["stored_engine_signature_hash"]
                 == rep["current_engine_signature_hash"])
@@ -1718,6 +1718,26 @@ class TestMlsStatsIngestion:
         goals = model_mls.fit(rows, as_of)
         same = model_mls.fit(rows, as_of, xg_by_fixture=xg, xg_alpha=0.0)
         assert goals["ratings"] == same["ratings"]
+
+    def test_calibration_shrinks_toward_uniform_not_win_rates(self):
+        """The 3-way calibration replaced the old win% blend. The Jul 24
+        audit showed that term carried no team information — a flat anchor
+        beat the real win/draw/loss prior at the same weight — so what it
+        actually did (correcting overconfidence) is now explicit."""
+        from src.live.model_mls import UNIFORM_3WAY, calibrate
+        sharp = {"home_win": 0.70, "draw": 0.20, "away_win": 0.10}
+        out = calibrate(sharp, 0.25)
+        assert abs(sum(out.values()) - 1.0) < 1e-9
+        # every outcome moves toward 1/3, and the order is preserved
+        assert sharp["home_win"] > out["home_win"] > UNIFORM_3WAY["home_win"]
+        assert sharp["away_win"] < out["away_win"] < UNIFORM_3WAY["away_win"]
+        assert out["home_win"] > out["draw"] > out["away_win"]
+        # exact arithmetic: (1-a)*p + a/3
+        assert abs(out["home_win"] - (0.75 * 0.70 + 0.25 / 3)) < 1e-9
+        # alpha=0 is a no-op; alpha=1 is fully uniform
+        assert calibrate(sharp, 0.0) == sharp
+        full = calibrate(sharp, 1.0)
+        assert all(abs(v - 1 / 3) < 1e-9 for v in full.values())
 
     def test_xg_uses_its_own_lighter_shrink_than_goals(self, live_session,
                                                        monkeypatch):

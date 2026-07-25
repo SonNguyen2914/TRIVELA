@@ -72,11 +72,23 @@ KNOCKOUT_DAMPING = float(os.getenv("KNOCKOUT_DAMPING", "0.85"))
 # actionable. Set to 0 to recover pure Poisson.
 GOAL_DISPERSION_CV = float(os.getenv("GOAL_DISPERSION_CV", "0.30"))
 
-# MLS win% (results) blend: fraction of the 3-way that comes from the
-# teams' recency-weighted win/draw/loss rates rather than the goals
-# simulation (0 = pure goals model). Tuned on the walk-forward ladder
-# (M2 vs M2W); deploy the weight that measurably helps.
-MLS_WIN_BLEND_ALPHA = float(os.getenv("MLS_WIN_BLEND_ALPHA", "0.30"))
+# MLS 3-way CALIBRATION: fraction of the final 3-way that is the uniform
+# (1/3, 1/3, 1/3) anchor rather than the simulation. The model is
+# measurably overconfident — its raw probabilities are too extreme — and
+# shrinking them toward uniform corrects that.
+#
+# This REPLACED a "win% blend" that pulled toward the teams' win/draw/loss
+# rates. The Jul 24 audit showed that term carried NO team information: a
+# flat anchor at the same weight scored strictly better (1.0445 vs 1.0469),
+# i.e. its whole benefit was damping, and the benefit did not survive
+# fitting the weight walk-forward. Calling it calibration is what it is.
+#
+# The optimum is flat across 0.15-0.35 (1.0443-1.0454); 0.25 is its centre,
+# so the exact value is not a knife-edge choice.
+MLS_CALIBRATION_ALPHA = float(os.getenv("MLS_CALIBRATION_ALPHA", "0.25"))
+# deprecated alias — the old name, kept so an existing env override is not
+# silently ignored. Remove once no deploy sets it.
+MLS_WIN_BLEND_ALPHA = float(os.getenv("MLS_WIN_BLEND_ALPHA", "0.0"))
 
 # MLS xG-based ratings: fraction of each team's attack/defence rating that
 # comes from the provider's per-match expected goals (Sportec xG) rather
