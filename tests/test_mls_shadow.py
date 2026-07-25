@@ -1713,7 +1713,24 @@ class TestPredictionRuns:
         runs.scheduled_runs()
         out = str(tmp_path / "corpus-v1")
         manifest = corpus.export_corpus(out, "mls-shadow-2026-test")
-        assert manifest["schema_version"] == "corpus-v1"
+        assert manifest["schema_version"] == "corpus-v2"
+        # V9.3 eval F10: the corpus must carry the RESEARCH plane too, or
+        # it can replay a final run while the model-development result
+        # (ladder, sweeps, approval) stays unreproducible
+        for section in ("model_approval_decisions.json",
+                        "registry_discovery.json",
+                        "mls_team_match_stats.json",
+                        "mls_player_match_stats.json",
+                        "model_parameters.json"):
+            assert section in manifest["files"], section
+        import json as _pj
+        import os as _po
+        with open(_po.path.join(out, "model_parameters.json")) as fh:
+            mp = _pj.load(fh)
+        assert "xg_shrink_games" in mp["parameters"]
+        assert "calibration_alpha" in mp["parameters"]
+        # and it must STATE how those parameters were selected
+        assert "model-selection" in mp["selection_protocol"]["limitation"]
         assert manifest["counts"]["prediction_runs"] >= 1
         assert manifest["counts"]["input_artifacts"] >= 1
 
@@ -2443,6 +2460,34 @@ class TestV93ExecutionFidelity:
                                 min_size=10, max_spread_c=8,
                                 max_quote_age_s=600,
                                 model_approved=True) == "INSUFFICIENT_SIZE"
+
+    def test_f7_approval_records_what_it_approved(self, live_session,
+                                                  monkeypatch):
+        """An approval that does not say WHAT it approved, on WHICH data,
+        cannot be audited later. The decision hash must cover the exact
+        selected parameters, the data cutoff and the bound corpus — not
+        just the headline numbers."""
+        from src.live import model_eval as me
+        self._seed_playable(live_session)
+        monkeypatch.setattr(config, "MLS_XG_RATING_ALPHA", 0.0)
+        res = me.ensure_approval_decision(n_boot=60, force=True)
+        assert res.get("decision_id")
+        from src.live.models import ModelApprovalDecision
+        row = (live_session.query(ModelApprovalDecision)
+               .order_by(ModelApprovalDecision.id.desc()).first())
+        import json as _pj
+        doc = _pj.loads(row.decision_document)
+        assert "model_parameters" in doc and "data_cutoff" in doc
+        assert "corpus_manifest_hash" in doc      # null until published
+        params = doc["model_parameters"]["parameters"]
+        assert "xg_shrink_games" in params
+        assert "calibration_alpha" in params
+        # the hash must actually COVER them: change a parameter, get a
+        # different decision hash
+        import copy
+        other = copy.deepcopy(doc)
+        other["model_parameters"]["parameters"]["xg_shrink_games"] = 99.0
+        assert me._decision_content_hash(other) != row.content_hash
 
     def test_f5_audit_linkage_is_not_vacuous(self, live_session):
         """A canonical lock with ZERO market-linked contracts used to pass

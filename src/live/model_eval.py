@@ -474,6 +474,32 @@ def shadow_approval_policy(report: dict) -> tuple[bool, str]:
                   "prospective evidence, NOT an established edge")
 
 
+def _data_cutoff() -> str | None:
+    """The kickoff of the most recent fixture that could inform this
+    approval — the data boundary the decision was computed on."""
+    from src.live.model_mls import _completed
+    s = get_session()
+    try:
+        rows = _completed(s)
+        return _utc(rows[-1].current_kickoff_utc).isoformat() if rows else None
+    finally:
+        s.close()
+
+
+def _published_corpus_hash(version: str | None) -> str | None:
+    """The manifest hash of the PUBLISHED corpus this approval is bound
+    to, or None when no corpus has been published yet (V9.3 eval F7)."""
+    if not version:
+        return None
+    from src.live.models import CorpusExport
+    s = get_session()
+    try:
+        row = s.query(CorpusExport).filter_by(version=version).first()
+        return row.manifest_hash if row else None
+    finally:
+        s.close()
+
+
 def _decision_canonical(rec: dict) -> str:
     """The canonical bytes a decision's content_hash covers (V9.1 eval F4).
     Excludes wall-clock fields so an unchanged evaluation dedupes to one
@@ -483,7 +509,11 @@ def _decision_canonical(rec: dict) -> str:
     core = {k: rec.get(k) for k in (
         "model_version", "eval_version", "policy_version", "corpus_version",
         "approved_mode", "approved", "metrics", "edge_vs_baseline",
-        "decision_reason", "engine_signature")}
+        "decision_reason", "engine_signature",
+        # V9.3 eval F7 — the decision hash now covers WHAT was approved
+        # (exact parameters), on WHICH data (cutoff) and against which
+        # published corpus, not merely the headline numbers
+        "model_parameters", "data_cutoff", "corpus_manifest_hash")}
     return _canonical(core)
 
 
@@ -544,6 +574,14 @@ def ensure_approval_decision(corpus_version: str | None = None,
     rec["decision_reason"] = reason
     rec["engine_signature"] = current_engine   # pins the decision to the
     #                                            exact deployed model (V9.2)
+    # V9.3 eval F7: an approval must say WHAT it approved and on what
+    # data. Record the exact selected parameters, the engine, the data
+    # cutoff, and the published corpus it is bound to (null until one is
+    # published — which is itself disclosed rather than hidden).
+    from src.live import corpus as _corpus
+    rec["model_parameters"] = _corpus._model_parameters()
+    rec["data_cutoff"] = _data_cutoff()
+    rec["corpus_manifest_hash"] = _published_corpus_hash(corpus_version)
     canonical = _decision_canonical(rec)
     chash = hashlib.sha256(canonical.encode()).hexdigest()
 
