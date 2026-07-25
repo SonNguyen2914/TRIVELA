@@ -3,6 +3,7 @@ runs (launch decision O4-O8). All canned — no network anywhere."""
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from types import SimpleNamespace
 
 import pytest
@@ -807,9 +808,31 @@ class TestSlateReport:
             simulation_seed=1,
             input_quality_json=_json.dumps({"TEAM_DATA_FRESH": True})))
         live_session.flush()
-        for k, p in (("home_win", 0.5), ("draw", 0.2), ("away_win", 0.3)):
+        # a PASS lock must be market-provenance-complete: all three game
+        # legs mapped to a contract AND a frozen quote (V9.3 eval F5)
+        from src.live.models import (MarketContract, MarketEvent,
+                                     MarketQuote)
+        ev3 = MarketEvent(competition_slug="mls-2026",
+                          kalshi_event_ticker="KXMLSGAME-SLATEPASS",
+                          series="KXMLSGAME", fixture_id=3,
+                          mapping_approved=True)
+        live_session.add(ev3)
+        live_session.flush()
+        for k, p, ask in (("home_win", 0.5, 45), ("draw", 0.2, 26),
+                          ("away_win", 0.3, 34)):
+            mc = MarketContract(market_event_id=ev3.id,
+                                ticker=f"KXMLSGAME-SLATEPASS-{k}",
+                                outcome_key=k)
+            live_session.add(mc)
+            live_session.flush()
+            q = MarketQuote(market_contract_id=mc.id, market_snapshot_id=1,
+                            captured_at=cap, yes_ask_c=ask,
+                            yes_bid_c=ask - 1, yes_ask_size=500)
+            live_session.add(q)
+            live_session.flush()
             live_session.add(PredictionContract(
-                prediction_run_id="lk3", outcome_key=k, raw_probability=p))
+                prediction_run_id="lk3", outcome_key=k, raw_probability=p,
+                market_contract_id=mc.id, market_quote_id=q.id))
         live_session.commit()
 
         rep = slate.slate_report(et)
@@ -875,9 +898,31 @@ class TestSlateReport:
             lineup_snapshot_id=1, simulation_seed=1,
             input_quality_json=_json.dumps({"TEAM_DATA_FRESH": True})))
         live_session.flush()
-        for k, p in (("home_win", 0.5), ("draw", 0.2), ("away_win", 0.3)):
+        # market-linked so the ONLY reason this row is not PASS is the
+        # execution-readiness flag under test (V9.3 eval F5 made market
+        # linkage a hard lock requirement)
+        from src.live.models import (MarketContract, MarketEvent,
+                                     MarketQuote)
+        ev7 = MarketEvent(competition_slug="mls-2026",
+                          kalshi_event_ticker="KXMLSGAME-ENR",
+                          series="KXMLSGAME", fixture_id=7,
+                          mapping_approved=True)
+        live_session.add(ev7)
+        live_session.flush()
+        for k, p, ask in (("home_win", 0.5, 45), ("draw", 0.2, 26),
+                          ("away_win", 0.3, 34)):
+            mc = MarketContract(market_event_id=ev7.id,
+                                ticker=f"KXMLSGAME-ENR-{k}", outcome_key=k)
+            live_session.add(mc)
+            live_session.flush()
+            q = MarketQuote(market_contract_id=mc.id, market_snapshot_id=2,
+                            captured_at=datetime.now(UTC), yes_ask_c=ask,
+                            yes_bid_c=ask - 1, yes_ask_size=500)
+            live_session.add(q)
+            live_session.flush()
             live_session.add(PredictionContract(
-                prediction_run_id="lk7", outcome_key=k, raw_probability=p))
+                prediction_run_id="lk7", outcome_key=k, raw_probability=p,
+                market_contract_id=mc.id, market_quote_id=q.id))
         live_session.commit()
         rep = slate.slate_report("20260816")
         row = next(r for r in rep["rows"] if r["espn_event_id"] == "enr")
@@ -1254,14 +1299,49 @@ class TestPredictionRuns:
         assert runs.latest_odds() == []          # writing != complete
         assert runs.model_for_event("9001") is None
 
-    def _fake_snapshot(self, s, fixture_id):
-        from src.live.models import MarketSnapshot
+    def _fake_snapshot(self, s, fixture_id, link_market=True):
+        """A lock-grade snapshot. By default it carries the three GAME
+        legs mapped to market contracts with FROZEN quotes, because a
+        canonical lock now requires exactly that (V9.3 eval F5) — a lock
+        with no market links is not market-provenance-complete and is
+        refused at completion. Pass link_market=False to build the
+        unlinked shape the evaluator used to prove the old vacuous pass."""
+        from src.live.models import (MarketContract, MarketEvent,
+                                     MarketQuote, MarketSnapshot)
         snap = MarketSnapshot(fixture_id=fixture_id,
                               captured_at=datetime.now(UTC),
-                              status="complete", quotes_written=3)
+                              status="complete", quotes_written=3,
+                              execution_ready=True,
+                              required_families_complete=True,
+                              policy_version="mls-lock-v2")
         s.add(snap)
+        s.flush()
+        qbt = {}
+        if link_market:
+            ev = MarketEvent(competition_slug="mls-2026",
+                             kalshi_event_ticker="KXMLSGAME-TESTLOCK",
+                             series="KXMLSGAME", fixture_id=fixture_id,
+                             mapping_approved=True, mapped_via="alias")
+            s.add(ev)
+            s.flush()
+            for okey, tail, ask in (("home_win", "H", 45),
+                                    ("draw", "T", 26),
+                                    ("away_win", "A", 34)):
+                mc = MarketContract(market_event_id=ev.id,
+                                    ticker=f"KXMLSGAME-TESTLOCK-{tail}",
+                                    outcome_key=okey)
+                s.add(mc)
+                s.flush()
+                q = MarketQuote(market_contract_id=mc.id,
+                                market_snapshot_id=snap.id,
+                                captured_at=datetime.now(UTC),
+                                yes_ask_c=ask, yes_bid_c=ask - 1,
+                                yes_ask_size=500)
+                s.add(q)
+                s.flush()
+                qbt[mc.ticker] = q.id
         s.commit()
-        return {"snapshot_id": snap.id, "quote_by_ticker": {}}
+        return {"snapshot_id": snap.id, "quote_by_ticker": qbt}
 
     def test_t10_lock_is_canonical_and_single(self, live_session,
                                               monkeypatch):
@@ -2100,3 +2180,176 @@ class TestLineupView:
         from src.live import lineup_view
         v = lineup_view.build({"header": {}, "rosters": []})
         assert v["home"] is None and v["away"] is None
+
+
+class TestV93ExecutionFidelity:
+    """The V9.3 evaluation's five P0 findings, pinned with ITS reproductions.
+
+    Each of these existed in V9.2, was reported, and was still present in
+    V9.3 — they survived because nothing in the suite exercised them."""
+
+    def test_f1_depth_sorts_by_exact_price_not_rounded_cents(self):
+        """0.5300..0.5311 all round to 53c. Sorting on the rounded value
+        left ties in provider order and dropped the true best bid."""
+        from src.live.markets import _depth_levels
+        ob = {"orderbook_fp": {"no_dollars": [
+            ["0.53%02d" % i, "100"] for i in range(12)]}}
+        kept = [r[3] for r in _depth_levels(ob) if r[0] == "no"]
+        assert "0.5311" in kept, "the true best bid must be retained"
+        assert kept[0] == "0.5311"
+        assert "0.5300" not in kept   # the worst tie is the one dropped
+
+    def test_f2_fees_come_from_allocations_not_the_vwap(self):
+        """The general fee is non-linear in price, so one fee at the
+        blended average is not the sum of the per-fill fees."""
+        from decimal import Decimal
+
+        from src.live.paper import (allocation_fees, order_fee_dollars,
+                                    simulate_fill)
+        fill = simulate_fill([(Decimal("0.10"), Decimal(50)),
+                              (Decimal("0.90"), Decimal(50))], 100)
+        assert fill["avg_price"] == Decimal("0.50")
+        total, breakdown = allocation_fees(fill["allocations"])
+        assert total == Decimal("0.6300")                  # correct
+        assert order_fee_dollars(fill["avg_price"], 100) == Decimal("1.7500")
+        assert len(breakdown) == 2 and breakdown[0]["seq"] == 1
+
+    _lock_with_book = TestPaperTrading._lock_with_book
+    _seed_playable = TestPredictionRuns._seed_playable
+    _fake_snapshot = TestPredictionRuns._fake_snapshot
+
+    def test_f3_fill_below_post_fill_edge_is_rejected(self, live_session,
+                                                      monkeypatch):
+        """A fill authorised at the top quote must be re-checked against
+        the economics it ACTUALLY achieved after walking depth."""
+        from src.live import paper
+        from src.live.models import PaperFill, PaperSignal
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        # top ask 0.55 clears the 3% gate; depth forces avg ~0.58, which
+        # does not — the evaluator's exact scenario
+        self._lock_with_book(live_session, ask=55, bid=54, model_p=0.60)
+        from src.live.models import MarketDepthLevel
+        live_session.query(MarketDepthLevel).delete()
+        live_session.add_all([
+            MarketDepthLevel(market_quote_id=1, side="no", price_c=45,
+                             size=40, price_dollars="0.45", size_fp="40"),
+            MarketDepthLevel(market_quote_id=1, side="no", price_c=41,
+                             size=60, price_dollars="0.41", size_fp="60")])
+        live_session.commit()
+        paper.paper_trade_lock("lock")
+        sig = live_session.query(PaperSignal).filter_by(
+            outcome_key="home_win").one()
+        assert sig.decision == "reject"
+        assert sig.reject_reason == "POST_FILL_EDGE_BELOW_THRESHOLD"
+        assert sig.net_edge > paper.EXEC_POLICY["min_net_edge"]   # quoted
+        assert sig.realized_net_edge < paper.EXEC_POLICY["min_net_edge"]
+        assert live_session.query(PaperFill).count() == 0
+
+    def test_f4_no_depth_fill_is_labelled_an_estimate(self, live_session,
+                                                      monkeypatch):
+        """A fill built from the top quote with ZERO captured depth is a
+        top-of-book estimate and must be recorded as such, never mixed
+        into execution-grade metrics."""
+        from src.live import paper
+        from src.live.models import MarketDepthLevel, PaperFill
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        self._lock_with_book(live_session, ask=45, model_p=0.60)
+        live_session.query(MarketDepthLevel).delete()
+        live_session.commit()
+        paper.paper_trade_lock("lock")
+        fill = live_session.query(PaperFill).one()
+        assert fill.execution_class == "top_of_book_estimate"
+        assert fill.levels_consumed == 1
+        # and the depth-backed path is labelled distinctly
+        assert paper.EXEC_POLICY["version"] == "paper-exec-v4"
+
+    def test_f4_depth_backed_fill_is_labelled_bounded_depth(
+            self, live_session, monkeypatch):
+        from src.live import paper
+        from src.live.models import PaperFill
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        self._lock_with_book(live_session, ask=45, model_p=0.60)
+        paper.paper_trade_lock("lock")
+        fill = live_session.query(PaperFill).one()
+        assert fill.execution_class == "bounded_depth"
+        assert fill.allocations_json and fill.fee_policy_version
+
+    def test_f4_estimates_are_excluded_from_headline_pnl(
+            self, live_session, monkeypatch):
+        """Labelling alone is not enough — an estimate fill must not enter
+        the headline ROI, or it silently contaminates the P&L it was
+        excluded from in name only."""
+        from src.live import paper
+        from src.live.models import MarketDepthLevel, PaperFill
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        fx = self._lock_with_book(live_session, ask=45, model_p=0.60)
+        live_session.query(MarketDepthLevel).delete()   # force estimate
+        live_session.commit()
+        paper.paper_trade_lock("lock")
+        fx.status = "post"; fx.home_goals = 2; fx.away_goals = 0
+        live_session.commit()
+        paper.settle_paper()
+        fill = live_session.query(PaperFill).one()
+        assert fill.execution_class == "top_of_book_estimate"
+        summ = paper.paper_summary()
+        # headline excludes it entirely...
+        assert summ["settled_fills"] == 0
+        assert summ["roi_pct"] is None
+        assert summ["settled_pnl_dollars"] == "0"
+        # ...but the evidence is still reported, separately
+        assert summ["estimate_only"]["settled_fills"] == 1
+        assert Decimal(summ["estimate_only"]["settled_pnl_dollars"]) != 0
+
+    def test_f5_audit_linkage_is_not_vacuous(self, live_session):
+        """A canonical lock with ZERO market-linked contracts used to pass
+        the whole audit, because all([]) is True."""
+        from src.live import audit
+        from src.live.models import (MarketSnapshot, ModelVersion,
+                                     PredictionContract, PredictionRun)
+        s = live_session
+        s.add(ModelVersion(id=1, name=model_mls.MODEL_NAME,
+                           approved_for_shadow=True))
+        s.add(Fixture(id=50, competition_slug="mls-2026",
+                      espn_event_id="vac", status="post",
+                      current_kickoff_utc=datetime.now(UTC),
+                      home_goals=1, away_goals=0))
+        s.add(MarketSnapshot(id=50, fixture_id=50,
+                             captured_at=datetime.now(UTC),
+                             status="complete",
+                             required_families_complete=True,
+                             policy_version="mls-lock-v2"))
+        s.flush()
+        s.add(PredictionRun(
+            id="vaclock", fixture_id=50, run_type="t10", status="complete",
+            canonical=True, captured_at=datetime.now(UTC),
+            seconds_before_kickoff=480, market_snapshot_id=50,
+            model_version_id=1, model_approved_at_run=True))
+        s.flush()
+        for k, p in (("home_win", 0.5), ("draw", 0.2), ("away_win", 0.3)):
+            s.add(PredictionContract(prediction_run_id="vaclock",
+                                     outcome_key=k, raw_probability=p))
+        s.commit()
+        rep = audit.lock_audit()
+        lock = next(x for x in rep["locks"]
+                    if x.get("espn_event_id") == "vac")
+        assert lock["all_pass"] is False, "zero market links must NOT pass"
+        assert lock["checks"]["priced_contracts_quote_linked"] is False
+        assert lock["checks"]["three_way_market_linked"] is False
+
+    def test_f5_run_writer_refuses_unlinked_canonical_lock(
+            self, live_session, monkeypatch):
+        """The stronger half of F5: a canonical lock is refused at
+        completion when the three game legs are not market-linked."""
+        monkeypatch.setattr(config, "N_SIMULATIONS", 300)
+        up = self._seed_playable(live_session)
+        up.current_kickoff_utc = datetime.now(UTC) + timedelta(minutes=9)
+        live_session.commit()
+        snap = self._fake_snapshot(live_session, up.id, link_market=False)
+        monkeypatch.setattr(markets, "capture_lock_snapshot",
+                            lambda fixture_id: snap)
+        import src.alerts as alerts
+        monkeypatch.setattr(alerts, "send_alert", lambda *a, **kw: None)
+        import src.live.lineups as lineups_mod
+        monkeypatch.setattr(lineups_mod, "capture_lineup",
+                            lambda fixture_id, **kw: None)
+        assert runs.t10_locks()["locked"] == 0

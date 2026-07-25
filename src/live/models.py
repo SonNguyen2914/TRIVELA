@@ -472,7 +472,12 @@ class PaperSignal(LiveBase):
     # the display cents so paper P&L can be reconciled to the centicent
     ask_dollars = Column(String(16))
     fee_dollars = Column(String(16))
-    net_edge = Column(Float)             # model_p - (ask + fee)
+    net_edge = Column(Float)             # model_p - (ask + fee) AT THE QUOTE
+    # the edge the fill ACTUALLY achieved: model_p - (avg fill + per-contract
+    # fee from the real allocations). V9.3 eval F3 — the quoted edge
+    # authorised the order, but the depth walk can pay a worse average, so
+    # the policy is re-applied to these economics before the fill stands.
+    realized_net_edge = Column(Float)
     decision = Column(String(12))        # fill | reject
     reject_reason = Column(String(48))
     created_at = Column(DateTime(timezone=True))
@@ -506,6 +511,16 @@ class PaperFill(LiveBase):
     fee_dollars = Column(String(16))
     cost_dollars = Column(String(24))
     levels_consumed = Column(Integer)
+    # V9.3 eval F4: a fill built from the top quote because no order-book
+    # depth was captured is a TOP-OF-BOOK ESTIMATE, not a depth-backed
+    # execution. Recorded explicitly so execution-grade metrics can exclude
+    # it instead of silently mixing the two.
+    execution_class = Column(String(24))   # bounded_depth | top_of_book_estimate
+    # the exact per-level allocations the fee was computed from (V9.3 eval
+    # F2): [{"seq","price","qty","fee"}]. The general fee is non-linear in
+    # price, so one fee at the VWAP is not the sum of the per-fill fees.
+    allocations_json = Column(Text)
+    fee_policy_version = Column(String(24))
     latency_ms = Column(Integer)         # recorded assumption
     reason = Column(String(48))          # filled | partial | no_depth
     created_at = Column(DateTime(timezone=True))

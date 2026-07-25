@@ -26,6 +26,7 @@ extension.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import json
 from decimal import ROUND_HALF_UP, ROUND_UP, Decimal
 
 import config
@@ -61,7 +62,9 @@ FEE_POLICY = {
 # The execution policy is versioned so paper results can be tied to the
 # exact rules that produced them.
 EXEC_POLICY = {
-    "version": "paper-exec-v3",          # v3: exact Decimal depth+fees (F1/F2/F3)
+    # v4 (V9.3 eval F1-F4): exact-Decimal depth ordering, per-allocation
+    # fees, post-fill edge re-check, and depth-vs-estimate classification.
+    "version": "paper-exec-v4",
     "fee_policy": FEE_POLICY["version"],
     "depth_policy": "best_10_each_side",  # V9.1 eval F1
     "min_top_size": 10,       # contracts available at the ask to bother
@@ -70,6 +73,10 @@ EXEC_POLICY = {
     "min_net_edge": 0.03,     # model_p - (ask + fee) must clear this
     "target_contracts": 100,  # requested size (depth caps the fill)
     "latency_ms": 250,        # recorded assumption (no movement vs frozen)
+    # a fill with NO captured depth is a top-of-book estimate. False keeps
+    # it as labelled evidence (excluded from execution-grade metrics);
+    # True refuses it outright.
+    "require_depth_for_fill": False,
 }
 
 
@@ -181,20 +188,49 @@ def simulate_fill(ladder: list[tuple[Decimal, Decimal]],
     cost = Decimal(0)
     used = 0
     best = ladder[0][0] if ladder else None
+    # EVERY per-level allocation is retained (V9.3 eval F2). The general
+    # fee is non-linear in price (P x (1-P)), so a single fee at the
+    # weighted-average price is NOT the sum of the per-fill fees — for
+    # 50@0.10 + 50@0.90 that error is $1.75 vs $0.63. The fee engine needs
+    # the actual allocations, so they are returned and persisted.
+    allocations: list[dict] = []
     for price, size in ladder:
         if filled >= requested:
             break
         take = min(size, requested - filled)
+        if take <= 0:
+            continue
         filled += take
         cost += take * price
         used += 1
+        allocations.append({"seq": used, "price": price, "qty": take})
     if filled == 0:
         return {"filled": Decimal(0), "avg_price": None, "best_ask": best,
-                "slippage": None, "levels": 0}
+                "slippage": None, "levels": 0, "allocations": []}
     avg = cost / filled
     return {"filled": filled, "avg_price": avg, "best_ask": best,
             "slippage": (avg - best) if best is not None else None,
-            "levels": used, "notional": cost}
+            "levels": used, "notional": cost, "allocations": allocations}
+
+
+def allocation_fees(allocations: list[dict]) -> tuple[Decimal, list[dict]]:
+    """Total fee charged ACROSS the actual fills, plus the per-allocation
+    breakdown (V9.3 eval F2).
+
+    Each allocation is charged at ITS OWN price under the general taker
+    formula and rounded up to the centicent, then summed — never one fee
+    at the blended average, which the non-linear P x (1-P) term makes
+    wrong. Still an approximation of the venue's full schedule: maker
+    treatment, series overrides, rebates and the balance-rounding fee are
+    NOT modelled (see FEE_POLICY.not_modeled)."""
+    total = Decimal("0")
+    out: list[dict] = []
+    for a in allocations:
+        fee = order_fee_dollars(a["price"], a["qty"])
+        total += fee
+        out.append({"seq": a["seq"], "price": str(a["price"]),
+                    "qty": str(a["qty"]), "fee": str(fee)})
+    return total, out
 
 
 def _market_gate(quote, snap, net_edge, model_approved) -> str | None:
@@ -276,18 +312,42 @@ def paper_trade_lock(run_id: str) -> dict:
                 continue
             depth = s.query(MarketDepthLevel).filter_by(
                 market_quote_id=c.market_quote_id).all()
+            # V9.3 eval F4: a ladder built from the top quote because NO
+            # order-book depth was captured is a top-of-book ESTIMATE, not
+            # a depth-backed execution. Classify it explicitly so
+            # execution-grade metrics can exclude it (or reject outright
+            # when the policy demands depth).
+            exec_class = ("bounded_depth" if depth
+                          else "top_of_book_estimate")
+            if not depth and EXEC_POLICY["require_depth_for_fill"]:
+                sig.decision = "reject"
+                sig.reject_reason = "DEPTH_UNAVAILABLE"
+                continue
             ladder = yes_buy_ladder(quote, depth)
             fill = simulate_fill(ladder, target)
             if fill["filled"] == 0:
                 sig.decision = "reject"
                 sig.reject_reason = "DEPTH_INSUFFICIENT"
                 continue
-            # EXACT economics (V9.1 eval F2/F3): whole-order fee on the
-            # actual filled quantity, exact notional, exact cost
+            # EXACT economics: fees charged on the ACTUAL per-level
+            # allocations (V9.3 eval F2), never one fee at the blended
+            # average — the general fee is non-linear in price.
             avg = fill["avg_price"]
             filled = fill["filled"]
-            fee_total = order_fee_dollars(avg, filled)
+            fee_total, alloc_breakdown = allocation_fees(fill["allocations"])
             cost = fill["notional"] + fee_total
+            # V9.3 eval F3: the quoted edge authorised this order, but the
+            # depth walk may have paid a worse average. Re-apply the policy
+            # to the economics the fill ACTUALLY achieved, and refuse the
+            # fill if it no longer clears the threshold.
+            per_contract_fee = fee_total / filled if filled else Decimal(0)
+            realized_edge = float(Decimal(str(c.raw_probability))
+                                  - (avg + per_contract_fee))
+            sig.realized_net_edge = realized_edge
+            if realized_edge < EXEC_POLICY["min_net_edge"]:
+                sig.decision = "reject"
+                sig.reject_reason = "POST_FILL_EDGE_BELOW_THRESHOLD"
+                continue
             cost_c = _to_cents(cost)
             slip = fill["slippage"]
             # EXPOSURE gates — the central risk authority, after the fill
@@ -310,6 +370,9 @@ def paper_trade_lock(run_id: str) -> dict:
                 fee_c=_to_cents(fee_total), fee_dollars=str(fee_total),
                 cost_c=cost_c, cost_dollars=str(cost),
                 levels_consumed=fill["levels"],
+                execution_class=exec_class,
+                allocations_json=json.dumps(alloc_breakdown),
+                fee_policy_version=FEE_POLICY["version"],
                 latency_ms=EXEC_POLICY["latency_ms"],
                 reason=("partial" if filled < Decimal(str(target))
                         else "filled"),
@@ -386,13 +449,25 @@ def paper_summary() -> dict:
         for r in (s.query(PaperSignal.reject_reason)
                   .filter_by(decision="reject").all()):
             reasons[r[0]] = reasons.get(r[0], 0) + 1
+        # V9.3 eval F4: a fill built from the top quote with no captured
+        # depth is an ESTIMATE, not a depth-backed execution. Headline P&L
+        # is EXECUTION-GRADE ONLY (bounded_depth); estimates are reported
+        # separately so they can never silently inflate or deflate ROI.
+        graded = [f for f in settled
+                  if f.execution_class == "bounded_depth"]
+        estimates = [f for f in settled
+                     if f.execution_class != "bounded_depth"]
         # exact P&L in dollars (V9.1 eval F2/F3), summed as Decimal
-        pnl_d = sum((Decimal(f.pnl_dollars) for f in settled
+        pnl_d = sum((Decimal(f.pnl_dollars) for f in graded
                      if f.pnl_dollars), Decimal(0))
-        cost_d = sum((Decimal(f.cost_dollars) for f in settled
+        cost_d = sum((Decimal(f.cost_dollars) for f in graded
                       if f.cost_dollars), Decimal(0))
-        pnl = sum(f.pnl_c or 0 for f in settled)
-        cost = sum(f.cost_c or 0 for f in settled)
+        pnl = sum(f.pnl_c or 0 for f in graded)
+        cost = sum(f.cost_c or 0 for f in graded)
+        est_pnl_d = sum((Decimal(f.pnl_dollars) for f in estimates
+                         if f.pnl_dollars), Decimal(0))
+        est_cost_d = sum((Decimal(f.cost_dollars) for f in estimates
+                          if f.cost_dollars), Decimal(0))
         return {
             "paper": True, "policy_version": EXEC_POLICY["version"],
             "fee_policy": FEE_POLICY["version"],
@@ -404,7 +479,16 @@ def paper_summary() -> dict:
             "fills": len(fills),
             "rejected": rejects, "reject_reasons": reasons,
             "open_fills": sum(1 for f in fills if f.status == "open"),
-            "settled_fills": len(settled),
+            "settled_fills": len(graded),
+            # excluded from the headline: no captured depth backed them
+            "execution_grade": "bounded_depth",
+            "estimate_only": {
+                "settled_fills": len(estimates),
+                "settled_pnl_dollars": str(est_pnl_d),
+                "settled_cost_dollars": str(est_cost_d),
+                "note": ("top-of-book estimates — no captured depth; "
+                         "EXCLUDED from the headline P&L and ROI"),
+            },
             "settled_cost_c": cost, "settled_pnl_c": pnl,
             "roi_pct": round(100 * pnl / cost, 2) if cost else None,
             "note": ("paper execution against frozen T-10 books — never a "
