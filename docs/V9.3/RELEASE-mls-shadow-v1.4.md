@@ -42,13 +42,18 @@ MIN_GAMES                5
 ## Approved-for-shadow decision (production)
 
 ```text
-decision           182
-edge vs baseline   +0.0332
-CI 95%             [-0.0018, +0.0667]
+decision           184 at cut
+edge vs baseline   +0.0331
+CI 95%             [-0.0032, +0.0664]
 n_scored           162
 mode               shadow
 significant        NO
 ```
+> The decision **recomputes on every deploy**: its engine signature
+> includes the code revision, so a new revision re-evaluates and writes a
+> new immutable row. The id therefore moves, and the bootstrap CI shifts
+> in the third decimal between runs. The point estimate and the verdict
+> (not significant) are what to hold onto — not the id.
 
 **Shadow approval means "safe to collect prospective evidence". It does
 not mean an edge is established.**
@@ -61,7 +66,7 @@ ready              true, no blockers
 migrations_current true
 paper_execution    ready true, new entries allowed
 data coverage      team 238/238 · player 238/238 · bridge 99.4% mins-wt
-storage            377 MB of 5120 MB (7.4%)
+storage            397 MB of 5120 MB (7.8%)
 REAL_MONEY_SIGNALS false  — no order-placement path exists in the codebase
 ```
 

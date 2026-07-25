@@ -46,6 +46,11 @@ replays byte-for-byte from stored bytes alone.
 n = 162. M1 losing to M0 is the standing reminder that more signal can
 hurt: raw ratings without pooling overfit.
 
+> These are one reference run (seed 12345, 2000 bootstrap resamples).
+> Production recomputes the ladder on every deploy, so the CI bounds move
+> in the third decimal and the point estimates by ~0.0001. Live at cut:
+> M3 vs M0 **+0.0331**, CI [−0.0032, +0.0664].
+
 ---
 
 ## Calibration of the 3-way

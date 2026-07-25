@@ -63,7 +63,7 @@ edge         M3 vs baseline +0.0332  CI [−0.0015, +0.0674]  n=162
 data         team 238/238 · player 238/238 · bridge 99.4% minutes-weighted
 tests        477 backend + 6 e2e + 3 page-health
 prod         ready · no blockers · paper_execution_ready true
-storage      377 MB of a 5 GB volume
+storage      ~397 MB of a 5 GB volume (7.8%)
 money        LOCKED — and there is no order-placement code path at all
 ```
 
