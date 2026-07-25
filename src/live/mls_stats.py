@@ -30,6 +30,7 @@ from datetime import datetime, timedelta, timezone
 import requests
 
 from src.live import identity
+import config
 from src.live.db import get_session, plane_ready
 from src.live.models import (Fixture, MlsPlayerMatchStat, MlsTeamMatchStat,
                              SourceObservation)
@@ -81,7 +82,8 @@ def _observe(s, endpoint: str, params: dict, payload) -> int:
         source="mls_stats", endpoint=endpoint,
         params_json=json.dumps(params, sort_keys=True),
         content_hash=hashlib.sha256(raw.encode()).hexdigest(),
-        payload_json=raw[:200_000], observed_at=_now())
+        payload_json=raw[:config.OBSERVATION_PAYLOAD_MAX_BYTES],
+        observed_at=_now())
     s.add(obs)
     s.flush()
     return obs.id

@@ -19,6 +19,7 @@ from datetime import date, datetime, timedelta, timezone
 import requests
 
 from src.live import identity
+import config
 from src.live.db import get_session, plane_ready
 from src.live.models import (Fixture, MarketContract, MarketDepthLevel,
                              MarketEvent, MarketQuote, MarketSnapshot,
@@ -530,7 +531,8 @@ def capture_quotes(fixture_id: int | None = None,
                 source="kalshi",
                 endpoint=f"markets?event={me.kalshi_event_ticker}",
                 content_hash=hashlib.sha256(raw.encode()).hexdigest(),
-                payload_json=raw[:200_000], observed_at=_now())
+                payload_json=raw[:config.OBSERVATION_PAYLOAD_MAX_BYTES],
+                observed_at=_now())
             s.add(obs)
             s.flush()
             for m in ms:
@@ -604,7 +606,8 @@ def capture_lock_snapshot(fixture_id: int) -> dict | None:
                 source="kalshi",
                 endpoint=f"lock:markets?event={me.kalshi_event_ticker}",
                 content_hash=hashlib.sha256(raw.encode()).hexdigest(),
-                payload_json=raw[:200_000], observed_at=now)
+                payload_json=raw[:config.OBSERVATION_PAYLOAD_MAX_BYTES],
+                observed_at=now)
             s.add(obs)
             s.flush()
             for m in ms:

@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 
 import requests
 
+import config
 from src.live.db import get_session, plane_ready
 from src.live import identity
 from src.live.models import Fixture, FixtureChange, SourceObservation
@@ -43,7 +44,8 @@ def _observe(s, endpoint: str, payload: dict) -> int:
     obs = SourceObservation(
         source="espn", endpoint=endpoint,
         content_hash=hashlib.sha256(raw.encode()).hexdigest(),
-        payload_json=raw[:200_000], observed_at=_now())
+        payload_json=raw[:config.OBSERVATION_PAYLOAD_MAX_BYTES],
+        observed_at=_now())
     s.add(obs)
     s.flush()
     return obs.id

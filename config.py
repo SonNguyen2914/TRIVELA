@@ -86,6 +86,17 @@ GOAL_DISPERSION_CV = float(os.getenv("GOAL_DISPERSION_CV", "0.30"))
 # The optimum is flat across 0.15-0.35 (1.0443-1.0454); 0.25 is its centre,
 # so the exact value is not a knife-edge choice.
 MLS_CALIBRATION_ALPHA = float(os.getenv("MLS_CALIBRATION_ALPHA", "0.25"))
+
+# How much of a raw provider response SourceObservation keeps. The
+# content_hash is the evidence anchor — it proves exactly what we
+# received — and NOTHING in the codebase reads payload_json. Storing
+# 200 KB per observation filled the production volume on Jul 25
+# (source_observation reached 160 MB; every prediction write then failed
+# with DiskFull), because the season-schedule ingest writes ~60
+# observations on EVERY boot and the stats ingest 2 per match. An excerpt
+# keeps the payload human-inspectable without unbounded growth.
+OBSERVATION_PAYLOAD_MAX_BYTES = int(
+    os.getenv("OBSERVATION_PAYLOAD_MAX_BYTES", "8192"))
 # deprecated alias — the old name, kept so an existing env override is not
 # silently ignored. Remove once no deploy sets it.
 MLS_WIN_BLEND_ALPHA = float(os.getenv("MLS_WIN_BLEND_ALPHA", "0.0"))
