@@ -611,6 +611,60 @@ class TestPaperTrading:
         assert sig.decision == "reject"
         assert sig.reject_reason == "NOT_EXECUTION_READY"
 
+    def test_settlement_loss_and_draw_and_exact_decimals(
+            self, live_session, monkeypatch):
+        """Saturday runs this for real with zero prior production
+        exercise. The win case was covered; a LOSS (the common case) and
+        a DRAW were not, nor was the exact-Decimal P&L that the ledger
+        reconciles on (audit Jul 25)."""
+        from decimal import Decimal
+
+        from src.live import paper
+        from src.live.models import PaperFill, PaperSignal
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        fx = self._lock_with_book(live_session, ask=45, model_p=0.60)
+        paper.paper_trade_lock("lock")
+        fill = live_session.query(PaperFill).one()
+        sig = live_session.query(PaperSignal).filter_by(
+            outcome_key="home_win", decision="fill").one()
+        assert fill.status == "open"
+        cost = Decimal(fill.cost_dollars)
+        assert cost > 0
+
+        # the bet was home_win; an AWAY win must settle as a total loss
+        fx.status = "post"; fx.home_goals = 0; fx.away_goals = 2
+        live_session.commit()
+        assert paper.settle_paper()["settled"] == 1
+        live_session.refresh(fill)
+        assert fill.outcome_hit is False
+        assert Decimal(fill.payout_dollars) == 0
+        # a loss is exactly minus the cost — in EXACT decimals, and the
+        # display cents must agree with them
+        assert Decimal(fill.pnl_dollars) == -cost
+        assert fill.payout_c == 0
+        assert fill.pnl_c == -fill.cost_c
+        assert fill.settled_at is not None
+        # idempotent: a settled fill is never re-settled
+        assert paper.settle_paper()["settled"] == 0
+
+    def test_settlement_draw_result_only_pays_the_draw_bet(
+            self, live_session, monkeypatch):
+        from decimal import Decimal
+
+        from src.live import paper
+        from src.live.models import PaperFill
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        fx = self._lock_with_book(live_session, ask=45, model_p=0.60)
+        paper.paper_trade_lock("lock")
+        fill = live_session.query(PaperFill).one()
+        # the staked outcome is home_win; a DRAW must not pay it
+        fx.status = "post"; fx.home_goals = 1; fx.away_goals = 1
+        live_session.commit()
+        paper.settle_paper()
+        live_session.refresh(fill)
+        assert fill.outcome_hit is False
+        assert Decimal(fill.pnl_dollars) == -Decimal(fill.cost_dollars)
+
     def test_settlement_pays_hits_and_records_pnl(self, live_session,
                                                   monkeypatch):
         from src.live import paper

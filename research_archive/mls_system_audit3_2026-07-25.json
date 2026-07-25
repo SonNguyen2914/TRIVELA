@@ -1,0 +1,25 @@
+{
+  "title": "MLS system audit #3 \u2014 lock path, settlement, archive plane, concurrency, cross-layer",
+  "generated_at": "2026-07-25T01:41:52.079563+00:00",
+  "CRITICAL_FINDING_lock_freshness": {
+    "issue": "execution_ready required freshness_basis==provider AND age<=600s (V9.1 eval F6). Kalshi publishes NO quote-update timestamp: updated_time tracks the market DEFINITION and measured ~108,880s (~30h) stale on an ACTIVE two-sided market (0.26/0.25, volume ~43k, OI ~39k). Gate was unsatisfiable.",
+    "blast_radius": "execution_ready permanently False -> risk.market_gate rejected EVERY paper signal NOT_EXECUTION_READY -> slate.py classified EVERY fixture EXECUTION_NOT_READY. Saturday would have produced locks and predictions but ZERO paper-trading evidence, looking like correct fail-closed behaviour.",
+    "fix": "lock policy mls-lock-v1 -> mls-lock-v2: freshness measured on OUR capture clock, basis recorded as capture_time, provider timestamp retained per quote for audit. Verified against the REAL Kalshi book: execution_ready False->True, status complete, 62/62 priced. Prod paper_execution_ready now true.",
+    "coverage_gap": "nothing pinned the v1 rule \u2014 475 tests passed with the platform core purpose disabled. 3 regression tests added, 1 fails without the fix."
+  },
+  "lock_path_exercised_for_real": "capture_lock_snapshot run against the LIVE Kalshi book (first time outside mocks): status complete, 11/11 events, contracts_expected 62, quotes_written 62, all priced, 933 depth rows, failure_reason None.",
+  "settlement": {
+    "verified": "win/loss/draw all correct incl. EXACT Decimal P&L (loss = -cost exactly, display cents agree), idempotent",
+    "gap_closed": "only the WIN case was covered before; loss + draw + exact-decimal tests added"
+  },
+  "passed": {
+    "paper_scope": "paper trading enters THREE_WAY contracts only, so the 3-way-only settlement logic is consistent (props never enter)",
+    "wc26_archive_plane": "11/11 backend endpoints healthy; archive_ready true; results 16/16, ledger 84/84, lock bundles 6/6",
+    "concurrency": "APScheduler job_defaults = {coalesce: True, max_instances: 1} \u2014 every job overlap-protected by default, including the ones without explicit kwargs",
+    "session_hygiene": "all 8 flagged get_session() sites close in finally \u2014 no leaks",
+    "cross_layer_fees": "frontend fee 0.07p(1-p) vs backend ceil-to-centicent agree within 0.0075pp (rounding only)",
+    "corpus": "immutability tests pass; no published version yet (expected pre-slate)"
+  },
+  "tests": "477 backend + 6 e2e green",
+  "honest_note": "Rounds 1-3 each found real defects in fully-green code. The recurring shape: a correct implementation of an assumption that was never checked against the provider reality. This is risk reduction, not a bug-free certification."
+}
