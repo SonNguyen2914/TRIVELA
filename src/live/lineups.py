@@ -23,6 +23,7 @@ from datetime import datetime, timezone
 import requests
 
 import config
+from src.live.evidence import pack_payload as _pack
 from src.live.db import get_session, plane_ready
 from src.live.models import (Fixture, LineupEntry, LineupSnapshot, Player,
                              SourceObservation)
@@ -150,9 +151,7 @@ def capture_lineup(fixture_id: int, summary: dict | None = None
         obs = SourceObservation(
             source="espn",
             endpoint=f"summary?event={fx.espn_event_id}#rosters",
-            content_hash=hashlib.sha256(raw.encode()).hexdigest(),
-            payload_json=raw[:config.OBSERVATION_PAYLOAD_MAX_BYTES],
-            observed_at=_now())
+            observed_at=_now(), **_pack(raw))
         s.add(obs)
         s.flush()
         snap = LineupSnapshot(

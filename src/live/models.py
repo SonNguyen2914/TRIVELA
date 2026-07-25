@@ -119,7 +119,17 @@ class SourceObservation(LiveBase):
     endpoint = Column(String(160), nullable=False)
     params_json = Column(Text)
     content_hash = Column(String(64), nullable=False)
+    # a truncated, human-readable PREVIEW only — never the evidence
     payload_json = Column(Text)
+    # the COMPLETE raw body, gzip+base64 (V9.3 eval F11). A content hash
+    # without the bytes cannot be independently verified or replayed
+    # through a corrected parser, which is exactly what the truncated
+    # preview cost us. Compression makes the full body ~29% of raw — i.e.
+    # SMALLER than the 8 KB stub it replaces — so completeness costs no
+    # more volume than the truncation did.
+    payload_compressed = Column(Text)
+    payload_bytes = Column(Integer)            # full, uncompressed length
+    payload_encoding = Column(String(16))      # gzip+base64
     observed_at = Column(DateTime(timezone=True), nullable=False)
     provider_timestamp = Column(DateTime(timezone=True))
 
@@ -432,6 +442,12 @@ class MarketQuote(LiveBase):
     no_ask_dollars = Column(String(16))
     sizes_fp_json = Column(Text)         # exact *_fp size strings, by field
     provider_precision = Column(String(24))
+    # the ACTIVE price grid at capture (V9.3 eval F12). Kalshi can change a
+    # market's price structure during its lifecycle, so a historical reader
+    # needs the grid that was valid when this quote was frozen — otherwise
+    # a subpenny-era price cannot be interpreted against a cent-era book.
+    price_level_structure = Column(String(32))   # e.g. linear_cent
+    price_ranges_json = Column(Text)             # [{start,end,step}, ...]
 
 
 class MarketDepthLevel(LiveBase):

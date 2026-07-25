@@ -22,6 +22,7 @@ import requests
 
 from src.live import identity
 import config
+from src.live.evidence import pack_payload as _pack
 from src.live.db import get_session, plane_ready
 from src.live.models import (Fixture, MarketContract, MarketDepthLevel,
                              MarketEvent, MarketQuote, MarketSnapshot,
@@ -508,6 +509,13 @@ def _quote_row(m: dict, mc_id: int, obs_id: int,
         market_contract_id=mc_id, captured_at=_now(),
         market_snapshot_id=snapshot_id,
         provider_timestamp=_parse_ts(m.get("updated_time")),
+        # the ACTIVE price grid at capture (V9.3 eval F12) — Kalshi can
+        # change a market's price structure mid-lifecycle, so a stored
+        # price is only interpretable against the grid that was valid then
+        price_level_structure=(str(m.get("price_level_structure"))[:32]
+                               if m.get("price_level_structure") else None),
+        price_ranges_json=(json.dumps(m.get("price_ranges"))
+                           if m.get("price_ranges") else None),
         yes_bid_c=_cents(m, "yes_bid"), yes_ask_c=_cents(m, "yes_ask"),
         no_bid_c=_cents(m, "no_bid"), no_ask_c=_cents(m, "no_ask"),
         yes_bid_size=_fp_int(m, "yes_bid_size"),
@@ -573,9 +581,7 @@ def capture_quotes(fixture_id: int | None = None,
             obs = SourceObservation(
                 source="kalshi",
                 endpoint=f"markets?event={me.kalshi_event_ticker}",
-                content_hash=hashlib.sha256(raw.encode()).hexdigest(),
-                payload_json=raw[:config.OBSERVATION_PAYLOAD_MAX_BYTES],
-                observed_at=_now())
+                observed_at=_now(), **_pack(raw))
             s.add(obs)
             s.flush()
             for m in ms:
@@ -648,9 +654,7 @@ def capture_lock_snapshot(fixture_id: int) -> dict | None:
             obs = SourceObservation(
                 source="kalshi",
                 endpoint=f"lock:markets?event={me.kalshi_event_ticker}",
-                content_hash=hashlib.sha256(raw.encode()).hexdigest(),
-                payload_json=raw[:config.OBSERVATION_PAYLOAD_MAX_BYTES],
-                observed_at=now)
+                observed_at=now, **_pack(raw))
             s.add(obs)
             s.flush()
             for m in ms:

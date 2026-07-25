@@ -78,12 +78,11 @@ def _get(path: str, params: dict | None = None,
 
 def _observe(s, endpoint: str, params: dict, payload) -> int:
     raw = json.dumps(payload, sort_keys=True)
+    from src.live.evidence import pack_payload
     obs = SourceObservation(
         source="mls_stats", endpoint=endpoint,
         params_json=json.dumps(params, sort_keys=True),
-        content_hash=hashlib.sha256(raw.encode()).hexdigest(),
-        payload_json=raw[:config.OBSERVATION_PAYLOAD_MAX_BYTES],
-        observed_at=_now())
+        observed_at=_now(), **pack_payload(raw))
     s.add(obs)
     s.flush()
     return obs.id
