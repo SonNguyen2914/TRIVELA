@@ -228,8 +228,9 @@ def mls_admin_storage(request: Request):
             out["database_bytes"] = c.execute(text(
                 "SELECT pg_database_size(current_database())")).scalar()
             rows = c.execute(text(
-                "SELECT relname, pg_total_relation_size(c.oid) AS bytes, "
-                "n_live_tup FROM pg_class c "
+                "SELECT c.relname AS tbl, "
+                "pg_total_relation_size(c.oid) AS bytes, "
+                "COALESCE(s.n_live_tup, 0) AS rows_est FROM pg_class c "
                 "JOIN pg_namespace n ON n.oid = c.relnamespace "
                 "LEFT JOIN pg_stat_user_tables s ON s.relid = c.oid "
                 "WHERE n.nspname='public' AND c.relkind='r' "
