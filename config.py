@@ -316,6 +316,13 @@ LIVE_DATABASE_URL = _normalize_pg_url(os.getenv("LIVE_DATABASE_URL", ""))
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "").strip()
 RATE_LIMIT_SECONDS = float(os.getenv("RATE_LIMIT_SECONDS", "30"))
 
+# Ceiling on an inline public response body (V9.3 eval F20). The corpus
+# PREVIEW is assembled from current state and therefore grows without
+# bound as the database does; published versions are immutable stored
+# bytes and remain the real download path.
+MAX_PUBLIC_BODY_BYTES = int(
+    os.getenv("MAX_PUBLIC_BODY_BYTES", str(8 * 1024 * 1024)))
+
 # --- Two-channel Discord routing + the narrator ---------------------------
 # ACTION channel: terse, act-now pings (signals, tracker flips, goals, T-10).
 # DETAIL channel: the narrator's full live briefs + rich event analyses.

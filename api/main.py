@@ -52,8 +52,20 @@ app.add_middleware(
 _rate_last: dict[str, float] = {}
 
 # Route prefixes whose recomputation is expensive enough to rate-limit
-# even for reads (refresh-all fans out simulations + provider calls).
-_EXPENSIVE_PREFIXES = ("/api/refresh-all",)
+# even for reads (V9.3 eval F20). Each of these can fan out simulations,
+# full-table reads, replay, or provider calls, so an unauthenticated
+# caller could otherwise burn CPU, database and provider quota at will.
+# The mutation surface was already fail-closed; these are the READS.
+# NOTE the limiter buckets per PREFIX, not per path, so only SINGLETON
+# routes belong here. Per-match routes (e.g. /api/research/{id}) must not
+# be listed: one visitor opening two different matches would 429 the
+# second, which is a correctness bug, not protection.
+_EXPENSIVE_PREFIXES = (
+    "/api/refresh-all",
+    "/api/mls/model-eval",     # rolling-origin ladder + bootstrap
+    "/api/mls/corpus",         # full-corpus assembly / download
+    "/api/mls/audit",          # per-lock replay + hash recomputation
+)
 
 
 def _admin_ok(request) -> bool:
@@ -419,6 +431,18 @@ def mls_corpus(version: str | None = Query(None), full: bool = Query(False),
         if preview:
             bundle = live_corpus.build_corpus()
             if full:
+                # V9.3 eval F20: a public read must not return an unbounded
+                # body. The PREVIEW is built from current state and grows
+                # with the database, so it is size-capped; published
+                # versions are served from stored bytes and stay available
+                # for the real download path.
+                import json as _j
+                size = len(_j.dumps(bundle, default=str))
+                if size > config.MAX_PUBLIC_BODY_BYTES:
+                    raise HTTPException(
+                        413, "corpus preview too large to serve inline "
+                             f"({size} bytes > {config.MAX_PUBLIC_BODY_BYTES}); "
+                             "publish a version and download that instead")
                 return bundle
             man = bundle.get("manifest", bundle)
             if isinstance(man, dict):

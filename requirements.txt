@@ -1,14 +1,19 @@
-# Runtime dependencies. Dev/test tools live in requirements-dev.txt
-# (the V7 evaluation flagged test deps shipping as runtime).
-# Exact-version locking (uv.lock / hashed pip-compile) remains on the
-# next-league gate list; these are floors, not pins.
-fastapi>=0.110
-uvicorn[standard]>=0.29
-sqlalchemy>=2.0
-apscheduler>=3.10
-numpy>=1.26
-requests>=2.31
-pydantic>=2.6
-# --- live data plane (MLS shadow; dormant without LIVE_DATABASE_URL) ---
-psycopg[binary]>=3.1
-alembic>=1.13
+# Runtime dependencies — EXACT PINS (V9.3 eval F17).
+#
+# These were floors (>=), so an independent rebuild could resolve a
+# different dependency graph than the one any recorded result was
+# produced under, and the engine signature could not compensate: it
+# fingerprints our source + python/numpy, not the whole graph.
+# Pinned to the versions this release was tested and measured on.
+# Dev/test tools live in requirements-dev.txt.
+#
+# Upgrade deliberately: change a pin, run the suite, re-measure.
+fastapi==0.139.0
+uvicorn[standard]==0.50.2
+sqlalchemy==2.0.51
+apscheduler==3.11.3
+numpy==2.5.1
+requests==2.34.2
+pydantic==2.13.4
+psycopg[binary]==3.3.4
+alembic==1.18.5
