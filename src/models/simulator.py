@@ -44,16 +44,28 @@ SECOND_HALF_GOAL_SHARE = 0.54
 
 
 class MatchSimulator:
-    def __init__(self, n_simulations: int | None = None, seed: int | None = None):
+    def __init__(self, n_simulations: int | None = None, seed: int | None = None,
+                 dispersion_cv: float | None = None):
         self.n = n_simulations or config.N_SIMULATIONS
         self.rng = np.random.default_rng(seed)
+        # PER-LEAGUE dispersion. None = the WC26 default from config, so the
+        # frozen archive replays bit-for-bit; MLS passes its own measured
+        # value (see config.MLS_GOAL_DISPERSION_CV).
+        self.dispersion_cv = dispersion_cv
 
     def _dispersed(self, lam_home, lam_away):
         """Gamma-mix the per-sim goal rates (negative binomial dispersion):
         real performances are streakier than pure Poisson — see
         GOAL_DISPERSION_CV in config for the sourcing. Mean-1 multipliers,
-        so team strength (the mean) is untouched; only the spread widens."""
-        cv = config.GOAL_DISPERSION_CV
+        so team strength (the mean) is untouched; only the spread widens.
+
+        NOTE the shape cost: widening the spread inflates P(0 goals) for
+        EACH side, which suppresses BTTS and the overs. That is right for
+        WC26's sourcing but was measured WRONG for MLS (audit Jul 25 — the
+        deployed props ran 4-10pp under actual), hence the per-league
+        override rather than a global change."""
+        cv = (config.GOAL_DISPERSION_CV if self.dispersion_cv is None
+              else self.dispersion_cv)
         if cv <= 0:
             return lam_home, lam_away
         k = 1.0 / (cv * cv)
