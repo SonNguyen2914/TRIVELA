@@ -427,9 +427,17 @@ def mls_corpus(version: str | None = Query(None), full: bool = Query(False),
     (unpublished) state, explicitly labeled as a non-immutable preview.
     Public read-only — the downloadable evidence base."""
     try:
+        from src.mls import _cached
         from src.live import corpus as live_corpus
         if preview:
-            bundle = live_corpus.build_corpus()
+            # V9.3 eval F20: the preview assembles the WHOLE current state
+            # and measured 46s on production once the research sections
+            # (F10) were added — far too long to hold a worker on a public
+            # route. Cache it so the cost is paid at most once per window
+            # no matter how many callers ask; published versions are served
+            # from stored bytes and are unaffected.
+            bundle = _cached("mls_corpus_preview", 300,
+                             live_corpus.build_corpus)
             if full:
                 # V9.3 eval F20: a public read must not return an unbounded
                 # body. The PREVIEW is built from current state and grows
