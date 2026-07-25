@@ -193,6 +193,8 @@ def scheduled_runs(horizon_hours: float = 168.0,
         return {"skipped": "no model (no completed fixtures ingested)"}
     s = get_session()
     created = skipped = 0
+    failures: list[str] = []
+    no_prediction: list[str] = []
     try:
         mv = approved_model_version(s)
         if mv is None:
@@ -229,10 +231,26 @@ def scheduled_runs(horizon_hours: float = 168.0,
             try:
                 if _write_run(s, f, "scheduled", model, mv):
                     created += 1
+                else:
+                    # _write_run declines (no prediction) rather than
+                    # raising. Reporting it matters: a sweep returning
+                    # created=0 with no errors used to be indistinguishable
+                    # from "nothing to do" (audit Jul 25).
+                    no_prediction.append(str(f.espn_event_id))
             except Exception as exc:
                 s.rollback()
+                failures.append(f"{f.espn_event_id}: {type(exc).__name__}: "
+                                f"{str(exc)[:160]}")
                 print(f"[runs] fixture {f.espn_event_id} failed: {exc}")
-        return {"created": created, "fresh_skipped": skipped}
+        out = {"created": created, "fresh_skipped": skipped}
+        # surface WHY a sweep produced nothing — silent swallowing hid a
+        # prod regeneration failure behind {"created": 0}
+        if no_prediction:
+            out["no_prediction"] = no_prediction[:10]
+        if failures:
+            out["failures"] = failures[:5]
+            out["failure_count"] = len(failures)
+        return out
     except Exception as exc:
         s.rollback()
         print(f"[runs] scheduled failed: {exc}")
