@@ -42,7 +42,10 @@ MIN_GAMES = 5               # a team needs history before it's rated
 # win% (results) signal: shrink w/d/l rates toward a flat prior so
 # small-sample teams aren't over-weighted, and BLEND the results-based
 # 3-way into the simulated 3-way by this weight. alpha is measured on the
-# walk-forward ladder (M2 vs M2W) — deploy the weight that actually helps.
+# NOTE: these win/draw/loss rates NO LONGER affect any probability. The
+# Jul 24 audit showed the blend that consumed them carried no team
+# information; it was replaced by an explicit calibration term. They are
+# kept because they are honest, displayable form data.
 RESULT_SHRINK = 8.0
 # xG ratings get their OWN, much lighter shrinkage. k=24 above was swept
 # for GOALS, which are noisy enough that a season's raw GF/GA must be
@@ -241,6 +244,31 @@ def results_prior(model: dict, home_id: int, away_id: int) -> dict | None:
             "away_win": p_away / tot}
 
 
+UNIFORM_3WAY = {"home_win": 1 / 3, "draw": 1 / 3, "away_win": 1 / 3}
+
+
+def calibrate(outcomes: dict, alpha: float) -> dict:
+    """Shrink the simulated 3-way toward the uniform anchor:
+    final = (1-alpha)*simulated + alpha*(1/3, 1/3, 1/3).
+
+    The model is measurably OVERCONFIDENT — raw probabilities are too
+    extreme — and this corrects it. It replaced a "win% blend" that
+    pulled toward teams' win/draw/loss rates: the Jul 24 audit showed a
+    flat anchor scored strictly better at the same weight (1.0445 vs
+    1.0469), so that term carried no team information and was doing
+    exactly this, under a name that claimed more.
+
+    A no-op at alpha<=0. Never touches props or scorelines — only the
+    3-way, which is what was measured."""
+    if alpha <= 0:
+        return outcomes
+    a = min(alpha, 1.0)
+    blended = {k: (1 - a) * outcomes.get(k, 0.0)
+               + a * UNIFORM_3WAY.get(k, 0.0) for k in outcomes}
+    s = sum(blended.values())
+    return {k: v / s for k, v in blended.items()} if s > 0 else outcomes
+
+
 def blend_with_results(outcomes: dict, prior: dict | None,
                        alpha: float) -> dict:
     """final = (1-alpha)*simulated + alpha*results_prior, renormalized. A
@@ -273,7 +301,7 @@ def seed_for(fixture, run_type: str) -> int:
 # python, numpy) — not just selected constants — so an implementation
 # change changes the signature. v2 froze constants+numpy only (a code
 # change could pass the guard); v1 froze no engine at all.
-INPUT_ARTIFACT_SCHEMA = "model-input-v4"
+INPUT_ARTIFACT_SCHEMA = "model-input-v5"
 _GIT_REV = os.getenv("RAILWAY_GIT_COMMIT_SHA", "")[:40]
 
 
@@ -380,12 +408,12 @@ def build_input_artifact(fixture, model: dict,
             "n_fixtures": model["n_fixtures"],
         },
         "team_ratings": {"home": home_r, "away": away_r},
-        # the win% (results) blend inputs, frozen so replay reproduces the
-        # BLENDED 3-way exactly, not just the pure-goals simulation
-        "win_blend": {
-            "alpha": config.MLS_WIN_BLEND_ALPHA,
-            "prior": results_prior(model, fixture.home_team_id,
-                                   fixture.away_team_id),
+        # the CALIBRATION applied to the 3-way, frozen so a replay
+        # reproduces the published probabilities, not just the raw
+        # simulation (v5 replaced the v4 "win_blend" term)
+        "calibration": {
+            "alpha": config.MLS_CALIBRATION_ALPHA,
+            "anchor": "uniform_3way",
         },
         "simulation": {
             "seed": seed_for(fixture, run_type),
@@ -438,8 +466,13 @@ def replay_from_artifact(document: dict,
         seed=sim_cfg.get("seed"))
     out = sim.simulate(raw(tr["home"], "home"),
                        raw(tr["away"], "away"), stage="group")
-    # reproduce the BLENDED 3-way from the frozen win% inputs (v4+); a
-    # legacy artifact without them replays the pure simulation
+    # reproduce the PUBLISHED 3-way from whatever post-processing the
+    # artifact froze. v5 = calibration toward uniform; v4 = the old win%
+    # blend, replayed from ITS frozen prior so historical locks still
+    # reproduce byte-exactly; v1-v3 = the raw simulation.
+    cal = document.get("calibration")
+    if cal:
+        return calibrate(out["outcomes"], cal.get("alpha", 0.0))
     wb = document.get("win_blend") or {}
     return blend_with_results(out["outcomes"], wb.get("prior"),
                               wb.get("alpha", 0.0))
@@ -456,12 +489,9 @@ def predict_fixture(fixture, model: dict, run_type: str = "scheduled",
     sim = MatchSimulator(n_simulations=n_sims,
                          seed=seed_for(fixture, run_type))
     out = sim.simulate(home, away, stage="group")
-    # blend the WIN% (results) prior into the 3-way (never the props/
-    # scorelines, which stay pure-goals-model) — weight measured on the
-    # walk-forward ladder (M2 vs M2W)
-    prior = results_prior(model, fixture.home_team_id, fixture.away_team_id)
-    outcomes = blend_with_results(out["outcomes"], prior,
-                                  config.MLS_WIN_BLEND_ALPHA)
+    # CALIBRATE the 3-way (never the props/scorelines): the simulation is
+    # overconfident, so shrink it toward uniform by the measured weight
+    outcomes = calibrate(out["outcomes"], config.MLS_CALIBRATION_ALPHA)
     # every probability a listed Kalshi family can consume: the totals
     # ladder, BTTS, margins (their "spread"), first team to score, and
     # team totals — ALL taken from the simulator's full-array marginals
@@ -479,7 +509,7 @@ def predict_fixture(fixture, model: dict, run_type: str = "scheduled",
         "model_version": MODEL_NAME,
         "seed": seed_for(fixture, run_type),
         "outcomes": outcomes,
-        "sim_outcomes": out["outcomes"],   # pre-blend, for transparency
+        "sim_outcomes": out["outcomes"],   # pre-calibration, for transparency
         "props": props,
         "scorelines": out["scorelines"][:12],
         "xg": out["xg"],
