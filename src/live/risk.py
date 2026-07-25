@@ -22,6 +22,8 @@ budget, so the system can't stack the same opinion across families.
 """
 from __future__ import annotations
 
+from decimal import Decimal
+
 from datetime import datetime, timezone
 
 import config
@@ -101,6 +103,33 @@ def _utc(dt):
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
+def _exact_price(quote, field: str) -> Decimal | None:
+    """The exact provider price for a quote field, preferring the
+    fixed-point dollar string and falling back to legacy integer cents."""
+    ds = getattr(quote, f"{field}_dollars", None)
+    if ds:
+        try:
+            return Decimal(ds)
+        except (ArithmeticError, TypeError, ValueError):
+            pass
+    c = getattr(quote, f"{field}_c", None)
+    return (Decimal(c) / 100) if c is not None else None
+
+
+def _exact_size(quote, field: str) -> Decimal:
+    """The exact size, preferring the fractional *_fp string."""
+    import json as _json
+    blob = getattr(quote, "sizes_fp_json", None)
+    if blob:
+        try:
+            v = (_json.loads(blob) or {}).get(field)
+            if v is not None:
+                return Decimal(str(v))
+        except (ArithmeticError, TypeError, ValueError):
+            pass
+    return Decimal(getattr(quote, field, 0) or 0)
+
+
 def market_gate(quote, snapshot, net_edge: float,
                 min_net_edge: float, min_size: int,
                 max_spread_c: int, max_quote_age_s: int,
@@ -113,12 +142,20 @@ def market_gate(quote, snapshot, net_edge: float,
     if snapshot.oldest_quote_age_seconds is not None \
             and snapshot.oldest_quote_age_seconds > max_quote_age_s:
         return "QUOTE_STALE"
-    if quote.yes_ask_c is None:
+    # EXACT economics, not the rounded display cents (V9.3 eval F13). Near
+    # a threshold a subpenny price or fractional size can flip the decision,
+    # and the ledger already stores exact values — the gate must agree with
+    # them. The *_c / integer fields remain only as a fallback for legacy
+    # rows that predate the exact columns.
+    ask_d = _exact_price(quote, "yes_ask")
+    bid_d = _exact_price(quote, "yes_bid")
+    size_d = _exact_size(quote, "yes_ask_size")
+    if ask_d is None:
         return "NO_EXECUTABLE_ASK"
-    if (quote.yes_ask_size or 0) < min_size:
+    if size_d < Decimal(str(min_size)):
         return "INSUFFICIENT_SIZE"
-    if quote.yes_bid_c is not None \
-            and (quote.yes_ask_c - quote.yes_bid_c) > max_spread_c:
+    if bid_d is not None \
+            and (ask_d - bid_d) > (Decimal(str(max_spread_c)) / 100):
         return "SPREAD_TOO_WIDE"
     if net_edge <= min_net_edge:
         return "NET_EDGE_TOO_LOW"

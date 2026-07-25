@@ -1307,7 +1307,16 @@ class TestPredictionRuns:
         refused at completion. Pass link_market=False to build the
         unlinked shape the evaluator used to prove the old vacuous pass."""
         from src.live.models import (MarketContract, MarketEvent,
-                                     MarketQuote, MarketSnapshot)
+                                     MarketQuote, MarketSnapshot,
+                                     RegistryDiscovery)
+        # a canonical lock requires a recent COMPLETE registry sweep, so the
+        # expected market universe is externally established rather than
+        # defined by whatever the local registry happens to hold
+        # (V9.3 eval F6)
+        s.add(RegistryDiscovery(
+            competition_slug="mls-2026", provider="kalshi", complete=True,
+            truncated_series_json="[]", events_seen=11,
+            completed_at=datetime.now(UTC)))
         snap = MarketSnapshot(fixture_id=fixture_id,
                               captured_at=datetime.now(UTC),
                               status="complete", quotes_written=3,
@@ -2347,6 +2356,93 @@ class TestV93ExecutionFidelity:
         q2 = _quote_row({"ticker": "t", "yes_ask": 45}, 1, 1, snapshot_id=1)
         assert q2.price_level_structure is None
         assert q2.price_ranges_json is None
+
+    def test_f6_stale_or_incomplete_registry_blocks_canonical_lock(
+            self, live_session, monkeypatch):
+        """Lock completeness was self-referential: 'everything known
+        LOCALLY was captured', even if discovery itself was truncated. A
+        canonical lock now needs a recent COMPLETE registry sweep."""
+        from src.live.models import RegistryDiscovery
+        monkeypatch.setattr(config, "N_SIMULATIONS", 300)
+        up = self._seed_playable(live_session)
+        up.current_kickoff_utc = datetime.now(UTC) + timedelta(minutes=9)
+        live_session.commit()
+        snap = self._fake_snapshot(live_session, up.id)
+        monkeypatch.setattr(markets, "capture_lock_snapshot",
+                            lambda fixture_id: snap)
+        import src.alerts as alerts
+        monkeypatch.setattr(alerts, "send_alert", lambda *a, **kw: None)
+        import src.live.lineups as lineups_mod
+        monkeypatch.setattr(lineups_mod, "capture_lineup",
+                            lambda fixture_id, **kw: None)
+
+        # INCOMPLETE discovery must not authorise a lock
+        live_session.query(RegistryDiscovery).delete()
+        live_session.add(RegistryDiscovery(
+            competition_slug="mls-2026", provider="kalshi", complete=False,
+            truncated_series_json='["KXMLSGAME"]',
+            completed_at=datetime.now(UTC)))
+        live_session.commit()
+        assert runs.t10_locks()["locked"] == 0
+
+        # STALE complete discovery must not either
+        live_session.query(RegistryDiscovery).delete()
+        live_session.add(RegistryDiscovery(
+            competition_slug="mls-2026", provider="kalshi", complete=True,
+            truncated_series_json="[]",
+            completed_at=datetime.now(UTC) - timedelta(
+                hours=runs.REGISTRY_MAX_AGE_HOURS + 1)))
+        live_session.commit()
+        assert runs.t10_locks()["locked"] == 0
+
+        # a fresh COMPLETE sweep authorises it
+        live_session.query(RegistryDiscovery).delete()
+        live_session.add(RegistryDiscovery(
+            competition_slug="mls-2026", provider="kalshi", complete=True,
+            truncated_series_json="[]", completed_at=datetime.now(UTC)))
+        live_session.commit()
+        assert runs.t10_locks()["locked"] == 1
+
+    def test_f13_risk_gate_uses_exact_price_not_rounded_cents(self):
+        """Near a threshold the rounded display cent and the exact price
+        disagree. The ledger stores exact values, so the gate that decides
+        whether to trade must use them too."""
+        from src.live import risk
+        snap = SimpleNamespace(execution_ready=True,
+                               oldest_quote_age_seconds=10)
+        # spread is 8.4c exactly, but rounds to 8c -> the old integer gate
+        # would ALLOW it against a max_spread_c of 8
+        q = SimpleNamespace(yes_ask_dollars="0.5040", yes_bid_dollars="0.4200",
+                            yes_ask_c=50, yes_bid_c=42, yes_ask_size=500,
+                            sizes_fp_json=None)
+        assert (q.yes_ask_c - q.yes_bid_c) == 8          # rounded view
+        assert risk.market_gate(q, snap, net_edge=0.10, min_net_edge=0.03,
+                                min_size=10, max_spread_c=8,
+                                max_quote_age_s=600,
+                                model_approved=True) == "SPREAD_TOO_WIDE"
+        # and a genuinely tight book still passes
+        q2 = SimpleNamespace(yes_ask_dollars="0.5000", yes_bid_dollars="0.4600",
+                             yes_ask_c=50, yes_bid_c=46, yes_ask_size=500,
+                             sizes_fp_json=None)
+        assert risk.market_gate(q2, snap, net_edge=0.10, min_net_edge=0.03,
+                                min_size=10, max_spread_c=8,
+                                max_quote_age_s=600,
+                                model_approved=True) is None
+
+    def test_f13_size_gate_uses_fractional_size(self):
+        """Fractional *_fp sizes are the real depth; the integer field
+        truncates them."""
+        from src.live import risk
+        snap = SimpleNamespace(execution_ready=True,
+                               oldest_quote_age_seconds=10)
+        q = SimpleNamespace(yes_ask_dollars="0.5000", yes_bid_dollars="0.4900",
+                            yes_ask_c=50, yes_bid_c=49, yes_ask_size=10,
+                            sizes_fp_json='{"yes_ask_size": "9.4"}')
+        # exact size 9.4 is BELOW the 10 minimum even though the int says 10
+        assert risk.market_gate(q, snap, net_edge=0.10, min_net_edge=0.03,
+                                min_size=10, max_spread_c=8,
+                                max_quote_age_s=600,
+                                model_approved=True) == "INSUFFICIENT_SIZE"
 
     def test_f5_audit_linkage_is_not_vacuous(self, live_session):
         """A canonical lock with ZERO market-linked contracts used to pass
