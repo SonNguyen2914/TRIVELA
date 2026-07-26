@@ -686,6 +686,105 @@ class TestPaperTrading:
         assert paper.settle_paper()["settled"] == 0
 
 
+class TestPaperCoverage:
+    """The 2026-07-25 slate produced 15 canonical locks carrying 45
+    quote-linked game legs, and a ledger holding 27 signals. Six locks
+    had never been paper-traded, and NOTHING reported it: the summary
+    published a numerator with no denominator, so a 40% shortfall was
+    indistinguishable from a complete examination that found nothing.
+
+    Same shape as the DiskFull `{"created": 0}` — a count that reads as
+    success purely because nothing states what it should have been."""
+
+    _lock_with_book = TestPaperTrading._lock_with_book
+
+    def test_uncovered_lock_is_reported_not_silent(self, live_session,
+                                                   monkeypatch):
+        from src.live import paper
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        # a lock that IS eligible, whose paper engine never ran — exactly
+        # the state six fixtures were in, invisibly
+        self._lock_with_book(live_session, ask=45, model_p=0.60)
+        cov = paper.paper_coverage()
+        assert cov["locks_eligible"] == 1
+        assert cov["locks_uncovered"] == 1
+        assert cov["legs_eligible"] == 1 and cov["legs_signalled"] == 0
+        assert cov["legs_missing"] == 1
+        assert cov["coverage_pct"] == 0.0
+        assert cov["complete"] is False
+        assert cov["uncovered"][0]["run_id"] == "lock"
+
+    def test_coverage_complete_once_the_engine_has_run(self, live_session,
+                                                       monkeypatch):
+        from src.live import paper
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        self._lock_with_book(live_session, ask=45, model_p=0.60)
+        paper.paper_trade_lock("lock")
+        cov = paper.paper_coverage()
+        assert cov["complete"] is True
+        assert cov["locks_uncovered"] == 0 and cov["legs_missing"] == 0
+        assert cov["coverage_pct"] == 100.0
+        # nothing was recovered after the fact, so nothing is marked
+        assert cov["backfilled_signals"] == 0
+
+    def test_backfill_recovers_the_gap_and_marks_provenance(
+            self, live_session, monkeypatch):
+        from src.live import paper
+        from src.live.models import PaperSignal
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        self._lock_with_book(live_session, ask=45, model_p=0.60)
+        out = paper.backfill_uncovered_locks()
+        assert out["attempted"] == 1
+        assert out["coverage_before"]["locks_uncovered"] == 1
+        assert out["coverage_after"]["complete"] is True
+        sig = live_session.query(PaperSignal).filter_by(
+            outcome_key="home_win").one()
+        # recovered evidence must never look like lock-time evidence
+        assert sig.backfilled_at is not None
+        assert paper.paper_coverage()["backfilled_signals"] == 1
+
+    def test_backfill_reproduces_the_inline_decision_exactly(
+            self, live_session, monkeypatch):
+        """The recovery is only legitimate if it is deterministic. Every
+        input is frozen on the lock — including the quote age the
+        staleness gate tests, which is read from the SNAPSHOT rather
+        than computed against now — so replaying later must yield the
+        identical decision, not merely a plausible one."""
+        from src.live import paper
+        from src.live.models import PaperFill, PaperSignal
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        self._lock_with_book(live_session, ask=45, model_p=0.60)
+        paper.paper_trade_lock("lock")
+        inline = live_session.query(PaperSignal).filter_by(
+            outcome_key="home_win").one()
+        before = (inline.decision, inline.reject_reason, inline.net_edge,
+                  inline.ask_dollars, inline.fee_dollars)
+        # wipe the ledger and recover it from the frozen book alone
+        live_session.query(PaperFill).delete()
+        live_session.query(PaperSignal).delete()
+        live_session.commit()
+        assert paper.paper_coverage()["locks_uncovered"] == 1
+        paper.backfill_uncovered_locks()
+        recovered = live_session.query(PaperSignal).filter_by(
+            outcome_key="home_win").one()
+        assert (recovered.decision, recovered.reject_reason,
+                recovered.net_edge, recovered.ask_dollars,
+                recovered.fee_dollars) == before
+        assert recovered.backfilled_at is not None
+
+    def test_summary_never_reports_signals_without_the_denominator(
+            self, live_session, monkeypatch):
+        from src.live import paper
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        self._lock_with_book(live_session, ask=45, model_p=0.60)
+        summary = paper.paper_summary()
+        assert "signals" in summary
+        cov = summary["coverage"]
+        # the exact reading that was impossible on the first slate
+        assert cov["legs_eligible"] == 1 and cov["legs_signalled"] == 0
+        assert cov["complete"] is False
+
+
 class TestRiskEngine:
     def test_correlation_groups_collapse_families(self):
         from src.live import risk

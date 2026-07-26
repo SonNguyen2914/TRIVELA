@@ -245,9 +245,14 @@ def _market_gate(quote, snap, net_edge, model_approved) -> str | None:
         model_approved=model_approved)
 
 
-def paper_trade_lock(run_id: str) -> dict:
+def paper_trade_lock(run_id: str, backfill: bool = False) -> dict:
     """Generate paper signals + fills for one canonical lock. Idempotent
-    (unique per run+contract). PAPER — no real order is ever placed."""
+    (unique per run+contract). PAPER — no real order is ever placed.
+
+    `backfill=True` stamps every signal written with `backfilled_at`, for
+    locks recovered after the fact (see backfill_uncovered_locks). The
+    ARITHMETIC is identical either way — all of it reads frozen values —
+    but the provenance must stay visible in the ledger."""
     if not (plane_ready() and config.MLS_SHADOW_ENABLED
             and config.PAPER_TRADING_ENABLED):
         return {"skipped": "off"}
@@ -304,7 +309,8 @@ def paper_trade_lock(run_id: str) -> dict:
                 fee_dollars=str(order_fee_dollars(ask_d, target)),
                 net_edge=net_edge,
                 decision="reject" if reason else "fill",
-                reject_reason=reason, created_at=_now())
+                reject_reason=reason, created_at=_now(),
+                backfilled_at=(_now() if backfill else None))
             s.add(sig)
             s.flush()
             signals += 1
@@ -435,6 +441,106 @@ def settle_paper(fixture_id: int | None = None) -> dict:
         s.close()
 
 
+def paper_coverage() -> dict:
+    """Did the paper engine actually evaluate every leg it could have?
+
+    The first prospective slate (2026-07-25) exposed the gap this answers.
+    15 canonical locks each carried three quote-linked game legs — 45
+    eligible legs — and the ledger held 27 signals. Six locks had never
+    been paper-traded at all, because `paper_trade_lock` is called inline
+    after each lock inside a try/except that must NOT undo the lock when
+    paper fails (runs.py). That isolation is right; the silence was not.
+
+    `paper_summary` reported 27 signals with no denominator, so a 40%
+    shortfall was indistinguishable from a complete examination that
+    happened to find nothing. This is the same defect as the DiskFull
+    `{"created": 0}` — a numerator that looks like success on its own.
+
+    Eligibility here is the SAME condition the signal loop tests, so
+    `covered` can never be satisfied by a leg the engine would skip."""
+    if not plane_ready():
+        return {}
+    s = get_session()
+    try:
+        locks = (s.query(PredictionRun)
+                 .filter_by(run_type="t10", canonical=True,
+                            status="complete").all())
+        eligible_legs = signalled = backfilled = 0
+        uncovered: list[dict] = []
+        partial: list[dict] = []
+        for run in locks:
+            legs = [c for c in (s.query(PredictionContract)
+                                .filter_by(prediction_run_id=run.id).all())
+                    if c.outcome_key in THREE_WAY
+                    and c.market_contract_id is not None
+                    and c.market_quote_id is not None]
+            sigs = (s.query(PaperSignal)
+                    .filter_by(prediction_run_id=run.id).all())
+            eligible_legs += len(legs)
+            signalled += len(sigs)
+            backfilled += sum(1 for g in sigs if g.backfilled_at is not None)
+            if not legs:
+                continue
+            fx = s.get(Fixture, run.fixture_id) if run.fixture_id else None
+            row = {"espn_event_id": (str(fx.espn_event_id) if fx else None),
+                   "run_id": run.id, "eligible_legs": len(legs),
+                   "signals": len(sigs)}
+            if not sigs:
+                uncovered.append(row)
+            elif len(sigs) < len(legs):
+                partial.append(row)
+        return {
+            "locks_eligible": len(locks),
+            "locks_covered": len(locks) - len(uncovered),
+            "locks_uncovered": len(uncovered),
+            "legs_eligible": eligible_legs,
+            "legs_signalled": signalled,
+            "legs_missing": max(0, eligible_legs - signalled),
+            "coverage_pct": (round(100 * signalled / eligible_legs, 1)
+                             if eligible_legs else None),
+            "complete": signalled >= eligible_legs and not uncovered,
+            "backfilled_signals": backfilled,
+            "uncovered": uncovered[:50],
+            "partial": partial[:50],
+            "note": ("a lock with zero signals means the paper engine never "
+                     "ran for it — the lock is still valid; the LEDGER is "
+                     "incomplete. Recover with backfill_uncovered_locks()."),
+        }
+    except Exception as exc:
+        print(f"[paper] coverage failed: {exc}")
+        return {"error": str(exc)[:200]}
+    finally:
+        s.close()
+
+
+def backfill_uncovered_locks(limit: int = 50) -> dict:
+    """Recompute paper signals for canonical locks the engine never ran.
+
+    Faithful by construction: every input the decision reads is FROZEN on
+    the lock — the model probability on the prediction contract, the ask
+    on the linked quote, and (the one that matters) the quote age the
+    staleness gate tests, which is `snapshot.oldest_quote_age_seconds`
+    recorded at capture rather than anything computed against now. So a
+    recomputation today yields the decision the lock would have produced.
+
+    The signals are still marked `backfilled_at`: deterministic recovery
+    is not the same evidence as a signal that existed at lock time, and
+    the ledger must never blur the two."""
+    cov = paper_coverage()
+    out: list[dict] = []
+    for row in (cov.get("uncovered") or [])[:limit]:
+        res = paper_trade_lock(row["run_id"], backfill=True)
+        out.append({"run_id": row["run_id"],
+                    "espn_event_id": row["espn_event_id"], **res})
+    after = paper_coverage()
+    return {"attempted": len(out), "results": out,
+            "coverage_before": {k: cov.get(k) for k in
+                                ("locks_uncovered", "legs_signalled",
+                                 "legs_eligible", "coverage_pct")},
+            "coverage_after": {k: v for k, v in after.items()
+                               if k not in ("uncovered", "partial", "note")}}
+
+
 def paper_summary() -> dict:
     """The paper ledger P&L — settled economics + open exposure. All
     labeled PAPER; never a real position."""
@@ -476,6 +582,11 @@ def paper_summary() -> dict:
             "settled_pnl_dollars": str(pnl_d),
             "settled_cost_dollars": str(cost_d),
             "signals": s.query(PaperSignal).count(),
+            # the DENOMINATOR (2026-07-26): a signal count alone cannot
+            # distinguish "examined the slate and found nothing" from
+            # "never examined 40% of it". Never report one without this.
+            "coverage": {k: v for k, v in paper_coverage().items()
+                         if k not in ("uncovered", "partial")},
             "fills": len(fills),
             "rejected": rejects, "reject_reasons": reasons,
             "open_fills": sum(1 for f in fills if f.status == "open"),

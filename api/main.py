@@ -220,6 +220,25 @@ def mls_admin_sweep(request: Request, force: bool = Query(False)):
             "generated_at": utcnow().isoformat()}
 
 
+@app.post("/api/admin/mls/paper-backfill")
+def mls_admin_paper_backfill(request: Request, limit: int = Query(50)):
+    """Operator-only: recompute paper signals for canonical locks the
+    paper engine never ran for.
+
+    Found on the first prospective slate (2026-07-25): 15 locks carried
+    45 quote-linked game legs and the ledger held 27 signals, with no
+    metric anywhere reporting the shortfall. The recomputation is
+    deterministic — every input is frozen on the lock, including the
+    quote age the staleness gate tests — but the recovered rows are
+    stamped `backfilled_at` so they can never be mistaken for evidence
+    that existed at lock time. PAPER only; no real order path exists."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import paper as live_paper
+    return {**live_paper.backfill_uncovered_locks(limit=limit),
+            "generated_at": utcnow().isoformat()}
+
+
 @app.get("/api/admin/mls/storage")
 def mls_admin_storage(request: Request):
     """Operator-only, READ-ONLY: what is consuming the live-plane volume.

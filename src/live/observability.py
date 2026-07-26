@@ -30,6 +30,21 @@ def _age_s(dt):
     return int((_now() - _utc(dt)).total_seconds())
 
 
+def _coverage() -> dict:
+    """Paper-ledger completeness, flattened for the metrics surface.
+    Isolated so a coverage failure can never take the whole metrics
+    endpoint down with it."""
+    try:
+        from src.live import paper
+        cov = paper.paper_coverage()
+        return {k: cov.get(k) for k in
+                ("locks_eligible", "locks_covered", "locks_uncovered",
+                 "legs_eligible", "legs_signalled", "legs_missing",
+                 "coverage_pct", "complete", "backfilled_signals")}
+    except Exception as exc:
+        return {"error": str(exc)[:120]}
+
+
 def metrics() -> dict:
     if not plane_ready():
         return {"skipped": "dormant"}
@@ -98,6 +113,10 @@ def metrics() -> dict:
             },
             "paper": {
                 "signals": s.query(PaperSignal).count(),
+                # a signal count WITHOUT this is unreadable: the 2026-07-25
+                # slate reported 27 against 45 eligible legs and nothing
+                # anywhere said so
+                "coverage": _coverage(),
                 "fills": len(fills),
                 "open": sum(1 for f in fills if f.status == "open"),
                 "settled": len(settled),
