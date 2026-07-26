@@ -294,6 +294,18 @@ def list_published() -> list[dict]:
         s.close()
 
 
+def latest_published_version() -> str | None:
+    """The newest published corpus version, or None when none exists.
+
+    Exists so an approval decision can BIND to a published corpus without
+    an operator having to carry the version string around. Boot called
+    ensure_approval_decision() with no corpus, so every decision recorded
+    corpus_version=null — the binding the evidence contract asks for was
+    available all along and simply never wired up."""
+    pub = list_published()
+    return pub[0]["version"] if pub else None
+
+
 def get_published(version: str, full: bool = False) -> dict | None:
     """Serve a PUBLISHED version FROM its stored immutable bytes (V9 eval
     F3) — never a rebuild from current state. Manifest by default, the

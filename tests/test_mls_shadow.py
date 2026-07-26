@@ -1323,6 +1323,74 @@ class TestModelLadderEval:
                 == dec["decision_id"])
         assert live_session.query(ModelApprovalDecision).count() == 1
 
+    def test_approval_binds_to_the_published_corpus(self, live_session,
+                                                    monkeypatch):
+        """Every decision to date recorded corpus_version=null: boot
+        called ensure_approval_decision() with no corpus, so the
+        contract's "approved against THIS frozen corpus" link was never
+        actually made. Publishing one must bind it, without requiring an
+        operator to carry the version string."""
+        import json as _json
+
+        from src.live import corpus as live_corpus
+        from src.live import model_eval as me
+        from src.live.models import ModelApprovalDecision
+        dv = me.deployed_variant()
+        report = {
+            "eval_version": "model-eval-v1", "n_scored": 162,
+            "variants": {dv: {"log_loss": 1.07, "brier": 0.647,
+                              "rps": 0.232}},
+            "edges": {f"{dv}_vs_M0": {"delta_log_loss": 0.008,
+                                      "ci95": [-0.012, 0.029],
+                                      "significant": False}},
+        }
+        monkeypatch.setattr(me, "evaluate_ladder", lambda **kw: report)
+        # nothing published yet -> honestly unbound
+        first = me.ensure_approval_decision()
+        row = live_session.get(ModelApprovalDecision, first["decision_id"])
+        assert row.corpus_version is None
+        assert live_corpus.latest_published_version() is None
+
+        pub = live_corpus.publish_corpus("test-corpus-v1")
+        assert pub.get("published") == "test-corpus-v1"
+        assert live_corpus.latest_published_version() == "test-corpus-v1"
+
+        # the SAME call now binds, without being told the version
+        second = me.ensure_approval_decision()
+        assert second["decision_id"] != first["decision_id"]
+        bound = live_session.get(ModelApprovalDecision,
+                                 second["decision_id"])
+        assert bound.corpus_version == "test-corpus-v1"
+        # the binding lives INSIDE the decision's content hash
+        doc = _json.loads(bound.decision_document)
+        assert doc["corpus_version"] == "test-corpus-v1"
+        assert doc["corpus_manifest_hash"] == pub["manifest_hash"]
+        # and it settles: the next call reloads rather than re-deciding
+        assert (me.ensure_approval_decision()["decision_id"]
+                == second["decision_id"])
+
+    def test_unbound_decision_is_not_silently_reused_after_publish(
+            self, live_session, monkeypatch):
+        """The early-return path reloaded the active decision whenever
+        the engine matched. With no corpus check it would hand back the
+        unbound row forever, leaving the binding unreachable."""
+        from src.live import corpus as live_corpus
+        from src.live import model_eval as me
+        dv = me.deployed_variant()
+        monkeypatch.setattr(me, "evaluate_ladder", lambda **kw: {
+            "eval_version": "model-eval-v1", "n_scored": 162,
+            "variants": {dv: {"log_loss": 1.07, "brier": 0.647,
+                              "rps": 0.232}},
+            "edges": {f"{dv}_vs_M0": {"delta_log_loss": 0.008,
+                                      "ci95": [-0.012, 0.029],
+                                      "significant": False}}})
+        unbound = me.ensure_approval_decision()
+        assert unbound.get("loaded") is not True      # freshly created
+        live_corpus.publish_corpus("test-corpus-v2")
+        after = me.ensure_approval_decision()
+        assert after["decision_id"] != unbound["decision_id"]
+        assert after.get("loaded") is not True        # recomputed + bound
+
 
 class TestMarketHelpers:
     def test_cents_prefers_native_integer(self):
