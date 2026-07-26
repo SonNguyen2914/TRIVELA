@@ -1,0 +1,109 @@
+{
+ "bundle": "v95_evaluation_remediation",
+ "generated_at": "2026-07-26T10:44:22.341664+00:00",
+ "evaluation": {
+  "file": "wc26-v95-project-evaluation.md",
+  "sha256": "f813efd22470811e91f219e5a91c25cfd9c3169a3d7bba9c402b454aeb40a646",
+  "verdict": "ACCURATE \u2014 every checkable claim verified against source and production; no false findings"
+ },
+ "findings": [
+  {
+   "id": "C1",
+   "claim": "all 7 fills reconstructed; backfill reads live kill switches, exposure, approved-model",
+   "verified": true,
+   "how": "7/7 fills link to backfilled_at signals in the corpus; exposure_gate called active_kill_switches(s) + current_exposure(s)",
+   "status": "FIXED",
+   "fix": "paper_evaluation_context frozen at lock time; exposure_gate made pure; evaluation_mode contemporaneous|reconstructed; headline excludes reconstructed",
+   "self_criticism": "I wrote 'faithful by construction' and had ALREADY noticed the exposure-gate hazard during the build, dismissing it as moot because no signal would reach that gate. Seven did."
+  },
+  {
+   "id": "C2",
+   "claim": "registry request failures self-certify as complete",
+   "verified": true,
+   "how": "except RequestException -> continue, never appends to truncated_series; complete = not truncated_series",
+   "status": "FIXED",
+   "fix": "per-family stage outcomes; complete is their AND; _ensure_contracts propagates cursor meta"
+  },
+  {
+   "id": "H3",
+   "claim": "wrong-side depth labelled execution-grade",
+   "verified": true,
+   "how": "yes_buy_ladder skips d.side != 'no'; exec_class tested the raw depth list",
+   "status": "FIXED",
+   "fix": "build_ladder returns provenance; exec_class derives from source"
+  },
+  {
+   "id": "H4",
+   "claim": "exact economics rounded before risk enforcement",
+   "verified": true,
+   "how": "exposure_gate(..., cost_c, _to_cents(slip)); current_exposure summed cost_c",
+   "status": "FIXED",
+   "fix": "all gates compare exact Decimal dollars; RISK_POLICY -> risk-v2"
+  },
+  {
+   "id": "H5",
+   "claim": "analyser does not validate the evidence chain",
+   "verified": true,
+   "how": "verify_hashes checked only section sha256 + manifest_hash",
+   "status": "FIXED",
+   "fix": "verify_provenance() as a separate dimension; exits non-zero on forgery; drift reported separately",
+   "proof": "reproduced their tamper (bogus engine sig + artifact hash + run hash, hashes recomputed consistently): now exit 1 naming ARTIFACT_CONTENT_HASH_MISMATCH + RUN_ARTIFACT_HASH_MISMATCH while file integrity and 309/309 reproduction still pass"
+  },
+  {
+   "id": "H6",
+   "claim": "approval labelled with a corpus it does not evaluate from; auto-recompute contradicts governance",
+   "verified": true,
+   "how": "evaluate_ladder reads _completed(s) from the live DB; boot called ensure_approval_decision() which created on engine change",
+   "status": "PARTIALLY FIXED",
+   "fix": "boot loads and fails closed; operator activate endpoint is the only creator; decision records evaluation_source=live_database inside its hash",
+   "deferred": "evaluating directly from published corpus bytes (their item 9)"
+  },
+  {
+   "id": "stat",
+   "claim": "expected wins 1.61 not 1.69; P(<=1)=0.49244 not 0.465",
+   "verified": true,
+   "how": "fill prices sum to 1.610000; Poisson-binomial gives 0.49244 \u2014 matches to 5dp",
+   "status": "FIXED",
+   "fix": "corrected in all five V9.5 docs with a visible note",
+   "my_errors": [
+    "used total cost (incl. $8.3237 fees) as the price",
+    "used single-p binomial across seven different prices"
+   ]
+  },
+  {
+   "id": "raw-books",
+   "claim": "raw order-book responses not retained; SourceObservation not exported",
+   "verified": true,
+   "status": "FIXED",
+   "fix": "_book_observation persists full body gzip+base64; depth rows link to it; corpus exports source_observations.json + paper_evaluation_contexts.json"
+  },
+  {
+   "id": "savepoints",
+   "claim": "one transaction per lock recreates all-or-nothing failure",
+   "verified": true,
+   "status": "FIXED",
+   "fix": "per-leg SAVEPOINT; leg_errors reported"
+  }
+ ],
+ "my_addition_to_their_finding": {
+  "batch_ordering_artifact": "all 6 locks were recovered in ONE run, each committing before the next was evaluated, so later locks saw earlier locks' accumulating exposure in coverage-query order. At real T-10 those locks were minutes to hours apart and only 6 of 15 were replayed \u2014 the exposure history behind these fills is wrong in COMPOSITION and ORDER, not just timestamp.",
+  "materiality_bound": {
+   "total_open_c": 16932,
+   "cap_c": 40000,
+   "max_per_match_c": 3659,
+   "max_correlated_c": 3659,
+   "cap_correlated_c": 6000,
+   "positions": 7,
+   "cap_positions": 40,
+   "max_slippage_c": 0,
+   "all_rejections": "NET_EDGE_TOO_LOW (frozen-only inputs)",
+   "reading": "no exposure, position, slippage or kill-switch gate came within reach of binding, so on THIS slate the recovery-time state did not alter any outcome \u2014 a fact about the data, not a property of the function. The finding stands."
+  }
+ },
+ "deferred": [
+  "item 9 \u2014 evaluate the ladder directly from immutable published corpus bytes",
+  "item 11 \u2014 standalone M0-M3 + bootstrap evaluator runnable without the production DB"
+ ],
+ "tests": "537 backend + PostgreSQL green; migrations b2c3d4e5f6a7 / c3d4e5f6a7b8 / d4e5f6a7b8c9 round-trip on PG 18",
+ "money": "LOCKED \u2014 REAL_MONEY_SIGNALS_ENABLED=false throughout"
+}
