@@ -87,33 +87,116 @@ def parse_event(e: dict) -> dict:
     }
 
 
+def _standing_row(entry: dict) -> dict:
+    team = entry.get("team") or {}
+    stats = {s.get("name"): s.get("value") for s in entry.get("stats") or []}
+    return {
+        "team": team.get("displayName"),
+        "abbrev": team.get("abbreviation"),
+        "logo": (team.get("logos") or [{}])[0].get("href")
+        if team.get("logos") else None,
+        "rank": stats.get("rank"),
+        "played": stats.get("gamesPlayed"),
+        "wins": stats.get("wins"),
+        "losses": stats.get("losses"),
+        "ties": stats.get("ties"),
+        "points": stats.get("points"),
+        "goals_for": stats.get("pointsFor"),
+        "goals_against": stats.get("pointsAgainst"),
+        "goal_diff": stats.get("pointDifferential"),
+        "ppg": stats.get("ppg"),
+        "_key": str(team.get("id") or team.get("abbreviation") or
+                    team.get("displayName") or ""),
+    }
+
+
+def _ranked(rows: list[dict]) -> list[dict]:
+    """Order a conference and guarantee each place appears once.
+
+    ESPN's rank is kept when it is already a clean 1..n — it encodes the
+    league's own tiebreakers, which are more authoritative than anything
+    reconstructed here. It is RECOMPUTED (points, wins, goal difference,
+    goals for) only when the supplied ranks collide, which is the state
+    that would otherwise render as two teams sharing a place."""
+    rows = sorted(rows, key=lambda r: (r["rank"] is None, r["rank"] or 0,
+                                       -(r["points"] or 0)))
+    ranks = [r["rank"] for r in rows]
+    if None in ranks or len(set(ranks)) != len(ranks):
+        rows.sort(key=lambda r: (-(r["points"] or 0), -(r["wins"] or 0),
+                                 -(r["goal_diff"] or 0),
+                                 -(r["goals_for"] or 0),
+                                 r["team"] or ""))
+        for i, r in enumerate(rows, 1):
+            r["rank"] = i
+    return rows
+
+
 def parse_standings(d: dict) -> list[dict]:
-    """ESPN standings -> [{conference, entries: [...]}], rank-ordered."""
-    out = []
+    """ESPN standings -> [{conference, entries: [...]}], rank-ordered.
+
+    ESPN's own grouping cannot be trusted to be a conference. On
+    2026-07-26 the child NAMED "Eastern Conference" carried all 30 clubs
+    (its inner standings block is literally `name: "overall"`) while
+    "Western Conference" carried the correct 15 — so every Western club
+    was rendered twice, once in each table, and the East table showed a
+    Western club in first place. Worse, the two blocks disagreed: the
+    30-row block was one matchday fresher, so the same club showed
+    different points depending on which table you read.
+
+    So membership and statistics are taken from different places, each
+    from the source that can actually be trusted for it:
+
+      - MEMBERSHIP from any child that lists a STRICT SUBSET of the
+        clubs. A child listing every club is the league table wearing a
+        conference's name, and is never treated as a roster; its members
+        are whatever no genuine roster claimed.
+      - STATISTICS from the FRESHEST row for each club across all
+        blocks (most games played). Standings only move forward, so
+        this resolves the disagreement deterministically and makes one
+        club appear with one set of numbers.
+
+    Each club therefore appears exactly once, in one conference. When no
+    child is a strict subset (nothing to split on) the honest output is
+    a single combined table rather than two invented ones.
+    """
+    blocks: list[tuple[str, list[dict]]] = []
     for group in d.get("children") or []:
-        entries = []
-        for entry in (group.get("standings") or {}).get("entries") or []:
-            team = entry.get("team") or {}
-            stats = {s.get("name"): s.get("value")
-                     for s in entry.get("stats") or []}
-            entries.append({
-                "team": team.get("displayName"),
-                "abbrev": team.get("abbreviation"),
-                "logo": (team.get("logos") or [{}])[0].get("href")
-                if team.get("logos") else None,
-                "rank": stats.get("rank"),
-                "played": stats.get("gamesPlayed"),
-                "wins": stats.get("wins"),
-                "losses": stats.get("losses"),
-                "ties": stats.get("ties"),
-                "points": stats.get("points"),
-                "goals_for": stats.get("pointsFor"),
-                "goals_against": stats.get("pointsAgainst"),
-                "goal_diff": stats.get("pointDifferential"),
-                "ppg": stats.get("ppg"),
-            })
-        entries.sort(key=lambda x: (x["rank"] is None, x["rank"]))
-        out.append({"conference": group.get("name"), "entries": entries})
+        rows = [_standing_row(e)
+                for e in (group.get("standings") or {}).get("entries") or []]
+        blocks.append((group.get("name"), [r for r in rows if r["_key"]]))
+    if not blocks:
+        return []
+
+    freshest: dict[str, dict] = {}
+    for _, rows in blocks:
+        for r in rows:
+            cur = freshest.get(r["_key"])
+            if cur is None or (r["played"] or 0) > (cur["played"] or 0):
+                freshest[r["_key"]] = r
+    pool = set(freshest)
+
+    rosters = {name: {r["_key"] for r in rows} for name, rows in blocks}
+    genuine = {n: m for n, m in rosters.items() if 0 < len(m) < len(pool)}
+    if not genuine:
+        # every block spans the whole league: there is nothing to split
+        # on, and inventing a split would repeat the bug in a new shape
+        return [{"conference": blocks[0][0] or "MLS",
+                 "entries": _ranked([dict(freshest[k]) for k in pool])}]
+    claimed: set[str] = set().union(*genuine.values())
+
+    out = []
+    for name, _rows in blocks:
+        members = genuine.get(name)
+        if members is None:
+            members = pool - claimed          # the unclaimed remainder
+            if not members:
+                continue                      # a pure duplicate block
+        out.append({"conference": name,
+                    "entries": _ranked([dict(freshest[k]) for k in members
+                                        if k in freshest])})
+    for e in out:
+        for r in e["entries"]:
+            r.pop("_key", None)
     return out
 
 

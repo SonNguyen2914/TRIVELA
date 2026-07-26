@@ -1,0 +1,346 @@
+{
+ "bundle": "espn_standings_conference_drift",
+ "observed_at": "2026-07-26T07:44:09.269919+00:00",
+ "endpoint": "https://site.api.espn.com/apis/v2/sports/soccer/usa.1/standings",
+ "http_status": 200,
+ "defect": "the child NAMED 'Eastern Conference' carried ALL 30 clubs \u2014 its inner standings block is literally name:'overall' \u2014 while 'Western Conference' carried the correct 15. Every Western club therefore rendered TWICE, once per table, and a Western club (Vancouver) sat top of the Eastern table.",
+ "second_defect": "the two blocks DISAGREE: every Western club's row in the 30-entry block is one matchday fresher, so the same club showed different points depending on which table you read",
+ "children_shape": [
+  {
+   "name": "Eastern Conference",
+   "standings_name": "overall",
+   "standings_id": "0",
+   "entries": 30
+  },
+  {
+   "name": "Western Conference",
+   "standings_name": "overall",
+   "standings_id": "0",
+   "entries": 15
+  }
+ ],
+ "key_insight": "the 30-row block carries each club's CONFERENCE rank (1..15 twice), not a league rank \u2014 so partitioning it by membership yields two clean tables with correct ranks",
+ "fix": "parse_standings takes MEMBERSHIP from any child listing a STRICT SUBSET of clubs (a child listing every club is the league table wearing a conference's name) and STATISTICS from the freshest row per club (most games played). Ranks are recomputed only if they collide. No child is a strict subset -> one honest combined table.",
+ "family": "same as headToHeadGames->seasonseries and the winner-first score string: ESPN breaks us at HTTP 200 with a well-formed payload",
+ "raw_blocks": {
+  "Eastern Conference": [
+   {
+    "abbrev": "CHI",
+    "team": "Chicago Fire FC",
+    "gamesPlayed": 16.0,
+    "points": 26.0,
+    "rank": 4.0
+   },
+   {
+    "abbrev": "CLB",
+    "team": "Columbus Crew",
+    "gamesPlayed": 17.0,
+    "points": 19.0,
+    "rank": 11.0
+   },
+   {
+    "abbrev": "COL",
+    "team": "Colorado Rapids",
+    "gamesPlayed": 17.0,
+    "points": 19.0,
+    "rank": 13.0
+   },
+   {
+    "abbrev": "DAL",
+    "team": "FC Dallas",
+    "gamesPlayed": 17.0,
+    "points": 26.0,
+    "rank": 6.0
+   },
+   {
+    "abbrev": "SKC",
+    "team": "Sporting Kansas City",
+    "gamesPlayed": 17.0,
+    "points": 14.0,
+    "rank": 15.0
+   },
+   {
+    "abbrev": "LA",
+    "team": "LA Galaxy",
+    "gamesPlayed": 18.0,
+    "points": 21.0,
+    "rank": 11.0
+   },
+   {
+    "abbrev": "NE",
+    "team": "New England Revolution",
+    "gamesPlayed": 16.0,
+    "points": 29.0,
+    "rank": 3.0
+   },
+   {
+    "abbrev": "RBNY",
+    "team": "Red Bull New York",
+    "gamesPlayed": 17.0,
+    "points": 22.0,
+    "rank": 8.0
+   },
+   {
+    "abbrev": "SJ",
+    "team": "San Jose Earthquakes",
+    "gamesPlayed": 17.0,
+    "points": 33.0,
+    "rank": 3.0
+   },
+   {
+    "abbrev": "DC",
+    "team": "D.C. United",
+    "gamesPlayed": 17.0,
+    "points": 22.0,
+    "rank": 9.0
+   },
+   {
+    "abbrev": "RSL",
+    "team": "Real Salt Lake",
+    "gamesPlayed": 16.0,
+    "points": 26.0,
+    "rank": 4.0
+   },
+   {
+    "abbrev": "HOU",
+    "team": "Houston Dynamo FC",
+    "gamesPlayed": 16.0,
+    "points": 26.0,
+    "rank": 5.0
+   },
+   {
+    "abbrev": "TOR",
+    "team": "Toronto FC",
+    "gamesPlayed": 17.0,
+    "points": 16.0,
+    "rank": 12.0
+   },
+   {
+    "abbrev": "MTL",
+    "team": "CF Montr\u00e9al",
+    "gamesPlayed": 17.0,
+    "points": 15.0,
+    "rank": 13.0
+   },
+   {
+    "abbrev": "POR",
+    "team": "Portland Timbers",
+    "gamesPlayed": 17.0,
+    "points": 21.0,
+    "rank": 10.0
+   },
+   {
+    "abbrev": "SEA",
+    "team": "Seattle Sounders FC",
+    "gamesPlayed": 16.0,
+    "points": 24.0,
+    "rank": 8.0
+   },
+   {
+    "abbrev": "VAN",
+    "team": "Vancouver Whitecaps",
+    "gamesPlayed": 16.0,
+    "points": 33.0,
+    "rank": 1.0
+   },
+   {
+    "abbrev": "PHI",
+    "team": "Philadelphia Union",
+    "gamesPlayed": 17.0,
+    "points": 13.0,
+    "rank": 14.0
+   },
+   {
+    "abbrev": "ORL",
+    "team": "Orlando City SC",
+    "gamesPlayed": 17.0,
+    "points": 20.0,
+    "rank": 10.0
+   },
+   {
+    "abbrev": "MIN",
+    "team": "Minnesota United FC",
+    "gamesPlayed": 17.0,
+    "points": 23.0,
+    "rank": 9.0
+   },
+   {
+    "abbrev": "NYC",
+    "team": "New York City FC",
+    "gamesPlayed": 17.0,
+    "points": 25.0,
+    "rank": 5.0
+   },
+   {
+    "abbrev": "CIN",
+    "team": "FC Cincinnati",
+    "gamesPlayed": 17.0,
+    "points": 23.0,
+    "rank": 7.0
+   },
+   {
+    "abbrev": "ATL",
+    "team": "Atlanta United FC",
+    "gamesPlayed": 17.0,
+    "points": 12.0,
+    "rank": 15.0
+   },
+   {
+    "abbrev": "LAFC",
+    "team": "LAFC",
+    "gamesPlayed": 18.0,
+    "points": 33.0,
+    "rank": 2.0
+   },
+   {
+    "abbrev": "NSH",
+    "team": "Nashville SC",
+    "gamesPlayed": 17.0,
+    "points": 39.0,
+    "rank": 1.0
+   },
+   {
+    "abbrev": "MIA",
+    "team": "Inter Miami CF",
+    "gamesPlayed": 17.0,
+    "points": 37.0,
+    "rank": 2.0
+   },
+   {
+    "abbrev": "ATX",
+    "team": "Austin FC",
+    "gamesPlayed": 17.0,
+    "points": 17.0,
+    "rank": 14.0
+   },
+   {
+    "abbrev": "CLT",
+    "team": "Charlotte FC",
+    "gamesPlayed": 17.0,
+    "points": 25.0,
+    "rank": 6.0
+   },
+   {
+    "abbrev": "STL",
+    "team": "St. Louis CITY SC",
+    "gamesPlayed": 17.0,
+    "points": 25.0,
+    "rank": 7.0
+   },
+   {
+    "abbrev": "SD",
+    "team": "San Diego FC",
+    "gamesPlayed": 17.0,
+    "points": 20.0,
+    "rank": 12.0
+   }
+  ],
+  "Western Conference": [
+   {
+    "abbrev": "COL",
+    "team": "Colorado Rapids",
+    "gamesPlayed": 16.0,
+    "points": 19.0,
+    "rank": 11.0
+   },
+   {
+    "abbrev": "DAL",
+    "team": "FC Dallas",
+    "gamesPlayed": 16.0,
+    "points": 26.0,
+    "rank": 5.0
+   },
+   {
+    "abbrev": "SKC",
+    "team": "Sporting Kansas City",
+    "gamesPlayed": 16.0,
+    "points": 14.0,
+    "rank": 15.0
+   },
+   {
+    "abbrev": "LA",
+    "team": "LA Galaxy",
+    "gamesPlayed": 17.0,
+    "points": 20.0,
+    "rank": 10.0
+   },
+   {
+    "abbrev": "SJ",
+    "team": "San Jose Earthquakes",
+    "gamesPlayed": 16.0,
+    "points": 32.0,
+    "rank": 2.0
+   },
+   {
+    "abbrev": "RSL",
+    "team": "Real Salt Lake",
+    "gamesPlayed": 15.0,
+    "points": 26.0,
+    "rank": 4.0
+   },
+   {
+    "abbrev": "HOU",
+    "team": "Houston Dynamo FC",
+    "gamesPlayed": 15.0,
+    "points": 23.0,
+    "rank": 7.0
+   },
+   {
+    "abbrev": "POR",
+    "team": "Portland Timbers",
+    "gamesPlayed": 16.0,
+    "points": 18.0,
+    "rank": 12.0
+   },
+   {
+    "abbrev": "SEA",
+    "team": "Seattle Sounders FC",
+    "gamesPlayed": 15.0,
+    "points": 24.0,
+    "rank": 6.0
+   },
+   {
+    "abbrev": "VAN",
+    "team": "Vancouver Whitecaps",
+    "gamesPlayed": 15.0,
+    "points": 32.0,
+    "rank": 1.0
+   },
+   {
+    "abbrev": "MIN",
+    "team": "Minnesota United FC",
+    "gamesPlayed": 16.0,
+    "points": 22.0,
+    "rank": 9.0
+   },
+   {
+    "abbrev": "LAFC",
+    "team": "LAFC",
+    "gamesPlayed": 17.0,
+    "points": 30.0,
+    "rank": 3.0
+   },
+   {
+    "abbrev": "ATX",
+    "team": "Austin FC",
+    "gamesPlayed": 16.0,
+    "points": 17.0,
+    "rank": 14.0
+   },
+   {
+    "abbrev": "STL",
+    "team": "St. Louis CITY SC",
+    "gamesPlayed": 16.0,
+    "points": 22.0,
+    "rank": 8.0
+   },
+   {
+    "abbrev": "SD",
+    "team": "San Diego FC",
+    "gamesPlayed": 16.0,
+    "points": 17.0,
+    "rank": 13.0
+   }
+  ]
+ }
+}
