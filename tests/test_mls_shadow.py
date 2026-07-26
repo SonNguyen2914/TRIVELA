@@ -1735,6 +1735,60 @@ class TestModelLadderEval:
         assert served["corpus_version"] == "test-corpus-v1"
         assert served["corpus_manifest_hash"] == pub["manifest_hash"]
 
+    def test_boot_never_mints_an_approval_and_fails_closed(
+            self, live_session, monkeypatch):
+        """V9.5 eval H6. Boot created an approval whenever none matched
+        the current engine — and the signature includes code_revision,
+        so every deploy silently issued a fresh approval from live data
+        while the docs claimed operator-only re-evaluation."""
+        from src.live import model_eval as me
+        from src.live.models import ModelApprovalDecision, ModelVersion
+        dv = me.deployed_variant()
+        monkeypatch.setattr(me, "evaluate_ladder", lambda **kw: {
+            "eval_version": "model-eval-v1", "n_scored": 162,
+            "variants": {dv: {"log_loss": 1.07, "brier": 0.647,
+                              "rps": 0.232}},
+            "edges": {f"{dv}_vs_M0": {"delta_log_loss": 0.008,
+                                      "ci95": [-0.012, 0.029],
+                                      "significant": False}}})
+        res = me.ensure_approval_decision(allow_create=False)
+        assert res.get("fail_closed") is True
+        assert res.get("approved") is False
+        assert live_session.query(ModelApprovalDecision).count() == 0
+        live_session.expire_all()
+        mv = live_session.query(ModelVersion).filter_by(
+            name=model_mls.MODEL_NAME).one_or_none()
+        # fail closed: nothing is approved, so canonical locks stay refused
+        assert mv is None or mv.approved_for_shadow is False
+        # the operator path is the ONLY one that creates
+        created = me.ensure_approval_decision(allow_create=True)
+        assert created["decision_id"]
+        # and boot now LOADS that one rather than making another
+        loaded = me.ensure_approval_decision(allow_create=False)
+        assert loaded["decision_id"] == created["decision_id"]
+        assert live_session.query(ModelApprovalDecision).count() == 1
+
+    def test_decision_records_what_it_actually_evaluated(
+            self, live_session, monkeypatch):
+        """V9.5 eval H6: the corpus binding is a label. The ladder reads
+        the live database, and the decision must say so."""
+        import json as _json
+
+        from src.live import model_eval as me
+        from src.live.models import ModelApprovalDecision
+        dv = me.deployed_variant()
+        monkeypatch.setattr(me, "evaluate_ladder", lambda **kw: {
+            "eval_version": "model-eval-v1", "n_scored": 162,
+            "variants": {dv: {"log_loss": 1.07, "brier": 0.647,
+                              "rps": 0.232}},
+            "edges": {f"{dv}_vs_M0": {"delta_log_loss": 0.008,
+                                      "ci95": [-0.012, 0.029],
+                                      "significant": False}}})
+        dec = me.ensure_approval_decision()
+        row = live_session.get(ModelApprovalDecision, dec["decision_id"])
+        doc = _json.loads(row.decision_document)
+        assert doc["evaluation_source"] == "live_database"
+
     def test_unbound_decision_is_not_silently_reused_after_publish(
             self, live_session, monkeypatch):
         """The early-return path reloaded the active decision whenever

@@ -254,7 +254,14 @@ def mls_boot() -> None:
     # estimate. approved_for_shadow is set FROM that decision.
     try:
         from src.live import model_eval
-        dec = model_eval.ensure_approval_decision()
+        # V9.5 eval H6: LOAD only. Boot must never mint an approval for
+        # itself — the engine signature includes code_revision, so every
+        # deploy was quietly issuing a fresh approval computed from
+        # whatever the mutable database held at that moment, while the
+        # governance claim was that re-evaluation is an explicit
+        # operator action. No active decision => model stays unapproved
+        # => canonical locks are structurally refused. Fail closed.
+        dec = model_eval.ensure_approval_decision(allow_create=False)
         print(f"[mls-boot] approval decision: {dec}")
     except Exception as exc:
         print(f"[mls-boot] approval FAILED: {exc}")
