@@ -220,17 +220,51 @@ range cannot drift underneath the review. Verify with
 `git worktree list` that the reviewer's path and the implementer's are
 distinct before starting.
 
-Cleanup is non-destructive to the main checkout:
+**Cleanup must run from the repository that owns the worktree.** These
+are two independent repositories: the backend's Git metadata knows
+nothing about `/tmp/trivela-review-frontend`, so removing it from the
+backend fails (safely, but it leaves the worktree registered).
 
 ```bash
-cd ~/dev/TRIVELA/backend
-git worktree remove /tmp/trivela-review-<repo>
-git worktree prune
+git -C ~/dev/TRIVELA/backend  worktree remove /tmp/trivela-review-backend
+git -C ~/dev/TRIVELA/frontend worktree remove /tmp/trivela-review-frontend
+git -C ~/dev/TRIVELA/backend  worktree prune
+git -C ~/dev/TRIVELA/frontend worktree prune
 ```
 
-`git worktree remove` refuses to discard uncommitted changes unless
-forced — that refusal is a feature; read what is there before overriding
-it.
+`scripts/launch-review.sh --clean` does exactly this and is the
+preferred route. `git worktree remove` refuses to discard uncommitted
+changes unless forced — that refusal is a feature; read what is there
+before overriding it.
+
+### 8.2 What the reviewer can and cannot validate
+
+A read-only sandbox cannot run this project's test suites, and pretending
+otherwise produces a review that quietly skips validation:
+
+- backend `pytest` needs a writable temp directory (it fails **before
+  collection** without one, and `conftest.py` creates a temporary SQLite
+  database)
+- the frontend needs `npm install`, `.next/` and Playwright output — a
+  detached worktree has no `node_modules`
+
+So the reviewer's default posture is: **audit the diff, read the
+implementer's validation evidence critically, and mark execution
+`SKIPPED_ENVIRONMENT`** — which is an honest status, not a failure.
+
+When the reviewer must genuinely re-run tests independently, give it a
+*disposable clone* rather than loosening the sandbox on tracked source:
+
+```bash
+git clone ~/dev/TRIVELA/backend /tmp/trivela-verify-backend
+cd /tmp/trivela-verify-backend && git checkout --detach <TARGET_COMMIT>
+```
+
+Run it with `--sandbox workspace-write` scoped to that clone. The
+acceptance check is `git status --short` coming back empty afterwards:
+if validation mutated tracked files, the result is not trustworthy.
+Delete the clone when done. Never point `PG_TEST_URL` at anything but a
+throwaway database — §9.
 
 > **A fresh worktree has no `.venv` and no `node_modules`** — both are
 > ignored, so neither is copied. Backend tests still run by invoking the
@@ -266,6 +300,27 @@ npm run build
 npx playwright test        # expect ~12 passed, 1 skipped
 ```
 
+> **`npx playwright test` talks to PRODUCTION by default.**
+> `playwright.config.ts` falls back to the production Railway URL when
+> `SUGGESTER_BACKEND_URL` is unset, and passes it to the dev server. The
+> requests are read-only GETs against the public shadow API, so this
+> does not write to production — but it does mean routine validation
+> depends on a live service and pins evidence to volatile data, which
+> is exactly the rot the frontend's own rules warn about.
+>
+> Point it somewhere else unless you specifically intend a live smoke
+> test:
+>
+> ```bash
+> SUGGESTER_BACKEND_URL=http://localhost:8000 npx playwright test
+> ```
+>
+> `e2e/contract-deterministic.spec.ts` is the hermetic one — it replays
+> recorded payloads and does not need a backend at all. The other four
+> specs do. **Whether the config's default should change is an open
+> decision for Son** (see §12), not something an agent should alter
+> unilaterally: it would change the meaning of every existing run.
+
 Report each as `PASSED_INDEPENDENTLY`, `FAILED_INDEPENDENTLY`,
 `SKIPPED_ENVIRONMENT`, `NOT_RUN`, or `RELEASE_REPORTED_ONLY`. Never hide
 a skip.
@@ -290,7 +345,7 @@ git show docs-v9.5:docs/V9.5/RUNBOOK.md                # the operational cycle
 On `main` directly (not branch-scoped):
 
 ```text
-backend/research_archive/v95_evaluation_remediation_2026-07-26.json
+research_archive/v95_evaluation_remediation_2026-07-26.json
 ```
 
 That last file is a finding-by-finding record of the most recent external
@@ -323,3 +378,40 @@ Explicit review questions:
 
 One section per repository. The reviewer reviews **the diff**, never the
 implementer's summary of it.
+
+## 12. Open decisions — Son's, not an agent's
+
+These are known, deliberately unresolved. Re-reporting them as new
+findings wastes a review; resolving them unilaterally is worse.
+
+- **Playwright's production default.** `playwright.config.ts` falls back
+  to the production backend (§9). Changing it would alter what every
+  existing e2e run means. Options: make hermetic the default and put
+  live behind an opt-in, or keep it and document it as intentional.
+- **Vercel's production branch is unverified.** No `vercel.json` exists;
+  the setting is dashboard-side. "A non-default branch push is only a
+  preview" is therefore an *assumption*. Confirm before the first
+  frontend branch push.
+- **Railway's deploy branch is unverified** for the same reason. §4's
+  claim that a feature branch triggers no backend deploy rests on it.
+- **Frontend `CLAUDE.md` cannot import this file.** It lives in another
+  repository, and a cloud agent may hold only one checkout. The frontend
+  copy points here in prose instead. If that proves too weak, the
+  alternative is duplicating the shared rules — which §"Where the rules
+  live" exists to prevent.
+
+## 13. Modelling safeguards
+
+Cross-repo and binding, not merely a reviewer checklist:
+
+- **No temporal leakage.** A feature must use only information available
+  at the moment being predicted. The T-10 lock exists to make that
+  mechanical — never reconstruct a "decision" from post-kickoff data and
+  present it as contemporaneous (§6).
+- **No target leakage.** Nothing derived from the outcome may reach a
+  feature, directly or through a provider's post-hoc field.
+- **Competition-aware, never tournament-shaped.** No group/bracket
+  structure in shared league flows (§5).
+- **Stable identity.** Fixtures and teams get provider-stable IDs, never
+  names or name+date. An ambiguous match fails explicitly.
+- **IANA time zones**, never fixed UTC offsets.

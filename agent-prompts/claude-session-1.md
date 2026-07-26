@@ -64,17 +64,22 @@ reach production. The workflow must not *depend* on MCP.
 target commit, diff range, the reviewer's read-only behaviour, how the
 report comes back, and how you independently verify each finding.
 
-**6. Commit, and push the implementation branch.**
+**6. Commit. Push only if the reviewer cannot read local commits.**
 Without a commit there is no fixed target and the review cannot run
 against prose. Commit on your implementation branch.
 
-Then push **that branch** — not `main`. The reviewer here is likely
-cloud/GitHub-backed and cannot see unpushed commits, so a
-local-commit-only workflow silently starves it of the diff. Confirm with
-Son that Railway deploys only from `main` before the first push; a
-feature branch triggers no backend deploy, and a frontend branch produces
-only a Vercel preview. **Never push `main`** — that deploys and trips the
-approval lock in §4 of AGENTS.md.
+Then apply the single rule in AGENTS.md §4 — do not push reflexively:
+
+- **Local reviewer** (a `codex` binary on this machine): it reads the
+  object store directly. **No push.** The committed range is enough.
+- **Cloud/GitHub-backed reviewer**: it cannot see unpushed commits, so
+  the branch must be pushed or the review is starved of its diff. Get
+  Son's confirmation of the Railway and Vercel deploy branches *first* —
+  those are dashboard-side and unverifiable from the repo.
+
+Establish which reviewer is running before deciding, and record it in
+the handoff's `Pushed to origin` field. **Never push `main`** — that
+deploys and trips the approval lock in AGENTS.md §4.
 
 **7. Hand off, then verify.**
 Produce the handoff (format in AGENTS.md §11). If Codex is reachable via
@@ -87,11 +92,13 @@ disagreement to Son rather than resolving it silently.**
 
 ## Safety
 
-Everything in `AGENTS.md` §3 and §4 binds you. In particular: no push, no
-merge, no deploy, no production migration, no approval activation, no
-corpus publication, and nothing that weakens the real-money lock. Do not
-modify `~/dev/wc26-predictor-archive/`. Do not rename Railway services,
-production URLs, Vercel projects, domains or GitHub repositories.
+Everything in `AGENTS.md` §3 and §4 binds you. In particular: no merge,
+no deploy, no production migration, no approval activation, no corpus
+publication, and nothing that weakens the real-money lock. Pushing is
+governed by step 6 above and AGENTS.md §4 — conditional on the reviewer,
+never to `main`. Do not modify `~/dev/wc26-predictor-archive/`. Do not
+rename Railway services, production URLs, Vercel projects, domains or
+GitHub repositories.
 
 Before finishing, inspect your own diff for secrets, machine-specific
 paths leaking into runtime code, generated files, database artifacts,
@@ -107,4 +114,5 @@ reviewer findings with your independent disposition of each ·
 disagreements for Son to settle · remaining decisions · a recommended
 commit message.
 
-Do not push. Do not deploy.
+Do not deploy. Do not merge. Do not push `main`. Push an implementation
+branch only under the condition in step 6.

@@ -20,13 +20,41 @@ Two consequences that are easy to get wrong in practice:
 
 ## 2. Interpreter and environment
 
-There is a committed virtualenv at `.venv/`. Use it explicitly; the
-system `python3` does not have the dependencies.
+There is a virtualenv at `.venv/` on the developer machine. It is
+**not committed** — nothing under it is tracked, and it excludes itself
+via a `.venv/.gitignore` containing `*` that the `venv` module writes
+automatically. `.gitignore` here lists `venv/`, which does *not* match
+`.venv/`; the self-exclusion is what keeps it out of `git status`.
+
+So in the developer checkout, use it explicitly — the system `python3`
+does not have the dependencies:
 
 ```bash
 .venv/bin/python -m pytest tests/ -q
 .venv/bin/python -m alembic ...
 ```
+
+In a **fresh clone or a detached worktree `.venv/` will be absent.** Do
+not conclude the project is broken; build one:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt -r requirements-dev.txt
+```
+
+Or, when the developer checkout is present and you only need to run the
+suite against another worktree's sources, invoke its interpreter
+directly — verified to work:
+
+```bash
+cd /tmp/trivela-review-backend
+~/dev/TRIVELA/backend/.venv/bin/python -m pytest tests/ -q
+```
+
+> **The local interpreter is not CI's.** This venv is Python 3.14 while
+> `.github/workflows/ci.yml` pins 3.12 (frontend: local Node 24 vs CI's
+> 20). A green local run is evidence about *this* interpreter. Do not
+> report it as proof CI will pass.
 
 Migrations live in `live_migrations/`, not `alembic/` — `alembic.ini`
 points there. `alembic/` does not exist; looking for it and concluding

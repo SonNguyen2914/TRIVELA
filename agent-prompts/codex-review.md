@@ -7,15 +7,29 @@
        CX=/Applications/ChatGPT.app/Contents/Resources/codex
 
      Run it against the reviewer's own detached worktree (AGENTS.md
-     §8.1), never against the implementer's checkout:
+     §8.1), never against the implementer's checkout. Use the launcher
+     — do NOT `cat` this file directly:
 
-       "$CX" exec --sandbox read-only -C /tmp/trivela-review-backend \
-         "$(cat ~/dev/TRIVELA/backend/agent-prompts/codex-review.md)"
+       ~/dev/TRIVELA/backend/scripts/launch-review.sh \
+         <BACKEND_BASE> <BACKEND_TARGET> [<FRONTEND_BASE> <FRONTEND_TARGET>]
+
+     Piping this file raw starts a reviewer with no repository, base or
+     target — it has no range, and is forbidden from inferring one. The
+     launcher
+     resolves them, builds the worktrees and refuses to start if a
+     commit does not exist. A review that had to be told its own range
+     out of band is not reproducible.
 
      `--sandbox read-only` is enforced by Codex itself, not by
      convention: a smoke run was observed being denied write access to
      /tmp while still reading Git state successfully. It is the
      mechanical guarantee behind "Read-only" below.
+
+     But read-only bounds INTEGRITY, not CONFIDENTIALITY. `-C` sets the
+     working directory; it does not scope reads. This reviewer can read
+     the implementer's checkout, the other repository and the wider home
+     directory. Do not treat the sandbox as a secrets boundary — it is
+     a guarantee that nothing is modified, nothing more.
 
      `codex review --base <BRANCH>` also exists and is purpose-built,
      but it derives its own range from a branch. Prefer `exec` with the
@@ -41,20 +55,26 @@ explicitly says otherwise in this session.
 
 ## Review inputs
 
-```text
-Repository:       <REPO>
-Base commit:      <BASE_COMMIT>
-Claude commit:    <CLAUDE_COMMIT>
-```
+Your repositories, base commits and target commits are supplied in the
+**"Review inputs" header prepended above this file** by
+`scripts/launch-review.sh`. There is one block per changed repository;
+if only one changed, the header says so explicitly.
 
-One block per changed repository. If only one changed, record explicitly
-that the other has no review range. **Never infer the range from
-Claude's prose** — Git provides it.
+If that header is absent, you were launched wrongly — **stop and say
+so.** Do not proceed on a guessed range, and never infer one from
+Claude's prose. Git provides the range; the launcher provides the
+endpoints. Verify both ancestries yourself before reviewing:
+
+```bash
+git merge-base --is-ancestor <BASE> <TARGET> && echo "descends"
+```
 
 ## Before you start: don't re-report settled decisions
 
 This codebase has been through five independent evaluations. Read
-`backend/research_archive/v95_evaluation_remediation_2026-07-26.json`
+`research_archive/v95_evaluation_remediation_2026-07-26.json` (relative
+to the backend repository root — there is no `backend/` prefix from
+inside the repo)
 and `git show docs-v9.5:docs/V9.5/DEFECT-ANALYSIS.md` before forming
 findings. (V9.1–V9.5 docs live on `docs-*` branches, not `main`.)
 
