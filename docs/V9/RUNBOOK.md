@@ -1,5 +1,11 @@
 # MLS Shadow Plane — Operator Runbook (V8.1 eval Phase 10)
 
+> **⚠️ SUPERSEDED.** This is the V9 edition (2026-07-23). The current
+> edition is **V9.5** on branch `docs-v9.5` — see [`docs/EDITIONS.md`](../EDITIONS.md)
+> for the full map. V9 predates the first prospective slate, the
+> published corpus, and the paper-coverage / VARCHAR-truncation /
+> engine-signature fixes. Kept for the record.
+
 Procedures for the incidents the evaluation named. The overriding rule:
 **the safest state is no new orders** — money is disabled, and every
 kill switch below only ever *stops* activity.

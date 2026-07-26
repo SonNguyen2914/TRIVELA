@@ -1,5 +1,11 @@
 # CALIBRATION — V9: `mls-2026-v0` Validation (July 23, 2026)
 
+> **⚠️ SUPERSEDED.** This is the V9 edition (2026-07-23). The current
+> edition is **V9.5** on branch `docs-v9.5` — see [`docs/EDITIONS.md`](../EDITIONS.md)
+> for the full map. V9 predates the first prospective slate, the
+> published corpus, and the paper-coverage / VARCHAR-truncation /
+> engine-signature fixes. Kept for the record.
+
 *Supersedes `docs/V8/CALIBRATION.md`, which documented the model's first
 Monte-Carlo walk-forward. The definitive evaluation is now the analytic
 model-development ladder (`src/live/model_eval.py`, `GET /api/mls/model-eval`),

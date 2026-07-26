@@ -1,5 +1,11 @@
 # Project Report — V9: From Shadow Prototype to Validation-Ready (July 22–23, 2026)
 
+> **⚠️ SUPERSEDED.** This is the V9 edition (2026-07-23). The current
+> edition is **V9.5** on branch `docs-v9.5` — see [`docs/EDITIONS.md`](../EDITIONS.md)
+> for the full map. V9 predates the first prospective slate, the
+> published corpus, and the paper-coverage / VARCHAR-truncation /
+> engine-signature fixes. Kept for the record.
+
 *Successor to `docs/V8/PROJECT_REPORT.md` (the MLS expansion + the first
 remediation addenda). This report tells the whole arc as one story: a
 shadow platform, two independent evaluations, and the disciplined build
