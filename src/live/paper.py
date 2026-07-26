@@ -26,14 +26,16 @@ extension.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import hashlib
 import json
 from decimal import ROUND_HALF_UP, ROUND_UP, Decimal
 
 import config
 from src.live.db import get_session, plane_ready
 from src.live.models import (Fixture, MarketContract, MarketDepthLevel,
-                             MarketQuote, MarketSnapshot, PaperFill,
-                             PaperSignal, PredictionContract, PredictionRun)
+                             MarketQuote, MarketSnapshot, PaperEvaluationContext,
+                             PaperFill, PaperSignal, PredictionContract,
+                             PredictionRun)
 from src.live.runs import approved_model_version
 
 THREE_WAY = ("home_win", "draw", "away_win")
@@ -245,147 +247,284 @@ def _market_gate(quote, snap, net_edge, model_approved) -> str | None:
         model_approved=model_approved)
 
 
+def _exposure_doc(exp: dict) -> dict:
+    """An exposure picture as JSON-safe exact decimal strings."""
+    return {
+        "total": str(exp["total"]),
+        "open_count": exp["open_count"],
+        "per_match": {str(k): str(v) for k, v in exp["per_match"].items()},
+        "per_corr": {f"{k[0]}|{k[1]}": str(v)
+                     for k, v in exp["per_corr"].items()},
+        "per_team": {str(k): str(v) for k, v in exp["per_team"].items()},
+    }
+
+
+def _exposure_from_doc(doc: dict) -> dict:
+    from src.live import risk
+    exp = risk.empty_exposure()
+    if not doc:
+        return exp
+    exp["total"] = Decimal(str(doc.get("total", "0")))
+    exp["open_count"] = int(doc.get("open_count") or 0)
+    exp["per_match"] = {int(k): Decimal(v)
+                        for k, v in (doc.get("per_match") or {}).items()}
+    exp["per_team"] = {int(k): Decimal(v)
+                       for k, v in (doc.get("per_team") or {}).items()}
+    corr = {}
+    for k, v in (doc.get("per_corr") or {}).items():
+        fid, _, grp = k.partition("|")
+        corr[(int(fid), grp)] = Decimal(v)
+    exp["per_corr"] = corr
+    return exp
+
+
+def capture_evaluation_context(s, run) -> PaperEvaluationContext:
+    """FREEZE the paper/risk state a lock is evaluated against.
+
+    V9.5 eval C1. Paper decisions depended on three mutable inputs that
+    nothing recorded — active kill switches, open exposure, and whether
+    the model was approved — so a later replay of a frozen lock was not
+    guaranteed to reproduce its decision. Capturing them at lock time
+    makes evaluation a pure function of (frozen lock evidence + this
+    row), and makes a reconstruction checkable rather than merely
+    plausible.
+
+    Idempotent: one context per run, returned as-is if already frozen."""
+    from src.live import model_mls, risk
+    existing = (s.query(PaperEvaluationContext)
+                .filter_by(prediction_run_id=run.id).first())
+    if existing is not None:
+        return existing
+    exposure = _exposure_doc(risk.current_exposure(s))
+    kill = risk.active_kill_switches(s)
+    approved = approved_model_version(s)
+    try:
+        engine = model_mls.engine_signature()["signature_hash"]
+    except Exception:
+        engine = None
+    doc = {
+        "prediction_run_id": run.id,
+        "exec_policy": EXEC_POLICY,
+        "fee_policy": FEE_POLICY,
+        "risk_policy": risk.RISK_POLICY,
+        "kill_switches": kill,
+        "exposure": exposure,
+        "model_approved": approved is not None,
+        "model_approval_decision_id": run.model_approval_decision_id,
+        "engine_signature_hash": engine,
+    }
+    ctx = PaperEvaluationContext(
+        prediction_run_id=run.id, captured_at=_now(),
+        exec_policy_version=EXEC_POLICY["version"],
+        exec_policy_json=json.dumps(EXEC_POLICY, sort_keys=True),
+        fee_policy_version=FEE_POLICY["version"],
+        fee_policy_json=json.dumps(FEE_POLICY, sort_keys=True),
+        risk_policy_version=risk.RISK_POLICY["version"],
+        risk_policy_json=json.dumps(risk.RISK_POLICY, sort_keys=True),
+        kill_switches_json=json.dumps(kill),
+        exposure_json=json.dumps(exposure, sort_keys=True),
+        model_approved=approved is not None,
+        model_approval_decision_id=run.model_approval_decision_id,
+        engine_signature_hash=engine,
+        content_hash=hashlib.sha256(
+            json.dumps(doc, sort_keys=True, default=str).encode()
+        ).hexdigest())
+    s.add(ctx)
+    s.flush()
+    return ctx
+
+
 def paper_trade_lock(run_id: str, backfill: bool = False) -> dict:
     """Generate paper signals + fills for one canonical lock. Idempotent
     (unique per run+contract). PAPER — no real order is ever placed.
 
-    `backfill=True` stamps every signal written with `backfilled_at`, for
-    locks recovered after the fact (see backfill_uncovered_locks). The
-    ARITHMETIC is identical either way — all of it reads frozen values —
-    but the provenance must stay visible in the ledger."""
+    Contemporaneous evaluation (`backfill=False`) FREEZES the paper/risk
+    context first, so the decision it makes is reproducible afterwards.
+    A recovery (`backfill=True`) loads that context and is then a pure
+    replay; when no context exists — locks written before V9.5 — the
+    signal is marked `reconstructed` with a NULL context, which is the
+    honest label for a decision that had to read recovery-time state
+    (V9.5 eval C1)."""
     if not (plane_ready() and config.MLS_SHADOW_ENABLED
             and config.PAPER_TRADING_ENABLED):
         return {"skipped": "off"}
+    from src.live import risk
     s = get_session()
     signals = fills = 0
+    leg_errors: list[str] = []
     try:
         run = s.get(PredictionRun, run_id)
         if run is None or not (run.run_type == "t10" and run.canonical):
             return {"skipped": "not a canonical lock"}
-        model_approved = approved_model_version(s) is not None
+        ctx = (s.query(PaperEvaluationContext)
+               .filter_by(prediction_run_id=run_id).first())
+        if ctx is None and not backfill:
+            ctx = capture_evaluation_context(s, run)
+        mode = "contemporaneous" if not backfill else "reconstructed"
+        if ctx is not None:
+            model_approved = bool(ctx.model_approved)
+            kill_switches = json.loads(ctx.kill_switches_json or "[]")
+            exposure = _exposure_from_doc(
+                json.loads(ctx.exposure_json or "{}"))
+        else:
+            # DEGRADED replay: no frozen context exists for this lock, so
+            # recovery-time state is the only thing available. Recorded
+            # as such rather than presented as a faithful replay.
+            model_approved = approved_model_version(s) is not None
+            kill_switches = risk.active_kill_switches(s)
+            exposure = risk.current_exposure(s)
         snap = (s.get(MarketSnapshot, run.market_snapshot_id)
                 if run.market_snapshot_id else None)
         fx = s.get(Fixture, run.fixture_id)
         for c in (s.query(PredictionContract)
                   .filter_by(prediction_run_id=run_id).all()):
-            if c.outcome_key not in THREE_WAY or not c.market_quote_id \
-                    or not c.market_contract_id:
-                continue
-            if s.query(PaperSignal).filter_by(
-                    prediction_run_id=run_id,
-                    market_contract_id=c.market_contract_id).first():
-                continue
-            quote = s.get(MarketQuote, c.market_quote_id)
-            if quote is None:
-                continue
-            # EXACT ask (V9.1 eval F2): the provider dollar string first,
-            # cents only as a fallback — never the rounded cent as the
-            # economic input
-            ask_d = None
-            if quote.yes_ask_dollars:
-                try:
-                    ask_d = Decimal(quote.yes_ask_dollars)
-                except (ArithmeticError, TypeError, ValueError):
+            # V9.5 eval finding 8: one leg per SAVEPOINT. The whole lock
+            # shared a transaction, so a single persistence failure threw
+            # away every signal and fill for that lock — which is exactly
+            # how the VARCHAR truncation erased six locks while looking
+            # like "the model found nothing". A failed leg now loses only
+            # itself, and is reported rather than swallowed.
+            try:
+                with s.begin_nested():
+                    if c.outcome_key not in THREE_WAY or not c.market_quote_id \
+                            or not c.market_contract_id:
+                        continue
+                    if s.query(PaperSignal).filter_by(
+                            prediction_run_id=run_id,
+                            market_contract_id=c.market_contract_id).first():
+                        continue
+                    quote = s.get(MarketQuote, c.market_quote_id)
+                    if quote is None:
+                        continue
+                    # EXACT ask (V9.1 eval F2): the provider dollar string first,
+                    # cents only as a fallback — never the rounded cent as the
+                    # economic input
                     ask_d = None
-            if ask_d is None:
-                ask_d = (Decimal(quote.yes_ask_c) / 100
-                         if quote.yes_ask_c is not None else Decimal(0))
-            # per-unit fee (exact rate, unquantized) for the net-edge gate
-            unit_fee = FEE_RATE * ask_d * (Decimal(1) - ask_d)
-            net_edge = float(Decimal(str(c.raw_probability))
-                             - (ask_d + unit_fee))
-            reason = _market_gate(quote, snap, net_edge, model_approved)
-            target = EXEC_POLICY["target_contracts"]
-            sig = PaperSignal(
-                prediction_run_id=run_id,
-                market_contract_id=c.market_contract_id,
-                market_quote_id=c.market_quote_id,
-                fixture_id=run.fixture_id, outcome_key=c.outcome_key,
-                policy_version=EXEC_POLICY["version"],
-                model_probability=c.raw_probability,
-                ask_c=quote.yes_ask_c, ask_dollars=str(ask_d),
-                # illustrative whole-order fee at the policy target size
-                fee_c=_to_cents(order_fee_dollars(ask_d, target)),
-                fee_dollars=str(order_fee_dollars(ask_d, target)),
-                net_edge=net_edge,
-                decision="reject" if reason else "fill",
-                reject_reason=reason, created_at=_now(),
-                backfilled_at=(_now() if backfill else None))
-            s.add(sig)
-            s.flush()
-            signals += 1
-            if reason:
+                    if quote.yes_ask_dollars:
+                        try:
+                            ask_d = Decimal(quote.yes_ask_dollars)
+                        except (ArithmeticError, TypeError, ValueError):
+                            ask_d = None
+                    if ask_d is None:
+                        ask_d = (Decimal(quote.yes_ask_c) / 100
+                                 if quote.yes_ask_c is not None else Decimal(0))
+                    # per-unit fee (exact rate, unquantized) for the net-edge gate
+                    unit_fee = FEE_RATE * ask_d * (Decimal(1) - ask_d)
+                    net_edge = float(Decimal(str(c.raw_probability))
+                                     - (ask_d + unit_fee))
+                    reason = _market_gate(quote, snap, net_edge, model_approved)
+                    target = EXEC_POLICY["target_contracts"]
+                    sig = PaperSignal(
+                        prediction_run_id=run_id,
+                        market_contract_id=c.market_contract_id,
+                        market_quote_id=c.market_quote_id,
+                        fixture_id=run.fixture_id, outcome_key=c.outcome_key,
+                        policy_version=EXEC_POLICY["version"],
+                        model_probability=c.raw_probability,
+                        ask_c=quote.yes_ask_c, ask_dollars=str(ask_d),
+                        # illustrative whole-order fee at the policy target size
+                        fee_c=_to_cents(order_fee_dollars(ask_d, target)),
+                        fee_dollars=str(order_fee_dollars(ask_d, target)),
+                        net_edge=net_edge,
+                        decision="reject" if reason else "fill",
+                        reject_reason=reason, created_at=_now(),
+                        backfilled_at=(_now() if backfill else None),
+                        evaluation_mode=mode,
+                        paper_evaluation_context_id=(ctx.id if ctx else None))
+                    s.add(sig)
+                    s.flush()
+                    signals += 1
+                    if reason:
+                        continue
+                    depth = s.query(MarketDepthLevel).filter_by(
+                        market_quote_id=c.market_quote_id).all()
+                    # V9.3 eval F4: a ladder built from the top quote because NO
+                    # order-book depth was captured is a top-of-book ESTIMATE, not
+                    # a depth-backed execution. Classify it explicitly so
+                    # execution-grade metrics can exclude it (or reject outright
+                    # when the policy demands depth).
+                    exec_class = ("bounded_depth" if depth
+                                  else "top_of_book_estimate")
+                    if not depth and EXEC_POLICY["require_depth_for_fill"]:
+                        sig.decision = "reject"
+                        sig.reject_reason = "DEPTH_UNAVAILABLE"
+                        continue
+                    ladder = yes_buy_ladder(quote, depth)
+                    fill = simulate_fill(ladder, target)
+                    if fill["filled"] == 0:
+                        sig.decision = "reject"
+                        sig.reject_reason = "DEPTH_INSUFFICIENT"
+                        continue
+                    # EXACT economics: fees charged on the ACTUAL per-level
+                    # allocations (V9.3 eval F2), never one fee at the blended
+                    # average — the general fee is non-linear in price.
+                    avg = fill["avg_price"]
+                    filled = fill["filled"]
+                    fee_total, alloc_breakdown = allocation_fees(fill["allocations"])
+                    cost = fill["notional"] + fee_total
+                    # V9.3 eval F3: the quoted edge authorised this order, but the
+                    # depth walk may have paid a worse average. Re-apply the policy
+                    # to the economics the fill ACTUALLY achieved, and refuse the
+                    # fill if it no longer clears the threshold.
+                    per_contract_fee = fee_total / filled if filled else Decimal(0)
+                    realized_edge = float(Decimal(str(c.raw_probability))
+                                          - (avg + per_contract_fee))
+                    sig.realized_net_edge = realized_edge
+                    if realized_edge < EXEC_POLICY["min_net_edge"]:
+                        sig.decision = "reject"
+                        sig.reject_reason = "POST_FILL_EDGE_BELOW_THRESHOLD"
+                        continue
+                    cost_c = _to_cents(cost)
+                    slip = fill["slippage"]
+                    # EXPOSURE gates — the central risk authority, after the fill
+                    # cost is known (position size / correlation / bankroll / kill).
+                    # EXACT dollars (V9.5 eval H4), against the exposure and kill
+                    # switches FROZEN on this lock's context (V9.5 eval C1) rather
+                    # than whatever the database holds at evaluation time.
+                    from src.live import risk
+                    risk_reason = risk.exposure_gate(
+                        fx, c.outcome_key, cost, slip,
+                        kill_switches=kill_switches, exposure=exposure)
+                    if risk_reason:
+                        sig.decision = "reject"
+                        sig.reject_reason = risk_reason
+                        continue
+                    # an accepted fill counts against the NEXT leg's budget, which
+                    # is what happened at lock time and what a replay must repeat
+                    risk.add_exposure(exposure, fx, c.outcome_key, cost)
+                    s.add(PaperFill(
+                        paper_signal_id=sig.id,
+                        requested_contracts=target,
+                        filled_contracts=int(filled), filled_contracts_fp=str(filled),
+                        avg_fill_price_c=_to_cents(avg),
+                        avg_fill_price_dollars=str(avg),
+                        best_ask_c=_to_cents(fill["best_ask"]),
+                        slippage_c=_to_cents(slip),
+                        fee_c=_to_cents(fee_total), fee_dollars=str(fee_total),
+                        cost_c=cost_c, cost_dollars=str(cost),
+                        levels_consumed=fill["levels"],
+                        execution_class=exec_class,
+                        allocations_json=json.dumps(alloc_breakdown),
+                        fee_policy_version=FEE_POLICY["version"],
+                        latency_ms=EXEC_POLICY["latency_ms"],
+                        reason=("partial" if filled < Decimal(str(target))
+                                else "filled"),
+                        created_at=_now(), status="open"))
+                    fills += 1
+            except Exception as exc:
+                leg_errors.append(
+                    f"{c.outcome_key}: {type(exc).__name__}: "
+                    f"{str(exc)[:120]}")
+                print(f"[paper] leg {run_id} {c.outcome_key}: {exc}")
                 continue
-            depth = s.query(MarketDepthLevel).filter_by(
-                market_quote_id=c.market_quote_id).all()
-            # V9.3 eval F4: a ladder built from the top quote because NO
-            # order-book depth was captured is a top-of-book ESTIMATE, not
-            # a depth-backed execution. Classify it explicitly so
-            # execution-grade metrics can exclude it (or reject outright
-            # when the policy demands depth).
-            exec_class = ("bounded_depth" if depth
-                          else "top_of_book_estimate")
-            if not depth and EXEC_POLICY["require_depth_for_fill"]:
-                sig.decision = "reject"
-                sig.reject_reason = "DEPTH_UNAVAILABLE"
-                continue
-            ladder = yes_buy_ladder(quote, depth)
-            fill = simulate_fill(ladder, target)
-            if fill["filled"] == 0:
-                sig.decision = "reject"
-                sig.reject_reason = "DEPTH_INSUFFICIENT"
-                continue
-            # EXACT economics: fees charged on the ACTUAL per-level
-            # allocations (V9.3 eval F2), never one fee at the blended
-            # average — the general fee is non-linear in price.
-            avg = fill["avg_price"]
-            filled = fill["filled"]
-            fee_total, alloc_breakdown = allocation_fees(fill["allocations"])
-            cost = fill["notional"] + fee_total
-            # V9.3 eval F3: the quoted edge authorised this order, but the
-            # depth walk may have paid a worse average. Re-apply the policy
-            # to the economics the fill ACTUALLY achieved, and refuse the
-            # fill if it no longer clears the threshold.
-            per_contract_fee = fee_total / filled if filled else Decimal(0)
-            realized_edge = float(Decimal(str(c.raw_probability))
-                                  - (avg + per_contract_fee))
-            sig.realized_net_edge = realized_edge
-            if realized_edge < EXEC_POLICY["min_net_edge"]:
-                sig.decision = "reject"
-                sig.reject_reason = "POST_FILL_EDGE_BELOW_THRESHOLD"
-                continue
-            cost_c = _to_cents(cost)
-            slip = fill["slippage"]
-            # EXPOSURE gates — the central risk authority, after the fill
-            # cost is known (position size / correlation / bankroll / kill)
-            from src.live import risk
-            risk_reason = risk.exposure_gate(
-                s, fx, c.outcome_key, cost_c, _to_cents(slip))
-            if risk_reason:
-                sig.decision = "reject"
-                sig.reject_reason = risk_reason
-                continue
-            s.add(PaperFill(
-                paper_signal_id=sig.id,
-                requested_contracts=target,
-                filled_contracts=int(filled), filled_contracts_fp=str(filled),
-                avg_fill_price_c=_to_cents(avg),
-                avg_fill_price_dollars=str(avg),
-                best_ask_c=_to_cents(fill["best_ask"]),
-                slippage_c=_to_cents(slip),
-                fee_c=_to_cents(fee_total), fee_dollars=str(fee_total),
-                cost_c=cost_c, cost_dollars=str(cost),
-                levels_consumed=fill["levels"],
-                execution_class=exec_class,
-                allocations_json=json.dumps(alloc_breakdown),
-                fee_policy_version=FEE_POLICY["version"],
-                latency_ms=EXEC_POLICY["latency_ms"],
-                reason=("partial" if filled < Decimal(str(target))
-                        else "filled"),
-                created_at=_now(), status="open"))
-            fills += 1
         s.commit()
-        return {"signals": signals, "fills": fills}
+        out = {"signals": signals, "fills": fills, "mode": mode,
+               "context_frozen": ctx is not None}
+        if leg_errors:
+            # a partially-evaluated lock is a real state and must never
+            # read as a clean success
+            out["leg_errors"] = leg_errors
+        return out
     except Exception as exc:
         s.rollback()
         print(f"[paper] trade failed: {exc}")
@@ -559,10 +698,30 @@ def paper_summary() -> dict:
         # depth is an ESTIMATE, not a depth-backed execution. Headline P&L
         # is EXECUTION-GRADE ONLY (bounded_depth); estimates are reported
         # separately so they can never silently inflate or deflate ROI.
+        # V9.5 eval C1: and a fill whose signal was RECONSTRUCTED after
+        # the fact is not prospective execution evidence at all. Every
+        # fill of the first slate was one. The headline is therefore
+        # contemporaneous AND execution-grade; everything else is
+        # reported beside it, never inside it.
+        mode_of = {}
+        for sid, m in s.query(PaperSignal.id,
+                              PaperSignal.evaluation_mode).all():
+            mode_of[sid] = m or "contemporaneous"
+
+        def _contemporaneous(f):
+            return mode_of.get(f.paper_signal_id,
+                               "contemporaneous") == "contemporaneous"
         graded = [f for f in settled
-                  if f.execution_class == "bounded_depth"]
+                  if f.execution_class == "bounded_depth"
+                  and _contemporaneous(f)]
         estimates = [f for f in settled
-                     if f.execution_class != "bounded_depth"]
+                     if f.execution_class != "bounded_depth"
+                     and _contemporaneous(f)]
+        recon = [f for f in settled if not _contemporaneous(f)]
+        recon_pnl = sum((Decimal(f.pnl_dollars) for f in recon
+                         if f.pnl_dollars), Decimal(0))
+        recon_cost = sum((Decimal(f.cost_dollars) for f in recon
+                          if f.cost_dollars), Decimal(0))
         # exact P&L in dollars (V9.1 eval F2/F3), summed as Decimal
         pnl_d = sum((Decimal(f.pnl_dollars) for f in graded
                      if f.pnl_dollars), Decimal(0))
@@ -591,14 +750,27 @@ def paper_summary() -> dict:
             "rejected": rejects, "reject_reasons": reasons,
             "open_fills": sum(1 for f in fills if f.status == "open"),
             "settled_fills": len(graded),
-            # excluded from the headline: no captured depth backed them
-            "execution_grade": "bounded_depth",
+            # the headline counts CONTEMPORANEOUS, depth-backed fills only
+            "execution_grade": "contemporaneous_bounded_depth",
             "estimate_only": {
                 "settled_fills": len(estimates),
                 "settled_pnl_dollars": str(est_pnl_d),
                 "settled_cost_dollars": str(est_cost_d),
                 "note": ("top-of-book estimates — no captured depth; "
                          "EXCLUDED from the headline P&L and ROI"),
+            },
+            "reconstructed_only": {
+                "settled_fills": len(recon),
+                "settled_pnl_dollars": str(recon_pnl),
+                "settled_cost_dollars": str(recon_cost),
+                "roi_pct": (round(100 * float(recon_pnl / recon_cost), 2)
+                            if recon_cost else None),
+                "note": ("signals replayed AFTER the slate, not decisions "
+                         "made at lock time — evaluated against "
+                         "recovery-time risk state where no frozen "
+                         "context existed. Engineering evidence; EXCLUDED "
+                         "from the headline and never a performance "
+                         "record (V9.5 eval C1)"),
             },
             "settled_cost_c": cost, "settled_pnl_c": pnl,
             "roi_pct": round(100 * pnl / cost, 2) if cost else None,

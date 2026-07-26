@@ -464,6 +464,49 @@ class MarketDepthLevel(LiveBase):
     size_fp = Column(String(24))
 
 
+class PaperEvaluationContext(LiveBase):
+    """The complete paper/risk state FROZEN at lock time.
+
+    V9.5 evaluation, critical finding 1: `paper_trade_lock` read LIVE
+    kill switches, LIVE open exposure and the LIVE approved-model state,
+    so a recovery run was never a pure replay — the same frozen lock
+    could legitimately yield a different decision later (the evaluator
+    demonstrated it by flipping a kill switch). The release nonetheless
+    called the backfill "faithful by construction", which was true only
+    of the market inputs.
+
+    Every non-market input a paper decision depends on is captured here
+    at lock time, so evaluation becomes a pure function of
+
+        frozen lock evidence  +  this row
+
+    A reconstruction that can load this row reproduces the lock-time
+    decision exactly. One without it is explicitly degraded — see
+    PaperSignal.evaluation_mode."""
+    __tablename__ = "paper_evaluation_context"
+    id = Column(Integer, primary_key=True)
+    prediction_run_id = Column(String(36),
+                               ForeignKey("prediction_run.id"),
+                               nullable=False, unique=True)
+    captured_at = Column(DateTime(timezone=True))
+    exec_policy_version = Column(String(64))
+    exec_policy_json = Column(Text)
+    fee_policy_version = Column(String(64))
+    fee_policy_json = Column(Text)
+    risk_policy_version = Column(String(64))
+    risk_policy_json = Column(Text)
+    # the gates that read mutable state — frozen here
+    kill_switches_json = Column(Text)      # [] when nothing was tripped
+    exposure_json = Column(Text)           # open exposure, exact dollars
+    model_approved = Column(Boolean)
+    model_approval_decision_id = Column(
+        Integer, ForeignKey("model_approval_decision.id"))
+    engine_signature_hash = Column(String(64))
+    # sha256 over the canonical document above, so a context cannot be
+    # edited after the fact without detection
+    content_hash = Column(String(64))
+
+
 class PaperSignal(LiveBase):
     """A paper-trading DECISION on one contract of a canonical lock
     (V8.1 evaluation Phase 7). PAPER ONLY — no real order is ever
@@ -501,6 +544,15 @@ class PaperSignal(LiveBase):
     # from the frozen book (deterministic, but not the same evidence as
     # a signal that existed at lock time — see paper.paper_coverage).
     backfilled_at = Column(DateTime(timezone=True))
+    # V9.5 eval C1 — provenance of the DECISION, not just its timing:
+    #   contemporaneous  evaluated at lock time against live state
+    #   reconstructed    replayed later. Pure when it carries a frozen
+    #                    context; DEGRADED when that FK is NULL, because
+    #                    then recovery-time risk state was read instead.
+    # Only contemporaneous rows may feed headline execution metrics.
+    evaluation_mode = Column(String(20), default="contemporaneous")
+    paper_evaluation_context_id = Column(
+        Integer, ForeignKey("paper_evaluation_context.id"))
     __table_args__ = (
         UniqueConstraint("prediction_run_id", "market_contract_id",
                          name="uq_paper_signal_run_contract"),

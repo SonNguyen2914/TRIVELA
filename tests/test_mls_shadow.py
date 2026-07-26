@@ -821,6 +821,137 @@ class TestPaperCoverage:
         assert cov["complete"] is False
 
 
+class TestFrozenPaperEvaluationContext:
+    """V9.5 evaluation, critical finding 1. `paper_trade_lock` read LIVE
+    kill switches, LIVE open exposure and the LIVE approved-model state,
+    so a recovery was never a pure replay — the evaluator flipped a kill
+    switch and turned the same frozen lock from `fill` into `reject`.
+    Every fill of the first prospective slate came from such a recovery.
+
+    The release called the backfill "faithful by construction". It was
+    faithful about the MARKET inputs and silent about the rest."""
+
+    _lock_with_book = TestPaperTrading._lock_with_book
+
+    def test_context_is_frozen_at_lock_time(self, live_session, monkeypatch):
+        import json as _json
+
+        from src.live import paper
+        from src.live.models import PaperEvaluationContext, PaperSignal
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        self._lock_with_book(live_session, ask=45, model_p=0.60)
+        paper.paper_trade_lock("lock")
+        ctx = live_session.query(PaperEvaluationContext).one()
+        assert ctx.prediction_run_id == "lock"
+        assert ctx.content_hash and len(ctx.content_hash) == 64
+        assert ctx.risk_policy_version == "risk-v2"
+        assert _json.loads(ctx.kill_switches_json) == []
+        sigs = live_session.query(PaperSignal).all()
+        assert {s.evaluation_mode for s in sigs} == {"contemporaneous"}
+        assert all(s.paper_evaluation_context_id == ctx.id for s in sigs)
+
+    def test_replay_ignores_a_kill_switch_flipped_AFTER_the_lock(
+            self, live_session, monkeypatch):
+        """The evaluator's adversarial reproduction, as a regression
+        test. A kill switch tripped after the lock must not change what
+        that lock decided — the frozen context is the authority."""
+        from src.live import paper
+        from src.live.models import PaperFill, PaperSignal
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        self._lock_with_book(live_session, ask=45, model_p=0.60)
+        paper.paper_trade_lock("lock")            # freezes the context
+        inline = live_session.query(PaperSignal).filter_by(
+            outcome_key="home_win").one()
+        assert inline.decision == "fill"
+        live_session.query(PaperFill).delete()
+        live_session.query(PaperSignal).delete()
+        live_session.commit()
+        monkeypatch.setattr(config, "GLOBAL_TRADING_DISABLED", True)
+        res = paper.paper_trade_lock("lock", backfill=True)
+        assert res["context_frozen"] is True
+        replayed = live_session.query(PaperSignal).filter_by(
+            outcome_key="home_win").one()
+        # v1 returned KILL_SWITCH:GLOBAL_TRADING_DISABLED here
+        assert replayed.decision == "fill"
+        assert replayed.reject_reason is None
+        assert replayed.evaluation_mode == "reconstructed"
+
+    def test_replay_without_a_frozen_context_is_marked_degraded(
+            self, live_session, monkeypatch):
+        """Locks written before V9.5 have no context. Their recovery has
+        to read recovery-time state, and must say so rather than pass as
+        a faithful replay."""
+        from src.live import paper
+        from src.live.models import PaperEvaluationContext, PaperSignal
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        self._lock_with_book(live_session, ask=45, model_p=0.60)
+        res = paper.paper_trade_lock("lock", backfill=True)
+        assert res["context_frozen"] is False
+        assert live_session.query(PaperEvaluationContext).count() == 0
+        sig = live_session.query(PaperSignal).filter_by(
+            outcome_key="home_win").one()
+        assert sig.evaluation_mode == "reconstructed"
+        assert sig.paper_evaluation_context_id is None
+
+    def test_degraded_replay_still_obeys_live_state_which_is_the_point(
+            self, live_session, monkeypatch):
+        """The contrast that proves the frozen context does real work:
+        with NO context, recovery reads live state and a switch tripped
+        afterwards changes the decision — the exact defect. With one, it
+        does not (see the kill-switch test above)."""
+        from src.live import paper
+        from src.live.models import PaperSignal
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        self._lock_with_book(live_session, ask=45, model_p=0.60)
+        monkeypatch.setattr(config, "GLOBAL_TRADING_DISABLED", True)
+        paper.paper_trade_lock("lock", backfill=True)
+        sig = live_session.query(PaperSignal).filter_by(
+            outcome_key="home_win").one()
+        assert sig.decision == "reject"
+        assert sig.reject_reason == "KILL_SWITCH:GLOBAL_TRADING_DISABLED"
+
+    def test_reconstructed_fills_are_excluded_from_the_headline(
+            self, live_session, monkeypatch):
+        """The first slate reported -$69.32 as its P&L. Every fill behind
+        it was reconstructed, so it must not sit in the headline."""
+        from src.live import paper
+        from src.live.models import PaperFill
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        fx = self._lock_with_book(live_session, ask=45, model_p=0.60)
+        paper.paper_trade_lock("lock", backfill=True)   # no context
+        fx.status = "post"; fx.home_goals = 2; fx.away_goals = 0
+        live_session.commit()
+        paper.settle_paper()
+        assert live_session.query(PaperFill).count() == 1
+        summary = paper.paper_summary()
+        assert summary["settled_fills"] == 0          # headline empty
+        assert summary["settled_pnl_dollars"] == "0"
+        assert summary["roi_pct"] is None
+        recon = summary["reconstructed_only"]
+        assert recon["settled_fills"] == 1
+        assert Decimal(recon["settled_pnl_dollars"]) != 0
+        assert summary["execution_grade"] == "contemporaneous_bounded_depth"
+
+    def test_exposure_gate_compares_exact_dollars(self):
+        """V9.5 eval H4: v1 rounded to cents first, so $60.004 cleared a
+        $60.000 correlated cap and 3.004c of slippage cleared a 3c one."""
+        from types import SimpleNamespace as NS
+
+        from src.live import risk
+        fx = NS(id=1, home_team_id=1, away_team_id=2)
+        exp = risk.empty_exposure()
+        r = risk.exposure_gate(fx, "home_win", Decimal("60.004"),
+                               Decimal(0), kill_switches=[], exposure=exp)
+        assert r == "CORRELATED_EXPOSURE_LIMIT"
+        r2 = risk.exposure_gate(fx, "home_win", Decimal("10.00"),
+                                Decimal("0.03004"),
+                                kill_switches=[], exposure=exp)
+        assert r2 == "SLIPPAGE_TOO_HIGH"
+        assert risk.exposure_gate(fx, "home_win", Decimal("60.000"),
+                                  Decimal("0.03"), kill_switches=[],
+                                  exposure=exp) is None
+
+
 class TestEngineSignatureRevisionDrift:
     """The engine signature hashes the git revision, so EVERY deploy
     changes it. After the 2026-07-25 slate an unrelated deploy (a
@@ -953,9 +1084,11 @@ class TestRiskEngine:
         from src.live import risk
         from types import SimpleNamespace as NS
         monkeypatch.setattr(config, "GLOBAL_TRADING_DISABLED", True)
-        r = risk.exposure_gate(live_session, NS(id=1, home_team_id=1,
-                                                away_team_id=2),
-                               "home_win", 1000, 0)
+        r = risk.exposure_gate(
+            NS(id=1, home_team_id=1, away_team_id=2), "home_win",
+            Decimal("10.00"), Decimal(0),
+            kill_switches=risk.active_kill_switches(live_session),
+            exposure=risk.current_exposure(live_session))
         assert r == "KILL_SWITCH:GLOBAL_TRADING_DISABLED"
 
     def test_correlated_exposure_limit(self, live_session, monkeypatch):
@@ -980,10 +1113,14 @@ class TestRiskEngine:
             cost_c=pol["max_correlated_exposure_c"] - 500))
         live_session.commit()
         # a new home_margin bet (same direction) that would exceed it
-        r = risk.exposure_gate(live_session, fx, "home_margin_2", 1000, 0)
+        exp = risk.current_exposure(live_session)
+        ks = risk.active_kill_switches(live_session)
+        r = risk.exposure_gate(fx, "home_margin_2", Decimal("10.00"),
+                               Decimal(0), kill_switches=ks, exposure=exp)
         assert r == "CORRELATED_EXPOSURE_LIMIT"
         # an AWAY bet (different direction) is not blocked by that budget
-        r2 = risk.exposure_gate(live_session, fx, "away_win", 1000, 0)
+        r2 = risk.exposure_gate(fx, "away_win", Decimal("10.00"),
+                                Decimal(0), kill_switches=ks, exposure=exp)
         assert r2 != "CORRELATED_EXPOSURE_LIMIT"
 
     def test_paper_uses_risk_engine_for_exposure(self, live_session,
@@ -1204,7 +1341,7 @@ class TestObservability:
         assert m["locks"]["lock_success_rate"] is not None
         # risk assessment is well-formed
         r = risk.assess()
-        assert r["policy_version"] == "risk-v1"
+        assert r["policy_version"] == "risk-v2"   # exact-Decimal gating
         assert "active_kill_switches" in r
 
 
