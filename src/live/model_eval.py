@@ -540,10 +540,21 @@ def ensure_approval_decision(corpus_version: str | None = None,
     set approved_for_shadow FROM it (V9 eval F1/F10; V9.1 eval F8). Boot
     LOADS rather than recomputes, so the approving decision does not drift
     as the mutable database accumulates data — a re-evaluation is an
-    explicit force=True operator action. Deduped by content hash."""
+    explicit force=True operator action. Deduped by content hash.
+
+    `corpus_version` defaults to the newest PUBLISHED corpus. Boot passed
+    nothing, so every decision recorded corpus_version=null and the
+    evidence contract's "this model was approved against THIS frozen
+    corpus" binding never existed in practice. Resolving it here means
+    the binding happens by default rather than by an operator remembering
+    a version string; it stays null, honestly, until a corpus is
+    published."""
     if not plane_ready():
         return {"error": "dormant"}
     from src.live import model_mls
+    if corpus_version is None:
+        from src.live import corpus as _c
+        corpus_version = _c.latest_published_version()
     current_engine = model_mls.engine_signature()["signature_hash"]
     if not force:
         existing = _active_decision()
@@ -557,10 +568,17 @@ def ensure_approval_decision(corpus_version: str | None = None,
                     existing.decision_document).get("engine_signature")
             except (ValueError, TypeError):
                 doc_engine = None
-            if doc_engine == current_engine:
+            # A change in the corpus binding must also fall through. The
+            # active decision recorded corpus_version=null; publishing a
+            # corpus does not retroactively bind it, and silently
+            # returning the unbound row would leave the binding
+            # permanently unreachable without an operator force.
+            if (doc_engine == current_engine
+                    and existing.corpus_version == corpus_version):
                 return {"decision_id": existing.id, "approved": True,
                         "loaded": True,
                         "content_hash": existing.content_hash,
+                        "corpus_version": existing.corpus_version,
                         "reason": "loaded active decision (not recomputed)",
                         "policy_version": existing.policy_version,
                         "n_scored": existing.n_scored}

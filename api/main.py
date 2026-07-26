@@ -506,6 +506,36 @@ def mls_admin_publish_corpus(request: Request, version: str = Query(...)):
     return live_corpus.publish_corpus(version)
 
 
+@app.post("/api/admin/mls/approval/bind-corpus")
+def mls_admin_bind_corpus(request: Request,
+                          corpus_version: str | None = Query(None),
+                          n_boot: int = Query(1000)):
+    """Operator-only: persist the approval decision BOUND to a published
+    corpus.
+
+    Every decision to date recorded corpus_version=null — boot called
+    ensure_approval_decision() with no corpus, so the evidence contract's
+    "approved against THIS frozen corpus" link was never actually made.
+    With a corpus published, this evaluates and persists a new immutable
+    decision carrying that corpus version and its manifest hash inside
+    the decision's content hash. Defaults to the newest published
+    corpus, and refuses when none exists — binding to nothing is the
+    condition it is here to fix."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import corpus as live_corpus
+    from src.live import model_eval
+    target = corpus_version or live_corpus.latest_published_version()
+    if not target:
+        raise HTTPException(
+            409, "no published corpus to bind to — publish one first "
+                 "(POST /api/admin/mls/corpus/publish?version=...)")
+    res = model_eval.ensure_approval_decision(corpus_version=target,
+                                              n_boot=n_boot, force=True)
+    return {**res, "bound_corpus_version": target,
+            "generated_at": utcnow().isoformat()}
+
+
 @app.get("/api/mls/replay/{run_id}")
 def mls_replay(run_id: str):
     """Independent reproducibility check: replay a run from its stored
