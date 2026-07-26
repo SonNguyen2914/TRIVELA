@@ -1,0 +1,48 @@
+{
+ "receipt": "published-corpus-verification",
+ "verified_at": "2026-07-26T06:54:52.514464+00:00",
+ "corpus_version": "mls-shadow-2026-07-25-slate-v1",
+ "schema_version": "corpus-v2",
+ "published_manifest_hash": "7e0836818f6f25f9a08126140eca822c063574f1e50cf0ffe003d3827415a27c",
+ "independently_recomputed_manifest_hash": "7e0836818f6f25f9a08126140eca822c063574f1e50cf0ffe003d3827415a27c",
+ "manifest_hash_matches": true,
+ "sections": 24,
+ "section_content_hash_mismatches": [],
+ "all_sections_verify": true,
+ "serialization": "json.dumps(section, sort_keys=True, ensure_ascii=False) \u2014 ensure_ascii MATTERS: the default (True) mismatches every section containing non-ASCII (player/team names, em dashes in notes)",
+ "download": {
+  "raw_bytes": 12527338,
+  "raw_sha256": "bc9fe7639d6b5d23a274c06809431b4c4ec0f6570d05e4476b4702e51f4c4cd8",
+  "gz_bytes": 948684,
+  "gz_sha256": "29cccf83e456c6b9c2fae6c0d69a0b09a3bdb1058ec0349557ab0e106b0330fe",
+  "note": "raw JSON is gitignored (12 MB); the .gz is committed. The authoritative immutable copy is served from prod: GET /api/mls/corpus?version=mls-shadow-2026-07-25-slate-v1&full=1"
+ },
+ "counts": {
+  "canonical_locks": 15,
+  "completed_fixtures": 253,
+  "depth_rows": 14320,
+  "failed_snapshots": 0,
+  "fixtures": 511,
+  "frozen_quotes": 930,
+  "input_artifacts": 309,
+  "lineup_snapshots": 15,
+  "lock_snapshots": 15,
+  "missed_locks": 0,
+  "paper_fills": 7,
+  "paper_signals": 45,
+  "players": 857,
+  "prediction_runs": 399
+ },
+ "bound_approval": {
+  "decision_id": 197,
+  "content_hash": "58382fc9da71d2acbd9be2be3dfd8cd87f2c6892a3399ce6b0266a80fe6c48d0",
+  "n_scored": 177,
+  "edge_vs_baseline": 0.0269,
+  "ci95": [
+   -0.0041,
+   0.0603
+  ],
+  "significant": false,
+  "note": "n_scored moved 162 -> 177 as the 15 prospective slate fixtures became scorable; the edge estimate fell from +0.0331 to +0.0269 and the CI still spans zero. Consistent with the slate scoring slightly below baseline. Still NOT significant."
+ }
+}
