@@ -17,6 +17,38 @@ from src.live.models import (Competition, Fixture, FixtureChange, LiveBase,
 UTC = timezone.utc
 
 
+def _enforce_varchar_lengths(session, flush_context, instances):
+    """Make SQLite reject over-long VARCHAR values the way PostgreSQL does.
+
+    SQLite ignores VARCHAR(n) entirely. Production is PostgreSQL, which
+    raises StringDataRightTruncation. That gap cost the first prospective
+    slate its entire fill record: FEE_POLICY["version"] grew to 26 chars
+    against a String(24) column, every paper_fill INSERT died on
+    PostgreSQL, the surrounding transaction rolled back — and because
+    only locks that produced a FILL ever inserted one, the ledger kept
+    100% of the rejections and 0% of the fills. The suite was green
+    throughout, because SQLite happily stored 26 chars in a 24-char
+    column.
+
+    Any test that writes a row now gets PostgreSQL-grade enforcement, so
+    this class of defect cannot pass a local run again."""
+    from sqlalchemy import String
+    for obj in list(session.new) + list(session.dirty):
+        table = getattr(obj, "__table__", None)
+        if table is None:
+            continue
+        for col in table.columns:
+            if not (isinstance(col.type, String) and col.type.length):
+                continue
+            val = getattr(obj, col.key, None)
+            if isinstance(val, str) and len(val) > col.type.length:
+                raise ValueError(
+                    f"value too long for {table.name}.{col.name}: "
+                    f"{len(val)} chars > String({col.type.length}) "
+                    f"— PostgreSQL would raise "
+                    f"StringDataRightTruncation here. Value: {val!r}")
+
+
 @pytest.fixture()
 def live_session(tmp_path, monkeypatch):
     """Point the whole live plane at a throwaway sqlite file so module
@@ -27,10 +59,14 @@ def live_session(tmp_path, monkeypatch):
     monkeypatch.setattr(live_db, "_Session", None)
     monkeypatch.setattr(live_db, "LIVE_BOOT_ERROR", None)
     LiveBase.metadata.create_all(live_db.get_engine())
+    from sqlalchemy import event
+    from sqlalchemy.orm import Session as _Session
+    event.listen(_Session, "before_flush", _enforce_varchar_lengths)
     s = live_db.get_session()
     s.add(Competition(slug="mls-2026", name="MLS", season=2026))
     s.commit()
     yield s
+    event.remove(_Session, "before_flush", _enforce_varchar_lengths)
     s.close()
     monkeypatch.setattr(live_db, "_engine", None)
     monkeypatch.setattr(live_db, "_Session", None)
@@ -783,6 +819,78 @@ class TestPaperCoverage:
         # the exact reading that was impossible on the first slate
         assert cov["legs_eligible"] == 1 and cov["legs_signalled"] == 0
         assert cov["complete"] is False
+
+
+class TestVersionStringsFitTheirColumns:
+    """The defect that destroyed the first slate's fill record was not in
+    any algorithm. FEE_POLICY["version"] grew to 26 characters against a
+    String(24) column; PostgreSQL rejected every paper_fill INSERT while
+    SQLite — the whole suite's backend — accepted it silently.
+
+    The rollback then made the loss BIASED rather than merely partial: a
+    lock that found no edge wrote no fill and committed normally, while a
+    lock that found one rolled back and lost its signals too. The ledger
+    kept 100% of rejections and 0% of fills, and reported the result as
+    "the model found nothing".
+
+    These tests make the invariant explicit rather than incidental."""
+
+    def test_every_versioned_constant_fits_the_column_it_is_written_to(self):
+        from sqlalchemy import String
+
+        from src.live import audit as live_audit
+        from src.live import corpus as live_corpus
+        from src.live import lineups as live_lineups
+        from src.live import markets as live_markets
+        from src.live import model_eval, model_mls, paper, risk
+        from src.live.models import (CorpusExport, LineupSnapshot,
+                                     MarketSnapshot, ModelApprovalDecision,
+                                     ModelInputArtifact, PaperFill,
+                                     PaperSignal)
+        # (constant, model, column) — every place a versioned string we
+        # control is persisted
+        bindings = [
+            (paper.FEE_POLICY["version"], PaperFill, "fee_policy_version"),
+            (paper.EXEC_POLICY["version"], PaperSignal, "policy_version"),
+            (live_markets.LOCK_POLICY_VERSION, MarketSnapshot,
+             "policy_version"),
+            (live_markets.PROVIDER_SCHEMA_VERSION, MarketSnapshot,
+             "provider_schema_version"),
+            (model_mls.INPUT_ARTIFACT_SCHEMA, ModelInputArtifact,
+             "schema_version"),
+            (live_corpus.CORPUS_SCHEMA, CorpusExport, "schema_version"),
+            (model_eval.EVAL_VERSION, ModelApprovalDecision, "eval_version"),
+            (model_eval.APPROVAL_POLICY_VERSION, ModelApprovalDecision,
+             "policy_version"),
+            (live_lineups.PARSER_VERSION, LineupSnapshot, "parser_version"),
+        ]
+        for value, model, column in bindings:
+            col = model.__table__.columns[column]
+            assert isinstance(col.type, String) and col.type.length
+            assert len(value) <= col.type.length, (
+                f"{model.__tablename__}.{column} is String("
+                f"{col.type.length}) but the constant written to it is "
+                f"{len(value)} chars ({value!r}). PostgreSQL will reject "
+                f"every INSERT; SQLite will not tell you.")
+        # unused imports kept meaningful
+        assert live_audit.AUDIT_VERSION and risk.RISK_POLICY["version"]
+
+    def test_execution_class_labels_fit(self):
+        from src.live.models import PaperFill
+        cap = PaperFill.__table__.columns["execution_class"].type.length
+        for label in ("bounded_depth", "top_of_book_estimate"):
+            assert len(label) <= cap
+
+    def test_the_guard_itself_catches_an_overlong_value(self, live_session):
+        """The suite's PostgreSQL-parity guard must actually fire —
+        otherwise it is decoration, and the next 26-char constant ships."""
+        from src.live.models import MarketSnapshot
+        live_session.add(MarketSnapshot(
+            id=999, fixture_id=1, captured_at=datetime.now(UTC),
+            status="complete", policy_version="x" * 500))
+        with pytest.raises(ValueError, match="value too long"):
+            live_session.flush()
+        live_session.rollback()
 
 
 class TestRiskEngine:
