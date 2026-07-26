@@ -822,6 +822,100 @@ class TestPaperCoverage:
         assert cov["complete"] is False
 
 
+class TestCorpusProvenanceVerification:
+    """V9.5 eval H5. The analyser verified section hashes and the
+    manifest, then replayed each run with current code. The evaluator
+    forged an engine signature, an artifact content hash and a run's
+    input_snapshot_hash, recomputed the section and manifest hashes
+    consistently, and still got `integrity_problems: []`, 309/309
+    reproduced, exit 0.
+
+    "The files are self-consistent" and "the chain is authentic" are
+    different claims."""
+
+    def _corpus(self, tmp_path, tamper=False):
+        import hashlib as _h
+        doc = json.dumps({"engine": {"signature_hash": "a" * 64}},
+                         sort_keys=True)
+        art = {"id": 1, "document_json": doc,
+               "content_hash": _h.sha256(doc.encode()).hexdigest()}
+        run = {"id": "r1", "model_input_artifact_id": 1,
+               "input_snapshot_hash": art["content_hash"],
+               "model_approval_decision_id": None}
+        if tamper:
+            art["content_hash"] = "f" * 64
+            run["input_snapshot_hash"] = "e" * 64
+        sections = {
+            "model_input_artifacts.json": [art],
+            "prediction_runs.json": [run],
+            "model_approval_decisions.json": [],
+        }
+        files = {}
+        for name, data in sections.items():
+            body = json.dumps(data, sort_keys=True, ensure_ascii=False)
+            (tmp_path / name).write_text(body, encoding="utf-8")
+            files[name] = {"records": len(data),
+                           "sha256": _h.sha256(body.encode()).hexdigest()}
+        man = {"corpus_version": "t1", "schema_version": "corpus-v2",
+               "files": files, "counts": {}}
+        core = json.dumps({"files": files, "counts": {},
+                           "corpus_version": "t1",
+                           "schema_version": "corpus-v2"}, sort_keys=True)
+        man["manifest_hash"] = _h.sha256(core.encode()).hexdigest()
+        (tmp_path / "manifest.json").write_text(json.dumps(man))
+        return man
+
+    def test_an_intact_chain_passes(self, tmp_path):
+        import sys
+        sys.path.insert(0, ".")
+        from scripts.analyze_corpus import verify_hashes, verify_provenance
+        man = self._corpus(tmp_path)
+        assert verify_hashes(str(tmp_path), man) == []
+        pv = verify_provenance(str(tmp_path))
+        assert pv["chain_intact"] is True
+        assert pv["problem_codes"] == []
+
+    def test_forged_hashes_fail_even_when_the_files_are_consistent(
+            self, tmp_path):
+        """The evaluator's exact attack: tamper, then recompute the
+        section and manifest hashes so file integrity still passes."""
+        import sys
+        sys.path.insert(0, ".")
+        from scripts.analyze_corpus import verify_hashes, verify_provenance
+        man = self._corpus(tmp_path, tamper=True)
+        # file-level integrity is genuinely clean — that is the point
+        assert verify_hashes(str(tmp_path), man) == []
+        pv = verify_provenance(str(tmp_path))
+        assert pv["chain_intact"] is False
+        assert "ARTIFACT_CONTENT_HASH_MISMATCH" in pv["problem_codes"]
+        assert "RUN_ARTIFACT_HASH_MISMATCH" in pv["problem_codes"]
+
+    def test_engine_drift_is_reported_but_does_not_fail(self, tmp_path):
+        """Drift is a historical fact (the signature includes
+        code_revision). A check that is red on every honest corpus
+        teaches people to ignore it."""
+        import hashlib as _h
+        import sys
+        sys.path.insert(0, ".")
+        from scripts.analyze_corpus import verify_provenance
+        self._corpus(tmp_path)
+        ddoc = json.dumps({"model_version": "mls-2026-v0",
+                           "engine_signature": "b" * 64}, sort_keys=True)
+        (tmp_path / "model_approval_decisions.json").write_text(
+            json.dumps([{"id": 1, "decision_document": ddoc,
+                         "content_hash": _h.sha256(ddoc.encode()).hexdigest(),
+                         "model_version_name": "mls-2026-v0"}],
+                       sort_keys=True, ensure_ascii=False), encoding="utf-8")
+        runs = json.loads((tmp_path / "prediction_runs.json").read_text())
+        runs[0]["model_approval_decision_id"] = 1
+        (tmp_path / "prediction_runs.json").write_text(
+            json.dumps(runs, sort_keys=True, ensure_ascii=False),
+            encoding="utf-8")
+        pv = verify_provenance(str(tmp_path))
+        assert pv["chain_intact"] is True                 # not a failure
+        assert "ENGINE_SIGNATURE_DRIFT" in pv["observation_codes"]
+
+
 class TestLadderProvenance:
     """V9.5 eval H3. Buying YES consumes the NO-side bid ladder. When
     only YES-side depth was captured the ladder correctly fell back to
