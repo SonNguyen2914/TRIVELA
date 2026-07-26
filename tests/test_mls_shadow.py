@@ -821,6 +821,52 @@ class TestPaperCoverage:
         assert cov["complete"] is False
 
 
+class TestEngineSignatureRevisionDrift:
+    """The engine signature hashes the git revision, so EVERY deploy
+    changes it. After the 2026-07-25 slate an unrelated deploy (a
+    migration plus some observability) flipped all 15 canonical locks to
+    engine_matches_current=false and made replay REFUSE — permanently
+    voiding the strongest evidence property the system has, over a change
+    that could not touch the model.
+
+    The distinction that has to hold: "the repo moved" is provable and
+    acceptable; "the engine moved" is not."""
+
+    def test_revision_only_drift_is_recognised_as_a_match(self):
+        from src.live import model_mls
+        # a signature taken under a different revision, everything else
+        # identical — exactly a lock that outlived one deploy
+        old = model_mls.engine_signature(code_revision="deadbeef")
+        matches, rev_only = model_mls.engine_matches(
+            old["signature_hash"], "deadbeef")
+        assert matches is True
+        assert rev_only is True
+
+    def test_same_revision_matches_without_claiming_drift(self):
+        from src.live import model_mls
+        cur = model_mls.engine_signature()
+        matches, rev_only = model_mls.engine_matches(
+            cur["signature_hash"], cur["code_revision"])
+        assert matches is True and rev_only is False
+
+    def test_a_real_engine_change_still_fails(self, monkeypatch):
+        """The guard must not be softened into uselessness: if anything
+        the numbers depend on differs, no recorded revision rescues it."""
+        from src.live import model_mls
+        stale = model_mls.engine_signature(code_revision="deadbeef")
+        # a constants change under the SAME old revision
+        monkeypatch.setattr(config, "MLS_GOAL_DISPERSION_CV", 0.99)
+        matches, rev_only = model_mls.engine_matches(
+            stale["signature_hash"], "deadbeef")
+        assert matches is False and rev_only is False
+
+    def test_unknown_revision_cannot_launder_a_mismatch(self):
+        from src.live import model_mls
+        matches, rev_only = model_mls.engine_matches("f" * 64, None)
+        assert matches is False and rev_only is False
+        assert model_mls.engine_matches(None, "abc123") == (False, False)
+
+
 class TestVersionStringsFitTheirColumns:
     """The defect that destroyed the first slate's fill record was not in
     any algorithm. FEE_POLICY["version"] grew to 26 characters against a
