@@ -1,0 +1,185 @@
+{
+ "bundle": "agent_workflow_review",
+ "generated_at": "2026-07-26T23:47:31.978013+00:00",
+ "what": "First run of the Claude-implementer / Codex-reviewer workflow, with the workflow reviewing its own establishing commits.",
+ "reviewer": {
+  "tool": "codex-cli 0.145.0-alpha.30",
+  "location": "/Applications/ChatGPT.app/Contents/Resources/codex (bundled in ChatGPT.app, not on PATH)",
+  "sandbox": "read-only",
+  "sandbox_verified": "observed denying writes to /tmp while still reading git state",
+  "mcp_status": "CODEX_INSTALLED_NO_MCP",
+  "isolation": "detached worktrees at the target commits, distinct from the implementer's checkouts"
+ },
+ "ranges": {
+  "backend": {
+   "repo": "github.com/SonNguyen2914/TRIVELA",
+   "base": "e8c755487940383e7d35b46a964abfd957d04ed8",
+   "target_reviewed": "3201f6f",
+   "corrections_commit": "bd9cd48"
+  },
+  "frontend": {
+   "repo": "github.com/SonNguyen2914/namson-dev",
+   "base": "6833701e5c5e23cf5cfcd61da2ac212a29b9e70d",
+   "target_reviewed": "798ae9c",
+   "corrections_commit": "7d5b301"
+  }
+ },
+ "adoption_decision": "READY_AFTER_P0_CORRECTIONS",
+ "findings_confirmed": 8,
+ "findings_reproduced_by_implementer": 8,
+ "findings_rejected": 0,
+ "findings": [
+  {
+   "id": "F1",
+   "title": "Standalone launch leaves the fixed review range unresolved",
+   "severity": "HIGH",
+   "reviewer_status": "CONFIRMED",
+   "claim": "codex-review.md shipped literal placeholders; the documented launch piped the file raw, so the reviewer got no range.",
+   "reproduced_independently": true,
+   "how": "Inspected the launch block: it performed no substitution. This session's review only worked because the range was supplied out of band.",
+   "disposition": "FIXED — scripts/launch-review.sh resolves repo/base/target, builds both worktrees, refuses non-existent commits. Acceptance test (zero unresolved placeholders) FAILED on first attempt and drove removing the placeholder block at source."
+  },
+  {
+   "id": "F2",
+   "title": "Read-only enforcement makes independent validation impossible",
+   "severity": "HIGH",
+   "reviewer_status": "CONFIRMED",
+   "claim": "The reviewer owns test verification but the sandbox cannot run either suite.",
+   "reproduced_independently": true,
+   "how": "Reviewer's own trace: pytest died before collection with no writable temp dir; detached worktree has no node_modules.",
+   "disposition": "FIXED — AGENTS.md 8.2 makes SKIPPED_ENVIRONMENT the honest default and documents a disposable-clone mode with 'git status --short' clean as acceptance."
+  },
+  {
+   "id": "F3",
+   "title": "Default Playwright validation accesses production",
+   "severity": "HIGH",
+   "reviewer_status": "CONFIRMED",
+   "claim": "playwright.config.ts falls back to the production Railway URL when SUGGESTER_BACKEND_URL is unset.",
+   "reproduced_independently": true,
+   "how": "Read playwright.config.ts:7-8 directly; confirmed the fallback and that webServer.env propagates it.",
+   "disposition": "DOCUMENTED in both repos with an explicit override; config default deliberately NOT changed — deferred to Son.",
+   "note": "PARTIAL DISAGREEMENT: reviewer graded this a breach of AGENTS.md 3 'no production access by default'. That section enumerates WRITE operations; these are read-only GETs against a public endpoint. The remedy is still worth doing for evidence stability, so the disagreement changes the rationale, not the action."
+  },
+  {
+   "id": "F4",
+   "title": "Claude session prompt both requires and forbids pushing",
+   "severity": "HIGH",
+   "reviewer_status": "CONFIRMED",
+   "claim": "claude-session-1.md ordered a push in step 6 and forbade one in its safety section and closing line.",
+   "reproduced_independently": true,
+   "how": "Read the three blocks together; the implementer had independently hit this and escalated to Son before the review ran.",
+   "disposition": "FIXED — one conditional rule keyed to whether the reviewer can read local commits."
+  },
+  {
+   "id": "F5",
+   "title": "Mandatory remediation record uses the wrong backend-relative path",
+   "severity": "MEDIUM",
+   "reviewer_status": "CONFIRMED",
+   "claim": "AGENTS.md and codex-review.md cited backend/research_archive/... which does not exist from the backend root.",
+   "reproduced_independently": true,
+   "how": "Compared both paths from the repo root; the prefixed one fails, breaking the mandatory preread.",
+   "disposition": "FIXED — path corrected in both files."
+  },
+  {
+   "id": "F6",
+   "title": "Backend virtualenv described as committed when it is local and ignored",
+   "severity": "MEDIUM",
+   "reviewer_status": "CONFIRMED",
+   "claim": "CLAUDE.md called .venv committed; nothing under it is tracked.",
+   "reproduced_independently": true,
+   "how": "git ls-files '.venv*' returns 0 files.",
+   "disposition": "FIXED — described as developer-local, with fresh-checkout bootstrap and the verified cross-worktree interpreter invocation.",
+   "note": "MECHANISM CORRECTED: reviewer implied .gitignore excludes it. It does not — .gitignore lists 'venv/', which does not match '.venv/'. The venv module writes .venv/.gitignore containing '*', so it self-excludes. Conclusion unchanged, cause different."
+  },
+  {
+   "id": "F7",
+   "title": "Frontend cleanup issued from the backend repository",
+   "severity": "MEDIUM",
+   "reviewer_status": "CONFIRMED",
+   "claim": "Documented cleanup always cd'd to the backend, which cannot remove the frontend's worktree.",
+   "reproduced_independently": true,
+   "how": "The two repos keep separate worktree metadata; confirmed via separate 'git worktree list' outputs.",
+   "disposition": "FIXED — repository-aware cleanup via git -C, and scripts/launch-review.sh --clean, both exercised."
+  },
+  {
+   "id": "F8",
+   "title": "Frontend decision-safety test coverage overstated",
+   "severity": "LOW",
+   "reviewer_status": "CONFIRMED",
+   "claim": "Four invariants were credited to one spec; it enforces two.",
+   "reproduced_independently": true,
+   "how": "Grepped the specs: empty state lives in contract-deterministic.spec.ts; NO spec asserts the significance-language rule.",
+   "disposition": "FIXED — enforcement split named per-spec, and the unautomated rule called out as reviewed by eye."
+  }
+ ],
+ "speculative_risks_accepted": [
+  {
+   "risk": "Non-default Vercel pushes assumed harmless without dashboard evidence",
+   "disposition": "Recorded as an open decision; no vercel.json exists, setting is dashboard-side and unverified."
+  },
+  {
+   "risk": "read-only bounds integrity, not confidentiality — -C does not scope reads",
+   "disposition": "Accepted and documented in codex-review.md; the reviewer can read outside its worktree."
+  }
+ ],
+ "validation": {
+  "backend_pytest_sqlite": {
+   "status": "PASSED_INDEPENDENTLY",
+   "result": "530 passed, 7 skipped",
+   "note": "run unpiped, exit 0; matches the figure AGENTS.md 9 already documented"
+  },
+  "worktree_lifecycle": {
+   "status": "PASSED_INDEPENDENTLY",
+   "result": "add/remove/prune verified in both repos; remove refuses to discard uncommitted work"
+  },
+  "launcher_guards": {
+   "status": "PASSED_INDEPENDENTLY",
+   "result": "bad args exit 2, nonexistent commit exit 1, --clean removes both worktrees, zero unresolved placeholders"
+  },
+  "codex_read_only_sandbox": {
+   "status": "PASSED_INDEPENDENTLY",
+   "result": "write to /tmp denied, git reads succeeded"
+  },
+  "backend_pytest_postgres": {
+   "status": "NOT_RUN",
+   "reason": "diff is documentation plus one shell script; no code path touched"
+  },
+  "alembic_migration": {
+   "status": "NOT_RUN",
+   "reason": "no migration in scope"
+  },
+  "frontend_tsc_build_playwright": {
+   "status": "NOT_RUN",
+   "reason": "documentation-only frontend diff; Playwright additionally reaches production when SUGGESTER_BACKEND_URL is unset (F3)"
+  }
+ },
+ "environment_drift_noted": {
+  "python": "local venv 3.14.4 vs CI 3.12",
+  "node": "local 24.11.1 vs CI 20",
+  "consequence": "a green local run is not evidence CI passes; recorded in CLAUDE.md"
+ },
+ "production_safety": {
+  "pushed": false,
+  "deployed": false,
+  "merged": false,
+  "runtime_code_changed": false,
+  "migrations": false,
+  "api_changes": false,
+  "real_money_lock": "untouched",
+  "wc26_archive": "untouched",
+  "historical_docs_modernised": false,
+  "secrets_in_diff": "none — scanned staged diff both repos"
+ },
+ "open_decisions_for_son": [
+  "Playwright's production default: change it, or bless it as intentional",
+  "Railway's deploy branch is unverified (dashboard-side); AGENTS.md 4 rests on it",
+  "Vercel's production branch is unverified for the same reason",
+  "Whether to register Codex as an MCP server (workflow deliberately does not depend on it)"
+ ],
+ "report": {
+  "sha256": "6245e02f6061551bbaab8cf62b7504f45331b13f2a41236d0fa581e6219e092d",
+  "lines": 266,
+  "note": "Verbatim reviewer report, sections 1-13. The surrounding raw transcript was sandbox noise and is not retained.",
+  "text": "## 1. Executive verdict\n\nThe workflow has strong role separation, fixed Git isolation, WC26 preservation, and real-money safeguards. It is not yet safe to adopt because four P0 defects remain:\n\n- The standalone Codex launch does not supply its promised fixed commit ranges.\n- The read-only sandbox cannot execute the prescribed validation.\n- Playwright defaults to the production Railway backend.\n- The Claude session prompt simultaneously orders and prohibits a push.\n\nNo implementation, model, migration, API, deployment configuration, or durable evidence changed.\n\n## 2. Scope and exact commit ranges\n\nBackend:\n\n- Repository: `github.com/SonNguyen2914/TRIVELA`\n- Range: `e8c755487940383e7d35b46a964abfd957d04ed8..3201f6f46ba40e734641ec449550ac5ccba30fd9`\n- Target descends from base: yes\n- Changed: `AGENTS.md`, `CLAUDE.md`, `agent-prompts/claude-session-1.md`, `agent-prompts/codex-review.md`\n\nFrontend:\n\n- Repository: `github.com/SonNguyen2914/namson-dev`\n- Range: `6833701e5c5e23cf5cfcd61da2ac212a29b9e70d..798ae9c606a81f5b4f735e0f852f35a4699bb822`\n- Target descends from base: yes\n- Changed: `AGENTS.md`\n\nNo local `origin/*` ref contains either target, so `Pushed to origin: no` according to current remote-tracking state. I did not fetch GitHub.\n\n## 3. Repository and worktree state\n\n- Both reviewer worktrees are clean, detached, and fixed at the supplied target commits.\n- Backend reviewer: `/private/tmp/trivela-review-backend`\n- Frontend reviewer: `/private/tmp/trivela-review-frontend`\n- Implementer worktrees are distinct, under `/Users/ns/dev/TRIVELA/{backend,frontend}`.\n- Both implementation branches are named `agent-workflow-seed`.\n- `~/dev/TRIVELA` is an umbrella directory, not a Git repository.\n- Remotes and default branches match the documented repositories and `origin/main`.\n\n## 4. Validation performed\n\n| Check | Result | Evidence |\n|---|---|---|\n| Backend range/diff/ancestry | `PASSED_INDEPENDENTLY` | Clean detached target; ancestry confirmed; `git diff --check` clean |\n| Frontend range/diff/ancestry | `FAILED_INDEPENDENTLY` | State and ancestry passed, but `git diff --check` reports a new blank line at EOF |\n| Backend SQLite pytest | `SKIPPED_ENVIRONMENT` | Attempted; pytest failed before collection because no writable temporary directory exists |\n| Backend PostgreSQL pytest | `SKIPPED_ENVIRONMENT` | No verified throwaway PostgreSQL database; sandbox cannot create temp data |\n| Alembic upgrade | `SKIPPED_ENVIRONMENT` | No verified throwaway database |\n| Frontend TypeScript | `SKIPPED_ENVIRONMENT` | Detached worktree lacks `node_modules`; compiler attempt produced dependency-resolution errors, not product errors |\n| Frontend build | `SKIPPED_ENVIRONMENT` | Requires dependencies and writes `.next` under a read-only sandbox |\n| Playwright | `SKIPPED_ENVIRONMENT` | Missing dependencies/output access, and the default configuration reaches production |\n| Codex CLI claims | `PASSED_INDEPENDENTLY` | Exact version `codex-cli 0.145.0-alpha.30`; `exec -C`, `--sandbox`, and `review --base` exist |\n| Claude MCP claim | `PASSED_INDEPENDENTLY` | Claude Code 2.1.220 reports no MCP servers configured |\n| V9.5 backend validation | `RELEASE_REPORTED_ONLY` | Remediation record reports 537 backend/PostgreSQL tests and migration round-trips |\n\nThe applicable MCP status is `CODEX_INSTALLED_NO_MCP`.\n\n## 5. Confirmed findings by severity\n\n### Finding 1\n\nTitle: Standalone launch leaves the fixed review range unresolved  \nSeverity: HIGH  \nStatus: CONFIRMED  \nRepository: Backend  \nFile / lines: [agent-prompts/codex-review.md:12–52](/tmp/trivela-review-backend/agent-prompts/codex-review.md:12)  \nEvidence: The launch command passes the file unchanged, while its repository, base, and target fields remain literal placeholders. The current session worked only because Son separately supplied both review ranges.  \nReproduction: Inspect lines 12–13 and 42–48; the command performs no substitution or argument injection.  \nImpact: A standalone reviewer cannot identify the intended diff without an undocumented second input and is explicitly forbidden from inferring it.  \nRecommended correction: Add a wrapper or documented invocation that requires and injects full repository/base/target values for every changed repository.\n\n### Finding 2\n\nTitle: Mechanical read-only enforcement makes independent validation impossible  \nSeverity: HIGH  \nStatus: CONFIRMED  \nRepository: Backend and frontend  \nFile / lines: [AGENTS.md:235–266](/tmp/trivela-review-backend/AGENTS.md:235), [codex-review.md:12–18](/tmp/trivela-review-backend/agent-prompts/codex-review.md:12)  \nEvidence: The sandbox denies writes even under `/tmp`. Pytest could not create its capture temporary file; `tests/conftest.py` also creates a temporary SQLite database. The frontend worktree has no `node_modules`, while `npm install`, TypeScript incremental state, `.next`, and Playwright results all require writes.  \nReproduction: The documented backend interpreter failed before test collection with “No usable temporary directory.” The frontend compiler could not resolve dependencies from the isolated checkout.  \nImpact: The reviewer owns command/test verification but cannot independently execute either repository’s principal validation workflow.  \nRecommended correction: Keep tracked source immutable while granting a dedicated disposable writable temp/cache/build area, or run the reviewer in an isolated scratch clone where generated artifacts are allowed and verified not to change tracked files.\n\n### Finding 3\n\nTitle: Default Playwright validation accesses production  \nSeverity: HIGH  \nStatus: CONFIRMED  \nRepository: Backend and frontend  \nFile / lines: [backend AGENTS.md:261–267](/tmp/trivela-review-backend/AGENTS.md:261), [frontend AGENTS.md:63–68](/tmp/trivela-review-frontend/AGENTS.md:63), [playwright.config.ts:7](/tmp/trivela-review-frontend/playwright.config.ts:7)  \nEvidence: The canonical command is `npx playwright test`, while the config defaults `SUGGESTER_BACKEND_URL` to the production Railway URL. The frontend rule recommends Playwright because `preview_start` forces production, but Playwright does the same unless explicitly overridden.  \nReproduction: Read `BACKEND` and `webServer.env` in `playwright.config.ts`; no environment override appears in the documented command.  \nImpact: Routine reviewer validation violates “no production access by default” and makes volatile live data part of the default evidence.  \nRecommended correction: Make hermetic/local data the default Playwright project. Put live-production smoke tests behind an explicit operator-approved opt-in.\n\n### Finding 4\n\nTitle: Claude session prompt both requires and forbids pushing  \nSeverity: HIGH  \nStatus: CONFIRMED  \nRepository: Backend  \nFile / lines: [agent-prompts/claude-session-1.md:67–110](/tmp/trivela-review-backend/agent-prompts/claude-session-1.md:67)  \nEvidence: Lines 67–76 require pushing the implementation branch. Lines 90–92 say “no push,” and line 110 repeats “Do not push.” The prompt also assumes the reviewer is likely cloud-backed, which the final workflow established was false here.  \nReproduction: Read the three cited instruction blocks together.  \nImpact: The implementer can either perform an unauthorized outward action or starve a cloud reviewer while still claiming compliance.  \nRecommended correction: Replace all three blocks with one conditional rule based on an established local-versus-cloud reviewer result and explicit deployment-branch confirmation.\n\n### Finding 5\n\nTitle: Mandatory remediation record uses the wrong backend-relative path  \nSeverity: MEDIUM  \nStatus: CONFIRMED  \nRepository: Backend  \nFile / lines: [AGENTS.md:283–294](/tmp/trivela-review-backend/AGENTS.md:283), [codex-review.md:54–59](/tmp/trivela-review-backend/agent-prompts/codex-review.md:54)  \nEvidence: From the documented backend working directory, `backend/research_archive/...` does not exist. The file is `research_archive/v95_evaluation_remediation_2026-07-26.json`. My initial mandated read failed on the documented path.  \nReproduction: From the backend root, compare the existence of the two paths.  \nImpact: Reviewers can miss the settled-defect record and re-report deliberately deferred items.  \nRecommended correction: Use the backend-root-relative path consistently.\n\n### Finding 6\n\nTitle: Backend virtualenv is described as committed when it is local and ignored  \nSeverity: MEDIUM  \nStatus: CONFIRMED  \nRepository: Backend  \nFile / lines: [CLAUDE.md:21–29](/tmp/trivela-review-backend/CLAUDE.md:21), [AGENTS.md:235–244](/tmp/trivela-review-backend/AGENTS.md:235)  \nEvidence: `git ls-files` returns nothing under `.venv`; the detached worktree has no `.venv`; only the developer’s main checkout has one. The two documents contradict each other.  \nReproduction: Run `git ls-files '.venv/**'` and inspect a fresh worktree.  \nImpact: A cloud or fresh-clone implementer is told to invoke dependencies that were never committed and receives no bootstrap instructions.  \nRecommended correction: Describe `.venv` as developer-local and document the verified bootstrap path when absent.\n\n### Finding 7\n\nTitle: Frontend cleanup is issued from the backend repository  \nSeverity: MEDIUM  \nStatus: CONFIRMED  \nRepository: Backend  \nFile / lines: [AGENTS.md:207–229](/tmp/trivela-review-backend/AGENTS.md:207)  \nEvidence: Creation says “backend or frontend,” but cleanup always changes to `~/dev/TRIVELA/backend`. Backend Git metadata does not own `/tmp/trivela-review-frontend`; the two `git worktree list` outputs are separate.  \nReproduction: Compare worktree lists from the two repositories.  \nImpact: The documented frontend cleanup fails, leaving its worktree registered. It fails safely, but the promised complete cleanup is inaccurate.  \nRecommended correction: Run removal from the repository that owns the specific worktree.\n\n### Finding 8\n\nTitle: Frontend decision-safety test coverage is overstated  \nSeverity: LOW  \nStatus: CONFIRMED  \nRepository: Frontend  \nFile / lines: [AGENTS.md:38–50](/tmp/trivela-review-frontend/AGENTS.md:38), [decision-safety.spec.ts:7](/tmp/trivela-review-frontend/e2e/decision-safety.spec.ts:7), [contract-deterministic.spec.ts:82](/tmp/trivela-review-frontend/e2e/contract-deterministic.spec.ts:82)  \nEvidence: `decision-safety.spec.ts` covers shadow framing and a bare `TAKE`. The empty-state invariant is in another spec, and there is no dedicated assertion preventing statistically insignificant point estimates from being described as established edges.  \nReproduction: Compare the four policy bullets with assertions in the named test.  \nImpact: The documentation gives stronger assurance than the named guard provides.  \nRecommended correction: Name the actual enforcing specs and add or explicitly disclaim the missing statistical-language assertion.\n\n## 6. Speculative risks\n\n### Risk 1\n\nTitle: Non-default Vercel pushes are assumed harmless without dashboard evidence  \nSeverity: MEDIUM  \nStatus: SPECULATIVE  \nRepository: Backend and frontend  \nFile / lines: [backend AGENTS.md:98–107](/tmp/trivela-review-backend/AGENTS.md:98), [frontend AGENTS.md:25–36](/tmp/trivela-review-frontend/AGENTS.md:25)  \nEvidence: No `vercel.json` exists; production-branch selection is dashboard-side and was not locally verifiable.  \nImpact: If Vercel’s configured production branch differs from the Git default branch, a supposedly preview-only push could affect production.  \nRecommended correction: Require Son to confirm and record the configured Vercel production branch before the first feature-branch push.\n\n### Risk 2\n\nTitle: Read-only is not a confidentiality boundary  \nSeverity: MEDIUM  \nStatus: SPECULATIVE  \nRepository: Backend  \nFile / lines: [codex-review.md:9–18](/tmp/trivela-review-backend/agent-prompts/codex-review.md:9)  \nEvidence: `-C` sets the working directory but does not scope reads. This reviewer could read the main checkout, frontend repository, developer-local virtualenv, and application installation outside the review worktree. No secret was read or found in the diff.  \nImpact: An erroneous or adversarial instruction could cause unrelated host files to be inspected or printed even though writes remain blocked.  \nRecommended correction: Run reviews from a sanitized checkout/account/container and document that `--sandbox read-only` protects integrity, not confidentiality.\n\n`preview_start` behavior and actual Railway/Vercel dashboard settings remain `UNVERIFIED_ENVIRONMENT_DEPENDENT`.\n\n## 7. Optional improvements\n\n- Remove the frontend EOF whitespace reported by `git diff --check`.\n- Move the explicit “no temporal or target leakage” rule from the reviewer checklist into the canonical hard invariants.\n- Reword “components only ever render client-side”: the components do SSR-render their initial states; only fetched data becomes available after `useEffect`.\n\n## 8. WC26 reference classification\n\n- `LEGITIMATE_ARCHIVE`: the fail-closed World Cup archive plane and archived evidence references.\n- `LEGITIMATE_HISTORICAL_DOCUMENTATION`: instructions preserving old paths in V7–V9.5.\n- `BACKWARD_COMPATIBILITY`: the existing `/bet-suggester` route/name.\n- `STALE_PATH_OR_NAME`: the active reviewer path `backend/research_archive/...`.\n- No new `ACTIVE_TRIVELA_ASSUMPTION` was introduced.\n- The archived WC26 project, archive-plane code/data, and V7–V9 historical documents were untouched.\n\n## 9. Multi-league risk assessment\n\nThe workflow correctly identifies Trivela as active and multi-league, distinguishes league from tournament assumptions, requires stable identity and IANA-zone scrutiny, and preserves evidence classes and explicit fallbacks.\n\nNo modelling or league implementation changed, so this review does not establish that existing code is free of multi-league or leakage defects. The reviewer prompt includes temporal/target-leakage review, but that rule should also live in the shared contract.\n\n## 10. Security and deployment assessment\n\n- Secret scan: no key, token, private-key, `.env`, database, binary, virtualenv, `node_modules`, corpus, or log artifacts added.\n- Absolute developer paths occur only in agent workflow documentation, not runtime code.\n- Railway/Vercel configuration, Dockerfiles, startup commands, CI, environment schemas, APIs, migrations, and models are unchanged.\n- `REAL_MONEY_SIGNALS_ENABLED=false` remains in `.env.example`; configuration still defaults false; the diff introduces no enabling path.\n- No push, merge, deploy, migration, production write, approval activation, or corpus publication was performed.\n- Production-safety is nevertheless blocked by the default Playwright target and ambiguous push prompt.\n\n## 11. Role-separation assessment\n\nThis part is strong:\n\n- Implementer and reviewer responsibilities are explicit.\n- Reviewer is read-only and owns no implementation.\n- Findings must be reproduced independently before application.\n- Disagreements must be surfaced to Son.\n- Detached fixed-commit worktrees prevent branch drift.\n- Backend and frontend are handled as separate repositories.\n\nNo implementer response exists yet, so there is no disagreement to adjudicate.\n\n## 12. Prioritised correction list\n\nP0:\n\n1. Inject complete, immutable review inputs into the launch.\n   - Minimum acceptance: a generated prompt contains both full ranges, no `<REPO>`/`<BASE_COMMIT>`/`<CLAUDE_COMMIT>` placeholders, and the launched reviewer independently verifies both ancestries.\n\n2. Make independent validation executable without permitting source mutation.\n   - Minimum acceptance: under the documented reviewer launch, backend pytest and frontend typecheck/build can complete using disposable writable scratch space, followed by clean `git status --short` in both worktrees.\n\n3. Make default Playwright validation hermetic and non-production.\n   - Minimum acceptance: the default command makes zero requests to the production hostname; live smoke tests require an explicit opt-in and operator approval.\n\n4. Remove the push contradiction.\n   - Minimum acceptance: one unambiguous rule remains; a local-reviewer scenario requires no push, while a cloud-reviewer scenario requires Son’s deployment-branch confirmation before any branch push.\n\nP1:\n\n1. Correct the remediation-record path.\n   - Minimum acceptance: every mandatory preread command succeeds exactly as written from the documented backend working directory.\n\n2. Correct the virtualenv description and provide fresh-checkout setup.\n   - Minimum acceptance: the documented procedure produces a usable interpreter in a clean checkout where `.venv` is initially absent.\n\n3. Make cleanup repository-aware.\n   - Minimum acceptance: disposable backend and frontend review worktrees can each be removed from their owning repository without affecting the implementation worktrees.\n\n4. Verify Vercel’s production branch before regular branch pushes.\n   - Minimum acceptance: the handoff records Son-confirmed dashboard state and the exact branch classified as production.\n\nP2:\n\n- Correct the decision-safety test attribution or add the missing assertion.\n- Remove frontend EOF whitespace.\n- Promote temporal/target-leakage language into the canonical contract.\n- Clarify SSR/useEffect wording.\n\n## 13. Adoption decision\n\nRole separation, Git isolation, MCP fallback direction, WC26 preservation, multi-league framing, real-money safety, and the absence of runtime changes are all sound. Adoption is conditional on fixing the four P0 issues; P1 corrections should land before regular use.\n\n`READY_AFTER_P0_CORRECTIONS`\n"
+ }
+}

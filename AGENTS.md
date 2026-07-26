@@ -346,13 +346,23 @@ On `main` directly (not branch-scoped):
 
 ```text
 research_archive/v95_evaluation_remediation_2026-07-26.json
+research_archive/agent_workflow_review_2026-07-26.json
 ```
 
-That last file is a finding-by-finding record of the most recent external
-review: what was claimed, how it was verified, what was fixed, and
-**what was deliberately deferred**. Two items are open by choice —
-evaluating the ladder from published corpus bytes, and a standalone
-M0–M3 evaluator. Re-reporting those as new findings wastes a review.
+Both are finding-by-finding records: what was claimed, how it was
+verified, what was fixed, and **what was deliberately deferred**.
+
+`v95_evaluation_remediation` covers the most recent external evaluation
+of the platform. Two items there are open by choice — evaluating the
+ladder from published corpus bytes, and a standalone M0–M3 evaluator.
+
+`agent_workflow_review` covers the first run of this implementer/reviewer
+workflow auditing its own establishing commits: eight confirmed
+findings, each reproduced independently before being acted on, plus one
+recorded disagreement about whether read-only GETs against the public
+shadow API count as "production access" under §3.
+
+Re-reporting anything settled in either file wastes a review.
 
 ## 11. Handoff format
 
