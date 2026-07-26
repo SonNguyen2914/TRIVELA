@@ -1740,7 +1740,12 @@ class TestPredictionRuns:
         assert lock["checks"]["engine_signature_present"]
         # V9.1 eval F4: validity + match, not mere presence
         assert lock["checks"]["approval_decision_hash_valid"]
-        assert lock["checks"]["engine_signature_matches_current"]
+        # a freshly written lock necessarily matches the running engine —
+        # reported, not gated (a later deploy must not invalidate it)
+        assert lock["engine_matches_current"] is True
+        assert lock["engine_revision_only_drift"] is False
+        assert rep["summary"]["engine_provenance"][
+            "locks_matching_current"] == 1
         assert lock["approval_decision_id"] is not None
         assert lock["approval_decision_hash"]
         assert lock["engine_signature_hash"]
@@ -1820,10 +1825,19 @@ class TestPredictionRuns:
         art.document_json = ('{"engine": {"signature_hash": '
                              '"bogus-engine-signature"}}')  # mismatch engine
         live_session.commit()
-        lock = audit.lock_audit()["locks"][0]
+        rep = audit.lock_audit()
+        lock = rep["locks"][0]
         assert not lock["all_pass"]
         assert lock["checks"]["approval_decision_hash_valid"] is False
-        assert lock["checks"]["engine_signature_matches_current"] is False
+        # Engine drift is REPORTED, not treated as lock invalidity: a
+        # lock records what happened at T-10 and cannot be retroactively
+        # invalidated by a later deploy. The bogus signature must still
+        # be visible as a mismatch and counted in the provenance block.
+        assert lock["engine_matches_current"] is False
+        assert lock["engine_revision_only_drift"] is False
+        prov = rep["summary"]["engine_provenance"]
+        assert prov["locks_engine_changed"] == 1
+        assert prov["locks_matching_current"] == 0
 
     def test_lock_audit_retains_missed_locks(self, live_session,
                                              monkeypatch):
