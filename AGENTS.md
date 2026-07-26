@@ -67,8 +67,23 @@ operator explicitly calls:
 POST /api/admin/mls/approval/activate
 ```
 
-So an unplanned push does not merely deploy — it **halts evidence
-collection** until a human intervenes. Do not push.
+So a push to the deployment branch does not merely deploy — it **halts
+evidence collection** until a human intervenes.
+
+The rule is therefore about *which branch*, not about pushing at all:
+
+- **Never push the deployment branch (`main`)** without explicit
+  instruction from Son.
+- **Pushing an implementation branch is expected**, once Son has
+  confirmed which branch Railway deploys from. That is dashboard-side —
+  there is no `railway.*` file to read. A feature branch triggers no
+  backend deploy.
+- Vercel builds a *preview* for any frontend branch push: harmless, a
+  preview URL, production domain untouched.
+
+This matters because the reviewer may be a **cloud/GitHub-backed agent
+that cannot see unpushed local commits**. A local-commit-only workflow
+silently starves such a reviewer of the diff it is meant to audit.
 
 ## 5. Classifying WC26 references
 
@@ -134,10 +149,13 @@ silently.
 
 ## 8. Branch discipline
 
-Never work on `main`. Capture a base commit, branch, commit locally so a
-fixed review range exists, and let the reviewer read that range from a
-detached worktree. Only the user authorises a push, merge, migration,
-deployment or production action.
+Never work on `main`. Capture a base commit, branch, and commit so a
+FIXED review range exists — a reviewer must never audit a moving branch.
+
+Push the implementation branch so a GitHub-backed reviewer can reach it
+(see §4 for why that is safe and why withholding it is not). Only Son
+authorises a push to `main`, a merge, a migration, a deployment or any
+production action.
 
 ## 9. Validation (verify against the repo; these are current as of 2026-07-26)
 
@@ -203,6 +221,7 @@ Repository:
 Base commit:
 Target commit:
 Branch:
+Pushed to origin:   yes/no
 Review range:
 Changed files:
 Purpose:

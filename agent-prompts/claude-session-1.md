@@ -64,10 +64,17 @@ reach production. The workflow must not *depend* on MCP.
 target commit, diff range, the reviewer's read-only behaviour, how the
 report comes back, and how you independently verify each finding.
 
-**6. Commit locally so a review range exists.**
-You are authorised to make a local commit on your implementation branch.
-**Do not push.** Without a commit there is no target and the reviewer has
-nothing to read — the review cannot run against prose.
+**6. Commit, and push the implementation branch.**
+Without a commit there is no fixed target and the review cannot run
+against prose. Commit on your implementation branch.
+
+Then push **that branch** — not `main`. The reviewer here is likely
+cloud/GitHub-backed and cannot see unpushed commits, so a
+local-commit-only workflow silently starves it of the diff. Confirm with
+Son that Railway deploys only from `main` before the first push; a
+feature branch triggers no backend deploy, and a frontend branch produces
+only a Vercel preview. **Never push `main`** — that deploys and trips the
+approval lock in §4 of AGENTS.md.
 
 **7. Hand off, then verify.**
 Produce the handoff (format in AGENTS.md §11). If Codex is reachable via
