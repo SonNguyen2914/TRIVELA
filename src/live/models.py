@@ -462,6 +462,13 @@ class MarketDepthLevel(LiveBase):
     # so subpenny prices and fractional sizes at each level are material.
     price_dollars = Column(String(16))
     size_fp = Column(String(24))
+    # V9.5 eval: the COMPLETE raw order-book response these levels were
+    # parsed from. Only the retained best-N levels were stored, so
+    # omitted depth could not be reconstructed, a corrected parser could
+    # not be re-run against the original book, and best-N selection was
+    # not independently auditable from published bytes.
+    book_observation_id = Column(Integer,
+                                 ForeignKey("source_observation.id"))
 
 
 class PaperEvaluationContext(LiveBase):

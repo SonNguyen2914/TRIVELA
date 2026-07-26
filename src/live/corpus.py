@@ -29,10 +29,11 @@ from src.live.models import (Competition, CorpusExport, Fixture,
                              MarketDepthLevel, MarketEvent, MarketQuote,
                              MarketSnapshot, MlsPlayerMatchStat,
                              MlsTeamMatchStat, ModelApprovalDecision,
-                             ModelInputArtifact, ModelVersion, PaperFill,
+                             ModelInputArtifact, ModelVersion,
+                             PaperEvaluationContext, PaperFill,
                              PaperSignal, Player, PredictionContract,
-                             PredictionRun, RegistryDiscovery, Team,
-                             TeamAlias)
+                             PredictionRun, RegistryDiscovery,
+                             SourceObservation, Team, TeamAlias)
 
 # v2 (V9.3 eval F10): adds the RESEARCH plane — approval decisions,
 # registry sweeps, official per-match team/player stats and the exact
@@ -91,6 +92,20 @@ def _dump(obj) -> dict:
             v = (v if v.tzinfo else v.replace(tzinfo=timezone.utc)).isoformat()
         out[c.key] = v
     return out
+
+
+def _book_observations(s, depth) -> list:
+    """The raw order-book observations the exported depth rows point at.
+
+    Scoped to referenced books rather than the whole observation stream:
+    the corpus is lock evidence, and an unbounded dump of every routine
+    poll would dwarf it without adding auditability."""
+    ids = {d.book_observation_id for d in depth
+           if getattr(d, "book_observation_id", None)}
+    if not ids:
+        return []
+    return (s.query(SourceObservation)
+            .filter(SourceObservation.id.in_(ids)).all())
 
 
 def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
@@ -152,6 +167,17 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             "market_snapshots.json": [_dump(x) for x in snapshots],
             "market_quotes.json": [_dump(x) for x in quotes],
             "market_depth_levels.json": [_dump(x) for x in depth],
+            # V9.5 eval: the COMPLETE raw order books the depth rows were
+            # parsed from. Without these the corpus could not support
+            # re-parsing an original book or auditing best-N selection —
+            # `SourceObservation` was not exported at all.
+            "source_observations.json": [
+                _dump(x) for x in _book_observations(s, depth)],
+            # V9.5 eval C1: the frozen paper/risk state each lock was
+            # evaluated against, so a reader can verify that a paper
+            # decision was a pure function of frozen inputs
+            "paper_evaluation_contexts.json": [
+                _dump(x) for x in s.query(PaperEvaluationContext).all()],
             "players.json": [_dump(x) for x in s.query(Player).all()],
             "lineup_snapshots.json": [_dump(x) for x in lineups],
             "lineup_entries.json": [_dump(x) for x in lineup_entries],

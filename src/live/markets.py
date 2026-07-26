@@ -606,6 +606,27 @@ def _fetch_event_books(events) -> tuple[dict, dict, list[str]]:
     return markets_by_event, books, failed
 
 
+def _book_observation(s, ticker: str, payload: dict | None):
+    """Persist the COMPLETE raw order-book response as a content-addressed
+    observation, and return it.
+
+    V9.5 evaluation: capture stored only the parsed best-N levels, so the
+    omitted depth could never be reconstructed, a corrected parser could
+    not be re-run against the original book, and the best-N selection was
+    not independently auditable from the published bytes. The body is
+    gzip+base64 via evidence.pack_payload — a real response compresses to
+    ~29% and the hash is always taken over the FULL body."""
+    if not payload:
+        return None
+    raw = json.dumps(payload, sort_keys=True)
+    obs = SourceObservation(
+        source="kalshi", endpoint=f"markets/{ticker}/orderbook",
+        observed_at=_now(), **_pack(raw))
+    s.add(obs)
+    s.flush()
+    return obs
+
+
 def capture_quotes(fixture_id: int | None = None,
                    horizon_hours: float = 48.0) -> dict:
     """Routine observation stream: quotes + depth for mapped events in
@@ -638,12 +659,15 @@ def capture_quotes(fixture_id: int | None = None,
                 quote.source_observation_id = obs.id
                 s.add(quote)
                 s.flush()
+                book = books.get(m.get("ticker")) or {}
+                bobs = _book_observation(s, m.get("ticker"), book)
                 for side, price_c, size, price_d, size_fp in _depth_levels(
-                        books.get(m.get("ticker")) or {}):
+                        book):
                     s.add(MarketDepthLevel(
                         market_quote_id=quote.id, side=side,
                         price_c=price_c, size=size,
-                        price_dollars=price_d, size_fp=size_fp))
+                        price_dollars=price_d, size_fp=size_fp,
+                        book_observation_id=(bobs.id if bobs else None)))
                 quotes += 1
         s.commit()
         return {"events": len(events), "quotes": quotes}
@@ -735,12 +759,15 @@ def capture_lock_snapshot(fixture_id: int) -> dict | None:
                     if (quote.yes_ask_c is not None
                             and quote.yes_bid_c is not None):
                         game_two_sided += 1
+                book = books.get(m.get("ticker")) or {}
+                bobs = _book_observation(s, m.get("ticker"), book)
                 for side, price_c, size, price_d, size_fp in _depth_levels(
-                        books.get(m.get("ticker")) or {}):
+                        book):
                     s.add(MarketDepthLevel(
                         market_quote_id=quote.id, side=side,
                         price_c=price_c, size=size,
-                        price_dollars=price_d, size_fp=size_fp))
+                        price_dollars=price_d, size_fp=size_fp,
+                        book_observation_id=(bobs.id if bobs else None)))
                     depth_rows += 1
         # required families for policy v1 = the GAME 3-way (the
         # executable comparator); everything else is captured-when-present
