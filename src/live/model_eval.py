@@ -672,8 +672,13 @@ def current_approval_decision() -> dict:
     STORED — never a recomputation (pre-slate evidence contract). Returns
     the immutable row's fields (incl. its own content hash) or
     `{approval_decision_missing: True}` when none exists; it must never
-    invent a decision. corpus_manifest_hash is null until an approval is
-    linked to a *published* corpus (none yet)."""
+    invent a decision. corpus_manifest_hash is read from the decision
+    DOCUMENT — it is covered by the content hash, so it is the tamper-
+    evident copy — and stays null while the approval is bound to no
+    published corpus. It was previously hardcoded None beside a comment
+    saying no corpus existed yet; once one was published that comment
+    became false and the endpoint reported an unbound approval that was
+    in fact bound."""
     if not plane_ready():
         return {"approval_decision_missing": True, "reason": "dormant"}
     from src.live.models import ModelApprovalDecision
@@ -686,12 +691,19 @@ def current_approval_decision() -> dict:
             return {"approval_decision_missing": True}
         edge = json.loads(row.edge_json) if row.edge_json else {}
         ci = edge.get("ci95") or [None, None]
+        manifest_hash = None
+        if row.decision_document:
+            try:
+                manifest_hash = json.loads(
+                    row.decision_document).get("corpus_manifest_hash")
+            except (ValueError, TypeError):
+                manifest_hash = None
         return {
             "decision_id": row.id,
             "content_hash": row.content_hash,
             "model_version": row.model_version_name,
             "corpus_version": row.corpus_version,
-            "corpus_manifest_hash": None,
+            "corpus_manifest_hash": manifest_hash,
             "evaluation_version": row.eval_version,
             "approval_policy_version": row.policy_version,
             "approved_mode": row.approved_mode,

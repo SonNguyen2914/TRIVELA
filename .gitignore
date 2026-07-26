@@ -9,3 +9,6 @@ data/*.db
 .DS_Store
 *.log
 probe_out.txt
+research_archive/corpus/*.json
+!research_archive/corpus/*.verification.json
+!research_archive/corpus/*.json.gz

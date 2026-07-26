@@ -1368,6 +1368,13 @@ class TestModelLadderEval:
         # and it settles: the next call reloads rather than re-deciding
         assert (me.ensure_approval_decision()["decision_id"]
                 == second["decision_id"])
+        # the PUBLIC read must show the binding it actually has. This
+        # field was hardcoded None beside a comment asserting no corpus
+        # existed yet — once one did, a bound approval kept reporting
+        # itself as unbound.
+        served = me.current_approval_decision()
+        assert served["corpus_version"] == "test-corpus-v1"
+        assert served["corpus_manifest_hash"] == pub["manifest_hash"]
 
     def test_unbound_decision_is_not_silently_reused_after_publish(
             self, live_session, monkeypatch):
