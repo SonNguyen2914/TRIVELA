@@ -134,11 +134,26 @@ def _lvl_size(d) -> Decimal:
 
 def yes_buy_ladder(quote: MarketQuote,
                    depth: list) -> list[tuple[Decimal, Decimal]]:
-    """The executable BUY-YES ladder as (yes_ask_dollars, size), best
-    (lowest ask) first — in EXACT Decimal dollars/sizes (V9.1 eval F2),
-    not rounded cents. Kalshi: a resting NO bid at price q IS a YES ask at
-    1-q, so we walk the NO depth (now the BEST levels after the F1 fix).
-    When no depth was captured, fall back to the top quote's exact ask."""
+    """The executable BUY-YES ladder. See `build_ladder` for provenance."""
+    return build_ladder(quote, depth)["levels"]
+
+
+def build_ladder(quote: MarketQuote, depth: list) -> dict:
+    """The executable BUY-YES ladder WITH its provenance.
+
+    Levels are (yes_ask_dollars, size), best (lowest ask) first, in EXACT
+    Decimal dollars/sizes (V9.1 eval F2). Kalshi: a resting NO bid at
+    price q IS a YES ask at 1-q, so buying YES walks the NO depth (the
+    BEST levels after the F1 fix). With no usable NO depth we fall back
+    to the top quote's exact ask.
+
+    `source` is the point of this function (V9.5 eval H3). Execution
+    class was derived from whether ANY depth row existed, so a book with
+    only YES-side depth captured — which this function cannot consume —
+    produced a top-of-book estimate that was then labelled
+    `bounded_depth` and admitted to the headline P&L. The label must
+    follow the levels actually walked, not the presence of unrelated
+    rows."""
     levels: list[tuple[Decimal, Decimal]] = []
     for d in depth:
         if d.side != "no":
@@ -150,7 +165,9 @@ def yes_buy_ladder(quote: MarketQuote,
             levels.append((Decimal(1) - no_bid, size))
     if levels:
         levels.sort(key=lambda x: x[0])       # lowest ask first
-        return levels
+        return {"levels": levels, "source": "no_side_depth",
+                "depth_levels_available": len(levels),
+                "quote_id": getattr(quote, "id", None)}
     ask = None
     if getattr(quote, "yes_ask_dollars", None):
         try:
@@ -164,8 +181,12 @@ def yes_buy_ladder(quote: MarketQuote,
                                   "yes_ask_size")
                 or Decimal(quote.yes_ask_size
                            or EXEC_POLICY["min_top_size"]))
-        return [(ask, size)]
-    return []
+        return {"levels": [(ask, size)], "source": "top_quote_fallback",
+                "depth_levels_available": 0,
+                "quote_id": getattr(quote, "id", None)}
+    return {"levels": [], "source": "no_executable_ask",
+            "depth_levels_available": 0,
+            "quote_id": getattr(quote, "id", None)}
 
 
 def _lvl_size_from_fp(sizes_fp_json, field) -> Decimal | None:
@@ -438,18 +459,24 @@ def paper_trade_lock(run_id: str, backfill: bool = False) -> dict:
                         continue
                     depth = s.query(MarketDepthLevel).filter_by(
                         market_quote_id=c.market_quote_id).all()
-                    # V9.3 eval F4: a ladder built from the top quote because NO
-                    # order-book depth was captured is a top-of-book ESTIMATE, not
-                    # a depth-backed execution. Classify it explicitly so
-                    # execution-grade metrics can exclude it (or reject outright
-                    # when the policy demands depth).
-                    exec_class = ("bounded_depth" if depth
+                    # V9.3 eval F4: a ladder built from the top quote
+                    # because no usable order-book depth was captured is
+                    # a top-of-book ESTIMATE, not a depth-backed
+                    # execution. V9.5 eval H3: the class must follow the
+                    # levels ACTUALLY WALKED. Testing `if depth` counted
+                    # any captured row, so a book with only YES-side
+                    # depth — which a YES purchase cannot consume — was
+                    # labelled bounded_depth and entered the headline.
+                    built = build_ladder(quote, depth)
+                    ladder = built["levels"]
+                    exec_class = ("bounded_depth"
+                                  if built["source"] == "no_side_depth"
                                   else "top_of_book_estimate")
-                    if not depth and EXEC_POLICY["require_depth_for_fill"]:
+                    if exec_class != "bounded_depth" \
+                            and EXEC_POLICY["require_depth_for_fill"]:
                         sig.decision = "reject"
                         sig.reject_reason = "DEPTH_UNAVAILABLE"
                         continue
-                    ladder = yes_buy_ladder(quote, depth)
                     fill = simulate_fill(ladder, target)
                     if fill["filled"] == 0:
                         sig.decision = "reject"
@@ -504,7 +531,12 @@ def paper_trade_lock(run_id: str, backfill: bool = False) -> dict:
                         cost_c=cost_c, cost_dollars=str(cost),
                         levels_consumed=fill["levels"],
                         execution_class=exec_class,
-                        allocations_json=json.dumps(alloc_breakdown),
+                        allocations_json=json.dumps(
+                            {"ladder_source": built["source"],
+                             "depth_levels_available":
+                                 built["depth_levels_available"],
+                             "quote_id": built["quote_id"],
+                             "allocations": alloc_breakdown}),
                         fee_policy_version=FEE_POLICY["version"],
                         latency_ms=EXEC_POLICY["latency_ms"],
                         reason=("partial" if filled < Decimal(str(target))

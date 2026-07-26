@@ -2,6 +2,7 @@
 runs (launch decision O4-O8). All canned — no network anywhere."""
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from types import SimpleNamespace
@@ -819,6 +820,68 @@ class TestPaperCoverage:
         # the exact reading that was impossible on the first slate
         assert cov["legs_eligible"] == 1 and cov["legs_signalled"] == 0
         assert cov["complete"] is False
+
+
+class TestLadderProvenance:
+    """V9.5 eval H3. Buying YES consumes the NO-side bid ladder. When
+    only YES-side depth was captured the ladder correctly fell back to
+    the top quote — but execution class was derived from whether ANY
+    depth row existed, so that top-of-book estimate was labelled
+    `bounded_depth` and admitted to the headline execution-grade P&L."""
+
+    _lock_with_book = TestPaperTrading._lock_with_book
+
+    def test_yes_side_only_depth_is_a_top_of_book_estimate(self):
+        from types import SimpleNamespace as NS
+
+        from src.live import paper
+        quote = NS(id=7, yes_ask_dollars="0.55", yes_ask_c=55,
+                   yes_ask_size=10, sizes_fp_json=None)
+        yes_only = [NS(side="yes", price_c=55, price_dollars="0.55",
+                       size=40, size_fp="40")]
+        built = paper.build_ladder(quote, yes_only)
+        # the ladder could not consume it...
+        assert built["source"] == "top_quote_fallback"
+        assert built["depth_levels_available"] == 0
+        # ...so it must NOT be called depth-backed
+        assert built["levels"] == [(Decimal("0.55"), Decimal(10))]
+
+    def test_no_side_depth_is_genuinely_bounded(self):
+        from types import SimpleNamespace as NS
+
+        from src.live import paper
+        quote = NS(id=7, yes_ask_dollars="0.55", yes_ask_c=55,
+                   yes_ask_size=10, sizes_fp_json=None)
+        no_side = [NS(side="no", price_c=45, price_dollars="0.45",
+                      size=40, size_fp="40")]
+        built = paper.build_ladder(quote, no_side)
+        assert built["source"] == "no_side_depth"
+        assert built["depth_levels_available"] == 1
+
+    def test_a_fill_on_wrong_side_depth_is_excluded_from_the_headline(
+            self, live_session, monkeypatch):
+        """End to end: a lock whose only captured depth is YES-side must
+        produce an estimate, not execution-grade evidence."""
+        from src.live import paper
+        from src.live.models import MarketDepthLevel, PaperFill
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        fx = self._lock_with_book(live_session, ask=45, model_p=0.60)
+        # replace the NO depth the helper created with YES-side rows
+        live_session.query(MarketDepthLevel).delete()
+        live_session.add(MarketDepthLevel(market_quote_id=1, side="yes",
+                                          price_c=45, size=500))
+        live_session.commit()
+        paper.paper_trade_lock("lock")
+        fill = live_session.query(PaperFill).one()
+        assert fill.execution_class == "top_of_book_estimate"
+        alloc = json.loads(fill.allocations_json)
+        assert alloc["ladder_source"] == "top_quote_fallback"
+        fx.status = "post"; fx.home_goals = 2; fx.away_goals = 0
+        live_session.commit()
+        paper.settle_paper()
+        summary = paper.paper_summary()
+        assert summary["settled_fills"] == 0            # headline clean
+        assert summary["estimate_only"]["settled_fills"] == 1
 
 
 class TestRegistryCompleteness:
