@@ -612,13 +612,24 @@ class RegistryDiscovery(LiveBase):
     transient — a truncated local registry could silently define an
     incomplete universe as 'expected' for a lock's completeness gate. Each
     sweep now persists whether every series exhausted its cursor or hit the
-    cap, so completeness is first-class and auditable."""
+    cap, so completeness is first-class and auditable.
+
+    V9.5 eval, critical finding 2: completeness was decided by pagination
+    truncation ALONE. A provider request that failed outright was logged
+    and skipped, so a sweep that reached nothing at all still persisted
+    complete=true and satisfied the canonical lock's 'recent complete
+    registry' prerequisite. `family_outcomes_json` now records a stage
+    outcome per required family and `complete` is the AND of them."""
     __tablename__ = "registry_discovery"
     id = Column(Integer, primary_key=True)
     competition_slug = Column(String(32))
     provider = Column(String(24))
     complete = Column(Boolean, nullable=False)
     truncated_series_json = Column(Text)     # series that hit the page cap
+    # {series: SUCCESS|REQUEST_FAILED|PAGINATION_CAP|PARSE_FAILED|
+    #          CONTRACT_DISCOVERY_FAILED}
+    family_outcomes_json = Column(Text)
+    incomplete_reasons_json = Column(Text)
     events_seen = Column(Integer)
     newly_mapped = Column(Integer)
     unmapped = Column(Integer)

@@ -821,6 +821,71 @@ class TestPaperCoverage:
         assert cov["complete"] is False
 
 
+class TestRegistryCompleteness:
+    """V9.5 evaluation, critical finding 2. `discover_and_map()` decided
+    completeness from pagination truncation ALONE, so the evaluator made
+    every required family request fail and still got
+
+        {"events_seen": 0, "discovery_complete": true,
+         "truncated_series": []}
+
+    persisted as a COMPLETE registry row — which then satisfies a
+    canonical lock's "recent complete sweep" prerequisite. An incomplete
+    local universe was allowed to define its own expected universe."""
+
+    def test_total_request_failure_is_not_complete(self, live_session,
+                                                   monkeypatch):
+        import requests as _rq
+
+        from src.live import markets
+        from src.live.models import RegistryDiscovery
+
+        def boom(*a, **kw):
+            raise _rq.RequestException("provider down")
+        monkeypatch.setattr(markets, "_kalshi_paged", boom)
+        out = markets.discover_and_map()
+        assert out["events_seen"] == 0
+        # the exact assertion the evaluator's reproduction violated
+        assert out["discovery_complete"] is False
+        assert out["incomplete_reasons"]
+        assert set(out["family_outcomes"].values()) == {"REQUEST_FAILED"}
+        row = (live_session.query(RegistryDiscovery)
+               .order_by(RegistryDiscovery.id.desc()).first())
+        assert row is not None and row.complete is False
+        assert "REQUEST_FAILED" in (row.incomplete_reasons_json or "")
+
+    def test_a_clean_sweep_is_still_complete(self, live_session,
+                                             monkeypatch):
+        """The gate must not have been made unsatisfiable."""
+        from src.live import markets
+        monkeypatch.setattr(markets, "_kalshi_paged",
+                            lambda *a, **kw: (kw.get("meta", {}).update(
+                                {"complete": True, "pages": 1}) or []))
+        out = markets.discover_and_map()
+        assert out["discovery_complete"] is True
+        assert set(out["family_outcomes"].values()) == {"SUCCESS"}
+        assert out["incomplete_reasons"] == {}
+
+    def test_one_failed_family_invalidates_the_whole_sweep(
+            self, live_session, monkeypatch):
+        import requests as _rq
+
+        from src.live import markets
+        first = markets.FAMILY_SERIES[0]
+
+        def paged(url, params, key, **kw):
+            if params.get("series_ticker") == first:
+                raise _rq.RequestException("one family down")
+            m = kw.get("meta")
+            if m is not None:
+                m.update({"complete": True, "pages": 1})
+            return []
+        monkeypatch.setattr(markets, "_kalshi_paged", paged)
+        out = markets.discover_and_map()
+        assert out["discovery_complete"] is False
+        assert out["family_outcomes"][first] == "REQUEST_FAILED"
+
+
 class TestFrozenPaperEvaluationContext:
     """V9.5 evaluation, critical finding 1. `paper_trade_lock` read LIVE
     kill switches, LIVE open exposure and the LIVE approved-model state,

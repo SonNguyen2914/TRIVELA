@@ -323,7 +323,7 @@ def _try_map(s, row: MarketEvent, tdate: str | None) -> bool:
     return False
 
 
-def _ensure_contracts(s, row: MarketEvent) -> None:
+def _ensure_contracts(s, row: MarketEvent, meta: dict | None = None) -> None:
     """Create contract rows for an event, and REPAIR existing rows whose
     outcome_key is still NULL — an event discovered before its fixture
     existed got label-only contracts, and they must heal once the
@@ -336,10 +336,14 @@ def _ensure_contracts(s, row: MarketEvent) -> None:
     from src.mls import model_key_for
     # cursor-complete: a single limited page silently dropped contracts
     # from the registry, understating a lock snapshot's expected count
-    # against an already-truncated universe (V9 eval F6)
+    # against an already-truncated universe (V9 eval F6). V9.5 eval C2:
+    # the cursor state is now PROPAGATED to the caller, which previously
+    # discarded it — an enumeration that hit the cap looked identical to
+    # one that exhausted its cursor.
     markets_list = _kalshi_paged(
         f"{KALSHI}/markets",
-        {"event_ticker": row.kalshi_event_ticker}, "markets")
+        {"event_ticker": row.kalshi_event_ticker}, "markets",
+        meta=meta if meta is not None else None)
     fx = s.get(Fixture, row.fixture_id) if row.fixture_id else None
     suffix_codes = ""
     if "-" in (row.kalshi_event_ticker or ""):
@@ -387,6 +391,10 @@ def discover_and_map() -> dict:
     s = get_session()
     seen = mapped = unmapped = contracts_filled = 0
     truncated_series: list[str] = []
+    # V9.5 eval C2: one recorded outcome per REQUIRED family. Completeness
+    # is the AND of these, never pagination alone.
+    family_outcomes: dict[str, str] = {sr: "NOT_ATTEMPTED"
+                                       for sr in FAMILY_SERIES}
     horizon_floor = (_now() - timedelta(days=1)).date()
     try:
         for series in FAMILY_SERIES:
@@ -400,11 +408,26 @@ def discover_and_map() -> dict:
                     "events", meta=meta)
                 if not meta.get("complete", True):
                     truncated_series.append(series)
+                    family_outcomes[series] = "PAGINATION_CAP"
                     print(f"[markets] discovery {series} TRUNCATED at cap "
                           f"({meta.get('pages')} pages) — registry "
                           f"INCOMPLETE, not a clean full sweep")
+                else:
+                    family_outcomes[series] = "SUCCESS"
             except requests.RequestException as exc:
-                print(f"[markets] discovery {series} failed: {exc}")
+                # A failed request used to `continue` without touching
+                # completeness, so a sweep that reached NOTHING still
+                # recorded complete=true and satisfied the canonical
+                # lock's registry prerequisite. A family we could not
+                # read is a family we cannot claim to know.
+                family_outcomes[series] = "REQUEST_FAILED"
+                print(f"[markets] discovery {series} REQUEST FAILED — "
+                      f"registry INCOMPLETE: {exc}")
+                continue
+            except (ValueError, TypeError, KeyError) as exc:
+                family_outcomes[series] = "PARSE_FAILED"
+                print(f"[markets] discovery {series} PARSE FAILED — "
+                      f"registry INCOMPLETE: {exc}")
                 continue
             seen += len(events)
             for ev in events:
@@ -451,24 +474,46 @@ def discover_and_map() -> dict:
                                      for c in existing)))
                 if day and day >= horizon_floor and needs:
                     try:
-                        _ensure_contracts(s, row)
+                        cmeta: dict = {}
+                        _ensure_contracts(s, row, meta=cmeta)
                         contracts_filled += 1
+                        # V9.5 eval C2: contract enumeration has its own
+                        # cursor. A capped page understates the expected
+                        # universe just as an event-page cap does.
+                        if not cmeta.get("complete", True):
+                            family_outcomes[series] = \
+                                "CONTRACT_DISCOVERY_FAILED"
+                            print(f"[markets] contracts {ticker} TRUNCATED "
+                                  f"— registry INCOMPLETE")
                     except requests.RequestException as exc:
-                        print(f"[markets] contracts {ticker}: {exc}")
+                        family_outcomes[series] = \
+                            "CONTRACT_DISCOVERY_FAILED"
+                        print(f"[markets] contracts {ticker} FAILED — "
+                              f"registry INCOMPLETE: {exc}")
         # persist the sweep's completeness as a durable, auditable record
         # (V9.1 eval F10) — not just a transient return value
         from src.live.models import RegistryDiscovery
+        # V9.5 eval C2: complete ONLY when every required family reached
+        # SUCCESS — cursor exhausted, request answered, contracts
+        # enumerated. Anything else names itself in incomplete_reasons.
+        incomplete = {sr: o for sr, o in family_outcomes.items()
+                      if o != "SUCCESS"}
+        complete = not incomplete
         s.add(RegistryDiscovery(
             competition_slug="mls-2026", provider="kalshi",
-            complete=not truncated_series,
+            complete=complete,
             truncated_series_json=json.dumps(truncated_series),
+            family_outcomes_json=json.dumps(family_outcomes, sort_keys=True),
+            incomplete_reasons_json=json.dumps(incomplete, sort_keys=True),
             events_seen=seen, newly_mapped=mapped, unmapped=unmapped,
             contracts_filled=contracts_filled, completed_at=_now()))
         s.commit()
         return {"events_seen": seen, "newly_mapped": mapped,
                 "unmapped": unmapped,
                 "contracts_filled": contracts_filled,
-                "discovery_complete": not truncated_series,
+                "discovery_complete": complete,
+                "family_outcomes": family_outcomes,
+                "incomplete_reasons": incomplete,
                 "truncated_series": truncated_series}
     except Exception as exc:
         s.rollback()
