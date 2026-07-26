@@ -462,6 +462,56 @@ class MarketDepthLevel(LiveBase):
     # so subpenny prices and fractional sizes at each level are material.
     price_dollars = Column(String(16))
     size_fp = Column(String(24))
+    # V9.5 eval: the COMPLETE raw order-book response these levels were
+    # parsed from. Only the retained best-N levels were stored, so
+    # omitted depth could not be reconstructed, a corrected parser could
+    # not be re-run against the original book, and best-N selection was
+    # not independently auditable from published bytes.
+    book_observation_id = Column(Integer,
+                                 ForeignKey("source_observation.id"))
+
+
+class PaperEvaluationContext(LiveBase):
+    """The complete paper/risk state FROZEN at lock time.
+
+    V9.5 evaluation, critical finding 1: `paper_trade_lock` read LIVE
+    kill switches, LIVE open exposure and the LIVE approved-model state,
+    so a recovery run was never a pure replay — the same frozen lock
+    could legitimately yield a different decision later (the evaluator
+    demonstrated it by flipping a kill switch). The release nonetheless
+    called the backfill "faithful by construction", which was true only
+    of the market inputs.
+
+    Every non-market input a paper decision depends on is captured here
+    at lock time, so evaluation becomes a pure function of
+
+        frozen lock evidence  +  this row
+
+    A reconstruction that can load this row reproduces the lock-time
+    decision exactly. One without it is explicitly degraded — see
+    PaperSignal.evaluation_mode."""
+    __tablename__ = "paper_evaluation_context"
+    id = Column(Integer, primary_key=True)
+    prediction_run_id = Column(String(36),
+                               ForeignKey("prediction_run.id"),
+                               nullable=False, unique=True)
+    captured_at = Column(DateTime(timezone=True))
+    exec_policy_version = Column(String(64))
+    exec_policy_json = Column(Text)
+    fee_policy_version = Column(String(64))
+    fee_policy_json = Column(Text)
+    risk_policy_version = Column(String(64))
+    risk_policy_json = Column(Text)
+    # the gates that read mutable state — frozen here
+    kill_switches_json = Column(Text)      # [] when nothing was tripped
+    exposure_json = Column(Text)           # open exposure, exact dollars
+    model_approved = Column(Boolean)
+    model_approval_decision_id = Column(
+        Integer, ForeignKey("model_approval_decision.id"))
+    engine_signature_hash = Column(String(64))
+    # sha256 over the canonical document above, so a context cannot be
+    # edited after the fact without detection
+    content_hash = Column(String(64))
 
 
 class PaperSignal(LiveBase):
@@ -501,6 +551,15 @@ class PaperSignal(LiveBase):
     # from the frozen book (deterministic, but not the same evidence as
     # a signal that existed at lock time — see paper.paper_coverage).
     backfilled_at = Column(DateTime(timezone=True))
+    # V9.5 eval C1 — provenance of the DECISION, not just its timing:
+    #   contemporaneous  evaluated at lock time against live state
+    #   reconstructed    replayed later. Pure when it carries a frozen
+    #                    context; DEGRADED when that FK is NULL, because
+    #                    then recovery-time risk state was read instead.
+    # Only contemporaneous rows may feed headline execution metrics.
+    evaluation_mode = Column(String(20), default="contemporaneous")
+    paper_evaluation_context_id = Column(
+        Integer, ForeignKey("paper_evaluation_context.id"))
     __table_args__ = (
         UniqueConstraint("prediction_run_id", "market_contract_id",
                          name="uq_paper_signal_run_contract"),
@@ -560,13 +619,24 @@ class RegistryDiscovery(LiveBase):
     transient — a truncated local registry could silently define an
     incomplete universe as 'expected' for a lock's completeness gate. Each
     sweep now persists whether every series exhausted its cursor or hit the
-    cap, so completeness is first-class and auditable."""
+    cap, so completeness is first-class and auditable.
+
+    V9.5 eval, critical finding 2: completeness was decided by pagination
+    truncation ALONE. A provider request that failed outright was logged
+    and skipped, so a sweep that reached nothing at all still persisted
+    complete=true and satisfied the canonical lock's 'recent complete
+    registry' prerequisite. `family_outcomes_json` now records a stage
+    outcome per required family and `complete` is the AND of them."""
     __tablename__ = "registry_discovery"
     id = Column(Integer, primary_key=True)
     competition_slug = Column(String(32))
     provider = Column(String(24))
     complete = Column(Boolean, nullable=False)
     truncated_series_json = Column(Text)     # series that hit the page cap
+    # {series: SUCCESS|REQUEST_FAILED|PAGINATION_CAP|PARSE_FAILED|
+    #          CONTRACT_DISCOVERY_FAILED}
+    family_outcomes_json = Column(Text)
+    incomplete_reasons_json = Column(Text)
     events_seen = Column(Integer)
     newly_mapped = Column(Integer)
     unmapped = Column(Integer)

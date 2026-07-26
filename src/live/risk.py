@@ -30,7 +30,12 @@ import config
 from src.live.models import Fixture, PaperFill, PaperSignal
 
 RISK_POLICY = {
-    "version": "risk-v1",
+    # v2 (V9.5 eval H4): every gate compares EXACT Decimal dollars. v1
+    # converted cost and slippage to integer cents first, so an order
+    # costing $60.004 cleared a $60.000 correlated limit and 3.004c of
+    # slippage cleared a 3c ceiling. The limits stay declared in cents —
+    # they are the policy numbers — but the arithmetic is now exact.
+    "version": "risk-v2",
     "notional_bankroll_c": 100_000,       # $1,000 paper bankroll
     "min_bankroll_reserve_c": 20_000,     # keep $200 unspent
     "max_contracts_per_order": 100,
@@ -162,63 +167,109 @@ def market_gate(quote, snapshot, net_edge: float,
     return None
 
 
+def limit_dollars(key: str) -> Decimal:
+    """A cent-denominated policy limit as EXACT Decimal dollars."""
+    return Decimal(RISK_POLICY[key]) / 100
+
+
+def _fill_cost_dollars(fill) -> Decimal:
+    """A fill's cost in exact dollars. `cost_dollars` is the provider-
+    precision value; the integer cents are a legacy display fallback."""
+    if getattr(fill, "cost_dollars", None):
+        try:
+            return Decimal(fill.cost_dollars)
+        except (ArithmeticError, TypeError, ValueError):
+            pass
+    return Decimal(fill.cost_c or 0) / 100
+
+
+def empty_exposure() -> dict:
+    return {"per_match": {}, "per_corr": {}, "per_team": {},
+            "total": Decimal(0), "open_count": 0}
+
+
+def add_exposure(exp: dict, fixture, outcome_key: str,
+                 cost_d: Decimal) -> dict:
+    """Fold one accepted fill into an exposure picture.
+
+    Needed because a lock's legs are evaluated in sequence and each
+    accepted fill must count against the next leg's budget — which is
+    what happened at lock time, and therefore what a faithful replay
+    must reproduce."""
+    grp = correlation_group(outcome_key)
+    exp["total"] = exp["total"] + cost_d
+    exp["open_count"] = exp["open_count"] + 1
+    if fixture is not None:
+        fid = fixture.id
+        exp["per_match"][fid] = exp["per_match"].get(fid, Decimal(0)) + cost_d
+        key = (fid, grp)
+        exp["per_corr"][key] = exp["per_corr"].get(key, Decimal(0)) + cost_d
+        team = fixture.home_team_id if grp == "home" else \
+            fixture.away_team_id if grp == "away" else None
+        if team:
+            exp["per_team"][team] = (exp["per_team"].get(team, Decimal(0))
+                                     + cost_d)
+    return exp
+
+
 def current_exposure(s) -> dict:
     """Open paper exposure by match / (match,direction) / team, plus
-    totals — the live picture the exposure gate checks against."""
-    per_match: dict[int, int] = {}
-    per_corr: dict[tuple, int] = {}
-    per_team: dict[int, int] = {}
-    total = open_count = 0
+    totals, in EXACT Decimal dollars (V9.5 eval H4 — it summed rounded
+    cents). This is the LIVE picture; a paper decision must read the
+    exposure frozen on its evaluation context instead."""
+    exp = empty_exposure()
     rows = (s.query(PaperFill, PaperSignal)
             .join(PaperSignal, PaperFill.paper_signal_id == PaperSignal.id)
             .filter(PaperFill.status == "open").all())
     for fill, sig in rows:
-        cost = fill.cost_c or 0
-        total += cost
-        open_count += 1
         fx = s.get(Fixture, sig.fixture_id) if sig.fixture_id else None
-        grp = correlation_group(sig.outcome_key)
-        if fx:
-            per_match[fx.id] = per_match.get(fx.id, 0) + cost
-            per_corr[(fx.id, grp)] = per_corr.get((fx.id, grp), 0) + cost
-            team = fx.home_team_id if grp == "home" else \
-                fx.away_team_id if grp == "away" else None
-            if team:
-                per_team[team] = per_team.get(team, 0) + cost
-    return {"per_match": per_match, "per_corr": per_corr,
-            "per_team": per_team, "total": total, "open_count": open_count}
+        add_exposure(exp, fx, sig.outcome_key, _fill_cost_dollars(fill))
+    return exp
 
 
-def exposure_gate(s, fixture, outcome_key: str, cost_c: int,
-                  slippage_c: int | None) -> str | None:
-    """Position-size / correlation / bankroll gates. Kill switches
-    first (safest state = no new orders). Returns a reason or None."""
-    ks = active_kill_switches(s)
-    if ks:
-        return f"KILL_SWITCH:{ks[0]}"
+def exposure_gate(fixture, outcome_key: str, cost_d: Decimal,
+                  slippage_d: Decimal | None, *,
+                  kill_switches: list[str], exposure: dict) -> str | None:
+    """Position-size / correlation / bankroll gates. Kill switches first
+    (safest state = no new orders). Returns a reason or None.
+
+    PURE (V9.5 eval C1): the two mutable inputs — active kill switches
+    and open exposure — are passed in rather than queried. v1 read them
+    from the live database, so replaying a frozen lock later could
+    produce a different decision; the evaluator demonstrated exactly
+    that by tripping a kill switch. Callers supply either the live
+    picture or the one frozen on the lock's evaluation context.
+
+    Amounts are EXACT Decimal dollars (V9.5 eval H4)."""
+    if kill_switches:
+        return f"KILL_SWITCH:{kill_switches[0]}"
     pol = RISK_POLICY
-    if slippage_c is not None and slippage_c > pol["max_slippage_c"]:
+    if slippage_d is not None and slippage_d > limit_dollars("max_slippage_c"):
         return "SLIPPAGE_TOO_HIGH"
-    exp = current_exposure(s)
+    exp = exposure
     if exp["open_count"] >= pol["max_simultaneous_positions"]:
         return "MAX_POSITIONS"
-    if exp["total"] + cost_c > pol["max_total_open_c"]:
+    total = exp["total"] + cost_d
+    if total > limit_dollars("max_total_open_c"):
         return "TOTAL_RISK_LIMIT"
-    if exp["total"] + cost_c > (pol["notional_bankroll_c"]
-                                - pol["min_bankroll_reserve_c"]):
+    if total > (limit_dollars("notional_bankroll_c")
+                - limit_dollars("min_bankroll_reserve_c")):
         return "BANKROLL_RESERVE"
     grp = correlation_group(outcome_key)
-    m = exp["per_match"].get(fixture.id, 0)
-    if m + cost_c > pol["max_match_exposure_c"]:
+    fid = fixture.id if fixture is not None else None
+    m = exp["per_match"].get(fid, Decimal(0))
+    if m + cost_d > limit_dollars("max_match_exposure_c"):
         return "MATCH_EXPOSURE_LIMIT"
-    c = exp["per_corr"].get((fixture.id, grp), 0)
-    if c + cost_c > pol["max_correlated_exposure_c"]:
+    c = exp["per_corr"].get((fid, grp), Decimal(0))
+    if c + cost_d > limit_dollars("max_correlated_exposure_c"):
         return "CORRELATED_EXPOSURE_LIMIT"
-    team = fixture.home_team_id if grp == "home" else \
-        fixture.away_team_id if grp == "away" else None
+    team = None
+    if fixture is not None:
+        team = fixture.home_team_id if grp == "home" else \
+            fixture.away_team_id if grp == "away" else None
     if team:
-        t = exp["per_team"].get(team, 0)
-        if t + cost_c > pol["max_team_exposure_c"]:
+        t = exp["per_team"].get(team, Decimal(0))
+        if t + cost_d > limit_dollars("max_team_exposure_c"):
             return "TEAM_EXPOSURE_LIMIT"
     return None
 
@@ -236,7 +287,8 @@ def assess() -> dict:
             "policy": RISK_POLICY,
             "active_kill_switches": active_kill_switches(s),
             "open_positions": exp["open_count"],
-            "total_open_c": exp["total"],
+            "total_open_dollars": str(exp["total"]),
+            "total_open_c": int(exp["total"] * 100),   # display only
             "matches_with_exposure": len(exp["per_match"]),
             "note": "one server-side authority; paper now, any executor later",
         }

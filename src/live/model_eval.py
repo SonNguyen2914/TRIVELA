@@ -513,7 +513,10 @@ def _decision_canonical(rec: dict) -> str:
         # V9.3 eval F7 — the decision hash now covers WHAT was approved
         # (exact parameters), on WHICH data (cutoff) and against which
         # published corpus, not merely the headline numbers
-        "model_parameters", "data_cutoff", "corpus_manifest_hash")}
+        "model_parameters", "data_cutoff", "corpus_manifest_hash",
+        # V9.5 eval H6 — and covers what the ladder actually READ, so a
+        # decision cannot silently imply it evaluated the corpus bytes
+        "evaluation_source")}
     return _canonical(core)
 
 
@@ -534,7 +537,8 @@ def _active_decision():
 
 
 def ensure_approval_decision(corpus_version: str | None = None,
-                             n_boot: int = 1000, force: bool = False) -> dict:
+                             n_boot: int = 1000, force: bool = False,
+                             allow_create: bool = True) -> dict:
     """LOAD the active approval decision, or (only when none exists, or
     force=True) run the CI evaluator and persist a new IMMUTABLE one, then
     set approved_for_shadow FROM it (V9 eval F1/F10; V9.1 eval F8). Boot
@@ -582,6 +586,21 @@ def ensure_approval_decision(corpus_version: str | None = None,
                         "reason": "loaded active decision (not recomputed)",
                         "policy_version": existing.policy_version,
                         "n_scored": existing.n_scored}
+    if not allow_create:
+        # V9.5 eval H6: boot must LOAD an approval and FAIL CLOSED, never
+        # mint a replacement for itself. Silently re-approving on every
+        # engine change contradicted the governance claim that
+        # re-evaluation is an explicit operator action — and since the
+        # engine signature includes code_revision, that meant every
+        # deploy quietly issued a fresh approval from whatever the
+        # mutable database happened to hold.
+        model_mls.ensure_model_version(approved_for_shadow=False)
+        return {"approval_decision_missing": True, "approved": False,
+                "reason": ("no ACTIVE approval decision for the current "
+                           "engine/corpus — operator activation required "
+                           "(POST /api/admin/mls/approval/activate). "
+                           "Shadow runs stay refused until then."),
+                "fail_closed": True}
     report = evaluate_ladder(n_boot=n_boot)
     if report.get("n_scored", 0) == 0:
         return {"error": report.get("note") or "no scorable fixtures"}
@@ -600,6 +619,16 @@ def ensure_approval_decision(corpus_version: str | None = None,
     rec["model_parameters"] = _corpus._model_parameters()
     rec["data_cutoff"] = _data_cutoff()
     rec["corpus_manifest_hash"] = _published_corpus_hash(corpus_version)
+    # V9.5 eval H6: the corpus binding is a LABEL, not the data the
+    # ladder read. evaluate_ladder() reads the mutable live database;
+    # it does not load the published corpus bytes. Recording that
+    # plainly inside the decision (and therefore inside its content
+    # hash) stops the binding from overclaiming what it establishes.
+    rec["evaluation_source"] = "live_database"
+    rec["evaluation_source_note"] = (
+        "the ladder evaluated CURRENT database state, not the published "
+        "corpus bytes; corpus_version/corpus_manifest_hash record which "
+        "corpus this decision is filed against, not what it computed from")
     canonical = _decision_canonical(rec)
     chash = hashlib.sha256(canonical.encode()).hexdigest()
 

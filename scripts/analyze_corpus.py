@@ -54,6 +54,138 @@ def verify_hashes(corpus_dir, manifest) -> list[str]:
     return problems
 
 
+def verify_provenance(corpus_dir) -> dict:
+    """Verify the EVIDENCE CHAIN, not just the files we were handed.
+
+    V9.5 eval H5. `verify_hashes` proves the supplied sections are
+    internally manifest-consistent, and the replay proves current code
+    can reproduce the stored probabilities from the supplied fields.
+    Neither proves the chain is authentic: the evaluator built a corpus
+    carrying a bogus engine signature, a bogus artifact content hash and
+    a bogus run input_snapshot_hash, recomputed the section and manifest
+    hashes consistently, and this script still reported
+    `integrity_problems: []` with 309/309 reproduced and max_delta 0.0.
+
+    Reported as its own dimension, because "the numbers reproduce" and
+    "the provenance is intact" are different claims and collapsing them
+    into one green tick is exactly how a tampered corpus passes.
+
+    Two classes, kept apart for the same reason lock validity was
+    separated from deployment state: FORGERY is a hash that does not
+    recompute, and it fails the command. DRIFT is a historical fact —
+    a legacy decision that predates content documents, or a run whose
+    engine signature differs from its approval's because the repo moved
+    (the signature includes code_revision, so every deploy changes it).
+    Drift is reported, never treated as tampering; a check that is red
+    on every honest corpus teaches people to ignore it."""
+    problems: list[dict] = []
+    observations: list[dict] = []
+
+    def fail(code, detail):
+        problems.append({"code": code, "detail": detail})
+
+    def note(code, detail):
+        observations.append({"code": code, "detail": detail})
+
+    arts = {a["id"]: a for a in
+            _load(corpus_dir, "model_input_artifacts.json")}
+    runs = _load(corpus_dir, "prediction_runs.json")
+    decisions = {d["id"]: d for d in
+                 _load(corpus_dir, "model_approval_decisions.json")}
+    manifest = _load(corpus_dir, "manifest.json")
+
+    # 1. every artifact's content_hash must hash its own document
+    for aid, a in arts.items():
+        doc = a.get("document_json")
+        if not doc:
+            fail("ARTIFACT_DOCUMENT_MISSING", f"artifact {aid}")
+            continue
+        if hashlib.sha256(doc.encode()).hexdigest() != a.get("content_hash"):
+            fail("ARTIFACT_CONTENT_HASH_MISMATCH", f"artifact {aid}")
+
+    # 2. each run must point at the artifact its input_snapshot_hash names
+    engine_seen: dict[str, int] = {}
+    for r in runs:
+        a = arts.get(r.get("model_input_artifact_id"))
+        if a is None:
+            continue
+        if r.get("input_snapshot_hash") != a.get("content_hash"):
+            fail("RUN_ARTIFACT_HASH_MISMATCH", f"run {r.get('id')}")
+        try:
+            eng = ((json.loads(a["document_json"]).get("engine") or {})
+                   .get("signature_hash"))
+        except (ValueError, TypeError):
+            eng = None
+        if eng:
+            engine_seen[eng] = engine_seen.get(eng, 0) + 1
+
+    # 3. an approval's content_hash must recompute from its document
+    for did, d in decisions.items():
+        doc = d.get("decision_document")
+        if not doc:
+            # pre-V9.1.2 rows stored the hash but not the document it
+            # covers. Unverifiable, but historical — not forgery.
+            note("APPROVAL_DOCUMENT_MISSING", f"decision {did}")
+            continue
+        if hashlib.sha256(doc.encode()).hexdigest() != d.get("content_hash"):
+            fail("APPROVAL_HASH_MISMATCH", f"decision {did}")
+            continue
+        try:
+            parsed = json.loads(doc)
+        except (ValueError, TypeError):
+            fail("APPROVAL_DOCUMENT_UNPARSEABLE", f"decision {did}")
+            continue
+        # 4. an approval that names a corpus must name THIS one
+        cv = parsed.get("corpus_version")
+        if cv and cv != manifest.get("corpus_version"):
+            fail("APPROVAL_CORPUS_MISMATCH", f"decision {did} -> {cv}")
+        ch = parsed.get("corpus_manifest_hash")
+        if ch and ch != manifest.get("manifest_hash"):
+            fail("APPROVAL_CORPUS_MISMATCH",
+                 f"decision {did} manifest {str(ch)[:12]}")
+        # 5. and must approve the model the runs actually used
+        if d.get("model_version_name") and parsed.get("model_version") \
+                and d["model_version_name"] != parsed["model_version"]:
+            fail("APPROVAL_MODEL_MISMATCH", f"decision {did}")
+
+    # 6. a run's artifact engine must match the decision that authorised it
+    for r in runs:
+        d = decisions.get(r.get("model_approval_decision_id"))
+        a = arts.get(r.get("model_input_artifact_id"))
+        if not (d and d.get("decision_document") and a
+                and a.get("document_json")):
+            continue
+        try:
+            want = json.loads(d["decision_document"]).get("engine_signature")
+            got = ((json.loads(a["document_json"]).get("engine") or {})
+                   .get("signature_hash"))
+        except (ValueError, TypeError):
+            continue
+        if want and got and got != want:
+            # the signature includes code_revision, so this fires
+            # whenever the repo moved between the approval and the run.
+            # Worth surfacing as governance drift; not evidence of a
+            # forged chain.
+            note("ENGINE_SIGNATURE_DRIFT",
+                 f"run {r.get('id')}: artifact {str(got)[:12]} != "
+                 f"approval {str(want)[:12]}")
+
+    return {
+        "artifacts_checked": len(arts),
+        "runs_checked": len(runs),
+        "decisions_checked": len(decisions),
+        "distinct_engine_signatures": len(engine_seen),
+        "problem_codes": sorted({p["code"] for p in problems}),
+        "problems": problems[:50],
+        "observation_codes": sorted({o["code"] for o in observations}),
+        "observations": observations[:50],
+        "chain_intact": not problems,
+        "note": ("provenance is verified SEPARATELY from numerical "
+                 "reproduction — a corpus can replay perfectly and still "
+                 "carry a forged chain (V9.5 eval H5)"),
+    }
+
+
 def replay_report(corpus_dir) -> dict:
     from src.live.model_mls import replay_from_artifact
     runs = _load(corpus_dir, "prediction_runs.json")
@@ -172,6 +304,10 @@ def main() -> int:
         "schema_version": manifest["schema_version"],
         "manifest_hash": manifest["manifest_hash"],
         "integrity_problems": verify_hashes(args.corpus_dir, manifest),
+        # V9.5 eval H5: a SEPARATE dimension. File hashes prove the
+        # bundle is self-consistent; this proves the chain behind it is
+        # authentic. A forged corpus passes the first and fails this.
+        "provenance": verify_provenance(args.corpus_dir),
         "counts": manifest["counts"],
         "reproducibility": replay_report(args.corpus_dir),
         "forecast": forecast_report(args.corpus_dir),
@@ -184,6 +320,11 @@ def main() -> int:
               f"({report['schema_version']})")
         print(f"  manifest_hash {report['manifest_hash'][:16]}")
         print(f"  integrity: {'CLEAN' if not report['integrity_problems'] else report['integrity_problems']}")
+        pv = report["provenance"]
+        print(f"  provenance: {'CHAIN INTACT' if pv['chain_intact'] else pv['problem_codes']}"
+              f"{'  drift: ' + str(pv['observation_codes']) if pv['observation_codes'] else ''}"
+              f"  ({pv['artifacts_checked']} artifacts · "
+              f"{pv['decisions_checked']} decisions)")
         c = report["counts"]
         print(f"  fixtures {c['fixtures']} · runs {c['prediction_runs']} "
               f"· canonical locks {c['canonical_locks']} · "
@@ -194,7 +335,9 @@ def main() -> int:
               f"runs replay exactly (max delta {rp['max_delta']})")
         print(f"  forecast: {report['forecast']}")
         print(f"  market: {report['market']}\n")
-    return 1 if report["integrity_problems"] else 0
+    # fail on EITHER dimension — file integrity or chain provenance
+    return 1 if (report["integrity_problems"]
+                 or not report["provenance"]["chain_intact"]) else 0
 
 
 if __name__ == "__main__":

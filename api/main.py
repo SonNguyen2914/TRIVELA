@@ -506,6 +506,36 @@ def mls_admin_publish_corpus(request: Request, version: str = Query(...)):
     return live_corpus.publish_corpus(version)
 
 
+@app.post("/api/admin/mls/approval/activate")
+def mls_admin_activate_approval(request: Request,
+                                corpus_version: str | None = Query(None),
+                                n_boot: int = Query(1000)):
+    """Operator-only: EXPLICITLY evaluate and activate an approval.
+
+    V9.5 eval H6. Boot used to create an approval whenever none matched
+    the current engine — and because the engine signature includes
+    `code_revision`, that meant every deploy silently minted a fresh
+    approval from whatever the live database held, while the documented
+    governance claim was that re-evaluation is an explicit operator
+    action. Boot now loads and fails closed; this is the only path that
+    creates one.
+
+    Note what the decision records about itself: `evaluation_source` is
+    `live_database`. The ladder reads current database state, NOT the
+    published corpus bytes, so the corpus binding files the decision
+    against a corpus rather than proving it was computed from one."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import corpus as live_corpus
+    from src.live import model_eval
+    target = corpus_version or live_corpus.latest_published_version()
+    res = model_eval.ensure_approval_decision(
+        corpus_version=target, n_boot=n_boot, force=True, allow_create=True)
+    return {**res, "bound_corpus_version": target,
+            "activated_by": "operator",
+            "generated_at": utcnow().isoformat()}
+
+
 @app.post("/api/admin/mls/approval/bind-corpus")
 def mls_admin_bind_corpus(request: Request,
                           corpus_version: str | None = Query(None),

@@ -2,6 +2,7 @@
 runs (launch decision O4-O8). All canned — no network anywhere."""
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from types import SimpleNamespace
@@ -821,6 +822,358 @@ class TestPaperCoverage:
         assert cov["complete"] is False
 
 
+class TestCorpusProvenanceVerification:
+    """V9.5 eval H5. The analyser verified section hashes and the
+    manifest, then replayed each run with current code. The evaluator
+    forged an engine signature, an artifact content hash and a run's
+    input_snapshot_hash, recomputed the section and manifest hashes
+    consistently, and still got `integrity_problems: []`, 309/309
+    reproduced, exit 0.
+
+    "The files are self-consistent" and "the chain is authentic" are
+    different claims."""
+
+    def _corpus(self, tmp_path, tamper=False):
+        import hashlib as _h
+        doc = json.dumps({"engine": {"signature_hash": "a" * 64}},
+                         sort_keys=True)
+        art = {"id": 1, "document_json": doc,
+               "content_hash": _h.sha256(doc.encode()).hexdigest()}
+        run = {"id": "r1", "model_input_artifact_id": 1,
+               "input_snapshot_hash": art["content_hash"],
+               "model_approval_decision_id": None}
+        if tamper:
+            art["content_hash"] = "f" * 64
+            run["input_snapshot_hash"] = "e" * 64
+        sections = {
+            "model_input_artifacts.json": [art],
+            "prediction_runs.json": [run],
+            "model_approval_decisions.json": [],
+        }
+        files = {}
+        for name, data in sections.items():
+            body = json.dumps(data, sort_keys=True, ensure_ascii=False)
+            (tmp_path / name).write_text(body, encoding="utf-8")
+            files[name] = {"records": len(data),
+                           "sha256": _h.sha256(body.encode()).hexdigest()}
+        man = {"corpus_version": "t1", "schema_version": "corpus-v2",
+               "files": files, "counts": {}}
+        core = json.dumps({"files": files, "counts": {},
+                           "corpus_version": "t1",
+                           "schema_version": "corpus-v2"}, sort_keys=True)
+        man["manifest_hash"] = _h.sha256(core.encode()).hexdigest()
+        (tmp_path / "manifest.json").write_text(json.dumps(man))
+        return man
+
+    def test_an_intact_chain_passes(self, tmp_path):
+        import sys
+        sys.path.insert(0, ".")
+        from scripts.analyze_corpus import verify_hashes, verify_provenance
+        man = self._corpus(tmp_path)
+        assert verify_hashes(str(tmp_path), man) == []
+        pv = verify_provenance(str(tmp_path))
+        assert pv["chain_intact"] is True
+        assert pv["problem_codes"] == []
+
+    def test_forged_hashes_fail_even_when_the_files_are_consistent(
+            self, tmp_path):
+        """The evaluator's exact attack: tamper, then recompute the
+        section and manifest hashes so file integrity still passes."""
+        import sys
+        sys.path.insert(0, ".")
+        from scripts.analyze_corpus import verify_hashes, verify_provenance
+        man = self._corpus(tmp_path, tamper=True)
+        # file-level integrity is genuinely clean — that is the point
+        assert verify_hashes(str(tmp_path), man) == []
+        pv = verify_provenance(str(tmp_path))
+        assert pv["chain_intact"] is False
+        assert "ARTIFACT_CONTENT_HASH_MISMATCH" in pv["problem_codes"]
+        assert "RUN_ARTIFACT_HASH_MISMATCH" in pv["problem_codes"]
+
+    def test_engine_drift_is_reported_but_does_not_fail(self, tmp_path):
+        """Drift is a historical fact (the signature includes
+        code_revision). A check that is red on every honest corpus
+        teaches people to ignore it."""
+        import hashlib as _h
+        import sys
+        sys.path.insert(0, ".")
+        from scripts.analyze_corpus import verify_provenance
+        self._corpus(tmp_path)
+        ddoc = json.dumps({"model_version": "mls-2026-v0",
+                           "engine_signature": "b" * 64}, sort_keys=True)
+        (tmp_path / "model_approval_decisions.json").write_text(
+            json.dumps([{"id": 1, "decision_document": ddoc,
+                         "content_hash": _h.sha256(ddoc.encode()).hexdigest(),
+                         "model_version_name": "mls-2026-v0"}],
+                       sort_keys=True, ensure_ascii=False), encoding="utf-8")
+        runs = json.loads((tmp_path / "prediction_runs.json").read_text())
+        runs[0]["model_approval_decision_id"] = 1
+        (tmp_path / "prediction_runs.json").write_text(
+            json.dumps(runs, sort_keys=True, ensure_ascii=False),
+            encoding="utf-8")
+        pv = verify_provenance(str(tmp_path))
+        assert pv["chain_intact"] is True                 # not a failure
+        assert "ENGINE_SIGNATURE_DRIFT" in pv["observation_codes"]
+
+
+class TestLadderProvenance:
+    """V9.5 eval H3. Buying YES consumes the NO-side bid ladder. When
+    only YES-side depth was captured the ladder correctly fell back to
+    the top quote — but execution class was derived from whether ANY
+    depth row existed, so that top-of-book estimate was labelled
+    `bounded_depth` and admitted to the headline execution-grade P&L."""
+
+    _lock_with_book = TestPaperTrading._lock_with_book
+
+    def test_yes_side_only_depth_is_a_top_of_book_estimate(self):
+        from types import SimpleNamespace as NS
+
+        from src.live import paper
+        quote = NS(id=7, yes_ask_dollars="0.55", yes_ask_c=55,
+                   yes_ask_size=10, sizes_fp_json=None)
+        yes_only = [NS(side="yes", price_c=55, price_dollars="0.55",
+                       size=40, size_fp="40")]
+        built = paper.build_ladder(quote, yes_only)
+        # the ladder could not consume it...
+        assert built["source"] == "top_quote_fallback"
+        assert built["depth_levels_available"] == 0
+        # ...so it must NOT be called depth-backed
+        assert built["levels"] == [(Decimal("0.55"), Decimal(10))]
+
+    def test_no_side_depth_is_genuinely_bounded(self):
+        from types import SimpleNamespace as NS
+
+        from src.live import paper
+        quote = NS(id=7, yes_ask_dollars="0.55", yes_ask_c=55,
+                   yes_ask_size=10, sizes_fp_json=None)
+        no_side = [NS(side="no", price_c=45, price_dollars="0.45",
+                      size=40, size_fp="40")]
+        built = paper.build_ladder(quote, no_side)
+        assert built["source"] == "no_side_depth"
+        assert built["depth_levels_available"] == 1
+
+    def test_a_fill_on_wrong_side_depth_is_excluded_from_the_headline(
+            self, live_session, monkeypatch):
+        """End to end: a lock whose only captured depth is YES-side must
+        produce an estimate, not execution-grade evidence."""
+        from src.live import paper
+        from src.live.models import MarketDepthLevel, PaperFill
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        fx = self._lock_with_book(live_session, ask=45, model_p=0.60)
+        # replace the NO depth the helper created with YES-side rows
+        live_session.query(MarketDepthLevel).delete()
+        live_session.add(MarketDepthLevel(market_quote_id=1, side="yes",
+                                          price_c=45, size=500))
+        live_session.commit()
+        paper.paper_trade_lock("lock")
+        fill = live_session.query(PaperFill).one()
+        assert fill.execution_class == "top_of_book_estimate"
+        alloc = json.loads(fill.allocations_json)
+        assert alloc["ladder_source"] == "top_quote_fallback"
+        fx.status = "post"; fx.home_goals = 2; fx.away_goals = 0
+        live_session.commit()
+        paper.settle_paper()
+        summary = paper.paper_summary()
+        assert summary["settled_fills"] == 0            # headline clean
+        assert summary["estimate_only"]["settled_fills"] == 1
+
+
+class TestRegistryCompleteness:
+    """V9.5 evaluation, critical finding 2. `discover_and_map()` decided
+    completeness from pagination truncation ALONE, so the evaluator made
+    every required family request fail and still got
+
+        {"events_seen": 0, "discovery_complete": true,
+         "truncated_series": []}
+
+    persisted as a COMPLETE registry row — which then satisfies a
+    canonical lock's "recent complete sweep" prerequisite. An incomplete
+    local universe was allowed to define its own expected universe."""
+
+    def test_total_request_failure_is_not_complete(self, live_session,
+                                                   monkeypatch):
+        import requests as _rq
+
+        from src.live import markets
+        from src.live.models import RegistryDiscovery
+
+        def boom(*a, **kw):
+            raise _rq.RequestException("provider down")
+        monkeypatch.setattr(markets, "_kalshi_paged", boom)
+        out = markets.discover_and_map()
+        assert out["events_seen"] == 0
+        # the exact assertion the evaluator's reproduction violated
+        assert out["discovery_complete"] is False
+        assert out["incomplete_reasons"]
+        assert set(out["family_outcomes"].values()) == {"REQUEST_FAILED"}
+        row = (live_session.query(RegistryDiscovery)
+               .order_by(RegistryDiscovery.id.desc()).first())
+        assert row is not None and row.complete is False
+        assert "REQUEST_FAILED" in (row.incomplete_reasons_json or "")
+
+    def test_a_clean_sweep_is_still_complete(self, live_session,
+                                             monkeypatch):
+        """The gate must not have been made unsatisfiable."""
+        from src.live import markets
+        monkeypatch.setattr(markets, "_kalshi_paged",
+                            lambda *a, **kw: (kw.get("meta", {}).update(
+                                {"complete": True, "pages": 1}) or []))
+        out = markets.discover_and_map()
+        assert out["discovery_complete"] is True
+        assert set(out["family_outcomes"].values()) == {"SUCCESS"}
+        assert out["incomplete_reasons"] == {}
+
+    def test_one_failed_family_invalidates_the_whole_sweep(
+            self, live_session, monkeypatch):
+        import requests as _rq
+
+        from src.live import markets
+        first = markets.FAMILY_SERIES[0]
+
+        def paged(url, params, key, **kw):
+            if params.get("series_ticker") == first:
+                raise _rq.RequestException("one family down")
+            m = kw.get("meta")
+            if m is not None:
+                m.update({"complete": True, "pages": 1})
+            return []
+        monkeypatch.setattr(markets, "_kalshi_paged", paged)
+        out = markets.discover_and_map()
+        assert out["discovery_complete"] is False
+        assert out["family_outcomes"][first] == "REQUEST_FAILED"
+
+
+class TestFrozenPaperEvaluationContext:
+    """V9.5 evaluation, critical finding 1. `paper_trade_lock` read LIVE
+    kill switches, LIVE open exposure and the LIVE approved-model state,
+    so a recovery was never a pure replay — the evaluator flipped a kill
+    switch and turned the same frozen lock from `fill` into `reject`.
+    Every fill of the first prospective slate came from such a recovery.
+
+    The release called the backfill "faithful by construction". It was
+    faithful about the MARKET inputs and silent about the rest."""
+
+    _lock_with_book = TestPaperTrading._lock_with_book
+
+    def test_context_is_frozen_at_lock_time(self, live_session, monkeypatch):
+        import json as _json
+
+        from src.live import paper
+        from src.live.models import PaperEvaluationContext, PaperSignal
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        self._lock_with_book(live_session, ask=45, model_p=0.60)
+        paper.paper_trade_lock("lock")
+        ctx = live_session.query(PaperEvaluationContext).one()
+        assert ctx.prediction_run_id == "lock"
+        assert ctx.content_hash and len(ctx.content_hash) == 64
+        assert ctx.risk_policy_version == "risk-v2"
+        assert _json.loads(ctx.kill_switches_json) == []
+        sigs = live_session.query(PaperSignal).all()
+        assert {s.evaluation_mode for s in sigs} == {"contemporaneous"}
+        assert all(s.paper_evaluation_context_id == ctx.id for s in sigs)
+
+    def test_replay_ignores_a_kill_switch_flipped_AFTER_the_lock(
+            self, live_session, monkeypatch):
+        """The evaluator's adversarial reproduction, as a regression
+        test. A kill switch tripped after the lock must not change what
+        that lock decided — the frozen context is the authority."""
+        from src.live import paper
+        from src.live.models import PaperFill, PaperSignal
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        self._lock_with_book(live_session, ask=45, model_p=0.60)
+        paper.paper_trade_lock("lock")            # freezes the context
+        inline = live_session.query(PaperSignal).filter_by(
+            outcome_key="home_win").one()
+        assert inline.decision == "fill"
+        live_session.query(PaperFill).delete()
+        live_session.query(PaperSignal).delete()
+        live_session.commit()
+        monkeypatch.setattr(config, "GLOBAL_TRADING_DISABLED", True)
+        res = paper.paper_trade_lock("lock", backfill=True)
+        assert res["context_frozen"] is True
+        replayed = live_session.query(PaperSignal).filter_by(
+            outcome_key="home_win").one()
+        # v1 returned KILL_SWITCH:GLOBAL_TRADING_DISABLED here
+        assert replayed.decision == "fill"
+        assert replayed.reject_reason is None
+        assert replayed.evaluation_mode == "reconstructed"
+
+    def test_replay_without_a_frozen_context_is_marked_degraded(
+            self, live_session, monkeypatch):
+        """Locks written before V9.5 have no context. Their recovery has
+        to read recovery-time state, and must say so rather than pass as
+        a faithful replay."""
+        from src.live import paper
+        from src.live.models import PaperEvaluationContext, PaperSignal
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        self._lock_with_book(live_session, ask=45, model_p=0.60)
+        res = paper.paper_trade_lock("lock", backfill=True)
+        assert res["context_frozen"] is False
+        assert live_session.query(PaperEvaluationContext).count() == 0
+        sig = live_session.query(PaperSignal).filter_by(
+            outcome_key="home_win").one()
+        assert sig.evaluation_mode == "reconstructed"
+        assert sig.paper_evaluation_context_id is None
+
+    def test_degraded_replay_still_obeys_live_state_which_is_the_point(
+            self, live_session, monkeypatch):
+        """The contrast that proves the frozen context does real work:
+        with NO context, recovery reads live state and a switch tripped
+        afterwards changes the decision — the exact defect. With one, it
+        does not (see the kill-switch test above)."""
+        from src.live import paper
+        from src.live.models import PaperSignal
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        self._lock_with_book(live_session, ask=45, model_p=0.60)
+        monkeypatch.setattr(config, "GLOBAL_TRADING_DISABLED", True)
+        paper.paper_trade_lock("lock", backfill=True)
+        sig = live_session.query(PaperSignal).filter_by(
+            outcome_key="home_win").one()
+        assert sig.decision == "reject"
+        assert sig.reject_reason == "KILL_SWITCH:GLOBAL_TRADING_DISABLED"
+
+    def test_reconstructed_fills_are_excluded_from_the_headline(
+            self, live_session, monkeypatch):
+        """The first slate reported -$69.32 as its P&L. Every fill behind
+        it was reconstructed, so it must not sit in the headline."""
+        from src.live import paper
+        from src.live.models import PaperFill
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        fx = self._lock_with_book(live_session, ask=45, model_p=0.60)
+        paper.paper_trade_lock("lock", backfill=True)   # no context
+        fx.status = "post"; fx.home_goals = 2; fx.away_goals = 0
+        live_session.commit()
+        paper.settle_paper()
+        assert live_session.query(PaperFill).count() == 1
+        summary = paper.paper_summary()
+        assert summary["settled_fills"] == 0          # headline empty
+        assert summary["settled_pnl_dollars"] == "0"
+        assert summary["roi_pct"] is None
+        recon = summary["reconstructed_only"]
+        assert recon["settled_fills"] == 1
+        assert Decimal(recon["settled_pnl_dollars"]) != 0
+        assert summary["execution_grade"] == "contemporaneous_bounded_depth"
+
+    def test_exposure_gate_compares_exact_dollars(self):
+        """V9.5 eval H4: v1 rounded to cents first, so $60.004 cleared a
+        $60.000 correlated cap and 3.004c of slippage cleared a 3c one."""
+        from types import SimpleNamespace as NS
+
+        from src.live import risk
+        fx = NS(id=1, home_team_id=1, away_team_id=2)
+        exp = risk.empty_exposure()
+        r = risk.exposure_gate(fx, "home_win", Decimal("60.004"),
+                               Decimal(0), kill_switches=[], exposure=exp)
+        assert r == "CORRELATED_EXPOSURE_LIMIT"
+        r2 = risk.exposure_gate(fx, "home_win", Decimal("10.00"),
+                                Decimal("0.03004"),
+                                kill_switches=[], exposure=exp)
+        assert r2 == "SLIPPAGE_TOO_HIGH"
+        assert risk.exposure_gate(fx, "home_win", Decimal("60.000"),
+                                  Decimal("0.03"), kill_switches=[],
+                                  exposure=exp) is None
+
+
 class TestEngineSignatureRevisionDrift:
     """The engine signature hashes the git revision, so EVERY deploy
     changes it. After the 2026-07-25 slate an unrelated deploy (a
@@ -953,9 +1306,11 @@ class TestRiskEngine:
         from src.live import risk
         from types import SimpleNamespace as NS
         monkeypatch.setattr(config, "GLOBAL_TRADING_DISABLED", True)
-        r = risk.exposure_gate(live_session, NS(id=1, home_team_id=1,
-                                                away_team_id=2),
-                               "home_win", 1000, 0)
+        r = risk.exposure_gate(
+            NS(id=1, home_team_id=1, away_team_id=2), "home_win",
+            Decimal("10.00"), Decimal(0),
+            kill_switches=risk.active_kill_switches(live_session),
+            exposure=risk.current_exposure(live_session))
         assert r == "KILL_SWITCH:GLOBAL_TRADING_DISABLED"
 
     def test_correlated_exposure_limit(self, live_session, monkeypatch):
@@ -980,10 +1335,14 @@ class TestRiskEngine:
             cost_c=pol["max_correlated_exposure_c"] - 500))
         live_session.commit()
         # a new home_margin bet (same direction) that would exceed it
-        r = risk.exposure_gate(live_session, fx, "home_margin_2", 1000, 0)
+        exp = risk.current_exposure(live_session)
+        ks = risk.active_kill_switches(live_session)
+        r = risk.exposure_gate(fx, "home_margin_2", Decimal("10.00"),
+                               Decimal(0), kill_switches=ks, exposure=exp)
         assert r == "CORRELATED_EXPOSURE_LIMIT"
         # an AWAY bet (different direction) is not blocked by that budget
-        r2 = risk.exposure_gate(live_session, fx, "away_win", 1000, 0)
+        r2 = risk.exposure_gate(fx, "away_win", Decimal("10.00"),
+                                Decimal(0), kill_switches=ks, exposure=exp)
         assert r2 != "CORRELATED_EXPOSURE_LIMIT"
 
     def test_paper_uses_risk_engine_for_exposure(self, live_session,
@@ -1204,7 +1563,7 @@ class TestObservability:
         assert m["locks"]["lock_success_rate"] is not None
         # risk assessment is well-formed
         r = risk.assess()
-        assert r["policy_version"] == "risk-v1"
+        assert r["policy_version"] == "risk-v2"   # exact-Decimal gating
         assert "active_kill_switches" in r
 
 
@@ -1375,6 +1734,60 @@ class TestModelLadderEval:
         served = me.current_approval_decision()
         assert served["corpus_version"] == "test-corpus-v1"
         assert served["corpus_manifest_hash"] == pub["manifest_hash"]
+
+    def test_boot_never_mints_an_approval_and_fails_closed(
+            self, live_session, monkeypatch):
+        """V9.5 eval H6. Boot created an approval whenever none matched
+        the current engine — and the signature includes code_revision,
+        so every deploy silently issued a fresh approval from live data
+        while the docs claimed operator-only re-evaluation."""
+        from src.live import model_eval as me
+        from src.live.models import ModelApprovalDecision, ModelVersion
+        dv = me.deployed_variant()
+        monkeypatch.setattr(me, "evaluate_ladder", lambda **kw: {
+            "eval_version": "model-eval-v1", "n_scored": 162,
+            "variants": {dv: {"log_loss": 1.07, "brier": 0.647,
+                              "rps": 0.232}},
+            "edges": {f"{dv}_vs_M0": {"delta_log_loss": 0.008,
+                                      "ci95": [-0.012, 0.029],
+                                      "significant": False}}})
+        res = me.ensure_approval_decision(allow_create=False)
+        assert res.get("fail_closed") is True
+        assert res.get("approved") is False
+        assert live_session.query(ModelApprovalDecision).count() == 0
+        live_session.expire_all()
+        mv = live_session.query(ModelVersion).filter_by(
+            name=model_mls.MODEL_NAME).one_or_none()
+        # fail closed: nothing is approved, so canonical locks stay refused
+        assert mv is None or mv.approved_for_shadow is False
+        # the operator path is the ONLY one that creates
+        created = me.ensure_approval_decision(allow_create=True)
+        assert created["decision_id"]
+        # and boot now LOADS that one rather than making another
+        loaded = me.ensure_approval_decision(allow_create=False)
+        assert loaded["decision_id"] == created["decision_id"]
+        assert live_session.query(ModelApprovalDecision).count() == 1
+
+    def test_decision_records_what_it_actually_evaluated(
+            self, live_session, monkeypatch):
+        """V9.5 eval H6: the corpus binding is a label. The ladder reads
+        the live database, and the decision must say so."""
+        import json as _json
+
+        from src.live import model_eval as me
+        from src.live.models import ModelApprovalDecision
+        dv = me.deployed_variant()
+        monkeypatch.setattr(me, "evaluate_ladder", lambda **kw: {
+            "eval_version": "model-eval-v1", "n_scored": 162,
+            "variants": {dv: {"log_loss": 1.07, "brier": 0.647,
+                              "rps": 0.232}},
+            "edges": {f"{dv}_vs_M0": {"delta_log_loss": 0.008,
+                                      "ci95": [-0.012, 0.029],
+                                      "significant": False}}})
+        dec = me.ensure_approval_decision()
+        row = live_session.get(ModelApprovalDecision, dec["decision_id"])
+        doc = _json.loads(row.decision_document)
+        assert doc["evaluation_source"] == "live_database"
 
     def test_unbound_decision_is_not_silently_reused_after_publish(
             self, live_session, monkeypatch):
