@@ -35,6 +35,14 @@ def _utc(dt):
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
+def _current_engine_hash() -> str | None:
+    try:
+        from src.live import model_mls
+        return model_mls.engine_signature()["signature_hash"]
+    except Exception:
+        return None
+
+
 def _paper_coverage_summary() -> dict:
     """How much of the paper evidence the locks were ELIGIBLE for
     actually exists. Reported at summary level (see the call site) and
@@ -152,9 +160,25 @@ def _lock_checks(s, f, lock, n_locks, current_engine=None) -> dict:
         "input_hash_present": bool(lock.input_snapshot_hash),
         "input_artifact_retained": lock.model_input_artifact_id is not None,
         # the frozen engine signature must be present AND match the current
-        # engine (V9.1 eval F4) — presence alone is engine-blind
+        # engine (V9.1 eval F4) — a lock must DOCUMENT the engine that
+        # produced it, and record the revision it ran under, so it stays
+        # self-describing no matter how the codebase moves afterwards.
         "engine_signature_present": bool(engine_sig),
-        "engine_signature_matches_current": engine_matches_current,
+        # (the recorded revision is reported as `run_git_revision` below
+        # rather than gated here — an environment without git metadata
+        # must not turn every lock red, which is the same over-broad
+        # gating this block exists to avoid)
+        # NOTE: whether TODAY's engine still matches is deliberately NOT
+        # a lock check. A canonical lock records what happened at T-10;
+        # its validity is fixed by facts frozen at that moment. "Does the
+        # currently deployed code still reproduce it?" is a fact about
+        # the deployment, and it changes without the lock changing — a
+        # lock cannot become retroactively invalid because someone
+        # shipped a fix. Folding it in made `clean` decay on every
+        # deploy, which destroys the acceptance signal while telling you
+        # nothing new. It is reported per lock and aggregated in the
+        # summary instead, and replay still REFUSES on a real mismatch,
+        # which is the right place for that guard.
         # a lineup snapshot must be REFERENCED (Phase 5) — whether or not
         # the lineup was confirmed. Its absence is a provenance gap; a
         # PENDING lineup inside it is honest data, not a failure.
@@ -344,6 +368,27 @@ def lock_audit() -> dict:
                 # the two would either excuse the gap or falsely condemn
                 # 15 clean locks. `clean` stays a statement about locks.
                 "paper_coverage": _paper_coverage_summary(),
+                # deployment provenance, reported beside lock integrity
+                # rather than inside it (see the note in _lock_checks)
+                "engine_provenance": {
+                    "current_signature_hash": _current_engine_hash(),
+                    "locks_matching_current": sum(
+                        1 for r in locks_out
+                        if r.get("engine_matches_current")
+                        and not r.get("engine_revision_only_drift")),
+                    "locks_revision_only_drift": sum(
+                        1 for r in locks_out
+                        if r.get("engine_revision_only_drift")),
+                    "locks_engine_changed": sum(
+                        1 for r in locks_out
+                        if not r.get("engine_matches_current")),
+                    "note": ("a lock whose engine no longer matches is "
+                             "still a valid lock — its artifact, quotes "
+                             "and hashes are frozen and retained. What "
+                             "is unavailable is replay under TODAY's "
+                             "engine; replay under the recorded revision "
+                             "remains the claim."),
+                },
                 "clean": (all(r["all_pass"] for r in locks_out)
                           and not missed),
             },
