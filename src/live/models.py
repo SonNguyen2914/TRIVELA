@@ -161,8 +161,8 @@ class ModelApprovalDecision(LiveBase):
     model_version_id = Column(Integer, ForeignKey("model_version.id"),
                               nullable=False)
     model_version_name = Column(String(48))
-    eval_version = Column(String(24))
-    policy_version = Column(String(24))
+    eval_version = Column(String(64))
+    policy_version = Column(String(64))
     corpus_version = Column(String(48))
     approved_mode = Column(String(16), nullable=False)      # shadow
     approved = Column(Boolean, nullable=False)
@@ -208,7 +208,7 @@ class LineupSnapshot(LiveBase):
     captured_at = Column(DateTime(timezone=True), nullable=False)
     observed_at = Column(DateTime(timezone=True))
     provider = Column(String(24))
-    parser_version = Column(String(16))
+    parser_version = Column(String(32))
     source_observation_id = Column(
         Integer, ForeignKey("source_observation.id"))
     status = Column(String(16))              # confirmed | partial | pending
@@ -242,7 +242,7 @@ class ModelInputArtifact(LiveBase):
     content_hash — identical inputs share one artifact."""
     __tablename__ = "model_input_artifact"
     id = Column(Integer, primary_key=True)
-    schema_version = Column(String(24), nullable=False)
+    schema_version = Column(String(64), nullable=False)
     content_hash = Column(String(64), unique=True, nullable=False)
     size_bytes = Column(Integer)
     document_json = Column(Text, nullable=False)   # canonical serialization
@@ -378,7 +378,7 @@ class MarketSnapshot(LiveBase):
     # qualification #2). The lock predicate itself is versioned so
     # "full book" cannot change meaning silently (qualification #3).
     status = Column(String(12), nullable=False, default="writing")
-    policy_version = Column(String(24))
+    policy_version = Column(String(64))
     provider_schema_version = Column(String(32))
     events_expected = Column(Integer)
     events_captured = Column(Integer)
@@ -427,7 +427,7 @@ class MarketQuote(LiveBase):
     open_interest = Column(Integer)
     status = Column(String(16))
     rules_hash = Column(String(64))
-    fee_schedule_version = Column(String(16))
+    fee_schedule_version = Column(String(64))
     source_observation_id = Column(Integer,
                                    ForeignKey("source_observation.id"))
     # EXACT provider fixed-point values retained beside the derived integer
@@ -480,7 +480,7 @@ class PaperSignal(LiveBase):
     market_quote_id = Column(Integer, ForeignKey("market_quote.id"))
     fixture_id = Column(Integer, ForeignKey("fixture.id"))
     outcome_key = Column(String(32))
-    policy_version = Column(String(24))
+    policy_version = Column(String(64))
     model_probability = Column(Float)
     ask_c = Column(Integer)              # display (rounded)
     fee_c = Column(Integer)              # display (rounded)
@@ -535,12 +535,12 @@ class PaperFill(LiveBase):
     # depth was captured is a TOP-OF-BOOK ESTIMATE, not a depth-backed
     # execution. Recorded explicitly so execution-grade metrics can exclude
     # it instead of silently mixing the two.
-    execution_class = Column(String(24))   # bounded_depth | top_of_book_estimate
+    execution_class = Column(String(32))   # bounded_depth | top_of_book_estimate
     # the exact per-level allocations the fee was computed from (V9.3 eval
     # F2): [{"seq","price","qty","fee"}]. The general fee is non-linear in
     # price, so one fee at the VWAP is not the sum of the per-fill fees.
     allocations_json = Column(Text)
-    fee_policy_version = Column(String(24))
+    fee_policy_version = Column(String(64))
     latency_ms = Column(Integer)         # recorded assumption
     reason = Column(String(48))          # filled | partial | no_depth
     created_at = Column(DateTime(timezone=True))
@@ -651,7 +651,7 @@ class CorpusExport(LiveBase):
     __tablename__ = "corpus_export"
     id = Column(Integer, primary_key=True)
     version = Column(String(48), unique=True, nullable=False)
-    schema_version = Column(String(24))
+    schema_version = Column(String(64))
     manifest_hash = Column(String(64), nullable=False)
     manifest_json = Column(Text, nullable=False)
     bundle_json = Column(Text, nullable=False)     # full self-contained bundle

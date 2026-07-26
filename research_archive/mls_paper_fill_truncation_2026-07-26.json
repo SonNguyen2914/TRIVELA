@@ -1,0 +1,37 @@
+{
+ "bundle": "mls_paper_fill_truncation_root_cause",
+ "generated_at": "2026-07-26T06:03:30.581138+00:00",
+ "severity": "P0 \u2014 biased evidence loss on the first prospective slate",
+ "defect": {
+  "what": "FEE_POLICY['version'] = 'kalshi-fee-2026-07-general' is 26 chars; paper_fill.fee_policy_version was String(24)",
+  "why_undetected": "SQLite ignores VARCHAR(n) entirely and the whole test suite runs on SQLite; production is PostgreSQL, which raises StringDataRightTruncation",
+  "production_error": "(psycopg.errors.StringDataRightTruncation) value too long for type character varying(24) [SQL: INSERT INTO paper_fill ...]",
+  "how_found": "the paper-coverage backfill built to recover 18 missing legs reproduced the original failure verbatim on all 6 uncovered locks"
+ },
+ "why_the_loss_was_biased": "paper_trade_lock wraps the whole lock in one transaction. A lock whose signals were ALL rejections inserted no paper_fill, so it committed normally. A lock that produced even one FILL hit the truncation, and the except-branch rollback discarded that lock's signals too. The ledger therefore retained 100% of rejections and 0% of fills.",
+ "consequence": {
+  "reported": "27 signals, 0 fills, 27/27 rejected NET_EDGE_TOO_LOW",
+  "actual": "6 of 15 locks produced at least one fill-grade signal and were erased; the surviving 27 are rejections BY SELECTION, not because the model agreed with the market",
+  "invalidated_claim": "the paper module docstring asserts 'a rejected signal keeps its reason, so the ledger has no survivorship bias' \u2014 the ledger had maximal survivorship bias",
+  "prior_evaluation_statement_now_WRONG": "'the model never disagreed with the market by more than 3%' \u2014 it did, on at least 6 fixtures, and those are exactly the ones lost"
+ },
+ "affected_locks": [
+  "761689",
+  "761687",
+  "761694",
+  "761690",
+  "761686",
+  "761692"
+ ],
+ "covered_locks_unaffected": 9,
+ "remediation": {
+  "migration_f1a2b3c4d5e6": "paper_signal.backfilled_at (coverage provenance)",
+  "migration_a1b2c3d4e5f6": "widen 10 version/policy columns, incl. the two holding PROVIDER-controlled strings (market_quote.fee_schedule_version <- kalshi fee_type, lineup_snapshot.parser_version)",
+  "structural": "tests now enforce VARCHAR lengths on SQLite via a before_flush listener, giving PostgreSQL-grade enforcement to every test that writes a row \u2014 this defect class can no longer pass a local run",
+  "invariant_tests": "every versioned constant is checked against the column it is persisted in, on SQLite AND with a real PostgreSQL write",
+  "proof_the_guard_works": "enabling the listener turned 10 previously green tests red \u2014 exactly the fill-creating ones"
+ },
+ "lesson": "the project's recurring defect shape again: a correct implementation of an assumption never checked against reality. Here the assumption was 'the test database behaves like the production database'.",
+ "tests": "500 SQLite + 7 PostgreSQL integration green; chain round-trips empty->head->down->head on PG 18",
+ "money": "LOCKED throughout \u2014 REAL_MONEY_SIGNALS_ENABLED=false; paper only"
+}
