@@ -53,6 +53,113 @@ class TestParsers:
         assert out[0]["entries"][0]["points"] == 41
         assert out[0]["entries"][0]["goal_diff"] == 19
 
+
+def _entry(team, abbrev, rank, played, points, wins=0, gd=0):
+    return {"team": {"id": abbrev, "displayName": team,
+                     "abbreviation": abbrev},
+            "stats": [{"name": "rank", "value": rank},
+                      {"name": "gamesPlayed", "value": played},
+                      {"name": "points", "value": points},
+                      {"name": "wins", "value": wins},
+                      {"name": "pointDifferential", "value": gd}]}
+
+
+# The real 2026-07-26 ESPN response, reduced: the child NAMED "Eastern
+# Conference" carried EVERY club (its inner standings block is literally
+# `name: "overall"`), while "Western Conference" carried the correct
+# subset — one matchday STALER. So each Western club rendered twice, with
+# different numbers, and a Western club sat top of the Eastern table.
+_DRIFTED = {"children": [
+    {"name": "Eastern Conference", "standings": {"name": "overall", "entries": [
+        _entry("Nashville SC", "NSH", 1, 17, 39),
+        _entry("Inter Miami CF", "MIA", 2, 17, 37),
+        _entry("Vancouver Whitecaps", "VAN", 1, 16, 33),   # western
+        _entry("LAFC", "LAFC", 2, 18, 33),                 # western
+    ]}},
+    {"name": "Western Conference", "standings": {"name": "overall", "entries": [
+        _entry("Vancouver Whitecaps", "VAN", 1, 15, 32),   # one game behind
+        _entry("LAFC", "LAFC", 3, 17, 30),
+    ]}},
+]}
+
+
+class TestStandingsConferenceDrift:
+    """ESPN broke this at HTTP 200 with a full, well-formed payload —
+    the same failure mode as the seasonseries rename and the winner-first
+    score string. A provider's grouping is data, not a guarantee."""
+
+    def test_no_club_appears_in_two_conferences(self):
+        out = mls.parse_standings(_DRIFTED)
+        rows = [e["team"] for c in out for e in c["entries"]]
+        assert len(rows) == len(set(rows)) == 4
+
+    def test_western_clubs_are_not_listed_in_the_east(self):
+        out = mls.parse_standings(_DRIFTED)
+        tables = {c["conference"]: {e["abbrev"] for e in c["entries"]}
+                  for c in out}
+        assert tables["Eastern Conference"] == {"NSH", "MIA"}
+        assert tables["Western Conference"] == {"VAN", "LAFC"}
+
+    def test_each_conference_ranks_one_to_n_without_duplicates(self):
+        for c in mls.parse_standings(_DRIFTED):
+            ranks = [e["rank"] for e in c["entries"]]
+            assert ranks == sorted(ranks)
+            assert len(set(ranks)) == len(ranks)
+
+    def test_the_freshest_row_wins_when_blocks_disagree(self):
+        """The same club appeared with different points in each block.
+        Standings only move forward, so the row with more games played
+        is the current one — and there must be exactly one of them."""
+        out = mls.parse_standings(_DRIFTED)
+        west = {e["abbrev"]: e for c in out
+                if c["conference"] == "Western Conference"
+                for e in c["entries"]}
+        assert west["VAN"]["played"] == 16 and west["VAN"]["points"] == 33
+        assert west["LAFC"]["played"] == 18 and west["LAFC"]["points"] == 33
+
+    def test_a_healthy_payload_is_unchanged(self):
+        """Two genuine rosters must pass straight through — the fix must
+        not depend on the provider staying broken."""
+        healthy = {"children": [
+            {"name": "Eastern Conference", "standings": {"entries": [
+                _entry("Nashville SC", "NSH", 1, 17, 39),
+                _entry("Inter Miami CF", "MIA", 2, 17, 37)]}},
+            {"name": "Western Conference", "standings": {"entries": [
+                _entry("Vancouver Whitecaps", "VAN", 1, 16, 33),
+                _entry("LAFC", "LAFC", 2, 18, 33)]}}]}
+        out = mls.parse_standings(healthy)
+        assert [c["conference"] for c in out] == ["Eastern Conference",
+                                                  "Western Conference"]
+        assert [[e["abbrev"] for e in c["entries"]] for c in out] == [
+            ["NSH", "MIA"], ["VAN", "LAFC"]]
+
+    def test_colliding_ranks_are_recomputed_rather_than_shown_twice(self):
+        """If ESPN ever sends league-wide ranks inside a conference block
+        there is nothing to partition on, but two teams must still never
+        share a place — recompute rather than render a duplicate."""
+        collide = {"children": [
+            {"name": "Eastern Conference", "standings": {"entries": [
+                _entry("A FC", "AAA", 1, 17, 20, wins=6, gd=1),
+                _entry("B FC", "BBB", 1, 17, 30, wins=9, gd=5)]}}]}
+        out = mls.parse_standings(collide)
+        entries = out[0]["entries"]
+        assert [e["rank"] for e in entries] == [1, 2]
+        assert entries[0]["abbrev"] == "BBB"      # 30 pts ranks above 20
+
+    def test_every_block_spanning_the_league_yields_one_honest_table(self):
+        """Nothing to split on: report a single table rather than invent
+        two — repeating the bug in a new shape helps nobody."""
+        both = {"children": [
+            {"name": "Eastern Conference", "standings": {"entries": [
+                _entry("A FC", "AAA", 1, 17, 30),
+                _entry("B FC", "BBB", 2, 17, 20)]}},
+            {"name": "Western Conference", "standings": {"entries": [
+                _entry("A FC", "AAA", 1, 17, 30),
+                _entry("B FC", "BBB", 2, 17, 20)]}}]}
+        out = mls.parse_standings(both)
+        assert len(out) == 1
+        assert len(out[0]["entries"]) == 2
+
     def test_parse_game_books_keeps_both_sides(self):
         evs = [{"event_ticker": "KXMLSGAME-26JUL25SJLAG",
                 "title": "San Jose vs Los Angeles G"}]
