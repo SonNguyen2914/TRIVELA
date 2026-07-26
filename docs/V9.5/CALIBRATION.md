@@ -130,9 +130,9 @@ average entry        ~$0.24
 ### Why −40.9% is not a result
 
 ```text
-expected hits at the MARKET's own price   1.69
+expected hits at the MARKET's own price   1.61      (sum of fill prices)
 observed                                  1
-P(≤1)                                     0.465     ordinary variance
+P(≤1)                                     0.49244   Poisson-binomial
 
 ROI as settled        −40.9%
 ROI, one more hit     +18.1%     ← the sign turns on a single match

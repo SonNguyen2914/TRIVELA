@@ -183,7 +183,7 @@ Treat the slate's evidence as compromised if any hold:
   eligible legs; created without attempted; fills without coverage.
 - **Never report an edge without n and its CI.** A point estimate with a
   CI spanning zero is not an edge.
-- **Never let a small P&L imply a verdict.** Seven fills at 24¢: one more
+- **Never let a small P&L imply a verdict.** Seven fills at 23¢: one more
   winner takes −40.9% to +18.1%. State what the sign turns on.
 - **Distinguish recovered evidence from original.** `backfilled_at` rows
   are deterministic recomputations, not signals that existed at lock time.

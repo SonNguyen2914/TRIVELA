@@ -123,9 +123,18 @@ Payout was exactly **$100.00**, so exactly **one of seven fills hit**.
 
 ### Reading the −40.9% honestly
 
-Average entry was **~24¢** — these were longshots. At the market's own
-price, expected wins across 7 fills is **1.69**; observed 1;
-**P(≤1) = 0.465.** Entirely ordinary variance.
+Average entry was **~23¢** — these were longshots. The seven fill
+prices sum to **1.61 expected wins**; observed 1. Because the prices
+differ, the correct distribution is Poisson-binomial, which gives
+**P(≤1) = 0.49244.** Entirely ordinary variance.
+
+> **Corrected 2026-07-26** (V9.5 independent evaluation). This first
+> read 1.69 expected wins and P(≤1) = 0.465. 1.693237 is the total
+> all-in COST per 100-contract equivalent — it includes $8.32 of fees —
+> and fees move economic break-even, not the probability the market
+> implies. The second error was using a single-p binomial across seven
+> different prices. The conclusion is unchanged; the statistic was
+> wrong and is fixed here.
 
 ```text
 ROI as settled          −40.9%

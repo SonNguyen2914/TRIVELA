@@ -81,8 +81,8 @@ survivorship bias."
 
 Recovered, the slate reads: 45 signals, 7 fills, 38 rejections, and a
 settled paper P&L of **−$69.32 on $169.32 — ROI −40.94%**, one of seven
-fills hitting at an average entry of 24¢. Expected hits at the market's
-own price: 1.69. Observed: 1. One more winner and the ROI is +18.1%.
+fills hitting at an average entry of 23¢. Expected hits at the market's
+own price: 1.61. Observed: 1. One more winner and the ROI is +18.1%.
 The sign is decided by a single match, so it is not evidence of edge —
 but it is a real number where there had been a fabricated zero.
 

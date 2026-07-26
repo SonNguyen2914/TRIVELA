@@ -116,7 +116,7 @@ precisely the fill-creating ones.**
 
 ### Recovered truth
 45 signals · 7 fills · 38 rejections · settled **−$69.32 on $169.32**
-(ROI −40.94%), 1 of 7 hitting at ~24¢ average entry.
+(ROI −40.94%), 1 of 7 hitting at ~23¢ average entry.
 
 ---
 
