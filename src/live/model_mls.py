@@ -314,7 +314,7 @@ def _canonical(doc: dict) -> str:
                        separators=(",", ":"))
 
 
-def engine_signature() -> dict:
+def engine_signature(code_revision: str | None = None) -> dict:
     """A fingerprint of the ACTUAL engine implementation + runtime a replay
     depends on (V9.1 eval F5). The V8 artifact froze no engine; v2 froze
     selected constants + numpy, so a logic change that left those constants
@@ -322,7 +322,20 @@ def engine_signature() -> dict:
     model/simulator modules themselves, plus the code revision, python, and
     numpy versions — so an implementation change changes signature_hash and
     replay refuses. (Container/wheel digests are the stronger form; a
-    source-tree digest is the portable version available in-process.)"""
+    source-tree digest is the portable version available in-process.)
+
+    `code_revision` overrides the running revision. That exists because
+    the hash includes the git revision, so EVERY deploy changes it —
+    including a migration or a docs commit that cannot touch the model.
+    After the 2026-07-25 slate, an unrelated deploy flipped all 15 locks
+    to engine_matches_current=false and made replay refuse, which would
+    have permanently voided the strongest evidence property this system
+    has. Recomputing with the revision a run RECORDED (PredictionRun.
+    git_revision) reproduces its stored hash exactly when nothing but the
+    revision moved — turning "the repo changed" into a provable
+    distinction from "the engine changed", without weakening the guard:
+    a real source edit still fails, because substituting the revision
+    cannot recover the hash."""
     import importlib
     import platform
 
@@ -357,7 +370,7 @@ def engine_signature() -> dict:
     runtime = {
         "python": platform.python_version(),
         "numpy": _np.__version__,
-        "code_revision": _GIT_REV,
+        "code_revision": code_revision or _GIT_REV,
     }
     fingerprint = {"constants": constants, "source_sha256": source_sha256,
                    "runtime": runtime}
@@ -368,9 +381,32 @@ def engine_signature() -> dict:
         "runtime": runtime,
         "numpy": _np.__version__,            # kept for display/back-compat
         "python": platform.python_version(),
-        "code_revision": _GIT_REV,
+        "code_revision": runtime["code_revision"],
         "signature_hash": sig_hash,
     }
+
+
+def engine_matches(stored_hash: str | None,
+                   run_revision: str | None) -> tuple[bool, bool]:
+    """(matches, revision_only_drift) for a stored engine signature.
+
+    Returns matches=True when the stored hash equals the current engine's,
+    OR when recomputing the signature under the revision the run recorded
+    reproduces the stored hash — which proves the engine constants, module
+    source, python and numpy are all identical and only the git revision
+    moved. revision_only_drift flags that second case so the distinction
+    stays visible rather than being quietly absorbed.
+
+    A genuine source, constant or runtime change fails both arms."""
+    if not stored_hash:
+        return False, False
+    if stored_hash == engine_signature()["signature_hash"]:
+        return True, False
+    if run_revision:
+        rehashed = engine_signature(code_revision=run_revision)
+        if rehashed["signature_hash"] == stored_hash:
+            return True, True
+    return False, False
 
 
 def build_input_artifact(fixture, model: dict,

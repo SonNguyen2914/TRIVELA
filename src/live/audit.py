@@ -87,10 +87,17 @@ def _lock_checks(s, f, lock, n_locks, current_engine=None) -> dict:
         approval and approval.decision_document and approval.content_hash
         and hashlib.sha256(approval.decision_document.encode()).hexdigest()
         == approval.content_hash)
+    from src.live import model_mls
     if current_engine is None:
-        from src.live import model_mls
         current_engine = model_mls.engine_signature()["signature_hash"]
-    engine_matches_current = bool(engine_sig and engine_sig == current_engine)
+    # The signature includes the git revision, so any deploy — a docs
+    # commit, a migration — flips it. Accept a stored signature that
+    # reproduces exactly when recomputed under the revision the run
+    # RECORDED: that proves only the revision moved. A real engine change
+    # still fails. Without this, every lock goes red on the next deploy
+    # and a permanently-red audit is one nobody reads.
+    engine_matches_current, engine_rev_drift = model_mls.engine_matches(
+        engine_sig, lock.git_revision)
     # a later COMPLETE run must not exist for this fixture (F9)
     later = (s.query(PredictionRun)
              .filter_by(fixture_id=f.id, status="complete")
@@ -173,6 +180,10 @@ def _lock_checks(s, f, lock, n_locks, current_engine=None) -> dict:
         "engine_signature_hash": engine_sig,
         "current_engine_signature_hash": current_engine,
         "engine_matches_current": engine_matches_current,
+        # true when the engine is provably identical and ONLY the build
+        # revision differs — informational, never a failure
+        "engine_revision_only_drift": engine_rev_drift,
+        "run_git_revision": lock.git_revision,
         "contracts": len(contracts),
         "priced_contracts": len(priced),
         "input_quality": (json.loads(lock.input_quality_json)
@@ -222,7 +233,11 @@ def verify_replay(run_id: str, tol: float = 1e-6) -> dict:
         # claim is engine-matched and independently visible, never blind.
         stored_sig = (doc.get("engine") or {}).get("signature_hash")
         current_sig = model_mls.engine_signature()["signature_hash"]
-        engine_match = (stored_sig == current_sig) if stored_sig else None
+        if stored_sig:
+            engine_match, rev_only = model_mls.engine_matches(
+                stored_sig, run.git_revision)
+        else:
+            engine_match, rev_only = None, False
         base = {
             "run_id": run_id,
             "artifact_hash": art.content_hash,
@@ -230,6 +245,9 @@ def verify_replay(run_id: str, tol: float = 1e-6) -> dict:
             "stored_engine_signature_hash": stored_sig,
             "current_engine_signature_hash": current_sig,
             "engine_match": engine_match,
+            # the engine is identical; only the build revision moved
+            "engine_revision_only_drift": rev_only,
+            "run_git_revision": run.git_revision,
         }
         # engine-drift guard: a v2+ artifact whose signature no longer
         # matches the current engine is REFUSED — the numbers would
