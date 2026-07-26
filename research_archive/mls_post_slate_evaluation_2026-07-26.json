@@ -1414,7 +1414,35 @@
  },
  "verdict": {
   "machinery": "GO \u2014 15/15 locks, 0 missed, 0 failed snapshots, audit clean, replay bit-exact (max_delta 0.0)",
-  "profitability": "NO-GO \u2014 unchanged; 0 fills, 27/27 rejected NET_EDGE_TOO_LOW, no P&L evidence at all",
+  "profitability": "NO-GO \u2014 unchanged. The slate DID produce execution evidence after recovery (7 fills, -40.9% ROI on $169.32) but n=7 longshots is decided by one match; not evidence in either direction",
   "real_money": "NO-GO \u2014 unchanged; REAL_MONEY_SIGNALS_ENABLED=false, kill switches empty"
+ },
+ "CORRECTION_2026-07-26": {
+  "why": "the paper section of this bundle was captured from a CORRUPTED ledger. A VARCHAR truncation (see mls_paper_fill_truncation_2026-07-26.json) had erased every paper fill while retaining every rejection, so the original reading of '27 signals / 0 fills / model agreed with the market' was an artefact of biased evidence loss, not a result.",
+  "ledger_as_reported": {
+   "signals": 27,
+   "fills": 0,
+   "rejected": 27,
+   "coverage": "60% (27 of 45 eligible legs)"
+  },
+  "ledger_after_recovery": {
+   "signals": 45,
+   "fills": 7,
+   "rejected": 38,
+   "coverage": "100% (45 of 45)",
+   "backfilled_signals": 18
+  },
+  "first_real_paper_pnl": {
+   "settled_fills": 7,
+   "execution_grade": "bounded_depth",
+   "estimates": 0,
+   "cost_dollars": 169.3237,
+   "pnl_dollars": -69.3237,
+   "roi_pct": -40.94,
+   "fills_that_hit": 1,
+   "avg_entry_price": 0.2419,
+   "reading": "7 longshot fills at ~24c. Expected wins at the market's OWN price = 1.69; observed 1; P(<=1) = 0.465 \u2014 entirely ordinary variance. One more winner puts ROI at +18.1%, one fewer at -100%. The SIGN of this number is decided by a single match, so it is not evidence of edge either way."
+  },
+  "verdict_unchanged": "machinery GO; profitability NO-GO; real money NO-GO. n=7 fills and n=15 fixtures move nothing."
  }
 }
