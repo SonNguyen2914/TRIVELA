@@ -8,6 +8,31 @@ here.
 first Claude+Codex session a shared contract instead of two prompts
 restating the same rules. Improve it; don't duplicate it.
 
+### Where the rules live
+
+Trivela is two independent repositories, so there is no single directory
+an agent is guaranteed to start in. The rule is **one canonical file,
+plus a local file that points at it**:
+
+```text
+TRIVELA/AGENTS.md         canonical, cross-repo: invariants, evidence
+                          classes, WC26 classification, roles, branch
+                          and review discipline, validation, handoff
+TRIVELA/CLAUDE.md         Claude-specific backend notes; imports the above
+namson-dev/AGENTS.md      frontend-only rules + a pointer back here
+namson-dev/CLAUDE.md      imports namson-dev/AGENTS.md
+```
+
+A rule that binds both repos belongs **here and only here**. A rule that
+is true of one repo belongs in that repo and must not be copied. If you
+find yourself writing the same sentence in two files, the rule was
+cross-repo and belongs in this one.
+
+An agent starting in the frontend cannot import this file — it is in a
+different repository, and a cloud agent may only have the one checkout.
+It is told to say so explicitly rather than assume the shared rules do
+not apply. **Silence about a missing contract is itself a finding.**
+
 ---
 
 ## 1. What this project is
@@ -81,9 +106,26 @@ The rule is therefore about *which branch*, not about pushing at all:
 - Vercel builds a *preview* for any frontend branch push: harmless, a
   preview URL, production domain untouched.
 
-This matters because the reviewer may be a **cloud/GitHub-backed agent
-that cannot see unpushed local commits**. A local-commit-only workflow
-silently starves such a reviewer of the diff it is meant to audit.
+**Whether a push is needed at all depends on which reviewer runs**, and
+that premise has already been wrong once. An earlier revision of this
+file asserted there was no local `codex` binary and concluded the
+reviewer must be cloud-backed. There is one — it ships inside the
+ChatGPT desktop app rather than on `PATH`, which is why looking for
+`codex` alone found nothing (see `agent-prompts/codex-review.md`).
+
+So:
+
+- **Local reviewer** (Codex CLI against a local worktree) reads the
+  object store directly and needs **no push**. A committed local range
+  is sufficient.
+- **Cloud/GitHub-backed reviewer** cannot see unpushed commits, and a
+  local-commit-only workflow silently starves it of the diff it exists
+  to audit. That reviewer needs the branch pushed.
+
+Establish which one is running *before* deciding, and record the answer
+in the handoff's `Pushed to origin` field. Do not push reflexively: an
+unnecessary push is a real, if small, outward action, and "the reviewer
+might be cloud-backed" is an assumption, not a finding.
 
 ## 5. Classifying WC26 references
 
@@ -156,6 +198,50 @@ Push the implementation branch so a GitHub-backed reviewer can reach it
 (see §4 for why that is safe and why withholding it is not). Only Son
 authorises a push to `main`, a merge, a migration, a deployment or any
 production action.
+
+**A branch push runs no CI.** Both repos' `.github/workflows/ci.yml`
+trigger on `push` to `main` and on `pull_request`. An implementation
+branch with no open PR gets no automated check at all, so local runs are
+the only validation signal. Never describe such a push as "CI green".
+
+### 8.1 Review worktree isolation
+
+The two agents must never share a working tree — §7. Give the reviewer
+its own checkout of the *fixed target commit*, detached so nothing it
+does can move a branch:
+
+```bash
+cd ~/dev/TRIVELA/backend                  # or frontend — one per repo
+git worktree add --detach /tmp/trivela-review-<repo> <TARGET_COMMIT>
+```
+
+Detached HEAD is the point: there is no branch to advance, so the review
+range cannot drift underneath the review. Verify with
+`git worktree list` that the reviewer's path and the implementer's are
+distinct before starting.
+
+Cleanup is non-destructive to the main checkout:
+
+```bash
+cd ~/dev/TRIVELA/backend
+git worktree remove /tmp/trivela-review-<repo>
+git worktree prune
+```
+
+`git worktree remove` refuses to discard uncommitted changes unless
+forced — that refusal is a feature; read what is there before overriding
+it.
+
+> **A fresh worktree has no `.venv` and no `node_modules`** — both are
+> ignored, so neither is copied. Backend tests still run by invoking the
+> main checkout's interpreter against the worktree's sources:
+>
+> ```bash
+> cd /tmp/trivela-review-backend
+> ~/dev/TRIVELA/backend/.venv/bin/python -m pytest tests/ -q
+> ```
+>
+> The frontend equivalent needs its own `npm install` in the worktree.
 
 ## 9. Validation (verify against the repo; these are current as of 2026-07-26)
 

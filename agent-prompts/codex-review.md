@@ -1,3 +1,31 @@
+<!-- ─────────────────────────────────────────────────────────────────
+     Launching this review (for Son — not part of the prompt below)
+
+     Codex is installed but NOT on PATH; it ships inside the ChatGPT
+     desktop app. Verified 2026-07-26, codex-cli 0.145.0-alpha.30:
+
+       CX=/Applications/ChatGPT.app/Contents/Resources/codex
+
+     Run it against the reviewer's own detached worktree (AGENTS.md
+     §8.1), never against the implementer's checkout:
+
+       "$CX" exec --sandbox read-only -C /tmp/trivela-review-backend \
+         "$(cat ~/dev/TRIVELA/backend/agent-prompts/codex-review.md)"
+
+     `--sandbox read-only` is enforced by Codex itself, not by
+     convention: a smoke run was observed being denied write access to
+     /tmp while still reading Git state successfully. It is the
+     mechanical guarantee behind "Read-only" below.
+
+     `codex review --base <BRANCH>` also exists and is purpose-built,
+     but it derives its own range from a branch. Prefer `exec` with the
+     explicit BASE..TARGET below — a fixed range is the whole point.
+
+     Codex is NOT currently registered as an MCP server for Claude, so
+     Claude cannot start this review itself. This separate terminal is
+     the primary path, not a fallback for one.
+     ───────────────────────────────────────────────────────────────── -->
+
 You are the **independent reviewer** for **Trivela**. Claude Code is the
 implementer. You audit its actual Git changes. You are not the
 implementer.
