@@ -35,6 +35,22 @@ def _utc(dt):
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
+def _paper_coverage_summary() -> dict:
+    """How much of the paper evidence the locks were ELIGIBLE for
+    actually exists. Reported at summary level (see the call site) and
+    kept small so it stays inside the audit's content hash without
+    dominating it."""
+    try:
+        from src.live import paper
+        cov = paper.paper_coverage()
+        return {k: cov.get(k) for k in
+                ("locks_eligible", "locks_uncovered", "legs_eligible",
+                 "legs_signalled", "legs_missing", "coverage_pct",
+                 "complete", "backfilled_signals")}
+    except Exception as exc:
+        return {"error": str(exc)[:120]}
+
+
 def _lock_checks(s, f, lock, n_locks, current_engine=None) -> dict:
     """Every invariant from the evaluation's acceptance table, as a flat
     dict of booleans. all_pass is their AND."""
@@ -303,6 +319,13 @@ def lock_audit() -> dict:
                                            if not r["all_pass"]),
                 "missed_locks": len(missed),
                 "failed_snapshots": len(failed_snaps),
+                # Ledger completeness is reported BESIDE lock integrity,
+                # never inside a lock's `checks`. A lock whose paper
+                # engine never ran is still a perfectly valid lock — it
+                # is the PAPER EVIDENCE that is missing, and conflating
+                # the two would either excuse the gap or falsely condemn
+                # 15 clean locks. `clean` stays a statement about locks.
+                "paper_coverage": _paper_coverage_summary(),
                 "clean": (all(r["all_pass"] for r in locks_out)
                           and not missed),
             },

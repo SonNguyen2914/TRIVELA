@@ -497,6 +497,10 @@ class PaperSignal(LiveBase):
     decision = Column(String(12))        # fill | reject
     reject_reason = Column(String(48))
     created_at = Column(DateTime(timezone=True))
+    # NULL = written inline at the lock. A timestamp = recovered later
+    # from the frozen book (deterministic, but not the same evidence as
+    # a signal that existed at lock time — see paper.paper_coverage).
+    backfilled_at = Column(DateTime(timezone=True))
     __table_args__ = (
         UniqueConstraint("prediction_run_id", "market_contract_id",
                          name="uq_paper_signal_run_contract"),
