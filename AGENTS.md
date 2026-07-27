@@ -99,12 +99,27 @@ The rule is therefore about *which branch*, not about pushing at all:
 
 - **Never push the deployment branch (`main`)** without explicit
   instruction from Son.
-- **Pushing an implementation branch is expected**, once Son has
-  confirmed which branch Railway deploys from. That is dashboard-side —
-  there is no `railway.*` file to read. A feature branch triggers no
-  backend deploy.
+- **Pushing an implementation branch is expected.** Railway's deploy
+  branch was confirmed dashboard-side on 2026-07-27: **source
+  `SonNguyen2914/TRIVELA`, branch `main`, auto-deploy ON.** A feature
+  branch therefore triggers no backend deploy. This is dashboard state,
+  not repo state — there is no `railway.*` file to read, so re-confirm
+  if the service is ever reconfigured.
 - Vercel builds a *preview* for any frontend branch push: harmless, a
   preview URL, production domain untouched.
+
+> **A GitHub repo rename silently severs Railway's source link.** After
+> the rename to `TRIVELA`, Railway showed `GitHub Repo not found` where
+> the branch should be, and could not deploy — while the service stayed
+> Online and healthy, serving its last built image. **Running is not the
+> same as deployable**, and nothing alerts on the difference.
+>
+> The fix was not on Railway's side: GitHub → Settings → Applications →
+> Railway → **Save** the repository-access form (already set to "All
+> repositories"; re-saving forces the installation to re-sync). Re-saving
+> an unchanged form is the fix, which is why it is worth writing down.
+> It resolved without triggering a deploy — approval and readiness were
+> byte-identical before and after.
 
 **Whether a push is needed at all depends on which reviewer runs**, and
 that premise has already been wrong once. An earlier revision of this
@@ -402,8 +417,6 @@ findings wastes a review; resolving them unilaterally is worse.
   the setting is dashboard-side. "A non-default branch push is only a
   preview" is therefore an *assumption*. Confirm before the first
   frontend branch push.
-- **Railway's deploy branch is unverified** for the same reason. §4's
-  claim that a feature branch triggers no backend deploy rests on it.
 - **Frontend `CLAUDE.md` cannot import this file.** It lives in another
   repository, and a cloud agent may hold only one checkout. The frontend
   copy points here in prose instead. If that proves too weak, the
