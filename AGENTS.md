@@ -108,6 +108,35 @@ The rule is therefore about *which branch*, not about pushing at all:
 - Vercel builds a *preview* for any frontend branch push: harmless, a
   preview URL, production domain untouched.
 
+Railway's deploy-safety config, verified in the dashboard 2026-07-27:
+
+```text
+branch main · auto-deploy ON · Wait for CI ON
+healthcheck /api/health · teardown OFF · restart On Failure ×10
+serverless OFF · volume 5 GB (735 MB used, 15%)
+```
+
+Two of those are deliberate and should not be "tidied":
+
+- **Teardown stays OFF.** It would kill the old deployment before the new
+  one proves healthy, so a bad deploy would take production down with no
+  fallback. Off means a failed deploy simply never takes over. The cost
+  is a brief overlap where two APScheduler instances run — `max_instances`
+  and `coalesce` are per-process and do *not* span containers, so the
+  real guard is the partial unique index on canonical locks (the one CI
+  tests for concurrent creation).
+- **`/api/health` is unconditional** — no DB, no approval check. That is
+  why it is the right healthcheck: a fail-closed boot still reports
+  healthy, so the deploy completes and an operator can reach
+  `/approval/activate`. A health endpoint coupled to approval would make
+  a fail-closed deploy fail its own healthcheck, leaving no way to
+  deploy the fix.
+
+**Volume alerts are unavailable on this plan** (Teams/Pro only). The
+volume filled once already, silently, behind `{"created":0}`. Since the
+platform cannot warn, headroom monitoring has to ride the app's existing
+Discord/ntfy alert path — see `/api/admin/mls/storage`.
+
 > **A GitHub repo rename silently severs Railway's source link.** After
 > the rename to `TRIVELA`, Railway showed `GitHub Repo not found` where
 > the branch should be, and could not deploy — while the service stayed
