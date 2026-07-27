@@ -112,11 +112,27 @@ Railway's deploy-safety config, verified in the dashboard 2026-07-27:
 
 ```text
 branch main · auto-deploy ON · Wait for CI ON
-healthcheck /api/health · teardown OFF · restart On Failure ×10
+healthcheck NONE · teardown OFF · restart On Failure ×10
 serverless OFF · volume 5 GB (735 MB used, 15%)
+API_HOST unset · API_PORT 8000 · no PORT variable
 ```
 
-Two of those are deliberate and should not be "tidied":
+> **Do not set `API_HOST=::`.** It makes uvicorn bind IPv6-only in this
+> container, the public domain returns 502, and the app looks healthy the
+> whole time — it logs `Uvicorn running on http://[::]:8000` and keeps
+> its Postgres sessions. Cost a live outage on 2026-07-27. Leave
+> `API_HOST` unset so it defaults to `0.0.0.0`.
+
+> **The healthcheck path must stay empty.** Railway's probe can never
+> connect: `service unavailable` on every attempt, in 300s and 900s
+> windows, with an entirely empty HTTP network log. Isolated by
+> controlled test — the same commit with no healthcheck deploys and
+> serves `200`; re-adding *only* the path fails from attempt #1 while
+> the previous container keeps serving `200` on the same route. Cause
+> unknown, open with Railway support. **A set path blocks every deploy**,
+> so it costs the ability to ship a fix and buys nothing.
+
+Two settings are deliberate and should not be "tidied":
 
 - **Teardown stays OFF.** It would kill the old deployment before the new
   one proves healthy, so a bad deploy would take production down with no
@@ -125,12 +141,12 @@ Two of those are deliberate and should not be "tidied":
   and `coalesce` are per-process and do *not* span containers, so the
   real guard is the partial unique index on canonical locks (the one CI
   tests for concurrent creation).
-- **`/api/health` is unconditional** — no DB, no approval check. That is
-  why it is the right healthcheck: a fail-closed boot still reports
-  healthy, so the deploy completes and an operator can reach
+- **`/api/health` is unconditional** — no DB, no approval check. Keep it
+  that way. If Railway's probe is ever fixed, this is the right target
+  precisely *because* it is unconditional: a fail-closed boot still
+  reports healthy, so the deploy completes and an operator can reach
   `/approval/activate`. A health endpoint coupled to approval would make
-  a fail-closed deploy fail its own healthcheck, leaving no way to
-  deploy the fix.
+  a fail-closed deploy fail its own healthcheck — no way to ship the fix.
 
 **Volume alerts are unavailable on this plan** (Teams/Pro only). The
 volume filled once already, silently, behind `{"created":0}`. Since the
