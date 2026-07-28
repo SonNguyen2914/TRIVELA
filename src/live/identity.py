@@ -168,8 +168,22 @@ def unmapped_upcoming(names: list[str]) -> list[str]:
 
 def resolve_mls_club(code: str, name: str | None = None) -> Team | None:
     """Resolve a Sportec club (its three-letter code, e.g. 'NSH') to our
-    Team. Primary key is abbrev == code (the verified 1:1); the name is a
-    defensive fallback only. No alias pre-seeding required."""
+    Team. Attachment requires a STABLE identifier: `abbrev == code` (the
+    verified 1:1), or an approved TeamAlias. A name is never sufficient.
+
+    TeamAlias already states the rule this enforces — fuzzy matching may
+    only PROPOSE; attachment requires approved=True. The previous
+    name-containment fallback broke it: it returned the FIRST substring
+    match, so an MLS NEXT Pro reserve side ('Columbus Crew 2',
+    'Austin FC II') resolved to its parent club. That does not fail
+    loudly — it folds reserve-team stats into first-team xG ratings and
+    into every lock downstream. AGENTS.md §6: an ambiguous identity match
+    must fail explicitly, never silently pick a team.
+
+    An unknown code returns None so the caller reports it observably
+    (`mls_stats.ingest_match_stats` -> status 'unmapped_club'). Name
+    near-misses are logged as curation candidates only; approving an
+    alias is a deliberate act, never a side effect of a read."""
     if not code:
         return None
     s = get_session()
@@ -181,11 +195,23 @@ def resolve_mls_club(code: str, name: str | None = None) -> Team | None:
                .filter(Team.abbrev == code).first())
         if row is not None:
             return row
+        bridged = (s.query(TeamAlias)
+                   .filter_by(source="mls_stats", alias=code, approved=True)
+                   .first())
+        if bridged is not None:
+            return s.query(Team).filter_by(id=bridged.team_id).first()
         if name:
-            for t in s.query(Team).filter_by(competition_slug="mls-2026"):
-                cn = norm(t.canonical_name)
-                if norm(name) == cn or norm(name) in cn or cn in norm(name):
-                    return t
+            n = norm(name)
+            near = [t.canonical_name
+                    for t in s.query(Team).filter_by(
+                        competition_slug="mls-2026")
+                    if n == norm(t.canonical_name)
+                    or n in norm(t.canonical_name)
+                    or norm(t.canonical_name) in n]
+            if near:
+                print(f"[identity] UNMAPPED mls club code={code!r} "
+                      f"name={name!r} — name-only candidates NOT attached "
+                      f"(approve an alias to bridge): {near}")
         return None
     finally:
         s.close()
