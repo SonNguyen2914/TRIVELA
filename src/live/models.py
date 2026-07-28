@@ -709,6 +709,78 @@ class MlsPlayerMatchStat(LiveBase):
     )
 
 
+class HunterFinding(LiveBase):
+    """One observational market-structure finding from the Kalshi soccer
+    hunter. APPEND-ONLY: a later cycle that no longer sees the anomaly
+    marks the row expired with a second capture timestamp — it never
+    deletes or rewrites the original observation.
+
+    Every price in legs_json carries OUR capture clock; Kalshi publishes
+    no quote timestamp (updated_time is the definition clock, ~30h stale
+    on active markets — see markets.QUOTE_FRESHNESS_NOTE). Margins are
+    exact Decimal net of the exact versioned fee policy, serialized as
+    strings. Provider-controlled strings (series/event/market tickers)
+    get generous widths — a 26-char fee-policy string in a 24-char
+    column once silently destroyed a night of production fills."""
+    __tablename__ = "hunter_finding"
+    id = Column(Integer, primary_key=True)
+    # competition slug when the event maps to a known fixture (mls-2026);
+    # otherwise NULL and the series ticker is the grouping key
+    competition_slug = Column(String(32))
+    series = Column(String(64), nullable=False)          # KXUCLGAME ...
+    event_ticker = Column(String(128))
+    market_ticker = Column(String(128))    # market-level findings only
+    finding_type = Column(String(32), nullable=False)
+    # SUM_BELOW_ONE | CROSSED_BOOK | POST_CERTAINTY |
+    # WIDE_SPREAD | THIN_BOOK | IN_PLAY_OVERREACTION | MODEL_EDGE
+    # liquidity/repricing flags are CONTEXT, never wins: labelled so,
+    # never alerted
+    is_context = Column(Boolean, nullable=False, default=False)
+    # the full arithmetic: legs, exact prices, exact fee per leg, margin
+    legs_json = Column(Text, nullable=False)
+    net_margin_dollars = Column(String(24))       # exact Decimal, string
+    fee_policy_version = Column(String(64))
+    # MODEL_EDGE only: the standing approval qualifier (edge, n, CI,
+    # significance) copied verbatim from the active approval decision
+    model_qualifier_json = Column(Text)
+    fixture_id = Column(Integer, ForeignKey("fixture.id"))
+    first_captured_at = Column(DateTime(timezone=True), nullable=False)
+    last_seen_at = Column(DateTime(timezone=True))
+    observed_cycles = Column(Integer, default=1)
+    # POST_CERTAINTY only: when the ESPN state was (re-)read — always at
+    # detection time, never cached from a previous cycle
+    espn_captured_at = Column(DateTime(timezone=True))
+    status = Column(String(16), nullable=False, default="open")
+    # open | expired
+    expired_at = Column(DateTime(timezone=True))
+    alerted_at = Column(DateTime(timezone=True))
+    __table_args__ = (
+        Index("ix_hunter_finding_status_type", "status", "finding_type"),
+    )
+
+
+class HunterCycle(LiveBase):
+    """One hunter scan cycle — the heartbeat AND the denominator. A count
+    of findings without cycles-run/markets-scanned is a defect in this
+    repo, and a scanner that dies silently must be visible as dead, not
+    as a quiet market. One row per cycle, including failed ones."""
+    __tablename__ = "hunter_cycle"
+    id = Column(Integer, primary_key=True)
+    started_at = Column(DateTime(timezone=True), nullable=False)
+    completed_at = Column(DateTime(timezone=True))
+    status = Column(String(16), nullable=False, default="running")
+    # running | complete | failed
+    series_scanned = Column(Integer)
+    events_scanned = Column(Integer)
+    markets_scanned = Column(Integer)
+    findings_new = Column(Integer)
+    findings_expired = Column(Integer)
+    request_count = Column(Integer)
+    roster_size = Column(Integer)          # discovered soccer GAME series
+    active_series = Column(Integer)        # series with open markets
+    error = Column(Text)
+
+
 class CorpusExport(LiveBase):
     """An IMMUTABLE published corpus version (V9 eval F3). build_corpus
     reads live state, so its bytes legitimately drift as the database
