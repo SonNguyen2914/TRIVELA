@@ -38,23 +38,29 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column('personal_bet',
-                  sa.Column('corrects_bet_id', sa.Integer(),
-                            nullable=True))
-    op.create_foreign_key('fk_personal_bet_corrects', 'personal_bet',
-                          'personal_bet', ['corrects_bet_id'], ['id'])
-    op.add_column('personal_bet_execution',
-                  sa.Column('publication_consent', sa.Boolean(),
-                            server_default=sa.false(), nullable=True))
-    op.create_unique_constraint(
-        'uq_personal_bet_execution_order_status',
-        'personal_bet_execution', ['exchange_order_id', 'status'])
+    # batch mode: SQLite (the suite's migration chain) cannot ALTER
+    # constraints; PostgreSQL runs these as plain ALTERs
+    with op.batch_alter_table('personal_bet') as batch:
+        batch.add_column(sa.Column('corrects_bet_id', sa.Integer(),
+                                   nullable=True))
+        batch.create_foreign_key('fk_personal_bet_corrects',
+                                 'personal_bet',
+                                 ['corrects_bet_id'], ['id'])
+    with op.batch_alter_table('personal_bet_execution') as batch:
+        batch.add_column(sa.Column('publication_consent', sa.Boolean(),
+                                   server_default=sa.false(),
+                                   nullable=True))
+        batch.create_unique_constraint(
+            'uq_personal_bet_execution_order_status',
+            ['exchange_order_id', 'status'])
 
 
 def downgrade() -> None:
-    op.drop_constraint('uq_personal_bet_execution_order_status',
-                       'personal_bet_execution', type_='unique')
-    op.drop_column('personal_bet_execution', 'publication_consent')
-    op.drop_constraint('fk_personal_bet_corrects', 'personal_bet',
-                       type_='foreignkey')
-    op.drop_column('personal_bet', 'corrects_bet_id')
+    with op.batch_alter_table('personal_bet_execution') as batch:
+        batch.drop_constraint('uq_personal_bet_execution_order_status',
+                              type_='unique')
+        batch.drop_column('publication_consent')
+    with op.batch_alter_table('personal_bet') as batch:
+        batch.drop_constraint('fk_personal_bet_corrects',
+                              type_='foreignkey')
+        batch.drop_column('corrects_bet_id')
