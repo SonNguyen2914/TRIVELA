@@ -300,3 +300,38 @@ def test_every_versioned_constant_round_trips_on_postgres(pg_schema):
     assert not tight, (
         f"columns narrower than the longest versioned constant "
         f"({longest} chars): {tight}")
+
+
+# 8. hunter tables: created by the migration chain, and a finding row
+# with REAL provider tickers + the real fee-policy string round-trips
+# under PostgreSQL's VARCHAR enforcement (the truncation class that
+# silently erased the first slate's fills).
+def test_hunter_tables_round_trip_on_postgres(pg_schema):
+    from datetime import datetime, timezone
+
+    from src.live.models import HunterCycle, HunterFinding
+    from src.live.paper import FEE_POLICY
+    with pg_schema.engine.connect() as c:
+        tables = {r[0] for r in c.execute(text(
+            "SELECT tablename FROM pg_tables "
+            "WHERE schemaname = current_schema()"))}
+    assert {"hunter_finding", "hunter_cycle"} <= tables
+    now = datetime.now(timezone.utc)
+    s = _session(pg_schema.engine)
+    try:
+        s.add(HunterFinding(
+            series="KXCONMEBOLLIBGAME",
+            event_ticker="KXCONMEBOLLIBGAME-26JUL30CARSFE",
+            market_ticker="KXCONMEBOLLIBGAME-26JUL30CARSFE-CAR",
+            finding_type="SUM_BELOW_ONE", is_context=False,
+            legs_json="{}", net_margin_dollars="0.0353",
+            fee_policy_version=FEE_POLICY["version"],
+            first_captured_at=now, last_seen_at=now, status="open"))
+        s.add(HunterCycle(started_at=now, completed_at=now,
+                          status="complete", markets_scanned=3))
+        s.commit()
+        row = s.query(HunterFinding).one()
+        assert row.fee_policy_version == FEE_POLICY["version"]
+        assert row.net_margin_dollars == "0.0353"
+    finally:
+        s.close()
