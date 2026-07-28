@@ -1,0 +1,926 @@
+{
+ "captured_at": "2026-07-28T10:21:16.192108+00:00",
+ "purpose": "Kalshi soccer taxonomy discovery for the market hunter. Empirical, unauthenticated reads only. Archived BEFORE any push per repo rule (archive-research-before-deploy).",
+ "method": {
+  "series_endpoint": "GET /trade-api/v2/series?category=Sports",
+  "probe_endpoint": "GET /trade-api/v2/markets?series_ticker={t}&status=open&limit=200",
+  "throttle": "0.3s min gap between probe requests",
+  "notes": [
+   "series carry a 'tags' array; 'Soccer' tag identifies the sport",
+   "per-match series tickers end in GAME; 95 soccer GAME series exist",
+   "3 name-matched GAME series excluded as novelty/non-match: KXWCGOALEVERYGAME (goal in every game), KXWCTEAMSINGAME (teams in game), KXKXECULPGAME (malformed duplicate of KXECULPGAME)"
+  ]
+ },
+ "counts": {
+  "sports_series_total": 3011,
+  "soccer_tagged_series": 1074,
+  "soccer_game_series": 95,
+  "probed": 92,
+  "active_today": 28
+ },
+ "soccer_game_series": [
+  "KXAFCACGAME",
+  "KXAFCCLGAME",
+  "KXAFCONGAME",
+  "KXALEAGUEGAME",
+  "KXALLSVENSKANGAME",
+  "KXAPFDDHGAME",
+  "KXARGNACBGAME",
+  "KXARGPREMDIVGAME",
+  "KXASEANGAME",
+  "KXBALLERLEAGUEGAME",
+  "KXBELGIANPLGAME",
+  "KXBOLPDIVGAME",
+  "KXBRASILEIROBGAME",
+  "KXBRASILEIROCGAME",
+  "KXBRASILEIROGAME",
+  "KXBUNDESLIGA2GAME",
+  "KXBUNDESLIGAGAME",
+  "KXCANPLGAME",
+  "KXCHLLDPGAME",
+  "KXCHNSLGAME",
+  "KXCLUBFGAME",
+  "KXCLUBWCGAME",
+  "KXCONCACAFCCUPGAME",
+  "KXCONMEBOLLIBGAME",
+  "KXCONMEBOLSUDGAME",
+  "KXCOPADELREYGAME",
+  "KXCOPADOBRASILGAME",
+  "KXCOPPAITALIAGAME",
+  "KXCOUPEDEFRANCEGAME",
+  "KXCZEFLGAME",
+  "KXDANISHSUPERLIGAGAME",
+  "KXDENSUPERLIGAGAME",
+  "KXDFBPOKALGAME",
+  "KXDIMAYORGAME",
+  "KXECULPGAME",
+  "KXEFLCHAMPIONSHIPGAME",
+  "KXEFLCUPGAME",
+  "KXEFLL1GAME",
+  "KXEGYPLGAME",
+  "KXEKSTRAKLASAGAME",
+  "KXELITESERIENGAME",
+  "KXEPLGAME",
+  "KXEREDIVISIEGAME",
+  "KXESPSUPERCUPGAME",
+  "KXEWSLGAME",
+  "KXFACUPGAME",
+  "KXFIFAGAME",
+  "KXFIFAUSPULLGAME",
+  "KXFIFAWGAME",
+  "KXFINALISSIMAGAME",
+  "KXFRASUPERCUPGAME",
+  "KXHNLGAME",
+  "KXINTERCONCUPGAME",
+  "KXINTLFRIENDLYGAME",
+  "KXITASUPERCUPGAME",
+  "KXJLEAGUEGAME",
+  "KXKLEAGUEGAME",
+  "KXKNVBCUPGAME",
+  "KXKXECULPGAME",
+  "KXLALIGA2GAME",
+  "KXLALIGAGAME",
+  "KXLIGAEXPGAME",
+  "KXLIGAMXGAME",
+  "KXLIGAPORTUGALGAME",
+  "KXLIGUE1GAME",
+  "KXMLSGAME",
+  "KXNWSLGAME",
+  "KXPERLIGA1GAME",
+  "KXPRYLIGA1GAME",
+  "KXQSTARSGAME",
+  "KXSAUDIPLGAME",
+  "KXSCOCUPGAME",
+  "KXSCOTTISHPREMGAME",
+  "KXSERIEAGAME",
+  "KXSERIEBGAME",
+  "KXSLGREECEGAME",
+  "KXSUPERLIGGAME",
+  "KXSWISSLEAGUEGAME",
+  "KXTACAPORTGAME",
+  "KXTHAIL1GAME",
+  "KXUAEPLGAME",
+  "KXUCLGAME",
+  "KXUCLWGAME",
+  "KXUECLGAME",
+  "KXUEFAGAME",
+  "KXUEFANLGAME",
+  "KXUELGAME",
+  "KXURYPDGAME",
+  "KXUSLCUPGAME",
+  "KXUSLGAME",
+  "KXUSOPENCUPGAME",
+  "KXVENFUTVEGAME",
+  "KXWCGAME",
+  "KXWCGOALEVERYGAME",
+  "KXWCTEAMSINGAME"
+ ],
+ "probe_results_open_market_counts": {
+  "KXAFCACGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXAFCCLGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXAFCONGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXALEAGUEGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXALLSVENSKANGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXAPFDDHGAME": {
+   "open_markets": 18,
+   "sample": [
+    "KXAPFDDHGAME-26JUL30LIBREC-TIE",
+    "KXAPFDDHGAME-26JUL30LIBREC-REC",
+    "KXAPFDDHGAME-26JUL30LIBREC-LIB"
+   ]
+  },
+  "KXARGNACBGAME": {
+   "open_markets": 6,
+   "sample": [
+    "KXARGNACBGAME-26JUL25SMAAR-TIE",
+    "KXARGNACBGAME-26JUL25SMAAR-SMA",
+    "KXARGNACBGAME-26JUL25SMAAR-AR"
+   ]
+  },
+  "KXARGPREMDIVGAME": {
+   "open_markets": 36,
+   "sample": [
+    "KXARGPREMDIVGAME-26JUL30CCTUC-TUC",
+    "KXARGPREMDIVGAME-26JUL30CCTUC-TIE",
+    "KXARGPREMDIVGAME-26JUL30CCTUC-CC"
+   ]
+  },
+  "KXASEANGAME": {
+   "open_markets": 42,
+   "sample": [
+    "KXASEANGAME-26AUG08MASPHI-TIE",
+    "KXASEANGAME-26AUG08MASPHI-PHI",
+    "KXASEANGAME-26AUG08MASPHI-MAS"
+   ]
+  },
+  "KXBALLERLEAGUEGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXBELGIANPLGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXBOLPDIVGAME": {
+   "open_markets": 30,
+   "sample": [
+    "KXBOLPDIVGAME-26AUG04INDAUR-TIE",
+    "KXBOLPDIVGAME-26AUG04INDAUR-IND",
+    "KXBOLPDIVGAME-26AUG04INDAUR-AUR"
+   ]
+  },
+  "KXBRASILEIROBGAME": {
+   "open_markets": 9,
+   "sample": [
+    "KXBRASILEIROBGAME-26JUL28FORBOT-TIE",
+    "KXBRASILEIROBGAME-26JUL28FORBOT-FOR",
+    "KXBRASILEIROBGAME-26JUL28FORBOT-BOT"
+   ]
+  },
+  "KXBRASILEIROCGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXBRASILEIROGAME": {
+   "open_markets": 30,
+   "sample": [
+    "KXBRASILEIROGAME-26JUL30CFCCRU-TIE",
+    "KXBRASILEIROGAME-26JUL30CFCCRU-CRU",
+    "KXBRASILEIROGAME-26JUL30CFCCRU-CFC"
+   ]
+  },
+  "KXBUNDESLIGA2GAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXBUNDESLIGAGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXCANPLGAME": {
+   "open_markets": 6,
+   "sample": [
+    "KXCANPLGAME-26JUL28CAVSUP-TIE",
+    "KXCANPLGAME-26JUL28CAVSUP-SUP",
+    "KXCANPLGAME-26JUL28CAVSUP-CAV"
+   ]
+  },
+  "KXCHLLDPGAME": {
+   "open_markets": 3,
+   "sample": [
+    "KXCHLLDPGAME-26JUL25COQUCO-UCO",
+    "KXCHLLDPGAME-26JUL25COQUCO-TIE",
+    "KXCHLLDPGAME-26JUL25COQUCO-COQ"
+   ]
+  },
+  "KXCHNSLGAME": {
+   "open_markets": 3,
+   "sample": [
+    "KXCHNSLGAME-26JUL31HENDAL-TIE",
+    "KXCHNSLGAME-26JUL31HENDAL-HEN",
+    "KXCHNSLGAME-26JUL31HENDAL-DAL"
+   ]
+  },
+  "KXCLUBFGAME": {
+   "open_markets": 200,
+   "sample": [
+    "KXCLUBFGAME-26JUL31BCBAR-TIE",
+    "KXCLUBFGAME-26JUL31BCBAR-BC",
+    "KXCLUBFGAME-26JUL31BCBAR-BAR"
+   ]
+  },
+  "KXCLUBWCGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXCONCACAFCCUPGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXCONMEBOLLIBGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXCONMEBOLSUDGAME": {
+   "open_markets": 24,
+   "sample": [
+    "KXCONMEBOLSUDGAME-26JUL30CARSFE-TIE",
+    "KXCONMEBOLSUDGAME-26JUL30CARSFE-SFE",
+    "KXCONMEBOLSUDGAME-26JUL30CARSFE-CAR"
+   ]
+  },
+  "KXCOPADELREYGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXCOPADOBRASILGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXCOPPAITALIAGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXCOUPEDEFRANCEGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXCZEFLGAME": {
+   "open_markets": 3,
+   "sample": [
+    "KXCZEFLGAME-26JUL31SPAFCZ-TIE",
+    "KXCZEFLGAME-26JUL31SPAFCZ-SPA",
+    "KXCZEFLGAME-26JUL31SPAFCZ-FCZ"
+   ]
+  },
+  "KXDANISHSUPERLIGAGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXDENSUPERLIGAGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXDFBPOKALGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXDIMAYORGAME": {
+   "open_markets": 6,
+   "sample": [
+    "KXDIMAYORGAME-26JUL30BUCLLA-TIE",
+    "KXDIMAYORGAME-26JUL30BUCLLA-LLA",
+    "KXDIMAYORGAME-26JUL30BUCLLA-BUC"
+   ]
+  },
+  "KXECULPGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXEFLCHAMPIONSHIPGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXEFLCUPGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXEFLL1GAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXEGYPLGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXEKSTRAKLASAGAME": {
+   "open_markets": 6,
+   "sample": [
+    "KXEKSTRAKLASAGAME-26JUL31MOTJAG-TIE",
+    "KXEKSTRAKLASAGAME-26JUL31MOTJAG-MOT",
+    "KXEKSTRAKLASAGAME-26JUL31MOTJAG-JAG"
+   ]
+  },
+  "KXELITESERIENGAME": {
+   "open_markets": 6,
+   "sample": [
+    "KXELITESERIENGAME-26JUL31BOGLSK-TIE",
+    "KXELITESERIENGAME-26JUL31BOGLSK-LSK",
+    "KXELITESERIENGAME-26JUL31BOGLSK-BOG"
+   ]
+  },
+  "KXEPLGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXEREDIVISIEGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXESPSUPERCUPGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXEWSLGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXFACUPGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXFIFAGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXFIFAUSPULLGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXFIFAWGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXFINALISSIMAGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXFRASUPERCUPGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXHNLGAME": {
+   "open_markets": 3,
+   "sample": [
+    "KXHNLGAME-26JUL31DINSLA-TIE",
+    "KXHNLGAME-26JUL31DINSLA-SLA",
+    "KXHNLGAME-26JUL31DINSLA-DIN"
+   ]
+  },
+  "KXINTERCONCUPGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXINTLFRIENDLYGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXITASUPERCUPGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXJLEAGUEGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXKLEAGUEGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXKNVBCUPGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXLALIGA2GAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXLALIGAGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXLIGAEXPGAME": {
+   "open_markets": 6,
+   "sample": [
+    "KXLIGAEXPGAME-26JUL30ADODRD-TIE",
+    "KXLIGAEXPGAME-26JUL30ADODRD-DRD",
+    "KXLIGAEXPGAME-26JUL30ADODRD-ADO"
+   ]
+  },
+  "KXLIGAMXGAME": {
+   "open_markets": 27,
+   "sample": [
+    "KXLIGAMXGAME-26AUG02TOLNCX-TOL",
+    "KXLIGAMXGAME-26AUG02TOLNCX-TIE",
+    "KXLIGAMXGAME-26AUG02TOLNCX-NCX"
+   ]
+  },
+  "KXLIGAPORTUGALGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXLIGUE1GAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXMLSGAME": {
+   "open_markets": 45,
+   "sample": [
+    "KXMLSGAME-26AUG01PORSEA-TIE",
+    "KXMLSGAME-26AUG01PORSEA-SEA",
+    "KXMLSGAME-26AUG01PORSEA-POR"
+   ]
+  },
+  "KXNWSLGAME": {
+   "open_markets": 9,
+   "sample": [
+    "KXNWSLGAME-26JUL29BAYGOT-TIE",
+    "KXNWSLGAME-26JUL29BAYGOT-GOT",
+    "KXNWSLGAME-26JUL29BAYGOT-BAY"
+   ]
+  },
+  "KXPERLIGA1GAME": {
+   "open_markets": 3,
+   "sample": [
+    "KXPERLIGA1GAME-26JUL31CHACOM-TIE",
+    "KXPERLIGA1GAME-26JUL31CHACOM-COM",
+    "KXPERLIGA1GAME-26JUL31CHACOM-CHA"
+   ]
+  },
+  "KXPRYLIGA1GAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXQSTARSGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXSAUDIPLGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXSCOCUPGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXSCOTTISHPREMGAME": {
+   "open_markets": 3,
+   "sample": [
+    "KXSCOTTISHPREMGAME-26JUL31DUURFC-TIE",
+    "KXSCOTTISHPREMGAME-26JUL31DUURFC-RFC",
+    "KXSCOTTISHPREMGAME-26JUL31DUURFC-DUU"
+   ]
+  },
+  "KXSERIEAGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXSERIEBGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXSLGREECEGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXSUPERLIGGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXSWISSLEAGUEGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXTACAPORTGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXTHAIL1GAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXUAEPLGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXUCLGAME": {
+   "open_markets": 51,
+   "sample": [
+    "KXUCLGAME-26AUG04SPAOL-TIE",
+    "KXUCLGAME-26AUG04SPAOL-SPA",
+    "KXUCLGAME-26AUG04SPAOL-OL"
+   ]
+  },
+  "KXUCLWGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXUECLGAME": {
+   "open_markets": 21,
+   "sample": [
+    "KXUECLGAME-26JUL29SCRFCC-TIE",
+    "KXUECLGAME-26JUL29SCRFCC-SCR",
+    "KXUECLGAME-26JUL29SCRFCC-FCC"
+   ]
+  },
+  "KXUEFAGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXUEFANLGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXUELGAME": {
+   "open_markets": 27,
+   "sample": [
+    "KXUELGAME-26JUL30BENSTG-TIE",
+    "KXUELGAME-26JUL30BENSTG-STG",
+    "KXUELGAME-26JUL30BENSTG-BEN"
+   ]
+  },
+  "KXURYPDGAME": {
+   "open_markets": 24,
+   "sample": [
+    "KXURYPDGAME-26JUL31TORWAN-WAN",
+    "KXURYPDGAME-26JUL31TORWAN-TOR",
+    "KXURYPDGAME-26JUL31TORWAN-TIE"
+   ]
+  },
+  "KXUSLCUPGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXUSLGAME": {
+   "open_markets": 9,
+   "sample": [
+    "KXUSLGAME-26JUL29LFCBIR-TIE",
+    "KXUSLGAME-26JUL29LFCBIR-LFC",
+    "KXUSLGAME-26JUL29LFCBIR-BIR"
+   ]
+  },
+  "KXUSOPENCUPGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXVENFUTVEGAME": {
+   "open_markets": 0,
+   "sample": []
+  },
+  "KXWCGAME": {
+   "open_markets": 0,
+   "sample": []
+  }
+ },
+ "provider_facts_verified": [
+  "market payloads on this date carry ONLY *_dollars price strings and *_fp size strings \u2014 no integer-cent price fields at all (see sample); parsers must read the dollar strings as exact Decimal",
+  "updated_time is the market-definition clock, not a quote timestamp (known ~30h stale on active markets; see src/live/markets.py QUOTE_FRESHNESS_NOTE) \u2014 capture clocks only",
+  "markets?status=open returns markets with status='active'",
+  "yes_bid+no_ask and yes_ask+no_bid both summed to exactly 1.0000 on the sampled book (single-book complement structure)"
+ ],
+ "sample_markets_response": {
+  "request": "GET /trade-api/v2/markets?series_ticker=KXUCLGAME&status=open&limit=6",
+  "response": {
+   "cursor": "CgwI2e-f0wYQgMy_ogISG0tYVUNMR0FNRS0yNkFVRzA0VVNHQk9HLUJPRw",
+   "markets": [
+    {
+     "can_close_early": true,
+     "close_time": "2026-08-07T00:00:00Z",
+     "created_time": "2026-07-28T00:29:14.267391Z",
+     "custom_strike": {
+      "soccer_team": "111193d4-9b1f-4bd8-ab7c-9de252737f05"
+     },
+     "early_close_condition": "This market will close and expire after a winner is declared.",
+     "event_ticker": "KXUCLGAME-26AUG04SPAOL",
+     "exchange_index": 0,
+     "expected_expiration_time": "2026-08-04T21:00:00Z",
+     "expiration_time": "2026-08-07T00:00:00Z",
+     "expiration_value": "",
+     "last_price_dollars": "0.0000",
+     "latest_expiration_time": "2026-08-07T00:00:00Z",
+     "liquidity_dollars": "0.0000",
+     "market_type": "binary",
+     "no_ask_dollars": "0.9500",
+     "no_bid_dollars": "0.2000",
+     "no_sub_title": "Tie",
+     "notional_value_dollars": "1.0000",
+     "occurrence_datetime": "2026-08-04T21:00:00Z",
+     "open_interest_fp": "0.00",
+     "open_time": "2026-07-28T00:37:00Z",
+     "previous_price_dollars": "0.0000",
+     "previous_yes_ask_dollars": "0.0000",
+     "previous_yes_bid_dollars": "0.0000",
+     "price_level_structure": "linear_cent",
+     "price_ranges": [
+      {
+       "end": "1.0000",
+       "start": "0.0000",
+       "step": "0.0100"
+      }
+     ],
+     "result": "",
+     "rules_primary": "If Tie is the result of the Sparta Prague vs Lyon professional Champions League soccer game originally scheduled for Aug 4, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.",
+     "rules_secondary": "The following market refers to the Sparta Prague vs Lyon professional Champions League soccer game originally scheduled for Aug 4, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called \"Tie\" resolves to Yes. If the game is cancelled or rescheduled to over 48 hours away, the market will resolve to a fair price in accordance with the rules.\n\nKalshi is not affiliated, associated, authorized, endorsed by, or in any way officially connected with the Governing League. All trademarks, logos, and brand names are the property of their respective owners.",
+     "settlement_timer_seconds": 30,
+     "status": "active",
+     "strike_type": "structured",
+     "ticker": "KXUCLGAME-26AUG04SPAOL-TIE",
+     "title": "Sparta Prague vs Lyon Winner?",
+     "updated_time": "2026-07-28T00:37:00.251012Z",
+     "volume_24h_fp": "0.00",
+     "volume_fp": "0.00",
+     "yes_ask_dollars": "0.8000",
+     "yes_ask_size_fp": "10.00",
+     "yes_bid_dollars": "0.0500",
+     "yes_bid_size_fp": "53.00",
+     "yes_sub_title": "Tie"
+    },
+    {
+     "can_close_early": true,
+     "close_time": "2026-08-07T00:00:00Z",
+     "created_time": "2026-07-28T00:29:14.267391Z",
+     "custom_strike": {
+      "soccer_team": "84109d75-d721-4c13-85eb-7fcde1a60a6d"
+     },
+     "early_close_condition": "This market will close and expire after a winner is declared.",
+     "event_ticker": "KXUCLGAME-26AUG04SPAOL",
+     "exchange_index": 0,
+     "expected_expiration_time": "2026-08-04T21:00:00Z",
+     "expiration_time": "2026-08-07T00:00:00Z",
+     "expiration_value": "",
+     "last_price_dollars": "0.0000",
+     "latest_expiration_time": "2026-08-07T00:00:00Z",
+     "liquidity_dollars": "0.0000",
+     "market_type": "binary",
+     "no_ask_dollars": "0.9500",
+     "no_bid_dollars": "0.2000",
+     "no_sub_title": "Sparta Prague",
+     "notional_value_dollars": "1.0000",
+     "occurrence_datetime": "2026-08-04T21:00:00Z",
+     "open_interest_fp": "0.00",
+     "open_time": "2026-07-28T00:37:00Z",
+     "previous_price_dollars": "0.0000",
+     "previous_yes_ask_dollars": "0.0000",
+     "previous_yes_bid_dollars": "0.0000",
+     "price_level_structure": "linear_cent",
+     "price_ranges": [
+      {
+       "end": "1.0000",
+       "start": "0.0000",
+       "step": "0.0100"
+      }
+     ],
+     "result": "",
+     "rules_primary": "If Sparta Prague wins the Sparta Prague vs Lyon professional Champions League soccer game originally scheduled for Aug 4, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.",
+     "rules_secondary": "The following market refers to the Sparta Prague vs Lyon professional Champions League soccer game originally scheduled for Aug 4, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called \"Tie\" resolves to Yes. If the game is cancelled or rescheduled to over 48 hours away, the market will resolve to a fair price in accordance with the rules.\n\nKalshi is not affiliated, associated, authorized, endorsed by, or in any way officially connected with the Governing League. All trademarks, logos, and brand names are the property of their respective owners.",
+     "settlement_timer_seconds": 30,
+     "status": "active",
+     "strike_type": "structured",
+     "ticker": "KXUCLGAME-26AUG04SPAOL-SPA",
+     "title": "Sparta Prague vs Lyon Winner?",
+     "updated_time": "2026-07-28T00:37:00.251012Z",
+     "volume_24h_fp": "0.00",
+     "volume_fp": "0.00",
+     "yes_ask_dollars": "0.8000",
+     "yes_ask_size_fp": "10.00",
+     "yes_bid_dollars": "0.0500",
+     "yes_bid_size_fp": "20.00",
+     "yes_sub_title": "Sparta Prague"
+    },
+    {
+     "can_close_early": true,
+     "close_time": "2026-08-07T00:00:00Z",
+     "created_time": "2026-07-28T00:29:14.267391Z",
+     "custom_strike": {
+      "soccer_team": "eb75f92c-7b8f-4a17-92fb-b9068dfba2d7"
+     },
+     "early_close_condition": "This market will close and expire after a winner is declared.",
+     "event_ticker": "KXUCLGAME-26AUG04SPAOL",
+     "exchange_index": 0,
+     "expected_expiration_time": "2026-08-04T21:00:00Z",
+     "expiration_time": "2026-08-07T00:00:00Z",
+     "expiration_value": "",
+     "last_price_dollars": "0.0000",
+     "latest_expiration_time": "2026-08-07T00:00:00Z",
+     "liquidity_dollars": "0.0000",
+     "market_type": "binary",
+     "no_ask_dollars": "0.9500",
+     "no_bid_dollars": "0.2000",
+     "no_sub_title": "Lyon",
+     "notional_value_dollars": "1.0000",
+     "occurrence_datetime": "2026-08-04T21:00:00Z",
+     "open_interest_fp": "0.00",
+     "open_time": "2026-07-28T00:37:00Z",
+     "previous_price_dollars": "0.0000",
+     "previous_yes_ask_dollars": "0.0000",
+     "previous_yes_bid_dollars": "0.0000",
+     "price_level_structure": "linear_cent",
+     "price_ranges": [
+      {
+       "end": "1.0000",
+       "start": "0.0000",
+       "step": "0.0100"
+      }
+     ],
+     "result": "",
+     "rules_primary": "If Lyon wins the Sparta Prague vs Lyon professional Champions League soccer game originally scheduled for Aug 4, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.",
+     "rules_secondary": "The following market refers to the Sparta Prague vs Lyon professional Champions League soccer game originally scheduled for Aug 4, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called \"Tie\" resolves to Yes. If the game is cancelled or rescheduled to over 48 hours away, the market will resolve to a fair price in accordance with the rules.\n\nKalshi is not affiliated, associated, authorized, endorsed by, or in any way officially connected with the Governing League. All trademarks, logos, and brand names are the property of their respective owners.",
+     "settlement_timer_seconds": 30,
+     "status": "active",
+     "strike_type": "structured",
+     "ticker": "KXUCLGAME-26AUG04SPAOL-OL",
+     "title": "Sparta Prague vs Lyon Winner?",
+     "updated_time": "2026-07-28T00:37:00.251012Z",
+     "volume_24h_fp": "0.00",
+     "volume_fp": "0.00",
+     "yes_ask_dollars": "0.8000",
+     "yes_ask_size_fp": "10.00",
+     "yes_bid_dollars": "0.0500",
+     "yes_bid_size_fp": "20.00",
+     "yes_sub_title": "Lyon"
+    },
+    {
+     "can_close_early": true,
+     "close_time": "2026-08-07T00:00:00Z",
+     "created_time": "2026-07-28T00:29:13.609216Z",
+     "custom_strike": {
+      "soccer_team": "491593c8-10a4-4c69-94a0-05e363d48d27"
+     },
+     "early_close_condition": "This market will close and expire after a winner is declared.",
+     "event_ticker": "KXUCLGAME-26AUG04USGBOG",
+     "exchange_index": 0,
+     "expected_expiration_time": "2026-08-04T21:00:00Z",
+     "expiration_time": "2026-08-07T00:00:00Z",
+     "expiration_value": "",
+     "last_price_dollars": "0.0000",
+     "latest_expiration_time": "2026-08-07T00:00:00Z",
+     "liquidity_dollars": "0.0000",
+     "market_type": "binary",
+     "no_ask_dollars": "0.9500",
+     "no_bid_dollars": "0.2000",
+     "no_sub_title": "Union Gilloise",
+     "notional_value_dollars": "1.0000",
+     "occurrence_datetime": "2026-08-04T21:00:00Z",
+     "open_interest_fp": "0.00",
+     "open_time": "2026-07-28T00:37:00Z",
+     "previous_price_dollars": "0.0000",
+     "previous_yes_ask_dollars": "0.0000",
+     "previous_yes_bid_dollars": "0.0000",
+     "price_level_structure": "linear_cent",
+     "price_ranges": [
+      {
+       "end": "1.0000",
+       "start": "0.0000",
+       "step": "0.0100"
+      }
+     ],
+     "result": "",
+     "rules_primary": "If Union Gilloise wins the Union Gilloise vs Bodoe/Glimt professional Champions League soccer game originally scheduled for Aug 4, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.",
+     "rules_secondary": "The following market refers to the Union Gilloise vs Bodoe/Glimt professional Champions League soccer game originally scheduled for Aug 4, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called \"Tie\" resolves to Yes. If the game is cancelled or rescheduled to over 48 hours away, the market will resolve to a fair price in accordance with the rules.\n\nKalshi is not affiliated, associated, authorized, endorsed by, or in any way officially connected with the Governing League. All trademarks, logos, and brand names are the property of their respective owners.",
+     "settlement_timer_seconds": 30,
+     "status": "active",
+     "strike_type": "structured",
+     "ticker": "KXUCLGAME-26AUG04USGBOG-USG",
+     "title": "Union Gilloise vs Bodoe/Glimt Winner?",
+     "updated_time": "2026-07-28T00:37:00.251012Z",
+     "volume_24h_fp": "0.00",
+     "volume_fp": "0.00",
+     "yes_ask_dollars": "0.8000",
+     "yes_ask_size_fp": "10.00",
+     "yes_bid_dollars": "0.0500",
+     "yes_bid_size_fp": "20.00",
+     "yes_sub_title": "Union Gilloise"
+    },
+    {
+     "can_close_early": true,
+     "close_time": "2026-08-07T00:00:00Z",
+     "created_time": "2026-07-28T00:29:13.609216Z",
+     "custom_strike": {
+      "soccer_team": "111193d4-9b1f-4bd8-ab7c-9de252737f05"
+     },
+     "early_close_condition": "This market will close and expire after a winner is declared.",
+     "event_ticker": "KXUCLGAME-26AUG04USGBOG",
+     "exchange_index": 0,
+     "expected_expiration_time": "2026-08-04T21:00:00Z",
+     "expiration_time": "2026-08-07T00:00:00Z",
+     "expiration_value": "",
+     "last_price_dollars": "0.0000",
+     "latest_expiration_time": "2026-08-07T00:00:00Z",
+     "liquidity_dollars": "0.0000",
+     "market_type": "binary",
+     "no_ask_dollars": "0.9500",
+     "no_bid_dollars": "0.2000",
+     "no_sub_title": "Tie",
+     "notional_value_dollars": "1.0000",
+     "occurrence_datetime": "2026-08-04T21:00:00Z",
+     "open_interest_fp": "0.00",
+     "open_time": "2026-07-28T00:37:00Z",
+     "previous_price_dollars": "0.0000",
+     "previous_yes_ask_dollars": "0.0000",
+     "previous_yes_bid_dollars": "0.0000",
+     "price_level_structure": "linear_cent",
+     "price_ranges": [
+      {
+       "end": "1.0000",
+       "start": "0.0000",
+       "step": "0.0100"
+      }
+     ],
+     "result": "",
+     "rules_primary": "If Tie is the result of the Union Gilloise vs Bodoe/Glimt professional Champions League soccer game originally scheduled for Aug 4, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.",
+     "rules_secondary": "The following market refers to the Union Gilloise vs Bodoe/Glimt professional Champions League soccer game originally scheduled for Aug 4, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called \"Tie\" resolves to Yes. If the game is cancelled or rescheduled to over 48 hours away, the market will resolve to a fair price in accordance with the rules.\n\nKalshi is not affiliated, associated, authorized, endorsed by, or in any way officially connected with the Governing League. All trademarks, logos, and brand names are the property of their respective owners.",
+     "settlement_timer_seconds": 30,
+     "status": "active",
+     "strike_type": "structured",
+     "ticker": "KXUCLGAME-26AUG04USGBOG-TIE",
+     "title": "Union Gilloise vs Bodoe/Glimt Winner?",
+     "updated_time": "2026-07-28T00:37:00.251012Z",
+     "volume_24h_fp": "0.00",
+     "volume_fp": "0.00",
+     "yes_ask_dollars": "0.8000",
+     "yes_ask_size_fp": "10.00",
+     "yes_bid_dollars": "0.0500",
+     "yes_bid_size_fp": "53.00",
+     "yes_sub_title": "Tie"
+    },
+    {
+     "can_close_early": true,
+     "close_time": "2026-08-07T00:00:00Z",
+     "created_time": "2026-07-28T00:29:13.609216Z",
+     "custom_strike": {
+      "soccer_team": "f70ffb24-7bb8-4111-8ba6-2c222fafc3c3"
+     },
+     "early_close_condition": "This market will close and expire after a winner is declared.",
+     "event_ticker": "KXUCLGAME-26AUG04USGBOG",
+     "exchange_index": 0,
+     "expected_expiration_time": "2026-08-04T21:00:00Z",
+     "expiration_time": "2026-08-07T00:00:00Z",
+     "expiration_value": "",
+     "last_price_dollars": "0.8000",
+     "latest_expiration_time": "2026-08-07T00:00:00Z",
+     "liquidity_dollars": "0.0000",
+     "market_type": "binary",
+     "no_ask_dollars": "0.9400",
+     "no_bid_dollars": "0.1900",
+     "no_sub_title": "Bodoe/Glimt",
+     "notional_value_dollars": "1.0000",
+     "occurrence_datetime": "2026-08-04T21:00:00Z",
+     "open_interest_fp": "10.00",
+     "open_time": "2026-07-28T00:37:00Z",
+     "previous_price_dollars": "0.0000",
+     "previous_yes_ask_dollars": "0.0000",
+     "previous_yes_bid_dollars": "0.0000",
+     "price_level_structure": "linear_cent",
+     "price_ranges": [
+      {
+       "end": "1.0000",
+       "start": "0.0000",
+       "step": "0.0100"
+      }
+     ],
+     "result": "",
+     "rules_primary": "If Bodoe/Glimt wins the Union Gilloise vs Bodoe/Glimt professional Champions League soccer game originally scheduled for Aug 4, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties), then the market resolves to Yes.",
+     "rules_secondary": "The following market refers to the Union Gilloise vs Bodoe/Glimt professional Champions League soccer game originally scheduled for Aug 4, 2026 after 90 minutes plus stoppage time (does not include extra time or penalties). If the game ends in a tie, the market called \"Tie\" resolves to Yes. If the game is cancelled or rescheduled to over 48 hours away, the market will resolve to a fair price in accordance with the rules.\n\nKalshi is not affiliated, associated, authorized, endorsed by, or in any way officially connected with the Governing League. All trademarks, logos, and brand names are the property of their respective owners.",
+     "settlement_timer_seconds": 30,
+     "status": "active",
+     "strike_type": "structured",
+     "ticker": "KXUCLGAME-26AUG04USGBOG-BOG",
+     "title": "Union Gilloise vs Bodoe/Glimt Winner?",
+     "updated_time": "2026-07-28T00:37:00.251012Z",
+     "volume_24h_fp": "10.00",
+     "volume_fp": "10.00",
+     "yes_ask_dollars": "0.8100",
+     "yes_ask_size_fp": "1316.00",
+     "yes_bid_dollars": "0.0600",
+     "yes_bid_size_fp": "10.00",
+     "yes_sub_title": "Bodoe/Glimt"
+    }
+   ]
+  }
+ }
+}
