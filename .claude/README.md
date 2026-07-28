@@ -58,64 +58,91 @@ covers only what `mls_readiness_watch` does not: `git reset --hard` and
 `psql` remain allowed and remain unguarded, because both have legitimate
 uses here and neither has an obvious narrow pattern to deny.
 
-## ⚠️ NONE OF THESE FOUR RULES HAVE BEEN OBSERVED TO FIRE
+## Status of each guard — measured, not assumed
 
-**Demonstrated: 0 of 4. Asserted: 4 of 4.** Do not treat this deny list
-as protection. It is well-formed JSON that has never been seen to stop
-anything.
+| Guard | Mechanism | Logic proven | Fires in a live session |
+|---|---|---|---|
+| `git push --force *` | permission deny | n/a | **NOT YET OBSERVED** |
+| `git push -f *` | permission deny | n/a | **NOT YET OBSERVED** |
+| rm touching `research_archive/` | PreToolUse hook | **YES** (11/11) | **NOT YET OBSERVED** |
+| rm touching `docs/V*` | PreToolUse hook | **YES** (11/11) | **NOT YET OBSERVED** |
 
-Probed live on 2026-07-28 from a session started at `~/dev/TRIVELA`. The
-trick is to target a path or ref that does not exist, so the probe is
-non-destructive whichever way it goes — a denial proves the guard, and a
-"no such file" proves the tool was reached:
+**Nothing here has been seen to stop anything.** Treat all four as
+unproven until a probe is observed to fail closed.
 
-```bash
-# control first — otherwise a denial proves nothing about the PATTERN
-touch /tmp/__probe_control__ && rm /tmp/__probe_control__
-# -> succeeded. rm is NOT blocked wholesale, so the probes below are
-#    testing the pattern, not a blanket rule.
+### The syntax lesson that cost two rounds
 
-rm ~/dev/TRIVELA/backend/research_archive/__probe_does_not_exist__
-# -> rm: ...: No such file or directory        NOT DENIED
+`permissions.deny` matches **exact** (`Bash(npm run test)`) or **prefix
+wildcard** (`Bash(git *)`) — a **space**, not a colon. The schema's own
+deny example is `Bash(rm -rf *)`, and Claude Code corroborates it by
+auto-writing `Bash(tmux ls *)` into `settings.local.json` itself.
 
-rm ~/dev/TRIVELA/backend/docs/V__probe_does_not_exist__
-# -> rm: ...: No such file or directory        NOT DENIED
+The first attempt shipped `Bash(rm:*research_archive*)` and
+`Bash(git push --force:*)`. The push rules were merely malformed and are
+now corrected. **The two rm rules were worse than malformed — they were
+inexpressible.** "Deny rm when a path *in the middle* of the command
+contains `research_archive`" is a containment test, and matching is
+prefix-based. Fixing the separator would never have made them fire.
 
-git push --force origin __probe_branch_does_not_exist__
-# -> error: src refspec ... does not match any NOT DENIED
+So they were **removed from `permissions.deny` entirely** and replaced
+with a `PreToolUse` hook on the `Bash` matcher — the only mechanism that
+can inspect a command string. Generally: **path-containment guards need
+a hook, not a permission rule.**
 
-git push -f origin __probe_branch_does_not_exist__
-# -> error: src refspec ... does not match any NOT DENIED
+### The hook: logic proven, firing not
+
+`scripts/deny-archive-rm.sh` was pipe-tested against 11 synthesised
+payloads before being wired, and got all 11 right:
+
+```text
+DENY   rm .../research_archive/__probe...__      rm -rf research_archive/
+       rm backend/docs/V9/RUNBOOK.md             rm docs/V9.5/DEFECT-ANALYSIS.md
+       cd /tmp && rm -rf .../research_archive
+ALLOW  rm /tmp/__probe_control__                 ls research_archive/
+       git rm --cached somefile                  grep -r research_archive src/
+       rm -rf node_modules                       python3 -c "print(1)"
 ```
 
-Every probe reached the underlying tool. The harness did not intervene
-once.
+The ALLOW half matters as much as the DENY half: `git rm --cached` and
+`grep -r research_archive` are exactly what a naive substring match would
+have blocked, making the guard so annoying it would be removed.
 
-**Two candidate causes, and this repo cannot distinguish them:**
+Schema validated with
+`jq -e '.hooks.PreToolUse[] | select(.matcher=="Bash") | .hooks[] | .command'`
+— exit 0.
 
-1. The session loaded its settings at startup, before the deny list
-   existed, so it is running without them.
-2. The pattern syntax does not match the way the harness compares
-   commands.
+**It still did not fire when probed live.** Per the hooks documentation,
+the settings watcher only watches directories that already had a settings
+file when the session started, and `backend/.claude/` did not exist at
+this session's start. The same explains the permission rules.
 
-A **fresh session** discriminates: start one at `~/dev/TRIVELA` and
-re-run the four probes. If they are denied there, cause 1 and the rules
-are fine going forward. If they still are not, cause 2 and the patterns
-need rewriting — at which point say so here rather than leaving four
-lines that read as a safety net.
+### How to finish the proof — someone must do this
 
-The rules are deliberately left in place rather than deleted, because
-they are correct in intent and may well be live in a new session. But
-**a deny that does not deny is worse than no deny**, since it invites
-exactly the confidence it has not earned. Until a probe is observed to
-fail closed, the real guard on force-push and archive deletion is the
-agent reading `AGENTS.md`, not this file.
+An agent cannot: `/hooks` is a user menu and opening it ends the turn,
+and a session cannot reload its own settings.
 
-This project has now paid twice to learn the difference between
-"the config is well-formed" and "the guard fires" — the V9.5 approval
-that minted itself on every deploy, and the Playwright suite whose
-green run cleared an assertion that did not exist. Treat every guard as
-unproven until something has been observed to fail because of it.
+**Open `/hooks` once, or start a fresh session, then run:**
+
+```bash
+rm ~/dev/TRIVELA/backend/research_archive/__probe_does_not_exist__
+rm ~/dev/TRIVELA/backend/docs/V__probe_does_not_exist__
+git push --force origin __probe_branch_does_not_exist__
+touch /tmp/__probe_control__ && rm /tmp/__probe_control__   # control: must SUCCEED
+```
+
+Nothing is deleted either way — every target is a path or ref that does
+not exist, so a denial proves the guard and a "no such file" proves the
+tool was reached. **Record the result in this table.** If a guard still
+does not fire, say so and leave the protection absent rather than
+shipping a second decorative one.
+
+### Why this section exists at all
+
+This project has now paid three times for the gap between "the config is
+well-formed" and "the guard fires": the V9.5 approval that re-minted
+itself on every deploy, the Playwright suite whose green run cleared an
+assertion that did not exist, and this. **A guard is unproven until
+something has been observed to fail because of it.**
 
 ## Making it active
 

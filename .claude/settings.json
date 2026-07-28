@@ -71,10 +71,24 @@
       "Bash(wc:*)"
     ],
     "deny": [
-      "Bash(git push --force:*)",
-      "Bash(git push -f:*)",
-      "Bash(rm:*research_archive*)",
-      "Bash(rm:*docs/V*)"
+      "Bash(git push --force *)",
+      "Bash(git push -f *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(rm *)",
+            "command": "$HOME/dev/TRIVELA/backend/scripts/deny-archive-rm.sh",
+            "timeout": 10,
+            "statusMessage": "checking archive protection"
+          }
+        ]
+      }
     ]
   }
 }
