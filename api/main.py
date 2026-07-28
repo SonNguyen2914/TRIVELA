@@ -357,6 +357,29 @@ def mls_metrics():
         raise HTTPException(503, "metrics unavailable")
 
 
+@app.get("/api/hunter/findings")
+def hunter_findings(competition: str | None = Query(None, max_length=64),
+                    type: str | None = Query(None, max_length=32),
+                    status: str | None = Query(None, max_length=16),
+                    limit: int = Query(100, ge=1, le=500)):
+    """Kalshi market-hunter findings — OBSERVATIONAL records only, with
+    their denominators (cycles run, markets scanned, findings per type)
+    and the last-cycle heartbeat so a dead scanner is distinguishable
+    from a quiet market. Filters: competition (slug or series ticker),
+    type (SUM_BELOW_ONE | CROSSED_BOOK | POST_CERTAINTY | WIDE_SPREAD |
+    THIN_BOOK | IN_PLAY_OVERREACTION | MODEL_EDGE), status (open |
+    expired). Public read-only; nothing here is advice and no order
+    path exists."""
+    try:
+        from src.live import hunter
+        return hunter.findings_report(competition=competition,
+                                      finding_type=type, status=status,
+                                      limit=limit)
+    except Exception as exc:
+        print(f"[hunter] findings failed: {exc}")
+        raise HTTPException(503, "hunter findings unavailable")
+
+
 @app.get("/api/mls/paper")
 def mls_paper():
     """The paper-trading ledger P&L: signals, fills, rejections (with
