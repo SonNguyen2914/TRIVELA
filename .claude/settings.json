@@ -69,6 +69,12 @@
       "Bash(tail:*)",
       "Bash(tmux:*)",
       "Bash(wc:*)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(rm:*research_archive*)",
+      "Bash(rm:*docs/V*)"
     ]
   }
 }

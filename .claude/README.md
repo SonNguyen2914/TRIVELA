@@ -26,6 +26,38 @@ That is a real trade and worth stating plainly rather than burying:
   `mls_readiness_watch` in `jobs/scheduler.py`, which alerts after ten
   minutes unapproved.
 
+## What is denied, and why only these
+
+`deny` is evaluated before `allow`, so a short deny list closes specific
+holes without reintroducing friction anywhere else. The allow list is
+untouched.
+
+```text
+Bash(git push --force:*)      Bash(git push -f:*)
+Bash(rm:*research_archive*)   Bash(rm:*docs/V*)
+```
+
+These four protect things that **cannot be reconstructed**:
+
+- **Force-push** can rewrite or destroy the evidence commits — the
+  prospective record this project exists to build. A normal push cannot.
+- **`research_archive/`** holds the evaluation and review bundles
+  (`v95_evaluation_remediation`, `agent_workflow_review`, the walk-forward
+  sweeps). They are inputs to decisions already made; losing them
+  unfalsifiables the record.
+- **`docs/V*`** are historical editions that must not be modernised
+  (AGENTS.md §5) and are the only account of what was believed when.
+- The **committed archive** the SQLite plane self-heals from at boot
+  lives under those paths. Delete it and a fresh container cannot rebuild
+  16/16 results and 84/84 ledger positions.
+
+The test is not "is this dangerous" — plenty of allowed commands are.
+It is **"can the damage be undone."** A bad deploy is recoverable in
+minutes; a force-pushed history or a deleted archive is not. Note this
+covers only what `mls_readiness_watch` does not: `git reset --hard` and
+`psql` remain allowed and remain unguarded, because both have legitimate
+uses here and neither has an obvious narrow pattern to deny.
+
 ## Making it active
 
 The umbrella directory is not a git repository, so `~/dev/TRIVELA` needs
