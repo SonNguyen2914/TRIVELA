@@ -328,29 +328,140 @@ class TestBroadcast:
         assert journal.recent_broadcasts(1)[0]["message"] == \
             "CIN drifted to 0.34"
 
-    def test_source_separates_judgement_from_measurement(
-            self, live_session, monkeypatch):
-        from src.live import journal
-        import src.alerts as alerts
-        sent = []
-        monkeypatch.setattr(alerts, "send_alert",
-                            lambda m, **kw: sent.append(m))
-        _seed(live_session)
-        journal.broadcast("model says hold", source="session", fixture_id=1)
-        journal.broadcast("flip: exit > hold", source="computed",
-                          fixture_id=1)
-        assert sent[0].startswith("🗣")
-        assert sent[1].startswith("⚙︎")
-        sources = {b["source"] for b in journal.recent_broadcasts(1)}
-        assert sources == {"session", "computed"}
-
     def test_a_reopened_session_can_read_what_it_already_said(
             self, live_session, monkeypatch):
         from src.live import journal
         import src.alerts as alerts
-        monkeypatch.setattr(alerts, "send_alert", lambda m, **kw: None)
+        monkeypatch.setattr(alerts, "send_alert",
+                            lambda m, **kw: {"discord_action": True})
         _seed(live_session)
         journal.broadcast("first", fixture_id=1)
         journal.broadcast("second", fixture_id=1)
         said = journal.recent_broadcasts(1)
         assert [b["message"] for b in said] == ["second", "first"]
+
+
+class TestBroadcastBoundary:
+    """journal-P0 F1: the action channel reaches a human whose friend
+    bets real money. Only operator-authenticated session prose may
+    dispatch; the lock governs model-generated signals, so a computed or
+    automated caller is refused mechanically — and every action dispatch
+    carries the standing-edge qualifier so no number travels without its
+    uncertainty."""
+
+    def test_session_action_broadcast_dispatches_with_the_qualifier(
+            self, live_session, monkeypatch):
+        """The carve-out: with REAL_MONEY_SIGNALS_ENABLED=false, session
+        prose still dispatches — WITH the uncertainty attached."""
+        from src.live import journal
+        import src.alerts as alerts
+        assert config.REAL_MONEY_SIGNALS_ENABLED is False
+        sent = []
+        monkeypatch.setattr(
+            alerts, "send_alert",
+            lambda m, **kw: (sent.append(m), {"discord_action": True})[1])
+        _seed(live_session)
+        r = journal.broadcast("CIN value at 0.31", channel="action",
+                              source="session", fixture_id=1)
+        assert r["dispatched"] is True
+        assert len(sent) == 1
+        assert sent[0].startswith("🗣")
+        # the qualifier is appended SERVER-SIDE: shadow-mode + the
+        # standing edge with its significance state, never a bare number
+        assert "[shadow]" in sent[0]
+        assert "not a real-money signal" in sent[0]
+        assert ("not significant" in sent[0]
+                or "no established edge" in sent[0])
+
+    def test_a_non_session_source_is_refused(self, live_session,
+                                             monkeypatch):
+        from src.live import journal
+        import src.alerts as alerts
+        sent = []
+        monkeypatch.setattr(
+            alerts, "send_alert",
+            lambda m, **kw: (sent.append(m), {"discord_action": True})[1])
+        _seed(live_session)
+        r = journal.broadcast("flip: exit > hold", source="computed",
+                              fixture_id=1)
+        assert r.get("refused") is True
+        assert r["dispatched"] is False
+        assert "error" in r
+        assert sent == []                    # nothing reached a transport
+        # and nothing was persisted as "said" — it never was
+        assert journal.recent_broadcasts(1) == []
+
+    def test_a_scheduler_frame_is_refused_even_claiming_session(
+            self, live_session, monkeypatch):
+        """The stack check: source="session" is verified against the
+        call stack, not taken on the caller's word."""
+        from src.live import journal
+        import src.alerts as alerts
+        monkeypatch.setattr(alerts, "send_alert",
+                            lambda m, **kw: {"discord_action": True})
+        _seed(live_session)
+        code = compile(
+            "result = journal.broadcast('auto', source='session', "
+            "fixture_id=1)", "<scheduler>", "exec")
+        g = {"__name__": "jobs.scheduler", "journal": journal}
+        exec(code, g)
+        assert g["result"].get("refused") is True
+        assert "jobs.scheduler" in g["result"]["error"]
+
+    def test_no_scheduler_or_model_module_touches_broadcast(self):
+        """Static guard: the scheduler and every model/pipeline module
+        must not import or call the broadcast path at all."""
+        import glob
+        import os
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        guarded = sorted(glob.glob(os.path.join(root, "jobs", "*.py")) + [
+            os.path.join(root, "src", "live", f) for f in (
+                "runs.py", "paper.py", "ingest.py", "markets.py",
+                "model_mls.py", "model_eval.py", "slate.py", "risk.py",
+                "mls_stats.py", "lineups.py", "audit.py")])
+        assert guarded, "guarded module list resolved to nothing"
+        for path in guarded:
+            if not os.path.exists(path):
+                continue
+            text = open(path, encoding="utf-8").read()
+            assert "broadcast" not in text, (
+                f"{path} references broadcast — scheduled/model code "
+                f"must never reach the relay")
+            assert "src.live.journal" not in text, (
+                f"{path} imports the journal — scheduled/model code "
+                f"must never reach the relay")
+
+    def test_dispatched_reports_per_transport_truth(self, live_session,
+                                                    monkeypatch):
+        """journal-P1 F6: dispatched=true only when a transport ACCEPTED;
+        all-fail reports false; the accepting transports are named."""
+        from src.live import journal
+        import src.alerts as alerts
+        _seed(live_session)
+        monkeypatch.setattr(alerts, "send_alert",
+                            lambda m, **kw: {"discord_action": False,
+                                             "ntfy": True})
+        r = journal.broadcast("one leg down", fixture_id=1)
+        assert r["dispatched"] is True
+        assert r["accepted"] == ["ntfy"]
+        assert r["transports"] == {"discord_action": False, "ntfy": True}
+        monkeypatch.setattr(alerts, "send_alert",
+                            lambda m, **kw: {"discord_action": False,
+                                             "ntfy": False})
+        r2 = journal.broadcast("all legs down", fixture_id=1)
+        assert r2["dispatched"] is False
+        assert r2["accepted"] == []
+
+    def test_send_alert_returns_per_transport_results(self, monkeypatch):
+        import src.alerts as alerts
+        monkeypatch.setattr(alerts, "send_discord",
+                            lambda m, channel="action": channel == "action")
+        monkeypatch.setattr(alerts, "send_ntfy",
+                            lambda m, **kw: False)
+        monkeypatch.setattr(config, "DISCORD_ACTION_WEBHOOK_URL", "a")
+        monkeypatch.setattr(config, "DISCORD_DETAIL_WEBHOOK_URL", "d")
+        out = alerts.send_alert("x", kind="action")
+        assert out == {"discord_action": True, "discord_detail": False,
+                       "ntfy": False}
+        assert alerts.send_alert("x", kind="detail") == {
+            "discord_detail": False}

@@ -35,6 +35,7 @@ import json
 from datetime import datetime, timezone
 from decimal import Decimal
 
+import config
 from src.live.db import get_session, plane_ready
 from src.live.models import (BroadcastLog, Fixture, MarketQuote,
                              PersonalBet, PersonalBetExecution)
@@ -445,6 +446,68 @@ def journal_summary(fixture_id: int | None = None) -> dict:
         s.close()
 
 
+# --- the broadcast boundary (journal-P0 F1) --------------------------------
+# The action channel relays prose to Son, whose consenting friend places
+# REAL bets on the same views. The real-money lock
+# (REAL_MONEY_SIGNALS_ENABLED=false) governs MODEL-GENERATED signals;
+# operator-authenticated, session-sourced prose relayed to Son is
+# documentation, not a model signal — the carve-out recorded in
+# AGENTS.md §3, PENDING SON'S SIGN-OFF AT MERGE. The boundary is
+# enforced HERE, mechanically, not by caller honesty:
+#
+#   - only source="session" may dispatch; any other source is refused
+#   - a call whose stack contains a scheduler or model frame is refused
+#     even when it CLAIMS source="session"
+#   - every action-channel dispatch carries the standing-edge qualifier
+#     appended server-side, so no relayed number can travel without its
+#     uncertainty
+_AUTOMATED_CALLER_PREFIXES = (
+    "apscheduler", "jobs",
+    "src.live.runs", "src.live.paper", "src.live.ingest",
+    "src.live.markets", "src.live.model_mls", "src.live.model_eval",
+    "src.live.slate", "src.live.risk", "src.live.mls_stats",
+    "src.live.lineups", "src.live.audit", "src.live.settlement",
+)
+
+
+def _automated_caller() -> str | None:
+    """The first scheduler/model module on the call stack, or None.
+
+    A parameter can be forged by any caller; the stack cannot. This is
+    the server-side check that makes `source="session"` a verified fact
+    rather than caller honesty."""
+    import inspect
+    for fi in inspect.stack(0)[1:]:
+        mod = fi.frame.f_globals.get("__name__") or ""
+        if mod == __name__:
+            continue
+        if any(mod == p or mod.startswith(p + ".")
+               for p in _AUTOMATED_CALLER_PREFIXES):
+            return mod
+    return None
+
+
+def _shadow_qualifier() -> str:
+    """The standing edge WITH its interval and significance flag, read
+    fresh — appended server-side to every action-channel dispatch so no
+    relayed message can present a number without its uncertainty."""
+    try:
+        from src.live import model_eval
+        d = model_eval.current_approval_decision()
+        edge = d.get("edge_vs_baseline")
+        lo, hi = d.get("ci_low"), d.get("ci_high")
+        if edge is not None and lo is not None and hi is not None:
+            sig = ("significant" if d.get("edge_significant")
+                   else "not significant")
+            return (f"[shadow] standing edge {edge:+.4f}, "
+                    f"n={d.get('n_scored')}, CI [{lo:+.4f}, {hi:+.4f}] — "
+                    f"{sig}; shadow model, not a real-money signal")
+    except Exception as exc:
+        print(f"[journal] qualifier read failed: {exc}")
+    return ("[shadow] no standing-edge decision available — no "
+            "established edge; shadow model, not a real-money signal")
+
+
 def broadcast(message: str, *, channel: str = "action",
               source: str = "session", session_label: str | None = None,
               fixture_id: int | None = None,
@@ -457,8 +520,13 @@ def broadcast(message: str, *, channel: str = "action",
     what was claimed live, when, is documentation in the same sense the
     journal is.
 
-    `source` separates a computed rule from an agent's judgement. A
-    measurement and an opinion must never look alike in the channel.
+    Only operator-authenticated SESSION prose may dispatch — see the
+    boundary note above. A `computed` source names a model-generated
+    message, which is exactly what the real-money lock governs, so it is
+    refused here rather than relayed; the refusal is logged, never
+    silently dropped. `dispatched` is true only when at least one
+    transport ACCEPTED the message (journal-P1 F6), and the accepting
+    transports are named.
     """
     if not plane_ready():
         return {"error": "dormant"}
@@ -466,8 +534,31 @@ def broadcast(message: str, *, channel: str = "action",
         return {"error": "channel must be action or detail"}
     if source not in ("session", "computed"):
         return {"error": "source must be session or computed"}
-    prefix = "🗣" if source == "session" else "⚙︎"
-    body = f"{prefix} {message}"
+    if source != "session":
+        print(f"[journal] broadcast REFUSED: source={source!r} is a "
+              f"model-generated signal and REAL_MONEY_SIGNALS_ENABLED="
+              f"{config.REAL_MONEY_SIGNALS_ENABLED} — no dispatch path")
+        return {"refused": True, "dispatched": False,
+                "error": ("refused: only source=\"session\" "
+                          "(operator-authenticated prose) may dispatch. "
+                          "A computed message is a model-generated "
+                          "signal; the real-money lock provides no "
+                          "dispatch path for those")}
+    auto = _automated_caller()
+    if auto is not None:
+        print(f"[journal] broadcast REFUSED: automated caller {auto} "
+              f"claimed source=session")
+        return {"refused": True, "dispatched": False,
+                "error": (f"refused: broadcast() was reached from {auto} "
+                          f"— scheduled jobs and model code paths may "
+                          f"never dispatch, whatever source they claim")}
+    body = f"🗣 {message}"
+    if channel == "action":
+        # server-side, unconditionally: the action channel reaches the
+        # person whose friend bets real money, so the number's
+        # uncertainty travels in the same message, not in a footnote
+        # somewhere the reader has to know to look
+        body = f"{body}\n{_shadow_qualifier()}"
     s = get_session()
     try:
         row = BroadcastLog(
@@ -478,21 +569,22 @@ def broadcast(message: str, *, channel: str = "action",
             created_at=_now())
         s.add(row)
         s.flush()
-        # `send_alert` returns None — it discards the transport's own
-        # boolean — so this records DISPATCHED WITHOUT ERROR, not
-        # confirmed receipt. Naming it anything stronger would be a
-        # small lie in a system whose whole point is not telling those.
-        dispatched = False
+        transports: dict = {}
         try:
             from src.alerts import send_alert
-            send_alert(body, title="Trivela", kind=channel)
-            dispatched = True
+            result = send_alert(body, title="Trivela", kind=channel)
+            if isinstance(result, dict):
+                transports = result
         except Exception as exc:      # a failed send must not lose the record
             print(f"[journal] broadcast dispatch failed: {exc}")
+        accepted = sorted(k for k, v in transports.items() if v)
+        # true only when at least one transport ACCEPTED the message —
+        # "dispatched without raising" is not delivery (journal-P1 F6)
+        dispatched = bool(accepted)
         row.delivered = dispatched
         s.commit()
         return {"id": row.id, "dispatched": dispatched,
-                "delivery_confirmed": None,
+                "transports": transports, "accepted": accepted,
                 "channel": channel, "source": source}
     finally:
         s.close()

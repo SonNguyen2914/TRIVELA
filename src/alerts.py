@@ -70,14 +70,22 @@ def send_ntfy(message: str, title: str = "WC26", priority: str = "high") -> bool
 
 
 def send_alert(message: str, title: str = "WC26",
-               kind: str = "action") -> None:
+               kind: str = "action") -> dict[str, bool]:
     """Fan-out by kind. "action": the act-now channel + phone push, and a
     copy to detail so that channel reads as a complete log. "detail": the
-    narrator's channel only — the phone stays quiet."""
+    narrator's channel only — the phone stays quiet.
+
+    Returns PER-TRANSPORT acceptance (journal-P1 F6): each key is a
+    transport, each value the transport's own boolean. It used to return
+    None, which forced callers to report "dispatched without raising" as
+    if it were delivery — a small lie in a system whose whole point is
+    not telling those. Existing fire-and-forget callers ignore the
+    return value, which is fine; anyone REPORTING dispatch must read it.
+    """
     if kind == "detail":
-        send_discord(message, channel="detail")
-        return
-    send_discord(message, channel="action")
+        return {"discord_detail": send_discord(message, channel="detail")}
+    out = {"discord_action": send_discord(message, channel="action")}
     if config.DISCORD_DETAIL_WEBHOOK_URL != config.DISCORD_ACTION_WEBHOOK_URL:
-        send_discord(message, channel="detail")
-    send_ntfy(message, title=title)
+        out["discord_detail"] = send_discord(message, channel="detail")
+    out["ntfy"] = send_ntfy(message, title=title)
+    return out

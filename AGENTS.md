@@ -74,6 +74,19 @@ backend's migrations live in `live_migrations/`, not `alembic/`
 
 - **Real money stays disabled.** `REAL_MONEY_SIGNALS_ENABLED=false`, and
   no code path may enable it. Verify the current setting; never relax it.
+
+  > **Journal-relay carve-out — PENDING SON'S SIGN-OFF AT MERGE.**
+  > Operator-authenticated, session-sourced prose relayed to Son over
+  > the broadcast channel is NOT a model signal; the real-money lock
+  > governs model-generated signals. The boundary is mechanical, not
+  > honor-system: `src/live/journal.py broadcast()` refuses dispatch
+  > for any non-`session` source and for any call reached from a
+  > scheduler or model code path (verified against the call stack, not
+  > the caller's claim), a test asserts no scheduler or model module
+  > references the broadcast path at all, and every action-channel
+  > dispatch carries the standing-edge qualifier (estimate, CI,
+  > significance) appended server-side — so no relayed message can
+  > present a number without its uncertainty.
 - **No secrets, ever** — not in commits, not printed, not in diffs.
 - **No production access by default.** No pushes, merges, deploys,
   migrations against production, approval activation, corpus publication,
