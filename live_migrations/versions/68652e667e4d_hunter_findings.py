@@ -17,7 +17,7 @@ off the same head; whichever lands later must re-parent (down_revision)
 onto the new head. This migration is single and additive precisely so
 that re-parenting is a one-line change.
 
-Revision ID: e5f6a7b8c9d0
+Revision ID: 68652e667e4d
 Revises: d4e5f6a7b8c9
 Create Date: 2026-07-28
 """
@@ -25,7 +25,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = 'e5f6a7b8c9d0'
+revision = '68652e667e4d'
 down_revision = 'd4e5f6a7b8c9'
 branch_labels = None
 depends_on = None
