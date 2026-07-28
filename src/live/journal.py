@@ -848,21 +848,88 @@ def recent_broadcasts(fixture_id: int, limit: int = 20) -> list[dict]:
         s.close()
 
 
-def open_entries(s, fixture_id: int) -> list[dict]:
+# --- public vs operator projections (journal-P0 F2) ------------------------
+# The briefing and journal endpoints are UNAUTHENTICATED reads, and an
+# execution row is a third party's financial record. The public surface
+# gets the view and its resolution — direction, stated price, status,
+# timestamps — and NEVER the person: no account label, no order id, no
+# fill economics, no consent provenance, no private prose. The operator
+# surface keeps the full record.
+_PRIVATE_EXECUTION_FIELDS = frozenset({
+    "account_label", "consent_recorded_at", "exchange_order_id",
+    "fill_price_dollars", "filled_contracts", "fee_paid_dollars",
+    "best_available_price_dollars", "settlement_credit_dollars",
+    "reconciliation_note", "gaps", "publication_consent"})
+
+
+def _bet_public_dict(row: PersonalBet) -> dict:
+    d = _bet_dict(row)
+    d.pop("rationale", None)          # private prose stays private
+    return d
+
+
+def _execution_public_dict(row: PersonalBetExecution) -> dict:
+    """The public shape of a real execution: that it happened, its
+    status, and its timeline — nothing that identifies the account or
+    quantifies the money."""
+    return {
+        "id": row.id, "personal_bet_id": row.personal_bet_id,
+        "status": row.status,
+        "not_filled_reason": row.not_filled_reason,
+        "filled_at": row.filled_at.isoformat() if row.filled_at else None,
+        "settled_at": (row.settled_at.isoformat()
+                       if row.settled_at else None),
+        "reconciled": bool(row.reconciled),
+        "redaction_note": ("private execution fields (account, order "
+                           "id, fill economics, consent) are withheld "
+                           "on the public surface"),
+    }
+
+
+def open_entries(s, fixture_id: int, redact: bool = True) -> list[dict]:
     """Journal entries on this fixture that still matter to a live
-    reader: everything except void, with their executions."""
+    reader: everything except void, with their executions. Redacted by
+    default — this feeds the PUBLIC briefing (journal-P0 F2); only an
+    operator-authenticated caller may pass redact=False."""
     rows = (s.query(PersonalBet).filter_by(fixture_id=fixture_id)
             .filter(PersonalBet.status != "void")
             .order_by(PersonalBet.id.desc()).all())
+    bet_fn = _bet_public_dict if redact else _bet_dict
     out = []
     for b in rows:
-        d = _bet_dict(b)
+        d = bet_fn(b)
         d["executions"] = [
-            _execution_dict(s, e) for e in
+            (_execution_public_dict(e) if redact
+             else _execution_dict(s, e)) for e in
             s.query(PersonalBetExecution)
             .filter_by(personal_bet_id=b.id).all()]
         out.append(d)
     return out
+
+
+def full_entries(fixture_id: int | None = None) -> list[dict]:
+    """The COMPLETE journal record — every entry (void included), every
+    execution with its economics, gaps and reconciliation state. This is
+    the operator surface (journal-P0 F2); it must only ever be served
+    behind operator authentication."""
+    if not plane_ready():
+        return []
+    s = get_session()
+    try:
+        q = s.query(PersonalBet)
+        if fixture_id is not None:
+            q = q.filter_by(fixture_id=fixture_id)
+        out = []
+        for b in q.order_by(PersonalBet.id.desc()).all():
+            d = _bet_dict(b)
+            d["executions"] = [
+                _execution_dict(s, e) for e in
+                s.query(PersonalBetExecution)
+                .filter_by(personal_bet_id=b.id).all()]
+            out.append(d)
+        return out
+    finally:
+        s.close()
 
 
 def briefing(espn_event_id: str) -> dict:

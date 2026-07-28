@@ -846,6 +846,160 @@ class TestJsonBodies:
         assert journal.recent_broadcasts(1)[0]["message"] == msg
 
 
+class TestPublicRedaction:
+    """journal-P0 F2: the briefing, journal and corpus-preview routes
+    are UNAUTHENTICATED, and an execution row is a third party's
+    financial record. The public projection keeps the view — direction,
+    stated price, resolution, timestamps — and never the person."""
+
+    HDRS = {"X-Admin-Token": "s3cret"}
+    RATIONALE = "RATIONALE-SENTINEL private prose"
+    ACCT = "ACCT-SENTINEL"
+    ORDER = "ORD-SENTINEL-1"
+    CONSENT_ISO = "2026-07-01T12:00:00+00:00"
+    PRIVATE_EXEC_FIELDS = (
+        "account_label", "consent_recorded_at", "exchange_order_id",
+        "fill_price_dollars", "filled_contracts", "fee_paid_dollars",
+        "best_available_price_dollars", "settlement_credit_dollars",
+        "reconciliation_note")
+
+    @pytest.fixture()
+    def client(self, live_session, monkeypatch):
+        monkeypatch.setattr(config, "ADMIN_TOKEN", "s3cret")
+        monkeypatch.setattr(config, "RATE_LIMIT_SECONDS", 0)
+        from src import mls
+        mls._cache.clear()                 # route-level caches
+        from fastapi.testclient import TestClient
+        from api import main as api_main
+        api_main._rate_last.clear()
+        return TestClient(api_main.app)
+
+    def _record_full(self, live_session):
+        """A journal entry + settled, reconciled REAL execution, every
+        private field carrying a sentinel. publication_consent False."""
+        from src.live import journal
+        _seed(live_session)
+        fx = live_session.get(Fixture, 1)
+        fx.espn_event_id = "4013212"       # route requires digits
+        live_session.commit()
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  stated_price="0.45",
+                                  market_quote_id=1,
+                                  rationale=self.RATIONALE)
+        journal.resolve_view(bet["id"], "taken")
+        now = datetime.now(UTC)
+        ex = journal.record_execution(
+            bet["id"], self.ACCT,
+            consent_recorded_at=datetime.fromisoformat(self.CONSENT_ISO),
+            fill_price="0.43", filled_contracts="10", fee_paid="9.87",
+            filled_at=now, market_quote_id_at_fill=1,
+            exchange_order_id=self.ORDER)
+        journal.settle_execution(ex["id"], settlement_credit="7.77",
+                                 settled_at=now,
+                                 settled_outcome="home_win")
+        journal.reconcile_execution(ex["id"], note="RECON-SENTINEL")
+        return bet, ex
+
+    def _mock_providers(self, monkeypatch):
+        from src import mls
+        from src.live import runs as live_runs
+        monkeypatch.setattr(mls, "match_summary", lambda eid: {
+            "date": "2026-07-28T23:30Z", "home": {"name": "A"},
+            "away": {"name": "B"}})
+        monkeypatch.setattr(mls, "find_all_books_with_freshness",
+                            lambda *a, **kw:
+                            ([], {"observed_at": None,
+                                  "age_seconds": None,
+                                  "status": "unavailable"}),
+                            raising=False)
+        monkeypatch.setattr(live_runs, "model_for_event",
+                            lambda eid: {}, raising=False)
+
+    def test_public_briefing_redacts_field_by_field(self, live_session,
+                                                    client, monkeypatch):
+        self._record_full(live_session)
+        self._mock_providers(monkeypatch)
+        r = client.get("/api/mls/briefing/4013212")
+        assert r.status_code == 200, r.text
+        entries = r.json()["journal"]
+        assert entries, "briefing lost the journal section"
+        for entry in entries:
+            assert "rationale" not in entry
+            for ex in entry["executions"]:
+                for field in self.PRIVATE_EXEC_FIELDS:
+                    assert field not in ex, field
+                assert "gaps" not in ex
+                # the public shape still documents THAT it happened
+                assert ex["status"] == "filled"
+                assert ex["reconciled"] is True
+        for sentinel in (self.RATIONALE, self.ACCT, self.ORDER,
+                         self.CONSENT_ISO, "9.87", "7.77",
+                         "RECON-SENTINEL"):
+            assert sentinel not in r.text, sentinel
+
+    def test_public_journal_summary_carries_no_private_values(
+            self, live_session, client):
+        self._record_full(live_session)
+        r = client.get("/api/mls/journal")
+        assert r.status_code == 200
+        for sentinel in (self.RATIONALE, self.ACCT, self.ORDER,
+                         self.CONSENT_ISO, "9.87", "7.77"):
+            assert sentinel not in r.text, sentinel
+
+    def test_corpus_preview_redacts_without_publication_consent(
+            self, live_session, client):
+        self._record_full(live_session)
+        r = client.get("/api/mls/corpus?preview=1&full=1")
+        assert r.status_code == 200, r.text
+        bundle = r.json()
+        bets = bundle["sections"]["personal_journal.json"]
+        execs = bundle["sections"]["personal_journal_executions.json"]
+        assert bets and execs
+        for row in bets:
+            assert "rationale" not in row
+        for row in execs:
+            for field in self.PRIVATE_EXEC_FIELDS:
+                assert field not in row, field
+        for sentinel in (self.RATIONALE, self.ACCT, self.ORDER,
+                         self.CONSENT_ISO, "RECON-SENTINEL"):
+            assert sentinel not in r.text, sentinel
+
+    def test_publication_consent_releases_the_execution_fields(
+            self, live_session):
+        """The explicit gate: with consent set on the ROW, the corpus
+        carries the full execution record; the bet's rationale still
+        never travels."""
+        from src.live import corpus
+        from src.live.models import PersonalBetExecution as PBE
+        _bet, ex = self._record_full(live_session)
+        row = live_session.get(PBE, ex["id"])
+        row.publication_consent = True
+        live_session.commit()
+        bundle = corpus.build_corpus()
+        execs = bundle["sections"]["personal_journal_executions.json"]
+        assert execs[0]["account_label"] == self.ACCT
+        assert execs[0]["exchange_order_id"] == self.ORDER
+        bets = bundle["sections"]["personal_journal.json"]
+        assert all("rationale" not in b for b in bets)
+
+    def test_operator_surface_keeps_the_full_record(self, live_session,
+                                                    client):
+        self._record_full(live_session)
+        denied = client.get("/api/admin/mls/journal")
+        assert denied.status_code == 403
+        r = client.get("/api/admin/mls/journal", headers=self.HDRS)
+        assert r.status_code == 200
+        entry = r.json()["entries"][0]
+        assert entry["rationale"] == self.RATIONALE
+        ex = entry["executions"][0]
+        assert ex["account_label"] == self.ACCT
+        assert ex["exchange_order_id"] == self.ORDER
+        assert ex["fill_price_dollars"] == "0.43"
+        assert ex["settlement_credit_dollars"] == "7.77"
+        assert "gaps" in ex
+
+
 class TestReportingFloor:
     def test_no_summary_statistic_below_the_minimum(self, live_session):
         """Three fills tell you the fee model is not OBVIOUSLY broken.

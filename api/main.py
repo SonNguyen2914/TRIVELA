@@ -306,6 +306,22 @@ class BroadcastIn(BaseModel):
     fixture_id: int | None = None
 
 
+@app.get("/api/admin/mls/journal")
+def mls_admin_journal(request: Request,
+                      fixture_id: int | None = Query(None)):
+    """Operator-only: the COMPLETE journal record — rationale, account
+    labels, order ids, fill economics, consent provenance, gaps,
+    settlement and reconciliation state. The public surfaces serve a
+    redacted projection (journal-P0 F2); this is where the full record
+    lives, behind the token."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import journal
+    return {"entries": journal.full_entries(fixture_id),
+            "evidence_class": "personal_journal",
+            "generated_at": utcnow().isoformat()}
+
+
 @app.post("/api/admin/mls/journal/view")
 def mls_journal_record_view(request: Request, body: JournalViewIn):
     """Operator-only: record a view AT THE MOMENT IT FORMS.

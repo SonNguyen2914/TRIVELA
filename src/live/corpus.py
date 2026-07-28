@@ -95,6 +95,32 @@ def _dump(obj) -> dict:
     return out
 
 
+# journal-P0 F2: the corpus is PUBLIC bytes and an execution row is a
+# third party's financial record. These fields leave the building only
+# under that row's explicit publication_consent (default false); the
+# journal's free-prose rationale never does — no consent field exists
+# for it, so no path out exists either.
+_PRIVATE_EXECUTION_FIELDS = frozenset({
+    "account_label", "consent_recorded_at", "exchange_order_id",
+    "fill_price_dollars", "filled_contracts", "fee_paid_dollars",
+    "best_available_price_dollars", "settlement_credit_dollars",
+    "reconciliation_note"})
+
+
+def _dump_personal_bet(x) -> dict:
+    d = _dump(x)
+    d.pop("rationale", None)
+    return d
+
+
+def _dump_personal_execution(x) -> dict:
+    d = _dump(x)
+    if not x.publication_consent:
+        for k in _PRIVATE_EXECUTION_FIELDS:
+            d.pop(k, None)
+    return d
+
+
 def _book_observations(s, depth) -> list:
     """The raw order-book observations the exported depth rows point at.
 
@@ -180,11 +206,14 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             # everything above and must never be folded into the
             # forecast or market reports. Human-selected bets cannot
             # measure edge; they measure whether execution behaves as
-            # modelled.
+            # modelled. Private fields are withheld unless the row
+            # carries explicit publication_consent (journal-P0 F2).
             "personal_journal.json": [
-                _dump(x) for x in s.query(PersonalBet).all()],
+                _dump_personal_bet(x)
+                for x in s.query(PersonalBet).all()],
             "personal_journal_executions.json": [
-                _dump(x) for x in s.query(PersonalBetExecution).all()],
+                _dump_personal_execution(x)
+                for x in s.query(PersonalBetExecution).all()],
             # V9.5 eval C1: the frozen paper/risk state each lock was
             # evaluated against, so a reader can verify that a paper
             # decision was a pure function of frozen inputs
