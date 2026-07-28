@@ -200,6 +200,148 @@ def mls_match(event_id: str):
             "lineups": lineup, "generated_at": utcnow().isoformat()}
 
 
+@app.get("/api/mls/briefing/{event_id}")
+def mls_briefing(event_id: str):
+    """Everything needed to reason about one fixture RIGHT NOW, in one
+    call — built for a live session rather than a human.
+
+    A session opening cold mid-match would otherwise spend its first
+    turns assembling state from several endpoints while the match moves.
+    The frozen T-10 book and the current book sit side by side, each
+    labelled, because comparing the wrong one to the wrong one is how a
+    bad hold gets justified. The standing edge travels with its interval
+    and significance flag so it cannot be quoted without them.
+
+    Public read-only; exposes nothing `/api/mls/match/{id}` does not,
+    plus the journal. 20s cache."""
+    if not event_id.isdigit() or len(event_id) > 12:
+        raise HTTPException(404, "unknown event")
+    from src.mls import _cached
+    try:
+        from src.live import journal
+        return _cached(f"mls_briefing_{event_id}", 20,
+                       lambda: journal.briefing(event_id)) or {}
+    except Exception as exc:
+        print(f"[mls] briefing failed for {event_id}: {exc}")
+        raise HTTPException(503, "briefing unavailable")
+
+
+@app.get("/api/mls/journal")
+def mls_journal(fixture_id: int | None = Query(None)):
+    """The personal journal with its DENOMINATOR — considered, taken and
+    passed. A hit rate over taken bets alone is not a statistic.
+
+    Below the policy minimum this returns rows and NO summary statistic;
+    the keys are absent rather than zero, because a zero reads as a
+    measured result. Public read-only."""
+    try:
+        from src.live import journal
+        return journal.journal_summary(fixture_id)
+    except Exception as exc:
+        print(f"[mls] journal failed: {exc}")
+        raise HTTPException(503, "journal unavailable")
+
+
+@app.post("/api/admin/mls/journal/view")
+def mls_journal_record_view(request: Request,
+                            fixture_id: int = Query(...),
+                            market_ticker: str = Query(...),
+                            outcome_key: str | None = Query(None),
+                            stated_price: str | None = Query(None),
+                            stated_size: str | None = Query(None),
+                            market_quote_id: int | None = Query(None),
+                            rationale: str | None = Query(None),
+                            status: str = Query("considered")):
+    """Operator-only: record a view AT THE MOMENT IT FORMS.
+
+    Record at `considered`, then resolve to `taken` or `passed`. The
+    passes are what make the takes interpretable — a journal of only the
+    bets that were taken has the survivorship problem the paper ledger's
+    retained rejections exist to prevent.
+
+    Falsifiability is enforced server-side: citing a quote that does not
+    exist, or one captured after this moment, silently downgrades the
+    entry to `stated_only`, and it then counts nowhere."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import journal
+    return journal.record_view(
+        fixture_id, market_ticker, outcome_key=outcome_key,
+        stated_price=stated_price, stated_size=stated_size,
+        market_quote_id=market_quote_id, rationale=rationale,
+        status=status)
+
+
+@app.post("/api/admin/mls/journal/resolve")
+def mls_journal_resolve(request: Request, bet_id: int = Query(...),
+                        status: str = Query(...)):
+    """Operator-only: resolve a recorded view to `taken` or `passed`."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import journal
+    return journal.resolve_view(bet_id, status)
+
+
+@app.post("/api/admin/mls/journal/execution")
+def mls_journal_execution(request: Request, bet_id: int = Query(...),
+                          account_label: str = Query(...),
+                          status: str = Query("filled"),
+                          fill_price: str | None = Query(None),
+                          filled_contracts: str | None = Query(None),
+                          fee_paid: str | None = Query(None),
+                          market_quote_id_at_fill: int | None = Query(None),
+                          not_filled_reason: str | None = Query(None),
+                          best_available_price: str | None = Query(None),
+                          exchange_order_id: str | None = Query(None)):
+    """Operator-only: record a REAL fill, or a real failure to fill.
+
+    Consent is required and never defaulted — this is a third party's
+    money, and the provenance of that consent belongs in the row rather
+    than in anyone's memory. A `not_filled` row is as valuable as a
+    fill: it is evidence about liquidity, half of what this pilot
+    measures."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import journal
+    return journal.record_execution(
+        bet_id, account_label, consent_recorded_at=utcnow(),
+        status=status, fill_price=fill_price,
+        filled_contracts=filled_contracts, fee_paid=fee_paid,
+        market_quote_id_at_fill=market_quote_id_at_fill,
+        not_filled_reason=not_filled_reason,
+        best_available_price=best_available_price,
+        exchange_order_id=exchange_order_id)
+
+
+@app.post("/api/admin/mls/broadcast")
+def mls_broadcast(request: Request, message: str = Query(...),
+                  channel: str = Query("action"),
+                  source: str = Query("session"),
+                  session_label: str | None = Query(None),
+                  fixture_id: int | None = Query(None)):
+    """Operator-only: a live session speaks to Discord/ntfy.
+
+    The session is the analyser; this is its megaphone. Operator-gated
+    rather than a local script so it works from any session — laptop,
+    cloud, or a phone over remote control.
+
+    Every broadcast is persisted, so a session that dropped mid-match
+    can read what it already said, and so what was claimed live becomes
+    part of the record. `source` separates a computed rule (⚙︎) from an
+    agent's judgement (🗣): a measurement and an opinion must never look
+    alike in the channel.
+
+    Figures should come from a briefing read in the SAME turn, never
+    from recall — a confident agent narrating a stale price is the
+    failure mode this endpoint makes possible."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import journal
+    return journal.broadcast(message, channel=channel, source=source,
+                             session_label=session_label,
+                             fixture_id=fixture_id)
+
+
 @app.post("/api/admin/mls/sweep")
 def mls_admin_sweep(request: Request, force: bool = Query(False)):
     """Operator-only: run the shadow sweeps NOW and return their result

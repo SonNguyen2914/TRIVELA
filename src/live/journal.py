@@ -518,3 +518,142 @@ def recent_broadcasts(fixture_id: int, limit: int = 20) -> list[dict]:
                 for r in rows]
     finally:
         s.close()
+
+
+def open_entries(s, fixture_id: int) -> list[dict]:
+    """Journal entries on this fixture that still matter to a live
+    reader: everything except void, with their executions."""
+    rows = (s.query(PersonalBet).filter_by(fixture_id=fixture_id)
+            .filter(PersonalBet.status != "void")
+            .order_by(PersonalBet.id.desc()).all())
+    out = []
+    for b in rows:
+        d = _bet_dict(b)
+        d["executions"] = [
+            _execution_dict(s, e) for e in
+            s.query(PersonalBetExecution)
+            .filter_by(personal_bet_id=b.id).all()]
+        out.append(d)
+    return out
+
+
+def briefing(espn_event_id: str) -> dict:
+    """Everything needed to reason about one fixture RIGHT NOW, in one
+    call.
+
+    Built for a live session, not a human. A session opening cold
+    mid-match otherwise spends its first turns assembling state from
+    several endpoints while the match moves.
+
+    Three deliberate properties:
+
+    - **Frozen and current sit side by side, always labelled.** The T-10
+      book and the live book are different evidence classes; showing one
+      without the other invites exactly the wrong comparison.
+    - **The standing edge travels WITH its interval and significance
+      flag**, so a consumer cannot quote the number without the
+      qualifier attached. Same rule the UI follows, applied to the
+      machine surface.
+    - **`said_already`** carries what has already been broadcast about
+      this fixture, so a session that dropped and reopened picks up the
+      thread instead of contradicting itself.
+    """
+    if not plane_ready():
+        return {"error": "dormant"}
+    out: dict = {"espn_event_id": espn_event_id,
+                 "generated_at": _now().isoformat()}
+
+    # --- the match itself, and the CURRENT book -------------------------
+    try:
+        from src import mls
+        summary = mls.match_summary(espn_event_id)
+        out["fixture"] = summary
+        if summary:
+            out["market_current"] = {
+                "basis": "live_read",
+                "books": mls.find_all_books(
+                    summary.get("date"),
+                    (summary.get("home") or {}).get("name") or "",
+                    (summary.get("away") or {}).get("name") or ""),
+            }
+    except Exception as exc:
+        out["fixture_error"] = str(exc)[:160]
+
+    # --- the model, and the FROZEN T-10 book ---------------------------
+    try:
+        from src.live import runs as live_runs
+        out["model"] = live_runs.model_for_event(espn_event_id)
+    except Exception as exc:
+        out["model_error"] = str(exc)[:160]
+
+    s = get_session()
+    try:
+        fx = (s.query(Fixture)
+              .filter_by(espn_event_id=str(espn_event_id)).first())
+        if fx is None:
+            out["note"] = "fixture not in the live plane"
+            return out
+        out["fixture_id"] = fx.id
+
+        # the frozen lock book, labelled as a DIFFERENT class from above
+        from src.live.models import (MarketContract, PredictionContract,
+                                     PredictionRun)
+        lock = (s.query(PredictionRun)
+                .filter_by(fixture_id=fx.id, run_type="t10",
+                           canonical=True, status="complete").first())
+        if lock is not None:
+            frozen = []
+            for c in (s.query(PredictionContract)
+                      .filter_by(prediction_run_id=lock.id).all()):
+                q = (s.get(MarketQuote, c.market_quote_id)
+                     if c.market_quote_id else None)
+                mc = (s.get(MarketContract, c.market_contract_id)
+                      if c.market_contract_id else None)
+                frozen.append({
+                    "outcome_key": c.outcome_key,
+                    "ticker": mc.ticker if mc else None,
+                    "model_probability": c.raw_probability,
+                    "frozen_yes_ask_dollars": (
+                        q.yes_ask_dollars if q else None),
+                    "frozen_yes_bid_dollars": (
+                        q.yes_bid_dollars if q else None),
+                    "quote_captured_at": (q.captured_at.isoformat()
+                                          if q and q.captured_at else None),
+                })
+            out["market_frozen_t10"] = {
+                "basis": "frozen_at_lock",
+                "run_id": lock.id,
+                "captured_at": (lock.captured_at.isoformat()
+                                if lock.captured_at else None),
+                "contracts": frozen,
+                "note": ("the book as it stood at T-10. Compare to "
+                         "market_current deliberately, never accidentally"),
+            }
+
+        out["journal"] = open_entries(s, fx.id)
+        out["said_already"] = recent_broadcasts(fx.id)
+    finally:
+        s.close()
+
+    # --- the standing edge, WITH its uncertainty ------------------------
+    try:
+        from src.live import model_eval
+        d = model_eval.current_approval_decision()
+        out["context"] = {
+            "edge_vs_baseline": d.get("edge_vs_baseline"),
+            "ci95": [d.get("ci_low"), d.get("ci_high")],
+            "significant": d.get("edge_significant"),
+            "n_scored": d.get("n_scored"),
+            "model_version": d.get("model_version"),
+            "note": ("the interval travels with the estimate. An edge "
+                     "whose CI spans zero is not an established edge — "
+                     "do not report the point estimate alone"),
+        }
+    except Exception as exc:
+        out["context_error"] = str(exc)[:160]
+
+    out["evidence_note"] = (
+        "shadow model, observational. Journal entries are human-selected "
+        "and are NOT edge evidence. Never sum journal, paper ledger and "
+        "real executions.")
+    return out
