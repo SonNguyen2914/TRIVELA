@@ -173,6 +173,13 @@ LIVE_SIGNAL_MIN_DIFF = float(os.getenv("LIVE_SIGNAL_MIN_DIFF", "0.08"))
 LIVE_SIGNAL_COOLDOWN_SECONDS = int(os.getenv("LIVE_SIGNAL_COOLDOWN_SECONDS", "180"))
 LIVE_SIGNAL_POLL_SECONDS = int(os.getenv("LIVE_SIGNAL_POLL_SECONDS", "30"))
 
+# The MLS position analyser's cadence (src/live/analyser.py). Minutes, not
+# seconds, and deliberately so: its inputs are the live plane's captured
+# quotes, which mls_markets_job refreshes every 10 minutes. Polling faster
+# than the capture cadence re-reads an identical book. Raise the capture
+# rate first if these reads ever need to be fresher than this.
+MLS_ANALYSER_POLL_MINUTES = int(os.getenv("MLS_ANALYSER_POLL_MINUTES", "5"))
+
 # EASY-WIN alerts scan EVERY open in-play book (not just watched ones): the
 # live model must call it near-certain, the price must still leave a real
 # payout, and the gap must show the market hasn't fully caught up yet.

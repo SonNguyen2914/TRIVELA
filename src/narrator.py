@@ -40,14 +40,24 @@ def _fmt_board(match, rows_by_key: dict) -> str:
     return " · ".join(parts)
 
 
+def _money(v) -> str:
+    """`—` for a figure that does not exist, rather than a crash.
+
+    `cashout_now` is None on a NO_BID position and `hold_ev` is None on a
+    STALE_MODEL one. Formatting either with `:.0f` raises TypeError, and
+    the caller catches it — so one non-executable position silently took
+    the WHOLE narrator brief down instead of printing a dash."""
+    return f"${v:.0f}" if isinstance(v, (int, float)) else "—"
+
+
 def _fmt_positions(positions: list[dict]) -> str:
     if not positions:
         return ""
     lines = ["**Your positions:**"]
     for p in positions:
         lines.append(
-            f"  {p['market_title'][:34]} — hold ${p['hold_ev']:.0f} / "
-            f"cash ${p['cashout_now']:.0f} → **{p['verdict']}**")
+            f"  {p['market_title'][:34]} — hold {_money(p['hold_ev'])} / "
+            f"cash {_money(p['cashout_now'])} → **{p['verdict']}**")
     return "\n".join(lines)
 
 

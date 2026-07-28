@@ -426,6 +426,30 @@ def mls_readiness_watch() -> None:
         print(f"[mls-readiness] watch error: {exc}")
 
 
+def mls_live_analyser_job() -> None:
+    """The position tracker, repointed at the MLS live plane.
+
+    `live_signals_job` above stays on the WC26 archive plane on purpose —
+    its BUY/SELL and EASY-WIN scans need an in-play model probability and
+    MLS has none (see `src/live_signals` module docstring). This job runs
+    the half that does not: hold-vs-cash-out reads on the positions Son
+    actually holds, alerted under an MLS title. Instant no-op when the
+    live plane is dormant."""
+    try:
+        from src.live import analyser
+        r = analyser.evaluate_mls_positions(alert=True)
+        if r.get("dormant"):
+            return
+        # counts always with their denominator: how many fixtures were
+        # considered, how many had a priced book, how many positions the
+        # analyser could actually read.
+        if r["positions"]:
+            print(f"[mls-analyser] {r['positions']} position read(s) over "
+                  f"{r['priced']}/{r['fixtures']} priced fixtures")
+    except Exception as exc:
+        print(f"[mls-analyser] pass error: {exc}")
+
+
 def mls_t10_job() -> None:
     """The atomic T-10 lock sweep (book freeze + canonical run)."""
     try:
@@ -485,6 +509,13 @@ def start_scheduler() -> BackgroundScheduler:
                       id="mls_stats", coalesce=True, max_instances=1)
     scheduler.add_job(mls_t10_job, "interval", seconds=60,
                       id="mls_t10", coalesce=True, max_instances=1)
+    # Position reads on MLS fixtures. Cadence is deliberately tied to the
+    # market job's: the analyser can only be as fresh as the newest
+    # captured quote, and mls_markets_job captures every 10 minutes, so
+    # polling faster than that re-reads the same book and buys nothing.
+    scheduler.add_job(mls_live_analyser_job, "interval",
+                      minutes=config.MLS_ANALYSER_POLL_MINUTES,
+                      id="mls_analyser", coalesce=True, max_instances=1)
     # The one thing no other alert covers: shadow collection stopped and
     # nobody noticed. Every other alert fires on MLS events, so silence
     # reads as a quiet evening rather than as a halt.
