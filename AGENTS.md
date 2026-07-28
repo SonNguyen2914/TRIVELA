@@ -243,7 +243,7 @@ identity match must **fail explicitly**, never silently pick a team.
 
 Never describe a point estimate as an established edge when its interval
 includes zero. The current standing result is +0.0269, n=177, CI
-[−0.0043, +0.0605] — **not significant**.
+[−0.0050, +0.0596] — **not significant**.
 
 ## 7. Roles
 
