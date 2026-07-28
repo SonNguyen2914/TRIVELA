@@ -65,30 +65,40 @@ def norm(s: str) -> str:
     return s.lower().replace(".", "").strip()
 
 
-def fetch_espn_teams() -> list[dict]:
-    r = requests.get(ESPN_TEAMS, timeout=15)
+def fetch_espn_teams(teams_url: str = ESPN_TEAMS) -> list[dict]:
+    r = requests.get(teams_url, timeout=15)
     r.raise_for_status()
     leagues = r.json().get("sports", [{}])[0].get("leagues", [{}])[0]
     return [t.get("team", {}) for t in leagues.get("teams", [])]
 
 
 def seed_teams(espn_teams: list[dict] | None = None) -> dict:
-    """Idempotent: insert missing clubs + approved aliases. Returns
-    counts. Never raises into the boot chain."""
+    """MLS entry point (kept so existing callers/tests are untouched)."""
+    return seed_league_teams("mls-2026", ESPN_TEAMS, KALSHI_BRIDGES,
+                             espn_teams=espn_teams)
+
+
+def seed_league_teams(competition_slug: str, teams_url: str,
+                      bridges: dict[str, str],
+                      espn_teams: list[dict] | None = None) -> dict:
+    """Idempotent, competition-keyed: insert missing clubs + approved
+    aliases. `bridges` is the operator-curated Kalshi-name map for THIS
+    competition. Returns counts. Never raises into the boot chain."""
     if not plane_ready():
         return {"skipped": "dormant"}
     if espn_teams is None:
-        espn_teams = fetch_espn_teams()
+        espn_teams = fetch_espn_teams(teams_url)
     added_teams = added_aliases = 0
     s = get_session()
     try:
         existing = {t.canonical_name: t for t in s.query(Team).filter_by(
-            competition_slug="mls-2026")}
+            competition_slug=competition_slug)}
         for t in espn_teams:
             name = t.get("displayName")
             if not name or name in existing:
                 continue
-            row = Team(competition_slug="mls-2026", canonical_name=name,
+            row = Team(competition_slug=competition_slug,
+                       canonical_name=name,
                        abbrev=t.get("abbreviation"),
                        espn_id=str(t.get("id")))
             s.add(row)
@@ -105,7 +115,7 @@ def seed_teams(espn_teams: list[dict] | None = None) -> dict:
                         added_aliases += 1
         # curated Kalshi bridges -> approved aliases
         by_norm = {norm(t.canonical_name): t for t in existing.values()}
-        for kalshi_name, espn_name in KALSHI_BRIDGES.items():
+        for kalshi_name, espn_name in bridges.items():
             team = by_norm.get(norm(espn_name))
             if team is None:
                 # tolerate ESPN name drift by containment either way
@@ -122,7 +132,8 @@ def seed_teams(espn_teams: list[dict] | None = None) -> dict:
                                 source="kalshi", approved=True))
                 added_aliases += 1
         s.commit()
-        total = s.query(Team).filter_by(competition_slug="mls-2026").count()
+        total = s.query(Team).filter_by(
+            competition_slug=competition_slug).count()
         return {"teams": total, "added_teams": added_teams,
                 "added_aliases": added_aliases,
                 "seeded_at": datetime.now(timezone.utc).isoformat()}
@@ -134,8 +145,16 @@ def seed_teams(espn_teams: list[dict] | None = None) -> dict:
         s.close()
 
 
-def resolve(source: str, alias: str) -> Team | None:
-    """APPROVED aliases only — the decision's final-attachment rule."""
+def resolve(source: str, alias: str,
+            competition_slug: str | None = None) -> Team | None:
+    """APPROVED aliases only — the decision's final-attachment rule.
+
+    With `competition_slug` the resolved team must ALSO belong to that
+    competition; a cross-competition hit fails EXPLICITLY (None + log)
+    rather than silently attaching another league's club. Alias
+    uniqueness is (source, alias) across the whole table, so once two
+    leagues coexist an unscoped resolve could cross them (AGENTS.md §6:
+    an ambiguous identity match must fail explicitly)."""
     s = get_session()
     if s is None:
         return None
@@ -143,20 +162,33 @@ def resolve(source: str, alias: str) -> Team | None:
         row = (s.query(TeamAlias)
                .filter_by(source=source, alias=alias, approved=True)
                .first())
-        return s.get(Team, row.team_id) if row else None
+        if row is None:
+            return None
+        team = s.get(Team, row.team_id)
+        if (team is not None and competition_slug is not None
+                and team.competition_slug != competition_slug):
+            print(f"[identity] CROSS-COMPETITION alias refused: "
+                  f"{source}:{alias!r} -> {team.canonical_name!r} "
+                  f"({team.competition_slug}), wanted {competition_slug}")
+            return None
+        return team
     finally:
         s.close()
 
 
-def resolve_espn_name(name: str) -> Team | None:
+def resolve_espn_name(name: str,
+                      competition_slug: str | None = None) -> Team | None:
     """ESPN display names are their own approved aliases."""
-    return resolve("espn", name)
+    return resolve("espn", name, competition_slug=competition_slug)
 
 
-def unmapped_upcoming(names: list[str]) -> list[str]:
+def unmapped_upcoming(names: list[str],
+                      competition_slug: str | None = None) -> list[str]:
     """Readiness invariant helper: which of these ESPN names lack an
     approved mapping."""
-    return [n for n in names if resolve_espn_name(n) is None]
+    return [n for n in names
+            if resolve_espn_name(n, competition_slug=competition_slug)
+            is None]
 
 
 # --- official MLS stats API (Sportec) identity ---------------------------

@@ -23,7 +23,12 @@ from src.live import identity
 from src.live.models import Fixture, FixtureChange, SourceObservation
 
 SCHEDULE_URL = ("https://site.api.espn.com/apis/site/v2/sports/soccer/"
-                "usa.1/teams/{espn_id}/schedule")
+                "{league}/teams/{espn_id}/schedule")
+SCOREBOARD_URL = ("https://site.api.espn.com/apis/site/v2/sports/soccer/"
+                  "{league}/scoreboard")
+# competition-keyed since the EPL build (2026-07-28): every function
+# below takes (competition_slug, espn_league) with MLS defaults, so the
+# MLS call sites and their behaviour are unchanged.
 
 
 def _now():
@@ -85,16 +90,21 @@ def _event_to_fields(ev: dict) -> dict | None:
     }
 
 
-def _upsert_fixture(s, f: dict, observed_at) -> tuple[bool, bool]:
+def _upsert_fixture(s, f: dict, observed_at,
+                    competition_slug: str = "mls-2026") -> tuple[bool, bool]:
     """Insert or update one fixture; returns (created, changed)."""
     row = (s.query(Fixture)
-           .filter_by(competition_slug="mls-2026",
+           .filter_by(competition_slug=competition_slug,
                       espn_event_id=f["espn_event_id"]).first())
-    home = identity.resolve_espn_name(f["home_name"]) if f["home_name"] else None
-    away = identity.resolve_espn_name(f["away_name"]) if f["away_name"] else None
+    home = (identity.resolve_espn_name(f["home_name"],
+                                       competition_slug=competition_slug)
+            if f["home_name"] else None)
+    away = (identity.resolve_espn_name(f["away_name"],
+                                       competition_slug=competition_slug)
+            if f["away_name"] else None)
     if row is None:
         s.add(Fixture(
-            competition_slug="mls-2026",
+            competition_slug=competition_slug,
             espn_event_id=f["espn_event_id"],
             home_team_id=home.id if home else None,
             away_team_id=away.id if away else None,
@@ -135,7 +145,8 @@ def _upsert_fixture(s, f: dict, observed_at) -> tuple[bool, bool]:
     return False, changed
 
 
-def ingest_season_schedules() -> dict:
+def ingest_season_schedules(competition_slug: str = "mls-2026",
+                            espn_league: str = "usa.1") -> dict:
     """Full-season ingest via each club's schedule endpoint (one call per
     club) — fixtures past AND future, with final scores. The history
     substrate for ratings, backtests, and settlement."""
@@ -145,7 +156,8 @@ def ingest_season_schedules() -> dict:
     s = get_session()
     created = updated = 0
     try:
-        teams = s.query(Team).filter_by(competition_slug="mls-2026").all()
+        teams = s.query(Team).filter_by(
+            competition_slug=competition_slug).all()
         for t in teams:
             if not t.espn_id:
                 continue
@@ -157,7 +169,8 @@ def ingest_season_schedules() -> dict:
             for params in ({}, {"fixture": "true"}):
                 try:
                     r = requests.get(
-                        SCHEDULE_URL.format(espn_id=t.espn_id),
+                        SCHEDULE_URL.format(league=espn_league,
+                                            espn_id=t.espn_id),
                         params=params, timeout=15)
                     r.raise_for_status()
                     payload = r.json()
@@ -171,12 +184,13 @@ def ingest_season_schedules() -> dict:
                     f = _event_to_fields(ev)
                     if not f:
                         continue
-                    c, ch = _upsert_fixture(s, f, now)
+                    c, ch = _upsert_fixture(s, f, now,
+                                            competition_slug=competition_slug)
                     created += int(c)
                     updated += int(ch)
                 s.commit()
         total = s.query(Fixture).filter_by(
-            competition_slug="mls-2026").count()
+            competition_slug=competition_slug).count()
         return {"fixtures": total, "created": created, "updated": updated}
     except Exception as exc:
         s.rollback()
@@ -186,7 +200,8 @@ def ingest_season_schedules() -> dict:
         s.close()
 
 
-def refresh_window() -> dict:
+def refresh_window(competition_slug: str = "mls-2026",
+                   espn_league: str = "usa.1") -> dict:
     """Rolling-window refresh (past 7d + next 14d) via dated scoreboards
     — cheap, run on a schedule; catches reschedules, statuses, scores."""
     if not plane_ready():
@@ -199,8 +214,7 @@ def refresh_window() -> dict:
             day = (_now() + timedelta(days=delta)).strftime("%Y%m%d")
             try:
                 r = requests.get(
-                    "https://site.api.espn.com/apis/site/v2/sports/"
-                    "soccer/usa.1/scoreboard",
+                    SCOREBOARD_URL.format(league=espn_league),
                     params={"dates": day}, timeout=15)
                 r.raise_for_status()
                 payload = r.json()
@@ -211,7 +225,8 @@ def refresh_window() -> dict:
                 f = _event_to_fields(ev)
                 if not f:
                     continue
-                c, ch = _upsert_fixture(s, f, now)
+                c, ch = _upsert_fixture(s, f, now,
+                                        competition_slug=competition_slug)
                 created += int(c)
                 updated += int(ch)
             s.commit()

@@ -335,6 +335,42 @@ DISCORD_DETAIL_WEBHOOK_URL = os.getenv(
 # Minutes between periodic in-play live briefs on the detail channel.
 NARRATOR_INTERVAL_MINUTES = int(os.getenv("NARRATOR_INTERVAL_MINUTES", "5"))
 
+# === EPL (epl-2026) — additive block, 2026-07-28 ==========================
+# Premier League machinery parity. The MODEL IS DARK: nothing here can
+# approve it, and no odds render until an approval decision is earned
+# through the evaluation ladder on real 2026-27 data.
+
+# Master switch for the EPL shadow-plane jobs (ingest, market discovery,
+# quote capture, run sweeps). Same fail-safe parser as the MLS flag;
+# with the model dark the run sweeps refuse regardless of this switch.
+EPL_SHADOW_ENABLED = _parse_flag(
+    os.getenv("EPL_SHADOW_ENABLED"), True, "EPL_SHADOW_ENABLED")
+
+# The Kalshi game series is CONFIG, not fact: KXEPLGAME is verified to
+# exist as a series (387 events in 25/26, research_archive/epl/) but had
+# ZERO open 2026-27 events on 2026-07-28. The discovery probe
+# (/api/epl/markets/discovery) reports its live status.
+EPL_KALSHI_GAME_SERIES = os.getenv("EPL_KALSHI_GAME_SERIES",
+                                   "KXEPLGAME").strip()
+
+# EPL goal-rate dispersion. UNMEASURED for the EPL — 0.0 carries the
+# closest measured precedent (MLS league play swept to 0.0 on 162
+# fixtures; WC26's 0.30 was tournament data). Must be re-swept on real
+# 2026-27 data before any approval evaluation; until then it only
+# affects backtests/tests, since the dark model produces no runs.
+EPL_GOAL_DISPERSION_CV = float(os.getenv("EPL_GOAL_DISPERSION_CV", "0.0"))
+
+# 3-way calibration toward uniform. 0.0 = raw simulation: MLS's 0.25
+# was MEASURED on MLS data and does not transfer by assumption. Swept
+# alongside dispersion before any approval.
+EPL_CALIBRATION_ALPHA = float(os.getenv("EPL_CALIBRATION_ALPHA", "0.0"))
+
+# Kalshi discovery cadence for EPL. Slower than MLS's 10min while the
+# series has no open events (11 family sweeps per pass; this repo has
+# been burned by Kalshi 429s) — tighten once 26/27 listings appear.
+EPL_MARKETS_JOB_MINUTES = int(os.getenv("EPL_MARKETS_JOB_MINUTES", "30"))
+# === end EPL block =========================================================
+
 # --- live-plane volume headroom -------------------------------------------
 # Railway's own volume alerts are Teams/Pro-only, so the platform CANNOT
 # warn before the disk fills. It filled once (2026-07-25) and every

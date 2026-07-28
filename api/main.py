@@ -605,6 +605,131 @@ def mls_odds():
             "generated_at": utcnow().isoformat()}
 
 
+# === EPL (epl-2026) — additive block, 2026-07-28 ===========================
+# Read-only mirrors of the /api/mls data reads, keyed by the epl-2026
+# competition. MODEL DARK: /api/epl/odds serves an empty board and
+# /api/epl/approval states the unapproved reality until an approval
+# decision is earned via the evaluation ladder — nothing here can mint
+# one. No admin/mutation routes are added for EPL in this phase.
+
+@app.get("/api/epl/scoreboard")
+def epl_scoreboard(date: str | None = Query(None, pattern=r"^\d{8}$")):
+    from src import epl
+    return {"fixtures": epl.scoreboard(date),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/epl/schedule")
+def epl_schedule(days: int = Query(7, ge=1, le=14)):
+    from src import epl
+    return {"fixtures": epl.schedule(days),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/epl/standings")
+def epl_standings():
+    """Single league table. EXPLICITLY EMPTY preseason: ESPN serves 20
+    all-zero rows ranked alphabetically before a ball is kicked, and
+    rendering that would fabricate an order (research_archive/epl/).
+    `tables` is [] until at least one club has played."""
+    from src import epl
+    return {"tables": epl.standings(),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/epl/markets")
+def epl_markets():
+    """Open EPL game books. Empty until Kalshi lists 2026-27 events —
+    see /api/epl/markets/discovery for the live probe. No futures
+    section: no EPL winner-futures series was found under any probed
+    name (research_archive/epl/), and none is invented."""
+    from src import epl
+    return {"games": epl.game_books(),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/epl/markets/discovery")
+def epl_markets_discovery():
+    """The Kalshi discovery probe: does the CONFIGURED series exist,
+    does it serve open 26/27 events yet, and how many upcoming fixtures
+    remain unmapped. The honest market-readiness answer, cached 300s."""
+    from src.epl import _cached as _epl_cached
+    try:
+        from src.live import epl_plane
+        return _epl_cached("discovery", 300,
+                           epl_plane.discovery_status) or {}
+    except Exception as exc:
+        print(f"[epl] discovery status failed: {exc}")
+        raise HTTPException(503, "discovery status unavailable")
+
+
+@app.get("/api/epl/match/{event_id}")
+def epl_match(event_id: str):
+    from src import epl
+    if not event_id.isdigit() or len(event_id) > 12:
+        raise HTTPException(404, "unknown event")
+    out = epl.match_summary(event_id)
+    if out is None:
+        raise HTTPException(502, "summary unavailable")
+    book = None
+    books = []
+    try:
+        books = epl.find_all_books(
+            out.get("date"),
+            (out.get("home") or {}).get("name") or "",
+            (out.get("away") or {}).get("name") or "")
+        book = next((f for f in books if f.get("key") == "winner"), None)
+    except Exception as exc:            # the hub must not die on the book
+        print(f"[epl] book match failed for {event_id}: {exc}")
+    model = None
+    try:                                # nor on the live plane
+        from src.live import epl_plane
+        model = epl_plane.model_for_event(event_id)
+    except Exception as exc:
+        print(f"[epl] model section failed for {event_id}: {exc}")
+    lineup = None
+    try:                # nor on the lineup view (display context only)
+        from src.live import lineup_view
+        raw = epl.raw_summary(event_id)
+        if raw:
+            lineup = lineup_view.build(raw)
+    except Exception as exc:
+        print(f"[epl] lineup section failed for {event_id}: {exc}")
+    return {"match": out, "book": book, "books": books, "model": model,
+            "lineups": lineup, "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/epl/odds")
+def epl_odds():
+    """The EPL shadow odds board. EMPTY while epl-2026-v0 is dark (no
+    approval decision exists; runs are structurally refused) — the
+    response says so explicitly rather than serving a zero that could
+    read as a forecast."""
+    odds = []
+    try:
+        from src.live import epl_plane
+        odds = epl_plane.latest_odds()
+    except Exception as exc:
+        print(f"[epl] odds board failed: {exc}")
+    return {"odds": odds, "shadow": True,
+            "model_dark": len(odds) == 0,
+            "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/epl/approval")
+def epl_approval():
+    """The epl-2026-v0 approval state: DARK. Load-only (V9.5 H6 —
+    nothing on a request path may create or activate an approval)."""
+    try:
+        from src.live import epl_plane
+        return epl_plane.approval_status()
+    except Exception as exc:
+        print(f"[epl] approval failed: {exc}")
+        raise HTTPException(503, "approval unavailable")
+# === end EPL block =========================================================
+
+
 @app.get("/api/ready")
 def ready():
     """Readiness, distinct from liveness (V7 evaluation F7): reports

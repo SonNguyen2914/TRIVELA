@@ -26,11 +26,11 @@ Kalshi ground truth (research_archive/epl/, 2026-07-28):
 """
 from __future__ import annotations
 
-import os
 import time
 
 import requests
 
+import config
 # league-neutral parsers, imported NOT copied (see module docstring)
 from src.mls import (parse_event, parse_game_books, parse_summary,
                      parse_team_colors, _ranked, _standing_row)
@@ -43,7 +43,7 @@ KALSHI_BASE = "https://api.elections.kalshi.com/trade-api/v2"
 # Config, not fact: the series exists (research_archive/epl/) but the
 # 2026-27 listings do not yet, so the ticker stays overridable and the
 # discovery probe (src/live/epl_plane.py) reports its live status.
-KALSHI_EPL_GAME = os.getenv("EPL_KALSHI_GAME_SERIES", "KXEPLGAME").strip()
+KALSHI_EPL_GAME = config.EPL_KALSHI_GAME_SERIES
 
 # this module keeps its OWN cache — sharing src.mls's dict would collide
 # on identical keys ("standings", "sb:<date>", ...)

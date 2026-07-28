@@ -117,6 +117,19 @@ def migrate_and_seed() -> None:
                     model_version="mls-2026-v0"))
                 s.commit()
                 print("[live] seeded competition mls-2026")
+            # --- EPL seed (additive block, 2026-07-28) ----------------
+            if s.get(Competition, "epl-2026") is None:
+                s.add(Competition(
+                    slug="epl-2026", name="Premier League",
+                    provider_league_id=39,      # API-Football's EPL id
+                    season=2026, timezone="UTC",
+                    match_duration_minutes=90, supports_draw=True,
+                    regular_time_only=True, has_group_stage=False,
+                    has_knockout_stage=False,   # pure league, no playoffs
+                    model_version="epl-2026-v0"))
+                s.commit()
+                print("[live] seeded competition epl-2026")
+            # --- end EPL seed -----------------------------------------
         finally:
             s.close()
     except Exception as exc:

@@ -2102,7 +2102,7 @@ class TestPredictionRuns:
         sent = []
         snap = self._fake_snapshot(live_session, up.id)
         monkeypatch.setattr(markets, "capture_lock_snapshot",
-                            lambda fixture_id: snap)
+                            lambda fixture_id, **kw: snap)
         import src.alerts as alerts
         monkeypatch.setattr(alerts, "send_alert",
                             lambda msg, **kw: sent.append(msg))
@@ -2142,7 +2142,7 @@ class TestPredictionRuns:
         up.current_kickoff_utc = datetime.now(UTC) + timedelta(minutes=9)
         live_session.commit()
         monkeypatch.setattr(markets, "capture_lock_snapshot",
-                            lambda fixture_id: None)
+                            lambda fixture_id, **kw: None)
         assert runs.t10_locks()["locked"] == 0
         assert (live_session.query(PredictionRun)
                 .filter_by(run_type="t10").count() == 0)
@@ -2170,7 +2170,7 @@ class TestPredictionRuns:
         live_session.commit()
         snap = self._fake_snapshot(live_session, up.id)
         monkeypatch.setattr(markets, "capture_lock_snapshot",
-                            lambda fixture_id: snap)
+                            lambda fixture_id, **kw: snap)
         import src.alerts as alerts
         monkeypatch.setattr(alerts, "send_alert", lambda *a, **kw: None)
         assert runs.t10_locks()["locked"] == 1
@@ -2195,7 +2195,7 @@ class TestPredictionRuns:
         row.required_families_complete = True
         live_session.commit()
         monkeypatch.setattr(markets, "capture_lock_snapshot",
-                            lambda fixture_id: snap)
+                            lambda fixture_id, **kw: snap)
         # hermetic: never touch live ESPN (the real capture_lineup makes a
         # network call; DNS-less CI otherwise produced a lineup-less lock)
         import src.live.lineups as lineups_mod
@@ -2259,7 +2259,7 @@ class TestPredictionRuns:
         row.required_families_complete = True
         live_session.commit()
         monkeypatch.setattr(markets, "capture_lock_snapshot",
-                            lambda fixture_id: snap)
+                            lambda fixture_id, **kw: snap)
         import src.live.lineups as lineups_mod
         monkeypatch.setattr(lineups_mod, "capture_lineup",
                             lambda fixture_id, **kw: {"snapshot_id": 77,
@@ -2294,7 +2294,7 @@ class TestPredictionRuns:
         row.required_families_complete = True
         live_session.commit()
         monkeypatch.setattr(markets, "capture_lock_snapshot",
-                            lambda fixture_id: snap)
+                            lambda fixture_id, **kw: snap)
         import src.live.lineups as lineups_mod
         monkeypatch.setattr(lineups_mod, "capture_lineup",
                             lambda fixture_id, **kw: {"snapshot_id": 77,
@@ -3163,7 +3163,7 @@ class TestV93ExecutionFidelity:
         live_session.commit()
         snap = self._fake_snapshot(live_session, up.id)
         monkeypatch.setattr(markets, "capture_lock_snapshot",
-                            lambda fixture_id: snap)
+                            lambda fixture_id, **kw: snap)
         import src.alerts as alerts
         monkeypatch.setattr(alerts, "send_alert", lambda *a, **kw: None)
         import src.live.lineups as lineups_mod
@@ -3312,7 +3312,7 @@ class TestV93ExecutionFidelity:
         live_session.commit()
         snap = self._fake_snapshot(live_session, up.id, link_market=False)
         monkeypatch.setattr(markets, "capture_lock_snapshot",
-                            lambda fixture_id: snap)
+                            lambda fixture_id, **kw: snap)
         import src.alerts as alerts
         monkeypatch.setattr(alerts, "send_alert", lambda *a, **kw: None)
         import src.live.lineups as lineups_mod

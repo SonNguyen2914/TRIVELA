@@ -239,3 +239,40 @@ class TestSummaryReuse:
         assert (g["team_score"], g["opponent_score"]) == (0, 2)
         assert g["result"] == "L"
         assert epl.scoreline_disagreements(d) == []
+
+
+# --- API surface -----------------------------------------------------------
+
+class TestEplRoutes:
+    def test_routes_registered_and_read_only(self):
+        from api.main import app
+        paths = {r.path for r in app.routes}
+        for p in ("/api/epl/scoreboard", "/api/epl/schedule",
+                  "/api/epl/standings", "/api/epl/markets",
+                  "/api/epl/markets/discovery", "/api/epl/odds",
+                  "/api/epl/approval", "/api/epl/match/{event_id}"):
+            assert p in paths
+        for r in app.routes:
+            if str(getattr(r, "path", "")).startswith("/api/epl"):
+                # READ-ONLY surface: no EPL mutation exists in this phase
+                assert set(r.methods) == {"GET"}
+
+    def test_odds_board_reports_dark_empty(self, monkeypatch):
+        """With the live plane dormant the board must be an explicit
+        empty carrying the shadow + dark flags — never a zero-forecast."""
+        from fastapi.testclient import TestClient
+        from api.main import app
+        with TestClient(app) as c:
+            d = c.get("/api/epl/odds").json()
+        assert d["odds"] == []
+        assert d["shadow"] is True and d["model_dark"] is True
+        assert d["real_money_signals"] is False
+
+    def test_approval_route_reports_dark(self):
+        from fastapi.testclient import TestClient
+        from api.main import app
+        with TestClient(app) as c:
+            d = c.get("/api/epl/approval").json()
+        assert d["mode"] == "dark"
+        assert d["approved_for_shadow"] is False
+        assert d["approval_decision_missing"] is True

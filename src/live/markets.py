@@ -41,6 +41,41 @@ FAMILY_SERIES = (
 )
 
 
+# --- competition spec (EPL build, 2026-07-28) ------------------------------
+# The discovery/mapping/capture/lock machinery below is competition-
+# KEYED, not duplicated: every public function takes an optional spec and
+# defaults to MLS, so existing MLS call sites and behaviour are
+# unchanged. A spec names the competition slug, its Kalshi families, the
+# ticker grammar, and the per-family model-key parser.
+class CompetitionMarketSpec:
+    def __init__(self, slug: str, game_series: str,
+                 family_series: tuple[str, ...], ticker_prefix: str,
+                 first_half_prefix: str, model_key_fn,
+                 lock_policy_version: str):
+        self.slug = slug
+        self.game_series = game_series
+        self.family_series = family_series
+        # regex prefix matching EVERY family ticker of this competition
+        # (e.g. "KXMLS" matches KXMLSGAME-... and KXMLS1HTOTAL-...)
+        self.ticker_prefix = ticker_prefix
+        self.first_half_prefix = first_half_prefix
+        self.model_key_fn = model_key_fn        # (series, ticker, codes)
+        self.lock_policy_version = lock_policy_version
+
+
+def _mls_spec() -> CompetitionMarketSpec:
+    from src.mls import model_key_for as _mls_keys
+    return CompetitionMarketSpec(
+        slug="mls-2026", game_series=SERIES, family_series=FAMILY_SERIES,
+        ticker_prefix="KXMLS", first_half_prefix="KXMLS1H",
+        model_key_fn=_mls_keys,
+        lock_policy_version=LOCK_POLICY_VERSION)
+
+
+# constructed after LOCK_POLICY_VERSION is defined below
+MLS_SPEC: CompetitionMarketSpec
+
+
 def _now():
     return datetime.now(timezone.utc)
 
@@ -62,9 +97,10 @@ def _ticker_date(event_ticker: str) -> str | None:
     return m.group(1) if m else None
 
 
-def _ticker_date_any(event_ticker: str) -> str | None:
+def _ticker_date_any(event_ticker: str,
+                     ticker_prefix: str = "KXMLS") -> str | None:
     """Date segment for ANY family's event ticker."""
-    m = re.match(r"^KXMLS[A-Z0-9]*-(\d{2}[A-Z]{3}\d{2})",
+    m = re.match(rf"^{ticker_prefix}[A-Z0-9]*-(\d{{2}}[A-Z]{{3}}\d{{2}})",
                  event_ticker or "")
     return m.group(1) if m else None
 
@@ -167,6 +203,8 @@ QUOTE_FRESHNESS_NOTE = (
     "market definition and ran ~30h stale on active, two-sided markets), "
     "so execution freshness is measured on our capture clock and labelled "
     "'capture_time'. Provider timestamps are retained per quote for audit.")
+
+MLS_SPEC = _mls_spec()
 
 
 def _fp_int(m: dict, field: str) -> int | None:
@@ -296,20 +334,24 @@ def _fixture_et_date(dt) -> str:
     return et.strftime("%y%b%d").upper()
 
 
-def _try_map(s, row: MarketEvent, tdate: str | None) -> bool:
+def _try_map(s, row: MarketEvent, tdate: str | None,
+             spec: CompetitionMarketSpec | None = None) -> bool:
     """Attach an event to its fixture via the approved-alias rule.
     Retried on later sweeps: an event can arrive before its fixture, or
     before an alias fix lands."""
+    spec = spec or MLS_SPEC
     title = row.title or ""
     if " vs " not in title or not tdate:
         return False
     k_home, k_away = title.split(" vs ", 1)
-    home = identity.resolve("kalshi", k_home.strip())
-    away = identity.resolve("kalshi", k_away.strip())
+    home = identity.resolve("kalshi", k_home.strip(),
+                            competition_slug=spec.slug)
+    away = identity.resolve("kalshi", k_away.strip(),
+                            competition_slug=spec.slug)
     if not (home and away):
         return False
     for f in (s.query(Fixture)
-              .filter_by(competition_slug="mls-2026",
+              .filter_by(competition_slug=spec.slug,
                          home_team_id=home.id,
                          away_team_id=away.id).all()):
         if (f.current_kickoff_utc and _fixture_et_date(
@@ -323,7 +365,8 @@ def _try_map(s, row: MarketEvent, tdate: str | None) -> bool:
     return False
 
 
-def _ensure_contracts(s, row: MarketEvent, meta: dict | None = None) -> None:
+def _ensure_contracts(s, row: MarketEvent, meta: dict | None = None,
+                      spec: CompetitionMarketSpec | None = None) -> None:
     """Create contract rows for an event, and REPAIR existing rows whose
     outcome_key is still NULL — an event discovered before its fixture
     existed got label-only contracts, and they must heal once the
@@ -331,9 +374,10 @@ def _ensure_contracts(s, row: MarketEvent, meta: dict | None = None) -> None:
 
     outcome keys: the GAME family resolves its side labels through the
     APPROVED alias table; every other family's key is parsed from the
-    machine-readable ticker tail (src.mls.model_key_for) — no label
+    machine-readable ticker tail (spec.model_key_fn) — no label
     guessing anywhere. Throttled; failures retry next sweep."""
-    from src.mls import model_key_for
+    spec = spec or MLS_SPEC
+    model_key_for = spec.model_key_fn
     # cursor-complete: a single limited page silently dropped contracts
     # from the registry, understating a lock snapshot's expected count
     # against an already-truncated universe (V9 eval F6). V9.5 eval C2:
@@ -351,11 +395,12 @@ def _ensure_contracts(s, row: MarketEvent, meta: dict | None = None) -> None:
     for m in markets_list:
         label = (m.get("yes_sub_title") or m.get("title") or "").strip()
         okey = None
-        if row.series == SERIES:
+        if row.series == spec.game_series:
             if label.lower() == "tie":
                 okey = "draw"
             else:
-                t = identity.resolve("kalshi", label)
+                t = identity.resolve("kalshi", label,
+                                     competition_slug=spec.slug)
                 if t and fx:
                     if t.id == fx.home_team_id:
                         okey = "home_win"
@@ -379,13 +424,14 @@ def _ticker_suffix(event_ticker: str) -> str | None:
             if "-" in (event_ticker or "") else None)
 
 
-def discover_and_map() -> dict:
+def discover_and_map(spec: CompetitionMarketSpec | None = None) -> dict:
     """Sweep EVERY per-match family. GAME events attach to fixtures via
     the approved-alias rule; all other families share the game event's
     ticker suffix ({date}{HOME}{AWAY}), so they inherit its fixture by
     exact suffix join — no name resolution at all. Contract rows exist
     (and heal) for every current or future event; historical events are
     recorded without contract fetches (rate budget goes to the slate)."""
+    spec = spec or MLS_SPEC
     if not plane_ready():
         return {"skipped": "dormant"}
     s = get_session()
@@ -394,10 +440,10 @@ def discover_and_map() -> dict:
     # V9.5 eval C2: one recorded outcome per REQUIRED family. Completeness
     # is the AND of these, never pagination alone.
     family_outcomes: dict[str, str] = {sr: "NOT_ATTEMPTED"
-                                       for sr in FAMILY_SERIES}
+                                       for sr in spec.family_series}
     horizon_floor = (_now() - timedelta(days=1)).date()
     try:
-        for series in FAMILY_SERIES:
+        for series in spec.family_series:
             try:
                 # cursor-complete event discovery: a single 100-row page
                 # truncated the registry once a series had >100 open
@@ -434,28 +480,30 @@ def discover_and_map() -> dict:
                 ticker = ev.get("event_ticker")
                 if not ticker:
                     continue
-                tdate = _ticker_date_any(ticker)
+                tdate = _ticker_date_any(ticker, spec.ticker_prefix)
                 row = s.query(MarketEvent).filter_by(
                     kalshi_event_ticker=ticker).first()
                 if row is None:
-                    row = MarketEvent(competition_slug="mls-2026",
+                    row = MarketEvent(competition_slug=spec.slug,
                                       kalshi_event_ticker=ticker,
                                       series=series,
                                       title=ev.get("title") or "",
                                       settlement_scope=(
                                           "first_half"
-                                          if series.startswith("KXMLS1H")
+                                          if series.startswith(
+                                              spec.first_half_prefix)
                                           else "regular_time"),
                                       mapping_approved=False)
                     s.add(row)
                 if not row.mapping_approved:
                     ok = False
-                    if series == SERIES:
-                        ok = _try_map(s, row, tdate)
+                    if series == spec.game_series:
+                        ok = _try_map(s, row, tdate, spec=spec)
                     else:
                         suffix = _ticker_suffix(ticker)
                         game = s.query(MarketEvent).filter_by(
-                            kalshi_event_ticker=f"{SERIES}-{suffix}"
+                            kalshi_event_ticker=(
+                                f"{spec.game_series}-{suffix}")
                         ).first() if suffix else None
                         if game is not None and game.fixture_id:
                             row.fixture_id = game.fixture_id
@@ -475,7 +523,7 @@ def discover_and_map() -> dict:
                 if day and day >= horizon_floor and needs:
                     try:
                         cmeta: dict = {}
-                        _ensure_contracts(s, row, meta=cmeta)
+                        _ensure_contracts(s, row, meta=cmeta, spec=spec)
                         contracts_filled += 1
                         # V9.5 eval C2: contract enumeration has its own
                         # cursor. A capped page understates the expected
@@ -500,7 +548,7 @@ def discover_and_map() -> dict:
                       if o != "SUCCESS"}
         complete = not incomplete
         s.add(RegistryDiscovery(
-            competition_slug="mls-2026", provider="kalshi",
+            competition_slug=spec.slug, provider="kalshi",
             complete=complete,
             truncated_series_json=json.dumps(truncated_series),
             family_outcomes_json=json.dumps(family_outcomes, sort_keys=True),
@@ -524,9 +572,10 @@ def discover_and_map() -> dict:
 
 
 def _mapped_events_for(s, fixture_id: int | None,
-                       horizon_hours: float) -> list:
+                       horizon_hours: float,
+                       slug: str = "mls-2026") -> list:
     q = (s.query(MarketEvent)
-         .filter_by(competition_slug="mls-2026", mapping_approved=True)
+         .filter_by(competition_slug=slug, mapping_approved=True)
          .filter(MarketEvent.fixture_id.isnot(None)))
     events = []
     for me in q.all():
@@ -628,16 +677,19 @@ def _book_observation(s, ticker: str, payload: dict | None):
 
 
 def capture_quotes(fixture_id: int | None = None,
-                   horizon_hours: float = 48.0) -> dict:
+                   horizon_hours: float = 48.0,
+                   spec: CompetitionMarketSpec | None = None) -> dict:
     """Routine observation stream: quotes + depth for mapped events in
     the horizon. NOT the lock path — lock evidence goes through
     capture_lock_snapshot, which validates completeness."""
+    spec = spec or MLS_SPEC
     if not plane_ready():
         return {"skipped": "dormant"}
     s = get_session()
     quotes = 0
     try:
-        events = _mapped_events_for(s, fixture_id, horizon_hours)
+        events = _mapped_events_for(s, fixture_id, horizon_hours,
+                                    slug=spec.slug)
         markets_by_event, books, _ = _fetch_event_books(events)
         for me in events:
             ms = markets_by_event.get(me.kalshi_event_ticker)
@@ -679,7 +731,9 @@ def capture_quotes(fixture_id: int | None = None,
         s.close()
 
 
-def capture_lock_snapshot(fixture_id: int) -> dict | None:
+def capture_lock_snapshot(fixture_id: int,
+                          spec: CompetitionMarketSpec | None = None
+                          ) -> dict | None:
     """The lock-grade capture (V8 evaluation F1): fetch EVERYTHING
     externally first, then one transaction writing observations, a
     MarketSnapshot header, and linked quotes; the snapshot completes
@@ -687,11 +741,12 @@ def capture_lock_snapshot(fixture_id: int) -> dict | None:
     quotes are present. Returns {'snapshot_id', 'quote_by_ticker'} on
     success; on ANY shortfall records a failed snapshot and returns
     None — the caller must then NOT create a canonical lock."""
+    spec = spec or MLS_SPEC
     if not plane_ready():
         return None
     s = get_session()
     try:
-        events = _mapped_events_for(s, fixture_id, 0)
+        events = _mapped_events_for(s, fixture_id, 0, slug=spec.slug)
         if not events:
             print(f"[markets] lock snapshot: no mapped events "
                   f"for fixture {fixture_id}")
@@ -702,7 +757,7 @@ def capture_lock_snapshot(fixture_id: int) -> dict | None:
         markets_by_event, books, failed = _fetch_event_books(events)
         snap = MarketSnapshot(
             fixture_id=fixture_id, captured_at=_now(), status="writing",
-            policy_version=LOCK_POLICY_VERSION,
+            policy_version=spec.lock_policy_version,
             provider_schema_version=PROVIDER_SCHEMA_VERSION,
             events_expected=len(events),
             events_captured=len(events) - len(failed),
@@ -744,7 +799,7 @@ def capture_lock_snapshot(fixture_id: int) -> dict | None:
                     age = int((now - quote.provider_timestamp)
                               .total_seconds())
                     oldest_age = max(oldest_age, age)
-                if me.series == SERIES:
+                if me.series == spec.game_series:
                     if quote.yes_ask_c is not None:
                         game_quotes += 1
                         # freshness is measured on the REQUIRED game quotes
