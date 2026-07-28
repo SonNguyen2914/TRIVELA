@@ -2653,6 +2653,28 @@ class TestMlsStatsIngestion:
         assert identity.resolve_mls_club("CLB").abbrev == "CLB"
         assert identity.resolve_mls_club("ZZZ") is None
 
+    def test_reserve_team_name_never_attaches_to_the_parent_club(
+            self, live_session):
+        """A name that CONTAINS a seeded club must not attach to it.
+
+        MLS first teams have MLS NEXT Pro reserve sides whose names are
+        supersets of the parent ('Columbus Crew 2', 'Austin FC II'). The
+        old containment fallback resolved those to the FIRST team, which
+        does not fail — it folds reserve stats into first-team xG ratings
+        and every lock downstream.
+
+        TeamAlias states the rule this enforces: fuzzy matching may only
+        PROPOSE; attachment requires a stable id or an approved alias.
+        """
+        self._seed(live_session)
+        # unknown code + reserve-side name: must refuse, not guess
+        assert identity.resolve_mls_club("XXX", "Columbus Crew 2") is None
+        # and the reverse containment direction
+        assert identity.resolve_mls_club("XXX", "Crew") is None
+        # a stable code still attaches
+        assert identity.resolve_mls_club("CLB", "Columbus Crew 2") \
+            .abbrev == "CLB"
+
     def test_ingest_attaches_team_stats_with_orientation(
             self, live_session, monkeypatch):
         clb, nyc, fx, ko = self._seed(live_session)
