@@ -668,6 +668,11 @@ def journal_summary(fixture_id: int | None = None) -> dict:
                      "these bets are human-selected. Never sums with the "
                      "paper ledger."),
         }
+        # journal-P1 F7: the marker NEVER silently disappears. Below the
+        # minimum it explains the floor; at or above it, it states that
+        # aggregation is deliberately not implemented — crossing n=20
+        # must not quietly convert a floor into an implied green light
+        # for whatever summary a reader wants to compute.
         if len(settled) < MIN_EXECUTIONS_FOR_AGGREGATE:
             out["aggregate_withheld"] = {
                 "reason": "below_minimum_observations",
@@ -676,6 +681,18 @@ def journal_summary(fixture_id: int | None = None) -> dict:
                 "note": ("rows are listed; no mean, rate or ROI is "
                          "reported. A summary over this many "
                          "observations would be a narrative."),
+            }
+        else:
+            out["aggregate_withheld"] = {
+                "reason": ("aggregation deliberately not implemented — "
+                           "pre-specified metrics not yet defined"),
+                "settled_executions": len(settled),
+                "minimum": MIN_EXECUTIONS_FOR_AGGREGATE,
+                "note": ("the observation floor is met, but no metric "
+                         "was pre-specified before the data arrived. "
+                         "Defining one now, after seeing the rows, "
+                         "would be exactly the post-hoc selection this "
+                         "journal exists to avoid."),
             }
         return out
     finally:

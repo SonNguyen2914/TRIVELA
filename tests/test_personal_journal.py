@@ -1015,6 +1015,44 @@ class TestReportingFloor:
                   "mean_fee_delta"):
             assert k not in out
 
+    def test_the_marker_survives_reaching_the_minimum(self,
+                                                      live_session):
+        """journal-P1 F7, at exactly n=20: crossing the floor must not
+        silently drop the marker. Aggregation is DELIBERATELY not
+        implemented — pre-specified metrics do not exist yet — and the
+        summary says so explicitly rather than implying a green light."""
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        now = datetime.now(UTC)
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  stated_price="0.45",
+                                  market_quote_id=1)
+        journal.resolve_view(bet["id"], "taken")
+        for i in range(journal.MIN_EXECUTIONS_FOR_AGGREGATE):
+            live_session.add(PBE(
+                personal_bet_id=bet["id"], account_label="friend-A",
+                consent_recorded_at=now, status="filled",
+                fill_price_dollars="0.45", filled_contracts="10",
+                fee_paid_dollars="0.10", filled_at=now,
+                settlement_credit_dollars="10", settled_at=now,
+                exchange_order_id=f"ORD-N{i}"))
+        live_session.commit()
+        out = journal.journal_summary()
+        assert out["executions"]["settled"] == \
+            journal.MIN_EXECUTIONS_FOR_AGGREGATE
+        marker = out["aggregate_withheld"]        # never disappears
+        assert marker["reason"] == (
+            "aggregation deliberately not implemented — "
+            "pre-specified metrics not yet defined")
+        assert marker["settled_executions"] == \
+            journal.MIN_EXECUTIONS_FOR_AGGREGATE
+        # and still no synthetic statistic anywhere
+        for k in ("mean_slippage", "roi_pct", "hit_rate",
+                  "mean_fee_delta"):
+            assert k not in out
+
 
 class TestBroadcast:
     def test_a_broadcast_is_persisted_even_if_dispatch_fails(
