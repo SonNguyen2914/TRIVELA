@@ -129,9 +129,11 @@ API_HOST unset · API_PORT 8000 · no PORT variable
 > controlled test — the same commit with no healthcheck deploys and
 > serves `200`; re-adding *only* the path fails from attempt #1 while
 > the previous container keeps serving `200` on the same route. Cause
-> unknown and **not being pursued** — treat it as permanent, not pending.
-> **A set path blocks every deploy**, so it costs the ability to ship a
-> fix and buys nothing.
+> unknown. Filed with Railway support 2026-07-28 (Hobby plan, so it is a
+> public Central Station thread, not a private ticket) — treat the path
+> as unusable until they answer, and do not assume an answer is coming
+> soon. **A set path blocks every deploy**, so it costs the ability to
+> ship a fix and buys nothing.
 >
 > Accept the consequence knowingly: with no healthcheck, Railway marks a
 > deploy successful as soon as the container starts, **whether or not it
