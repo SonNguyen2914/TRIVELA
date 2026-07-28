@@ -276,13 +276,32 @@ shared backend checkout. It adds `/api/mls/journal` and
 `/api/mls/briefing/{id}` — both **404 in production**, i.e. built but not
 live.
 
-**The Saturday slate — 2026-08-01.** Verified against production
-2026-07-28: 17 fixtures in the next 14 days. First league match is
-**Jul 31 23:30Z** (NYCFC v Toronto), then **8 fixtures Aug 1 23:30Z**,
-then 3+ on Aug 2 00:30Z. The Jul 30 00:00Z MLS All-Stars v Liga MX
-All-Stars is an **exhibition, not a league fixture**, and
-`src/live/runs.py` has explicit handling so it does not raise a false
-readiness blocker.
+**The Saturday slate — 2026-08-01.** Counted from
+`/api/mls/schedule?days=14` on 2026-07-28, grouped by kickoff:
+
+```text
+2026-07-30T00:00Z   1   MLS All-Stars v Liga MX All-Stars — EXHIBITION
+2026-07-31T23:30Z   1   NYCFC v Toronto — first league match
+2026-08-01T23:30Z   7  ┐
+2026-08-02T00:30Z   4  │  ONE Saturday evening in the Americas
+2026-08-02T01:30Z   1  │  14 fixtures across FOUR kickoff slots
+2026-08-02T02:30Z   2  ┘
+2026-08-08T20:30Z   1
+```
+
+**Do not size this slate off any single number.** It is **14 fixtures**,
+not the 7 in the largest slot — an earlier draft of this file said 8,
+from eyeballing a truncated list instead of counting.
+
+**The UTC date change is not a new matchday.** Three of the four slots
+fall on 2026-08-02 UTC while being the same Saturday evening locally
+(23:30Z is 19:30 ET). Anything that groups fixtures by UTC date will
+split one matchday in two and under-count the slate. Group by local
+kickoff window, or by the whole 23:30Z–02:30Z span.
+
+The Jul 30 00:00Z All-Star game is an **exhibition, not a league
+fixture**; `src/live/runs.py` has explicit handling so it does not raise
+a false readiness blocker.
 
 Before the slate, all of this must be true — check `/api/ready`:
 
