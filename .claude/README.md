@@ -33,11 +33,14 @@ holes without reintroducing friction anywhere else. The allow list is
 untouched.
 
 ```text
-Bash(git push --force:*)      Bash(git push -f:*)
-Bash(rm:*research_archive*)   Bash(rm:*docs/V*)
+permissions.deny:  Bash(git push --force *)   Bash(git push -f *)
+PreToolUse hook:   remove / move / forced-clean / truncating-redirect,
+                   targeting research_archive/ or docs/V*
 ```
 
-These four protect things that **cannot be reconstructed**:
+The path-targeting guards are a **hook, not a deny rule** — see the
+syntax lesson below. These protect things that **cannot be
+reconstructed**:
 
 - **Force-push** can rewrite or destroy the evidence commits — the
   prospective record this project exists to build. A normal push cannot.
@@ -73,8 +76,8 @@ timing problem, not a mechanism problem.
 | rm → `research_archive/` | PreToolUse hook | YES (25/25) | **YES — 2026-07-28** |
 | rm → `docs/V*` | PreToolUse hook | YES (25/25) | **YES — 2026-07-28** |
 | mv → protected path | PreToolUse hook | YES | **YES — 2026-07-28** |
-| `git clean -f…` | PreToolUse hook | YES | not probed live |
-| truncating `>` → protected | PreToolUse hook | YES | not probed live |
+| `git clean -f…` | PreToolUse hook | YES | **YES — 2026-07-28** |
+| truncating `>` → protected | PreToolUse hook | YES | **YES — 2026-07-28** |
 
 Verbatim, from the fresh session:
 
@@ -133,7 +136,7 @@ with a `PreToolUse` hook on the `Bash` matcher — the only mechanism that
 can inspect a command string. Generally: **path-containment guards need
 a hook, not a permission rule.**
 
-### The hook: logic proven, firing not
+### The hook: what it covers
 
 `scripts/deny-archive-rm.sh` was pipe-tested against 25 synthesised
 payloads before wiring, and got all 25 right. It covers four destruction
@@ -173,29 +176,53 @@ The real protection against a determined session is that the archive is
 **committed and pushed**. This hook stops the fat-finger and the
 plausible-looking cleanup command, which is what actually happens.
 
-### Re-probing later — how to do it properly
+### Three things the proof run falsified or exposed
 
-`/hooks` is unavailable over Remote Control, and a long-running session
-cannot reload its own settings. The way to test is a **fresh session**:
+**A long-running session CAN pick up new settings — accepting the trust
+dialog reloads them in place.** This file previously stated it never
+could, generalising from four rounds of probes failing in the session
+that authored the rules. That held only while the workspace was
+untrusted; the moment trust was accepted, the same probes fired in that
+same session. A real observation, over-generalised into a rule — which
+is the exact error this document exists to warn about.
+
+**The hook matches the command STRING, so it can block itself.** Running
+a probe via `claude -p '… <forced clean> …'` was denied because the
+*outer* command contained the trigger text, not because anything ran.
+Worse: editing this very file with a shell heredoc was denied, because
+the prose describing the guard trips the guard. To script a probe, stage
+the prompt in a file and pass `"$(cat file)"`; to edit docs that mention
+the patterns, use the Write/Edit tool rather than a shell redirect.
+Narrowness has a price and this is it.
+
+**The hook is on the `Bash` matcher only — `Write` is NOT covered.**
+Nothing stops an agent overwriting `research_archive/x.json` with the
+Write tool; that is how this section got written. A real hole, left open
+deliberately rather than papered over — closing it needs a second
+matcher and its own proof run. **Do not read this hook as "the archive
+cannot be overwritten."** It means "the archive cannot be destroyed by a
+bash mistake."
+
+### Re-probing later
+
+`/hooks` is unavailable over Remote Control. Either accept the trust
+dialog (which reloads settings in place), or use a fresh session:
 
 ```bash
 cd ~/dev/TRIVELA
-claude -p 'Run exactly this and report verbatim whether it was blocked or reached the tool: rm ~/dev/TRIVELA/backend/research_archive/__probe_does_not_exist__'
+claude -p "$(cat /path/to/prompt.txt)"
 ```
 
-Every target is a path or ref that does not exist, so nothing can be
-destroyed either way. **Read the block message, not just the block** —
-several layers can refuse the same command and only one of them is ours:
+Every probe target must be incapable of destroying anything — a
+nonexistent path, or a pathspec matching no file. **Read the block
+message, not just the block**, because several layers refuse the same
+command and only one is ours:
 
 ```text
 "Denied by deny-archive-rm hook: …"     <- this file's hook
 "Permission to use Bash … denied."      <- permissions.deny
 "rm in '…' was blocked. For security…"  <- Claude Code's built-in rm guard
 ```
-
-Not yet observed live: `git clean -f…` and the truncating `>` redirect.
-Both pass their pipe-tests; neither has been seen to fire. Probe them the
-same way and update the table.
 
 ### Why this section exists at all
 
