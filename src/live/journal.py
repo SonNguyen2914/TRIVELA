@@ -616,7 +616,8 @@ def _execution_dict(s, row: PersonalBetExecution) -> dict:
     }
 
 
-def journal_summary(fixture_id: int | None = None) -> dict:
+def journal_summary(fixture_id: int | None = None,
+                    competition_slug: str | None = "mls-2026") -> dict:
     """The journal, with its DENOMINATOR.
 
     A hit rate over taken bets alone is not a statistic — the passes are
@@ -627,12 +628,19 @@ def journal_summary(fixture_id: int | None = None) -> dict:
     summary statistic. Not a zero: absent. Three fills tell you the fee
     model is not OBVIOUSLY broken, which is not the same as telling you
     it is right.
+
+    Scoped to one competition by default (journal-P1 F9): the MLS
+    surface reports the MLS journal, and a second league's entries do
+    not inflate its denominator. Pass None for the cross-competition
+    view (internal use only).
     """
     if not plane_ready():
         return {}
     s = get_session()
     try:
         q = s.query(PersonalBet)
+        if competition_slug is not None:
+            q = q.filter_by(competition_slug=competition_slug)
         if fixture_id is not None:
             q = q.filter_by(fixture_id=fixture_id)
         bets = q.all()

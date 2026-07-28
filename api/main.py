@@ -233,10 +233,12 @@ def mls_journal(fixture_id: int | None = Query(None)):
 
     Below the policy minimum this returns rows and NO summary statistic;
     the keys are absent rather than zero, because a zero reads as a
-    measured result. Public read-only."""
+    measured result. Scoped to the MLS competition (journal-P1 F9).
+    Public read-only."""
     try:
         from src.live import journal
-        return journal.journal_summary(fixture_id)
+        return journal.journal_summary(fixture_id,
+                                       competition_slug="mls-2026")
     except Exception as exc:
         print(f"[mls] journal failed: {exc}")
         raise HTTPException(503, "journal unavailable")

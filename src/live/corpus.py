@@ -40,7 +40,28 @@ from src.live.models import (Competition, CorpusExport, Fixture,
 # registry sweeps, official per-match team/player stats and the exact
 # selected model parameters — so the corpus can regenerate the
 # model-DEVELOPMENT result, not only replay a final run.
-CORPUS_SCHEMA = "corpus-v2"
+#
+# v3 (journal-P0 F2/F9): documents and disciplines the two journal
+# sections that entered under the v2 label without a bump:
+#
+#   personal_journal.json            Son's recorded views (taken AND
+#                                    passed) — evidence class
+#                                    `personal_journal`, execution-
+#                                    fidelity documentation, NEVER edge
+#                                    evidence, never summed with the
+#                                    paper ledger. `rationale` is
+#                                    private prose and never exports.
+#   personal_journal_executions.json The pilot's real executions.
+#                                    Private fields (account label,
+#                                    order id, fill economics, consent
+#                                    provenance, reconciliation note)
+#                                    export ONLY under the row's
+#                                    explicit publication_consent.
+#
+# Both sections are scoped to the corpus's competition, exactly like
+# fixtures/runs/markets — a second league's journal must not leak into
+# an MLS corpus.
+CORPUS_SCHEMA = "corpus-v3"
 _GIT_REV = os.getenv("RAILWAY_GIT_COMMIT_SHA", "")[:40]
 
 
@@ -173,6 +194,11 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
         lineup_ids = {ln.id for ln in lineups}
         lineup_entries = [le for le in s.query(LineupEntry).all()
                           if le.lineup_snapshot_id in lineup_ids]
+        # journal-P1 F9: the journal scopes to THIS competition like
+        # everything else — a second league's entries stay out
+        journal_bets = (s.query(PersonalBet)
+                        .filter_by(competition_slug=comp).all())
+        journal_bet_ids = {b.id for b in journal_bets}
 
         sections = {
             "competitions.json": [_dump(x) for x in
@@ -207,13 +233,15 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             # forecast or market reports. Human-selected bets cannot
             # measure edge; they measure whether execution behaves as
             # modelled. Private fields are withheld unless the row
-            # carries explicit publication_consent (journal-P0 F2).
+            # carries explicit publication_consent (journal-P0 F2), and
+            # both sections are scoped to THIS corpus's competition
+            # (journal-P1 F9) like every other section.
             "personal_journal.json": [
-                _dump_personal_bet(x)
-                for x in s.query(PersonalBet).all()],
+                _dump_personal_bet(x) for x in journal_bets],
             "personal_journal_executions.json": [
                 _dump_personal_execution(x)
-                for x in s.query(PersonalBetExecution).all()],
+                for x in s.query(PersonalBetExecution).all()
+                if x.personal_bet_id in journal_bet_ids],
             # V9.5 eval C1: the frozen paper/risk state each lock was
             # evaluated against, so a reader can verify that a paper
             # decision was a pure function of frozen inputs

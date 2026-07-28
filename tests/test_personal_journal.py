@@ -1054,6 +1054,71 @@ class TestReportingFloor:
             assert k not in out
 
 
+class TestCorpusScoping:
+    """journal-P1 F9: the journal sections scope to the corpus's
+    competition like every other section, and /api/mls/journal reports
+    the MLS journal only."""
+
+    def _seed_two_competitions(self, s):
+        from src.live import journal
+        _seed(s)                                       # mls-2026, fx 1
+        s.add(Competition(slug="epl-2026", name="EPL", season=2026))
+        fx2 = Fixture(id=2, competition_slug="epl-2026",
+                      espn_event_id="e2", status="pre",
+                      current_kickoff_utc=datetime.now(UTC)
+                      + timedelta(hours=3))
+        ev2 = MarketEvent(id=2, competition_slug="epl-2026",
+                          kalshi_event_ticker="KXEPLGAME-z",
+                          series="KXEPLGAME", fixture_id=2,
+                          mapping_approved=True)
+        mc2 = MarketContract(id=2, market_event_id=2,
+                             ticker="KXEPLGAME-z-H",
+                             outcome_key="home_win")
+        q2 = MarketQuote(id=5, market_contract_id=2,
+                         captured_at=datetime.now(UTC)
+                         - timedelta(minutes=1),
+                         yes_ask_c=50, yes_bid_c=48)
+        s.add_all([fx2, ev2, mc2, q2])
+        s.commit()
+        mls_bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                      outcome_key="home_win",
+                                      market_quote_id=1)
+        epl_bet = journal.record_view(2, "KXEPLGAME-z-H",
+                                      outcome_key="home_win",
+                                      market_quote_id=5)
+        journal.resolve_view(mls_bet["id"], "taken")
+        journal.resolve_view(epl_bet["id"], "taken")
+        now = datetime.now(UTC)
+        for b, order in ((mls_bet, "ORD-MLS"), (epl_bet, "ORD-EPL")):
+            journal.record_execution(
+                b["id"], "friend-A", consent_recorded_at=now,
+                fill_price="0.47", filled_contracts="10",
+                fee_paid="0.12", filled_at=now, exchange_order_id=order)
+        return mls_bet, epl_bet
+
+    def test_the_mls_corpus_exports_only_mls_journal_rows(
+            self, live_session):
+        from src.live import corpus
+        mls_bet, epl_bet = self._seed_two_competitions(live_session)
+        bundle = corpus.build_corpus()
+        assert bundle["manifest"]["schema_version"] == "corpus-v3"
+        bets = bundle["sections"]["personal_journal.json"]
+        assert [b["id"] for b in bets] == [mls_bet["id"]]
+        assert all(b["competition_slug"] == "mls-2026" for b in bets)
+        execs = bundle["sections"]["personal_journal_executions.json"]
+        assert [e["personal_bet_id"] for e in execs] == [mls_bet["id"]]
+
+    def test_journal_summary_scopes_to_the_competition(self,
+                                                       live_session):
+        from src.live import journal
+        self._seed_two_competitions(live_session)
+        out = journal.journal_summary(competition_slug="mls-2026")
+        assert out["total_recorded"] == 1
+        assert out["executions"]["total"] == 1
+        everything = journal.journal_summary(competition_slug=None)
+        assert everything["total_recorded"] == 2
+
+
 class TestBroadcast:
     def test_a_broadcast_is_persisted_even_if_dispatch_fails(
             self, live_session, monkeypatch):
