@@ -19,15 +19,19 @@ Three schema teeth for the personal-bet-journal P0 findings:
       consent provenance) export ONLY when this explicit flag is set.
       Server default false: absence of consent is never publication.
 
-Revision ID: f6a7b8c9d0e1
+Revision ID: de771533ac03
 Revises: e5f6a7b8c9d0
 Create Date: 2026-07-28
+
+(Revision id is random, not the repo's historical rotating-hex pattern:
+two agents continuing that pattern from the same head deterministically
+mint the SAME id, which collides at merge.)
 """
 from alembic import op
 import sqlalchemy as sa
 
 
-revision = 'f6a7b8c9d0e1'
+revision = 'de771533ac03'
 down_revision = 'e5f6a7b8c9d0'
 branch_labels = None
 depends_on = None
