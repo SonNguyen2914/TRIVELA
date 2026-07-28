@@ -272,6 +272,27 @@ def mls_boot() -> None:
         print(f"[mls-boot] shadow_runs FAILED: {exc}")
 
 
+def storage_headroom_job() -> None:
+    """Watch the live volume. Railway's own alerts are Teams/Pro-only, so
+    without this nothing warns before the disk fills — and a full volume
+    fails every prediction write SILENTLY behind {"created": 0}, which is
+    exactly what happened on 2026-07-25."""
+    try:
+        from src.live import observability
+        r = observability.check_storage_headroom()
+        if r.get("dormant"):
+            return
+        if r.get("alerted"):
+            print(f"[storage] ALERTED at {r['used_pct']}% of volume")
+        elif r.get("over_threshold"):
+            print(f"[storage] over threshold ({r['used_pct']}%), "
+                  f"alert suppressed: {r.get('suppressed')}")
+        else:
+            print(f"[storage] {r.get('used_pct')}% of volume used")
+    except Exception as exc:
+        print(f"[storage] error: {exc}")
+
+
 def mls_window_job() -> None:
     """Rolling fixture refresh: reschedules, status flips, final scores;
     then settle any paper fills whose fixtures just completed."""
@@ -380,6 +401,8 @@ def start_scheduler() -> BackgroundScheduler:
     # instantly when MLS_SHADOW_ENABLED is off or the live DB is dormant.
     scheduler.add_job(mls_window_job, "interval", minutes=15,
                       id="mls_window", coalesce=True, max_instances=1)
+    scheduler.add_job(storage_headroom_job, "interval", minutes=60,
+                      id="storage_headroom", coalesce=True, max_instances=1)
     scheduler.add_job(mls_markets_job, "interval", minutes=10,
                       id="mls_markets", coalesce=True, max_instances=1)
     scheduler.add_job(mls_runs_job, "interval", minutes=15,

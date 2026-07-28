@@ -254,6 +254,14 @@ def mls_admin_storage(request: Request):
     if eng is None:
         return {"dormant": True}
     out: dict = {}
+    # headroom first: the diagnostic added after the DiskFull incident
+    # reported what was consuming the volume but never how close to full
+    # it was, so it could not answer the only question that mattered
+    try:
+        from src.live import observability
+        out["headroom"] = observability.storage_headroom()
+    except Exception as exc:
+        out["headroom"] = {"error": str(exc)}
     with eng.connect() as c:
         try:
             out["database_bytes"] = c.execute(text(
