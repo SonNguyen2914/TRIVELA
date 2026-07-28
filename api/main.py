@@ -308,6 +308,22 @@ class BroadcastIn(BaseModel):
     fixture_id: int | None = None
 
 
+@app.get("/api/admin/mls/broadcasts")
+def mls_admin_broadcasts(request: Request,
+                         fixture_id: int = Query(...),
+                         limit: int = Query(20, ge=1, le=200)):
+    """Operator-only: what has already been said about a fixture — the
+    full broadcast record including the wire payload and per-transport
+    acceptance (journal-P0-A/P0-C). Broadcast prose is operator
+    content (the ops loop announces fills through it), so it never
+    rides the public briefing; a session picks up its thread HERE."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import journal
+    return {"broadcasts": journal.recent_broadcasts(fixture_id, limit),
+            "generated_at": utcnow().isoformat()}
+
+
 @app.get("/api/admin/mls/journal")
 def mls_admin_journal(request: Request,
                       fixture_id: int | None = Query(None)):

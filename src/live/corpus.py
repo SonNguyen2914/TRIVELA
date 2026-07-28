@@ -23,6 +23,7 @@ import os
 from datetime import datetime, timezone
 
 from src.live import audit as live_audit
+from src.live.journal import public_bet_projection
 from src.live.db import get_session, plane_ready
 from src.live.models import (Competition, CorpusExport, Fixture,
                              LineupEntry, LineupSnapshot, MarketContract,
@@ -116,30 +117,14 @@ def _dump(obj) -> dict:
     return out
 
 
-# journal-P0 F2: the corpus is PUBLIC bytes and an execution row is a
-# third party's financial record. These fields leave the building only
-# under that row's explicit publication_consent (default false); the
-# journal's free-prose rationale never does — no consent field exists
-# for it, so no path out exists either.
-_PRIVATE_EXECUTION_FIELDS = frozenset({
-    "account_label", "consent_recorded_at", "exchange_order_id",
-    "fill_price_dollars", "filled_contracts", "fee_paid_dollars",
-    "best_available_price_dollars", "settlement_credit_dollars",
-    "reconciliation_note"})
-
-
-def _dump_personal_bet(x) -> dict:
-    d = _dump(x)
-    d.pop("rationale", None)
-    return d
-
-
-def _dump_personal_execution(x) -> dict:
-    d = _dump(x)
-    if not x.publication_consent:
-        for k in _PRIVATE_EXECUTION_FIELDS:
-            d.pop(k, None)
-    return d
+# journal-P0 F2 + P0-C: the corpus is PUBLIC bytes. Journal entries
+# export through THE single public projection defined in
+# src.live.journal (one field list for briefing, journal and corpus —
+# never two drifting copies). Executions are a third party's financial
+# record: a row exports ONLY under its explicit publication_consent
+# (default false), and then in full; absent consent even its
+# occurrence/timeline stays out of public bytes — the manifest carries
+# aggregate counts so the omission is explicit, never silent.
 
 
 def _book_observations(s, depth) -> list:
@@ -199,6 +184,8 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
         journal_bets = (s.query(PersonalBet)
                         .filter_by(competition_slug=comp).all())
         journal_bet_ids = {b.id for b in journal_bets}
+        journal_execs = [e for e in s.query(PersonalBetExecution).all()
+                         if e.personal_bet_id in journal_bet_ids]
 
         sections = {
             "competitions.json": [_dump(x) for x in
@@ -232,16 +219,15 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             # everything above and must never be folded into the
             # forecast or market reports. Human-selected bets cannot
             # measure edge; they measure whether execution behaves as
-            # modelled. Private fields are withheld unless the row
-            # carries explicit publication_consent (journal-P0 F2), and
-            # both sections are scoped to THIS corpus's competition
-            # (journal-P1 F9) like every other section.
+            # modelled. Entries go through THE public projection
+            # (journal-P0-C); executions export only under explicit
+            # publication_consent, then in full. Both sections scope to
+            # THIS corpus's competition (journal-P1 F9).
             "personal_journal.json": [
-                _dump_personal_bet(x) for x in journal_bets],
+                public_bet_projection(x) for x in journal_bets],
             "personal_journal_executions.json": [
-                _dump_personal_execution(x)
-                for x in s.query(PersonalBetExecution).all()
-                if x.personal_bet_id in journal_bet_ids],
+                _dump(x) for x in journal_execs
+                if x.publication_consent],
             # V9.5 eval C1: the frozen paper/risk state each lock was
             # evaluated against, so a reader can verify that a paper
             # decision was a pure function of frozen inputs
@@ -306,6 +292,13 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             "players": len(sections["players.json"]),
             "paper_signals": len(sections["paper_signals.json"]),
             "paper_fills": len(sections["paper_fills.json"]),
+            # journal-P0-C: consent-gated omissions are explicit — the
+            # difference between total and published is the number of
+            # executions withheld from public bytes
+            "journal_entries": len(journal_bets),
+            "journal_executions_total": len(journal_execs),
+            "journal_executions_published": len(
+                sections["personal_journal_executions.json"]),
         }
         manifest = {
             "corpus_version": version,

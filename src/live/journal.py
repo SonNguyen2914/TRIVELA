@@ -903,13 +903,18 @@ def recent_broadcasts(fixture_id: int, limit: int = 20) -> list[dict]:
         s.close()
 
 
-# --- public vs operator projections (journal-P0 F2) ------------------------
+# --- THE public projection (journal-P0 F2 + P0-C) --------------------------
 # The briefing and journal endpoints are UNAUTHENTICATED reads, and an
-# execution row is a third party's financial record. The public surface
-# gets the view and its resolution — direction, stated price, status,
-# timestamps — and NEVER the person: no account label, no order id, no
-# fill economics, no consent provenance, no private prose. The operator
-# surface keeps the full record.
+# execution row is a third party's financial record. There is exactly
+# ONE public projection of a journal entry, used by the briefing, the
+# journal surface and the corpus — one field list, so the surfaces
+# cannot drift apart (round-1 shipped two lists and they already
+# differed). The view and its resolution travel; the person and the
+# money never do:
+#   - no rationale (private prose — no consent field exists for it)
+#   - no stated_size (position sizing is third-party financial detail)
+#   - executions appear on public surfaces as COUNTS only, and in the
+#     corpus only under the row's explicit publication_consent
 _PRIVATE_EXECUTION_FIELDS = frozenset({
     "account_label", "consent_recorded_at", "exchange_order_id",
     "fill_price_dollars", "filled_contracts", "fee_paid_dollars",
@@ -917,47 +922,58 @@ _PRIVATE_EXECUTION_FIELDS = frozenset({
     "reconciliation_note", "gaps", "publication_consent"})
 
 
-def _bet_public_dict(row: PersonalBet) -> dict:
-    d = _bet_dict(row)
-    d.pop("rationale", None)          # private prose stays private
-    return d
+def _iso(dt):
+    return dt.isoformat() if dt else None
 
 
-def _execution_public_dict(row: PersonalBetExecution) -> dict:
-    """The public shape of a real execution: that it happened, its
-    status, and its timeline — nothing that identifies the account or
-    quantifies the money."""
+def public_bet_projection(row: PersonalBet) -> dict:
+    """The single public shape of a journal entry. Every public surface
+    (briefing, journal, corpus) serves THIS and nothing wider."""
     return {
-        "id": row.id, "personal_bet_id": row.personal_bet_id,
+        "id": row.id,
+        "competition_slug": row.competition_slug,
+        "fixture_id": row.fixture_id,
+        "market_ticker": row.market_ticker,
+        "market_contract_id": row.market_contract_id,
+        "outcome_key": row.outcome_key,
         "status": row.status,
-        "not_filled_reason": row.not_filled_reason,
-        "filled_at": row.filled_at.isoformat() if row.filled_at else None,
-        "settled_at": (row.settled_at.isoformat()
-                       if row.settled_at else None),
-        "reconciled": bool(row.reconciled),
-        "redaction_note": ("private execution fields (account, order "
-                           "id, fill economics, consent) are withheld "
-                           "on the public surface"),
+        "stated_price_dollars": row.stated_price_dollars,
+        "price_basis": row.price_basis,
+        "market_quote_id": row.market_quote_id,
+        "quote_observed_at": _iso(row.quote_observed_at),
+        "recorded_at": _iso(row.recorded_at),
+        "resolved_at": _iso(row.resolved_at),
+        "model_probability": row.model_probability,
+        "prediction_run_id": row.prediction_run_id,
+        "settled_outcome": row.settled_outcome,
+        "settled_at": _iso(row.settled_at),
+        "content_hash": row.content_hash,
+        "corrects_bet_id": row.corrects_bet_id,
+        "counts_toward_aggregate": (row.price_basis == "observed_quote"
+                                    and row.status != "void"),
     }
 
 
 def open_entries(s, fixture_id: int, redact: bool = True) -> list[dict]:
     """Journal entries on this fixture that still matter to a live
-    reader: everything except void, with their executions. Redacted by
-    default — this feeds the PUBLIC briefing (journal-P0 F2); only an
+    reader: everything except void. Redacted by default — this feeds
+    the PUBLIC briefing (journal-P0 F2/P0-C), which serves THE public
+    projection and execution COUNTS only: even an execution's
+    occurrence/timeline is third-party-linkable metadata. Only an
     operator-authenticated caller may pass redact=False."""
     rows = (s.query(PersonalBet).filter_by(fixture_id=fixture_id)
             .filter(PersonalBet.status != "void")
             .order_by(PersonalBet.id.desc()).all())
-    bet_fn = _bet_public_dict if redact else _bet_dict
     out = []
     for b in rows:
-        d = bet_fn(b)
-        d["executions"] = [
-            (_execution_public_dict(e) if redact
-             else _execution_dict(s, e)) for e in
-            s.query(PersonalBetExecution)
-            .filter_by(personal_bet_id=b.id).all()]
+        execs = (s.query(PersonalBetExecution)
+                 .filter_by(personal_bet_id=b.id).all())
+        if redact:
+            d = public_bet_projection(b)
+            d["executions"] = {"count": len(execs)}
+        else:
+            d = _bet_dict(b)
+            d["executions"] = [_execution_dict(s, e) for e in execs]
         out.append(d)
     return out
 
@@ -1150,7 +1166,16 @@ def briefing(espn_event_id: str) -> dict:
         }
 
         out["journal"] = open_entries(s, fx.id)
-        out["said_already"] = recent_broadcasts(fx.id)
+        # journal-P0-C: broadcast PROSE is operator content — the ops
+        # prompt fills it with fill announcements — so the public
+        # briefing carries only the count. The session reads the thread
+        # from the authenticated GET /api/admin/mls/broadcasts.
+        out["said_already"] = {
+            "count": s.query(BroadcastLog)
+                      .filter_by(fixture_id=fx.id).count(),
+            "note": ("broadcast content is operator-authenticated — "
+                     "GET /api/admin/mls/broadcasts?fixture_id=..."),
+        }
     finally:
         s.close()
 

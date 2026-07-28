@@ -9,9 +9,16 @@ export T=$(cat ~/.wc26_admin_token)
 curl -s "$PROD/api/mls/briefing/<espn_event_id>" | jq .
 ```
 
-That one call gives you everything: fixture state, the model, the frozen
-T-10 book, the current book, open journal entries with their executions,
-what has already been said about this match, and the standing edge.
+That one call gives you almost everything: fixture state, the model,
+the frozen T-10 book, the current book, open journal entries, and the
+standing edge. The one thing it does NOT carry is broadcast prose —
+`said_already` is a count only, because the briefing is public and
+your broadcasts name fills. Read the actual thread with the token:
+
+```bash
+curl -s -H "X-Admin-Token: $T" \
+  "$PROD/api/admin/mls/broadcasts?fixture_id=<id>" | jq .
+```
 
 ## How to talk
 
@@ -53,15 +60,19 @@ X" using one price and the other's probability).
 
 When Son forms a view, record it AS IT FORMS — before you know the
 outcome, before he decides. Payloads are JSON bodies (`--data`), never
-query strings: a rationale with spaces, `&`, newlines or Unicode must
-round-trip exactly.
+query strings — and build the JSON with `jq -n --arg`, never by
+splicing prose into a quoted literal: a rationale containing `'` or
+`"` breaks hand-built JSON exactly when the note gets interesting.
+Every view starts as `considered`; there is no way to record a
+pre-resolved entry.
 
 ```bash
 curl -s -X POST -H "X-Admin-Token: $T" \
   -H "Content-Type: application/json" \
-  --data '{"fixture_id": <id>, "market_ticker": "<t>",
-           "outcome_key": "home_win", "stated_price": "0.31",
-           "market_quote_id": <q>, "rationale": "<why>"}' \
+  --data "$(jq -n --arg why '<free prose — quotes, &, newlines all fine>' \
+      --argjson fx <id> --argjson q <quote_id> \
+      '{fixture_id: $fx, market_ticker: "<t>", outcome_key: "home_win",
+        stated_price: "0.31", market_quote_id: $q, rationale: $why}')" \
   "$PROD/api/admin/mls/journal/view"
 ```
 
@@ -87,16 +98,25 @@ mismatch named.
 
 When the friend reports a REAL fill, every fact comes from him and the
 exchange — consent timestamp, price, size, fee, fill time. The server
-refuses to invent any of them:
+refuses to invent any of them, and every timestamp must carry an
+explicit timezone offset (a naive timestamp is rejected, not guessed).
+
+`consent_recorded_at` is PROVENANCE, not bookkeeping: it is the moment
+Son recorded his friend's consent to place THIS bet — the friend's
+decision as Son documented it. It is never "now", never the API call
+time, never your clock.
 
 ```bash
 curl -s -X POST -H "X-Admin-Token: $T" \
   -H "Content-Type: application/json" \
-  --data '{"bet_id": <id>, "account_label": "friend-A",
-           "consent_recorded_at": "<iso8601, from Son>",
-           "fill_price": "0.47", "filled_contracts": "10",
-           "fee_paid": "0.12", "filled_at": "<iso8601, from exchange>",
-           "exchange_order_id": "<id>"}' \
+  --data "$(jq -n \
+      --argjson bet <id> \
+      --arg consent '<iso8601+offset — the consent moment, from Son>' \
+      --arg filled '<iso8601+offset — the fill moment, from exchange>' \
+      '{bet_id: $bet, account_label: "friend-A",
+        consent_recorded_at: $consent, fill_price: "0.47",
+        filled_contracts: "10", fee_paid: "0.12", filled_at: $filled,
+        exchange_order_id: "<id>"}')" \
   "$PROD/api/admin/mls/journal/execution"
 ```
 
@@ -111,18 +131,26 @@ exchange statement (`execution_id`, `note`).
 ```bash
 curl -s -X POST -H "X-Admin-Token: $T" \
   -H "Content-Type: application/json" \
-  --data '{"message": "<text>", "channel": "action",
-           "fixture_id": <id>, "session_label": "live"}' \
+  --data "$(jq -n --arg msg '<text — free prose>' --argjson fx <id> \
+      '{message: $msg, channel: "action", fixture_id: $fx,
+        session_label: "live"}')" \
   "$PROD/api/admin/mls/broadcast"
 ```
+
+Long messages are truncated to fit the transports — the shadow
+qualifier is never cut; your prose is, with a marker, and the full
+prose stays in the journal record.
 
 `action` interrupts him; `detail` is ambient. Use `action` for something
 he must see now — a flip, a fill, a material move — and `detail` for
 running commentary. Drown the action channel and he stops looking at it.
 
-Everything you broadcast is persisted, and `said_already` in the briefing
-shows what you have already said. If you reconnect mid-match, read it
-before speaking so you pick up the thread instead of repeating yourself.
+Everything you broadcast is persisted with the exact wire payload and
+its hash. If you reconnect mid-match, read the thread from
+`GET /api/admin/mls/broadcasts?fixture_id=<id>` (with the token)
+before speaking, so you pick up where you left off instead of
+repeating yourself — the public briefing only tells you HOW MANY
+things have been said.
 
 ## What you must not do
 
