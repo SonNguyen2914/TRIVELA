@@ -471,6 +471,119 @@ class MarketDepthLevel(LiveBase):
                                  ForeignKey("source_observation.id"))
 
 
+class PersonalBet(LiveBase):
+    """A bet Son FORMED A VIEW ON — taken or passed. Documentation, and
+    the input side of the execution-fidelity pilot.
+
+    This is NOT research evidence and must never touch one. The paper
+    ledger is mechanical: every eligible leg, fixed policy, frozen book,
+    rejections retained. These rows are human-selected, so they carry
+    selection bias by construction and can establish execution fidelity
+    but never edge. No join to PaperSignal/PaperFill exists or may be
+    added, and nothing here reaches model_eval or an approval decision.
+
+    `status` deliberately includes `passed`. A journal holding only bets
+    that were taken has exactly the survivorship problem the paper
+    ledger's retained rejections exist to prevent — it cannot separate
+    "the model is good" from "I remember my winners". A view is recorded
+    when it FORMS (`considered`), then resolves to `taken` or `passed`.
+
+    Multi-league is schema-only (platform audit A2): `competition_slug`
+    is carried, but no second competition is wired end to end.
+    """
+    __tablename__ = "personal_bet"
+    id = Column(Integer, primary_key=True)
+    competition_slug = Column(String(32), ForeignKey("competition.slug"))
+    fixture_id = Column(Integer, ForeignKey("fixture.id"), nullable=False)
+    # the raw ticker is ALWAYS recorded; the FK may be absent for a
+    # market we have not mapped
+    market_ticker = Column(String(128), nullable=False)
+    market_contract_id = Column(Integer, ForeignKey("market_contract.id"))
+    outcome_key = Column(String(32))
+    # considered | taken | passed | void
+    status = Column(String(16), nullable=False, default="considered")
+    stated_price_dollars = Column(String(16))
+    stated_size = Column(String(24))
+    # observed_quote | stated_only — see the falsifiability rule. A
+    # stated_only entry is recorded honestly and counted nowhere.
+    price_basis = Column(String(16), nullable=False, default="stated_only")
+    market_quote_id = Column(Integer, ForeignKey("market_quote.id"))
+    quote_observed_at = Column(DateTime(timezone=True))
+    recorded_at = Column(DateTime(timezone=True), nullable=False)
+    resolved_at = Column(DateTime(timezone=True))   # taken/passed moment
+    rationale = Column(Text)
+    # the shadow model's probability FROZEN at record time, with the run
+    # it came from — a later re-run must not change what was recorded
+    model_probability = Column(Float)
+    prediction_run_id = Column(String(36),
+                               ForeignKey("prediction_run.id"))
+    settled_outcome = Column(String(32))
+    settled_at = Column(DateTime(timezone=True))
+    content_hash = Column(String(64))
+
+
+class PersonalBetExecution(LiveBase):
+    """A REAL fill (or a real failure to fill) by a consenting third
+    party against a PersonalBet. Real money, reconcilable against the
+    exchange.
+
+    `status` includes `not_filled` for the same reason PersonalBet
+    includes `passed`: a bet the friend could not get at an acceptable
+    price is evidence about LIQUIDITY, which is half of what an
+    execution-fidelity pilot measures. Recording only successful fills
+    reproduces, one level down, the bias the pilot exists to detect.
+    """
+    __tablename__ = "personal_bet_execution"
+    id = Column(Integer, primary_key=True)
+    personal_bet_id = Column(Integer, ForeignKey("personal_bet.id"),
+                             nullable=False)
+    account_label = Column(String(64), nullable=False)
+    # non-null required to accept a row: this is someone else's money
+    consent_recorded_at = Column(DateTime(timezone=True), nullable=False)
+    # filled | partial | not_filled
+    status = Column(String(16), nullable=False, default="filled")
+    not_filled_reason = Column(String(32))
+    best_available_price_dollars = Column(String(16))
+    fill_price_dollars = Column(String(16))
+    filled_contracts = Column(String(24))
+    fee_paid_dollars = Column(String(16))
+    filled_at = Column(DateTime(timezone=True))
+    # the book AT FILL TIME, so slippage decomposes into market drift
+    # vs execution cost rather than staying one uninterpretable number
+    market_quote_id_at_fill = Column(Integer,
+                                     ForeignKey("market_quote.id"))
+    exchange_order_id = Column(String(64))
+    settlement_credit_dollars = Column(String(16))
+    settled_at = Column(DateTime(timezone=True))
+    reconciled = Column(Boolean, default=False)
+    reconciliation_note = Column(Text)
+
+
+class BroadcastLog(LiveBase):
+    """Every message a live session pushed to Discord/ntfy.
+
+    The session is the analyser; the alert channels are its megaphone.
+    What was said live, and when, is documentation in the same sense the
+    journal is — and it lets a session that dropped mid-match pick up
+    the thread instead of contradicting itself.
+
+    `source` separates a computed rule from an agent's judgement. A
+    measurement and an opinion must never look alike in the channel.
+    """
+    __tablename__ = "broadcast_log"
+    id = Column(Integer, primary_key=True)
+    fixture_id = Column(Integer, ForeignKey("fixture.id"))
+    channel = Column(String(16), nullable=False)      # action | detail
+    source = Column(String(16), nullable=False)       # session | computed
+    session_label = Column(String(64))
+    message = Column(Text, nullable=False)
+    # the structured values behind the prose, so a broadcast can be
+    # checked against what the API actually returned that turn
+    claims_json = Column(Text)
+    delivered = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True))
+
+
 class PaperEvaluationContext(LiveBase):
     """The complete paper/risk state FROZEN at lock time.
 
