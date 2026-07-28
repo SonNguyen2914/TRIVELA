@@ -1,0 +1,196 @@
+"""la-liga-2026 live-plane wiring — competition-keyed reuse, not a fork.
+
+Everything here is a thin, league-named binding of the SHARED
+competition-parameterized machinery (identity / ingest / markets /
+runs) to La Liga's slug, ESPN path, Kalshi series config and model
+scaffold. No table is duplicated — the live schema was already keyed
+by competition — and no MLS behavior changes: every shared function
+defaults to its previous MLS values.
+
+Operating posture (2026-07-28):
+  - LALIGA_SHADOW_ENABLED defaults FALSE. Even when flipped on, the
+    model is DARK (no approval decision for laliga-2026-v0), so runs
+    and T-10 locks are refused at the per-model gates; only identity,
+    fixture ingest, market discovery and quote capture would operate.
+  - Kalshi series existence verified 2026-07-28, coverage NOT — zero
+    open events. Discovery reports the honest unmapped state, and
+    shadow_status() carries the unmapped_upcoming metric.
+  - The three promoted clubs have no verifiable Kalshi name yet; they
+    are absent from KALSHI_BRIDGES on purpose and will surface in the
+    unmapped metric until the venue lists them and an operator curates
+    the aliases.
+"""
+from __future__ import annotations
+
+import config
+from src.live import identity, ingest, markets, runs
+from src.live import model_laliga
+from src.live.db import get_session, plane_ready
+
+SLUG = "la-liga-2026"
+LEAGUE_PATH = "esp.1"
+LEAGUE_LABEL = "LALIGA"
+EXPECTED_TEAMS = 20
+
+ESPN_TEAMS_URL = ("https://site.api.espn.com/apis/site/v2/sports/soccer/"
+                  f"{LEAGUE_PATH}/teams")
+
+# Operator-curated Kalshi-name bridges. Every key below was VERIFIED
+# against the full 383-event historical KXLALIGAGAME slate (2025-26,
+# archived 2026-07-28); values are the ESPN 2026-27 displayNames.
+# Relegated sides (Oviedo, Mallorca, Girona) are deliberately absent —
+# they have no 2026-27 team row to attach to. The promoted clubs
+# (Deportivo La Coruña, Málaga, Racing Santander) are deliberately
+# absent too: they appear in NO historical Kalshi event, and guessing
+# a name is the KXMENWORLDCUP class of error. They stay unmapped and
+# reported until curated from a real listing.
+KALSHI_BRIDGES = {
+    "Alaves": "Alavés",
+    "Atletico": "Atlético Madrid",
+    "Barcelona": "Barcelona",
+    "Bilbao": "Athletic Club",
+    "Celta Vigo": "Celta Vigo",
+    "Elche": "Elche",
+    "Espanyol": "Espanyol",
+    "Getafe": "Getafe",
+    "Levante": "Levante",
+    "Osasuna": "Osasuna",
+    "Real Betis": "Real Betis",
+    "Real Madrid": "Real Madrid",
+    "Real Sociedad": "Real Sociedad",
+    "Sevilla": "Sevilla",
+    "Valencia": "Valencia",
+    "Vallecano": "Rayo Vallecano",
+    "Villarreal": "Villarreal",
+}
+
+
+def ensure_competition() -> dict:
+    """Idempotent la-liga-2026 Competition row. Data, not schema — the
+    live tables were competition-keyed from the start, so no migration
+    exists on this branch."""
+    if not plane_ready():
+        return {"skipped": "dormant"}
+    from src.live.models import Competition
+    s = get_session()
+    try:
+        if s.get(Competition, SLUG) is None:
+            s.add(Competition(
+                slug=SLUG, name="La Liga",
+                # API-Football league id deliberately NOT set: the
+                # free-plan key was unavailable to verify it and no
+                # runtime consumer exists — verify before first use.
+                provider_league_id=None,
+                season=2026, timezone="UTC",
+                match_duration_minutes=90, supports_draw=True,
+                regular_time_only=True, has_group_stage=False,
+                has_knockout_stage=False,
+                model_version=model_laliga.MODEL_NAME))
+            s.commit()
+            return {"seeded": SLUG}
+        return {"exists": SLUG}
+    except Exception as exc:
+        s.rollback()
+        return {"error": str(exc)[:200]}
+    finally:
+        s.close()
+
+
+def seed_teams() -> dict:
+    return identity.seed_teams(competition_slug=SLUG,
+                               teams_url=ESPN_TEAMS_URL,
+                               kalshi_bridges=KALSHI_BRIDGES)
+
+
+def ingest_season() -> dict:
+    return ingest.ingest_season_schedules(competition_slug=SLUG,
+                                          league_path=LEAGUE_PATH)
+
+
+def refresh_window() -> dict:
+    return ingest.refresh_window(competition_slug=SLUG,
+                                 league_path=LEAGUE_PATH)
+
+
+def discover_and_map() -> dict:
+    return markets.discover_and_map(competition_slug=SLUG)
+
+
+def capture_quotes(fixture_id: int | None = None,
+                   horizon_hours: float = 48.0) -> dict:
+    return markets.capture_quotes(fixture_id=fixture_id,
+                                  horizon_hours=horizon_hours,
+                                  competition_slug=SLUG)
+
+
+def scheduled_runs(freshness_hours: float = 4.0) -> dict:
+    """Refused at the per-model approval gate until a La Liga ladder
+    earns a decision — the dark-model posture, enforced not asserted."""
+    return runs.scheduled_runs(freshness_hours=freshness_hours,
+                               competition_slug=SLUG,
+                               model_mod=model_laliga,
+                               enabled=config.LALIGA_SHADOW_ENABLED)
+
+
+def t10_locks() -> dict:
+    return runs.t10_locks(competition_slug=SLUG,
+                          model_mod=model_laliga,
+                          enabled=config.LALIGA_SHADOW_ENABLED,
+                          league_label=LEAGUE_LABEL)
+
+
+def model_for_event(espn_event_id: str) -> dict | None:
+    return runs.model_for_event(espn_event_id,
+                                competition_slug=SLUG,
+                                model_mod=model_laliga)
+
+
+def latest_odds() -> list[dict]:
+    return runs.latest_odds(competition_slug=SLUG,
+                            model_mod=model_laliga)
+
+
+def shadow_status() -> dict:
+    """The public posture read: pipeline counts + blockers (including
+    the unmapped_upcoming metric) + the Kalshi coverage probe + the
+    explicit statements a reader needs to not over-trust this surface."""
+    counts = runs.shadow_counts(competition_slug=SLUG,
+                                model_mod=model_laliga,
+                                expected_teams=EXPECTED_TEAMS) or {}
+    from src import laliga as laliga_data
+    return {
+        "competition": SLUG,
+        "enabled": config.LALIGA_SHADOW_ENABLED,
+        "model_version": model_laliga.MODEL_NAME,
+        "model_dark": True,
+        "model_dark_note": ("no approval decision exists for "
+                            f"{model_laliga.MODEL_NAME}; runs and T-10 "
+                            "locks are structurally refused until a "
+                            "La Liga evaluation ladder earns one"),
+        "xg_source": None,
+        "xg_note": ("no trustworthy public La Liga xG source exists "
+                    "(researched 2026-07-28) — ratings are goals-only"),
+        "kalshi": laliga_data.series_probe(),
+        "counts": counts,
+    }
+
+
+def boot() -> None:
+    """One-shot La Liga plane boot: competition -> identity -> season
+    history -> market map. Each step isolated; ALL of it no-ops when
+    LALIGA_SHADOW_ENABLED is off (the default) or the plane is dormant.
+    No approval step exists here on purpose — the model is dark, and
+    only an operator-run La Liga ladder can ever change that."""
+    if not config.LALIGA_SHADOW_ENABLED:
+        return
+    for name, step in (
+            ("competition", ensure_competition),
+            ("model_version_row", model_laliga.ensure_model_version),
+            ("seed_teams", seed_teams),
+            ("season_ingest", ingest_season),
+            ("market_map", discover_and_map),
+    ):
+        try:
+            print(f"[laliga-boot] {name}: {step()}")
+        except Exception as exc:
+            print(f"[laliga-boot] {name} FAILED: {exc}")

@@ -677,6 +677,52 @@ def epl_match(event_id: str):
     if not event_id.isdigit() or len(event_id) > 12:
         raise HTTPException(404, "unknown event")
     out = epl.match_summary(event_id)
+# --- La Liga (la-liga-2026) — BEGIN additive block -------------------------
+# Read-only mirrors of the MLS data-layer routes, backed by src/laliga.
+# The model is DARK (no approval decision), so /odds serves the explicit
+# empty state and /match carries model=None — surfaces must say "no
+# prediction", never render a zero that reads as one.
+
+@app.get("/api/laliga/scoreboard")
+def laliga_scoreboard(date: str | None = Query(None, pattern=r"^\d{8}$")):
+    from src import laliga
+    return {"fixtures": laliga.scoreboard(date),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/laliga/schedule")
+def laliga_schedule(days: int = Query(7, ge=1, le=14)):
+    from src import laliga
+    return {"fixtures": laliga.schedule(days),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/laliga/standings")
+def laliga_standings():
+    """Single league table. Preseason ESPN serves 20 all-zero rows —
+    that state returns tables=[] with preseason=true (the explicit
+    empty state; an all-zero table is a fabrication, not standings)."""
+    from src import laliga
+    return {**laliga.standings(), "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/laliga/markets")
+def laliga_markets():
+    """Kalshi books + futures + the series-coverage probe. `kalshi`
+    states exactly what is verified (series existence) and what is not
+    (2026-27 coverage) — zero open books is the honest answer today."""
+    from src import laliga
+    return {"games": laliga.game_books(), "futures": laliga.futures(),
+            "kalshi": laliga.series_probe(),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/laliga/match/{event_id}")
+def laliga_match(event_id: str):
+    from src import laliga
+    if not event_id.isdigit() or len(event_id) > 12:
+        raise HTTPException(404, "unknown event")
+    out = laliga.match_summary(event_id)
     if out is None:
         raise HTTPException(502, "summary unavailable")
     book = None
@@ -782,6 +828,70 @@ def epl_approval():
         print(f"[epl] approval failed: {exc}")
         raise HTTPException(503, "approval unavailable")
 # === end EPL block =========================================================
+    try:
+        books = laliga.find_all_books(
+            out.get("date"),
+            (out.get("home") or {}).get("name") or "",
+            (out.get("away") or {}).get("name") or "")
+        book = next((f for f in books if f.get("key") == "winner"), None)
+    except Exception as exc:            # the hub must not die on the book
+        print(f"[laliga] book match failed for {event_id}: {exc}")
+    model = None
+    try:                                # nor on the live plane
+        from src.live import laliga_live
+        model = laliga_live.model_for_event(event_id)
+    except Exception as exc:
+        print(f"[laliga] model section failed for {event_id}: {exc}")
+    # no lineups section: the MLS lineup view is enriched from the
+    # Sportec player feed, which has no La Liga equivalent — absent is
+    # honest, a stripped-down lookalike would not be
+    return {"match": out, "book": book, "books": books, "model": model,
+            "lineups": None, "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/laliga/odds")
+def laliga_odds():
+    """The shadow odds board — EMPTY until a La Liga model earns an
+    approval decision (none exists; boot is fail-closed). The flags
+    say so explicitly so no client renders silence as a forecast."""
+    odds = []
+    try:
+        from src.live import laliga_live
+        odds = laliga_live.latest_odds()
+    except Exception as exc:
+        print(f"[laliga] odds board failed: {exc}")
+    return {"odds": odds, "shadow": True, "model_dark": True,
+            "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/laliga/status")
+def laliga_status():
+    """Pipeline posture: counts, blockers (including the
+    unmapped-upcoming metric), the Kalshi coverage probe, and the
+    dark-model statement. Public read-only, 60s cache."""
+    from src.laliga import _cached
+    try:
+        from src.live import laliga_live
+        return _cached("laliga_status", 60, laliga_live.shadow_status) or {}
+    except Exception as exc:
+        print(f"[laliga] status failed: {exc}")
+        raise HTTPException(503, "status unavailable")
+
+
+@app.post("/api/admin/laliga/sweep")
+def laliga_admin_sweep(request: Request):
+    """Operator-only: run the La Liga plane's sweeps NOW (window refresh,
+    market discovery, scheduled runs — the last refuses while the model
+    is dark). Mirrors /api/admin/mls/sweep."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import laliga_live
+    return {"window": laliga_live.refresh_window(),
+            "map": laliga_live.discover_and_map(),
+            "runs": laliga_live.scheduled_runs(),
+            "generated_at": utcnow().isoformat()}
+# --- La Liga — END additive block -------------------------------------------
 
 
 @app.get("/api/ready")
