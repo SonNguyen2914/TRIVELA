@@ -520,6 +520,10 @@ class PersonalBet(LiveBase):
     settled_outcome = Column(String(32))
     settled_at = Column(DateTime(timezone=True))
     content_hash = Column(String(64))
+    # a resolution is IMMUTABLE once set (journal-P0 F5). A mistaken
+    # entry is corrected by a NEW row citing the old one here — the
+    # record of the mistake is part of the record, never rewritten.
+    corrects_bet_id = Column(Integer, ForeignKey("personal_bet.id"))
 
 
 class PersonalBetExecution(LiveBase):
@@ -532,8 +536,15 @@ class PersonalBetExecution(LiveBase):
     price is evidence about LIQUIDITY, which is half of what an
     execution-fidelity pilot measures. Recording only successful fills
     reproduces, one level down, the bias the pilot exists to detect.
+
+    Idempotency (journal-P0 F5): (exchange_order_id, status) is unique,
+    so a retried POST is a no-op instead of a duplicate fill.
     """
     __tablename__ = "personal_bet_execution"
+    __table_args__ = (
+        UniqueConstraint("exchange_order_id", "status",
+                         name="uq_personal_bet_execution_order_status"),
+    )
     id = Column(Integer, primary_key=True)
     personal_bet_id = Column(Integer, ForeignKey("personal_bet.id"),
                              nullable=False)
@@ -557,6 +568,12 @@ class PersonalBetExecution(LiveBase):
     settled_at = Column(DateTime(timezone=True))
     reconciled = Column(Boolean, default=False)
     reconciliation_note = Column(Text)
+    # publication gate (journal-P0 F2): the corpus is public bytes, and
+    # this row is a third party's financial record. Private fields
+    # (account label, order id, fill economics, consent provenance) are
+    # exported ONLY when this explicit consent is set. Default false —
+    # absence of consent is never publication.
+    publication_consent = Column(Boolean, default=False)
 
 
 class BroadcastLog(LiveBase):

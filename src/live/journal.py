@@ -83,25 +83,82 @@ def _content_hash(doc: dict) -> str:
         json.dumps(doc, sort_keys=True, default=str).encode()).hexdigest()
 
 
+def _validate_quote_identity(s, fixture_id: int, market_ticker: str,
+                             outcome_key: str | None,
+                             market_contract_id: int | None,
+                             q) -> tuple[dict | None, int | None]:
+    """journal-P0 F3: an EXISTING quote cited for this view must belong
+    to this fixture's approved market chain — fixture → approved
+    MarketEvent → MarketContract → quote — and to the stated contract
+    and outcome. A quote that belongs elsewhere is REJECTED with the
+    mismatch named, never silently accepted: the whole point of citing
+    a quote is falsifiability, and a price from another match falsifies
+    nothing.
+
+    Returns (error_dict, resolved_contract_id). error_dict is None when
+    the quote belongs.
+    """
+    from src.live.models import MarketContract, MarketEvent
+    mc = (s.get(MarketContract, q.market_contract_id)
+          if q.market_contract_id else None)
+    me = s.get(MarketEvent, mc.market_event_id) if mc else None
+    if mc is None or me is None:
+        return ({"error": f"quote {q.id} has no resolvable market "
+                          f"contract/event chain — cannot verify it "
+                          f"belongs to fixture {fixture_id}"}, None)
+    if me.fixture_id != fixture_id:
+        return ({"error": f"quote {q.id} belongs to fixture "
+                          f"{me.fixture_id} (event "
+                          f"{me.kalshi_event_ticker}), not fixture "
+                          f"{fixture_id} — refusing to record a price "
+                          f"from another match"}, None)
+    if not me.mapping_approved:
+        return ({"error": f"quote {q.id} sits on event "
+                          f"{me.kalshi_event_ticker} whose fixture "
+                          f"mapping is not approved — refusing an "
+                          f"unverified market identity"}, None)
+    if market_contract_id is not None and market_contract_id != mc.id:
+        return ({"error": f"quote {q.id} belongs to market contract "
+                          f"{mc.id} ({mc.ticker}), not the stated "
+                          f"contract {market_contract_id}"}, None)
+    if mc.ticker and market_ticker and mc.ticker != market_ticker:
+        return ({"error": f"quote {q.id} prices contract {mc.ticker}, "
+                          f"not the stated ticker {market_ticker}"},
+                None)
+    if outcome_key and mc.outcome_key and mc.outcome_key != outcome_key:
+        return ({"error": f"quote {q.id} prices outcome "
+                          f"{mc.outcome_key}, not the stated outcome "
+                          f"{outcome_key}"}, None)
+    return None, mc.id
+
+
 def record_view(fixture_id: int, market_ticker: str, *,
                 outcome_key: str | None = None,
                 stated_price=None, stated_size=None,
                 rationale: str | None = None,
                 market_quote_id: int | None = None,
                 market_contract_id: int | None = None,
-                status: str = "considered") -> dict:
+                status: str = "considered",
+                corrects_bet_id: int | None = None) -> dict:
     """Record a view at the moment it FORMS.
 
     Returns the stored row as a dict, including the price_basis actually
     granted — which may be weaker than the caller hoped. The rules below
     are enforced here rather than trusted to callers:
 
-    - `observed_quote` is granted only when a real quote exists and was
-      captured at or before now. Otherwise the entry is `stated_only`,
-      recorded honestly and excluded from every aggregate.
+    - `observed_quote` is granted only when a real quote exists, was
+      captured at or before now, AND belongs to this fixture's approved
+      market chain (fixture → approved event → contract → quote). A
+      quote that does not exist or postdates now downgrades the entry
+      to `stated_only` (falsifiability rule); a quote that exists but
+      belongs to ANOTHER fixture/contract/outcome is rejected outright
+      with the mismatch named (journal-P0 F3) — that is an identity
+      error, not a weaker record.
     - recording after kickoff yields `void`: keepable, never counted.
     - the model's probability is FROZEN now, with the run it came from,
       so a later re-run cannot change what was recorded.
+    - `corrects_bet_id` names the immutable entry this row corrects
+      (journal-P0 F5); corrections are new rows, never rewrites.
     """
     if not plane_ready():
         return {"error": "dormant"}
@@ -112,17 +169,27 @@ def record_view(fixture_id: int, market_ticker: str, *,
         fx = s.get(Fixture, fixture_id)
         if fx is None:
             return {"error": "no such fixture"}
+        if corrects_bet_id is not None \
+                and s.get(PersonalBet, corrects_bet_id) is None:
+            return {"error": f"corrects_bet_id {corrects_bet_id} names "
+                             f"no existing entry"}
         now = _now()
 
         # 1. price basis — falsifiable or explicitly not
         basis, quote_at = "stated_only", None
         if market_quote_id is not None:
             q = s.get(MarketQuote, market_quote_id)
-            if q is not None and q.captured_at is not None \
-                    and _utc(q.captured_at) <= now:
-                basis, quote_at = "observed_quote", _utc(q.captured_at)
-            else:
+            if q is None or q.captured_at is None \
+                    or _utc(q.captured_at) > now:
                 market_quote_id = None      # refuse to cite what we lack
+            else:
+                err, resolved_mc = _validate_quote_identity(
+                    s, fixture_id, market_ticker, outcome_key,
+                    market_contract_id, q)
+                if err is not None:
+                    return err
+                market_contract_id = resolved_mc
+                basis, quote_at = "observed_quote", _utc(q.captured_at)
 
         # 2. after kickoff a view is not a forecast
         ko = _utc(fx.current_kickoff_utc)
@@ -145,7 +212,7 @@ def record_view(fixture_id: int, market_ticker: str, *,
             price_basis=basis, market_quote_id=market_quote_id,
             quote_observed_at=quote_at, recorded_at=now,
             rationale=rationale, model_probability=model_p,
-            prediction_run_id=run_id)
+            prediction_run_id=run_id, corrects_bet_id=corrects_bet_id)
         row.content_hash = _content_hash({
             "fixture_id": fixture_id, "market_ticker": market_ticker,
             "outcome_key": outcome_key,
@@ -162,8 +229,14 @@ def record_view(fixture_id: int, market_ticker: str, *,
 
 
 def resolve_view(bet_id: int, status: str) -> dict:
-    """Move a recorded view to `taken` or `passed`. The pass is the half
-    that keeps the journal honest, so it is a first-class transition."""
+    """Move a recorded view from `considered` to `taken` or `passed`.
+    The pass is the half that keeps the journal honest, so it is a
+    first-class transition.
+
+    A resolution is IMMUTABLE once set (journal-P0 F5): taken→passed→
+    taken rewrites would let the journal remember its winners, which is
+    the exact bias the record exists to prevent. A mistaken resolution
+    is corrected by a NEW view citing `corrects_bet_id`."""
     if status not in ("taken", "passed"):
         return {"error": "resolve to taken or passed"}
     if not plane_ready():
@@ -175,6 +248,11 @@ def resolve_view(bet_id: int, status: str) -> dict:
             return {"error": "no such entry"}
         if row.status == "void":
             return {"error": "entry is void (recorded after kickoff)"}
+        if row.status != "considered":
+            return {"error": f"entry {bet_id} is already resolved to "
+                             f"'{row.status}' — resolutions are "
+                             f"immutable. Record a correction as a NEW "
+                             f"view with corrects_bet_id={bet_id}"}
         row.status = status
         row.resolved_at = _now()
         s.commit()
@@ -210,15 +288,32 @@ def record_execution(bet_id: int, account_label: str, *,
                      market_quote_id_at_fill: int | None = None,
                      not_filled_reason: str | None = None,
                      best_available_price=None,
-                     exchange_order_id: str | None = None) -> dict:
+                     exchange_order_id: str | None = None,
+                     publication_consent: bool = False) -> dict:
     """Record a REAL fill — or a real failure to fill.
+
+    The lifecycle is append-only (journal-P0 F5):
+
+        considered → taken → filled|partial → settled → reconciled
+
+    so an execution attaches ONLY to a `taken` view — a fill against a
+    passed or void entry describes a bet nobody decided to place, and
+    accepting it would let the journal invent history.
 
     `consent_recorded_at` is required and never defaulted: this is
     someone else's money, and the provenance of that consent belongs in
-    the row rather than in someone's memory.
+    the row rather than in someone's memory — supplied by the operator,
+    never manufactured by the server.
+
+    A `filled`/`partial` row must carry its economics — price, quantity,
+    fee — and the ACTUAL fill timestamp: an execution-fidelity pilot
+    with fabricated fill facts measures nothing.
 
     A `not_filled` row is as valuable as a fill. It is evidence about
     liquidity, which is half of what this pilot exists to measure.
+
+    Idempotency: (exchange_order_id, status) is unique. A retried POST
+    for a pair already recorded returns the existing row as a no-op.
     """
     if not plane_ready():
         return {"error": "dormant"}
@@ -231,11 +326,38 @@ def record_execution(bet_id: int, account_label: str, *,
         return {"error": "account_label is required"}
     if status == "not_filled" and not not_filled_reason:
         return {"error": "not_filled requires a reason"}
+    if status in ("filled", "partial"):
+        missing = [name for name, v in (
+            ("fill_price", _d(fill_price)),
+            ("filled_contracts", _d(filled_contracts)),
+            ("fee_paid", _d(fee_paid)),
+            ("filled_at", _utc(filled_at))) if v is None]
+        if missing:
+            return {"error": f"a '{status}' execution requires its real "
+                             f"economics and fill moment — missing: "
+                             f"{', '.join(missing)}. The server never "
+                             f"invents a fill fact"}
     s = get_session()
     try:
         bet = s.get(PersonalBet, bet_id)
         if bet is None:
             return {"error": "no such entry"}
+        if bet.status != "taken":
+            return {"error": f"entry {bet_id} is '{bet.status}' — an "
+                             f"execution attaches only to a taken view "
+                             f"(considered → taken → filled|partial → "
+                             f"settled → reconciled)"}
+        if exchange_order_id:
+            existing = (s.query(PersonalBetExecution)
+                        .filter_by(exchange_order_id=exchange_order_id,
+                                   status=status).first())
+            if existing is not None:
+                out = _execution_dict(s, existing)
+                out["idempotent"] = True
+                out["note"] = (f"exchange order {exchange_order_id} with "
+                               f"status '{status}' is already recorded — "
+                               f"retry treated as a no-op")
+                return out
         row = PersonalBetExecution(
             personal_bet_id=bet_id, account_label=account_label,
             consent_recorded_at=_utc(consent_recorded_at),
@@ -249,11 +371,119 @@ def record_execution(bet_id: int, account_label: str, *,
                               if _d(filled_contracts) is not None else None),
             fee_paid_dollars=(str(_d(fee_paid))
                               if _d(fee_paid) is not None else None),
-            filled_at=_utc(filled_at) or (_now() if status != "not_filled"
-                                          else None),
+            filled_at=_utc(filled_at),
             market_quote_id_at_fill=market_quote_id_at_fill,
-            exchange_order_id=exchange_order_id)
+            exchange_order_id=exchange_order_id,
+            publication_consent=bool(publication_consent))
         s.add(row)
+        s.commit()
+        return _execution_dict(s, row)
+    finally:
+        s.close()
+
+
+def settle_execution(execution_id: int, *, settlement_credit,
+                     settled_at, settled_outcome: str | None = None,
+                     ) -> dict:
+    """Record the exchange's settlement of one REAL execution — the
+    writer the settlement columns shipped without (journal-P0 F5).
+
+    Transitions filled|partial → settled, append-only: settlement facts
+    are written once and never rewritten. A retried call with identical
+    values is a no-op; a call with different values is refused — a
+    settlement correction is a reconciliation note, not an overwrite.
+
+    `settled_at` and `settlement_credit` come from the exchange record,
+    supplied by the operator; the server invents neither. An optional
+    `settled_outcome` records the market's resolved outcome on the
+    parent entry (write-once as well) so settlement_delta becomes
+    computable."""
+    if not plane_ready():
+        return {"error": "dormant"}
+    credit = _d(settlement_credit)
+    when = _utc(settled_at)
+    if credit is None or when is None:
+        return {"error": "settlement requires settlement_credit and the "
+                         "exchange's settled_at — the server never "
+                         "invents a settlement fact"}
+    s = get_session()
+    try:
+        row = s.get(PersonalBetExecution, execution_id)
+        if row is None:
+            return {"error": "no such execution"}
+        if row.status not in ("filled", "partial"):
+            return {"error": f"execution {execution_id} is "
+                             f"'{row.status}' — only filled or partial "
+                             f"executions settle"}
+        if row.settled_at is not None:
+            same = (_d(row.settlement_credit_dollars) == credit
+                    and when == _utc(row.settled_at))
+            if same:
+                out = _execution_dict(s, row)
+                out["idempotent"] = True
+                return out
+            return {"error": f"execution {execution_id} is already "
+                             f"settled ({row.settlement_credit_dollars} "
+                             f"at {_utc(row.settled_at).isoformat()}) — "
+                             f"settlement is immutable; record the "
+                             f"discrepancy in reconciliation instead"}
+        bet = s.get(PersonalBet, row.personal_bet_id)
+        if settled_outcome:
+            if bet.settled_outcome and bet.settled_outcome \
+                    != settled_outcome:
+                return {"error": f"entry {bet.id} already settled as "
+                                 f"'{bet.settled_outcome}' — refusing "
+                                 f"the conflicting outcome "
+                                 f"'{settled_outcome}'"}
+            bet.settled_outcome = settled_outcome
+            if bet.settled_at is None:
+                bet.settled_at = when
+        row.settlement_credit_dollars = str(credit)
+        row.settled_at = when
+        s.commit()
+        return _execution_dict(s, row)
+    finally:
+        s.close()
+
+
+def reconcile_execution(execution_id: int, *, note: str,
+                        publication_consent: bool | None = None) -> dict:
+    """Mark one settled execution as reconciled against the exchange's
+    own record — the last state of the append-only lifecycle
+    (journal-P0 F5), and the second writer the reconciliation columns
+    lacked.
+
+    Requires settlement first: reconciling an unsettled fill would
+    assert agreement with an exchange record that does not exist yet.
+    Repeat calls are no-ops. `publication_consent` may be set here
+    explicitly (it defaults false at recording); it is the only field
+    this transition may change besides the reconciliation itself."""
+    if not plane_ready():
+        return {"error": "dormant"}
+    if not note:
+        return {"error": "reconciliation requires a note naming what "
+                         "was checked against the exchange record"}
+    s = get_session()
+    try:
+        row = s.get(PersonalBetExecution, execution_id)
+        if row is None:
+            return {"error": "no such execution"}
+        if row.status not in ("filled", "partial"):
+            return {"error": f"execution {execution_id} is "
+                             f"'{row.status}' — only filled or partial "
+                             f"executions reconcile"}
+        if row.settled_at is None:
+            return {"error": f"execution {execution_id} is not settled "
+                             f"— reconcile follows settlement "
+                             f"(filled|partial → settled → reconciled)"}
+        if row.reconciled:
+            out = _execution_dict(s, row)
+            out["idempotent"] = True
+            return out
+        row.reconciled = True
+        row.reconciliation_note = note
+        if publication_consent is not None:
+            row.publication_consent = bool(publication_consent)
         s.commit()
         return _execution_dict(s, row)
     finally:
@@ -358,6 +588,7 @@ def _bet_dict(row: PersonalBet) -> dict:
         "prediction_run_id": row.prediction_run_id,
         "settled_outcome": row.settled_outcome,
         "content_hash": row.content_hash,
+        "corrects_bet_id": row.corrects_bet_id,
         "counts_toward_aggregate": (row.price_basis == "observed_quote"
                                     and row.status != "void"),
     }
@@ -375,7 +606,12 @@ def _execution_dict(s, row: PersonalBetExecution) -> dict:
         "fee_paid_dollars": row.fee_paid_dollars,
         "filled_at": row.filled_at.isoformat() if row.filled_at else None,
         "exchange_order_id": row.exchange_order_id,
+        "settlement_credit_dollars": row.settlement_credit_dollars,
+        "settled_at": (row.settled_at.isoformat()
+                       if row.settled_at else None),
         "reconciled": bool(row.reconciled),
+        "reconciliation_note": row.reconciliation_note,
+        "publication_consent": bool(row.publication_consent),
         "gaps": gaps_for(s, bet, row) if bet else {},
     }
 

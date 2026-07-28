@@ -78,7 +78,8 @@ class TestTheWall:
             bet["id"], "friend-A",
             consent_recorded_at=datetime.now(UTC),
             fill_price="0.47", filled_contracts="100",
-            fee_paid="1.20", market_quote_id_at_fill=1)
+            fee_paid="1.20", filled_at=datetime.now(UTC),
+            market_quote_id_at_fill=1)
 
         after = _json.dumps(paper.paper_summary(), sort_keys=True,
                             default=str)
@@ -203,6 +204,305 @@ class TestFalsifiability:
         assert stored.prediction_run_id == "run1"
 
 
+class TestQuoteIdentity:
+    """journal-P0 F3: a cited quote must BELONG — fixture → approved
+    MarketEvent → MarketContract → quote. One that exists but belongs
+    elsewhere is rejected with the mismatch named, never accepted as a
+    falsifiable price for the wrong match."""
+
+    def _seed_other_fixture(self, s):
+        fx2 = Fixture(id=2, competition_slug="mls-2026",
+                      espn_event_id="e2", status="pre",
+                      current_kickoff_utc=datetime.now(UTC)
+                      + timedelta(hours=3))
+        ev2 = MarketEvent(id=2, competition_slug="mls-2026",
+                          kalshi_event_ticker="KXMLSGAME-y",
+                          series="KXMLSGAME", fixture_id=2,
+                          mapping_approved=True)
+        mc2 = MarketContract(id=2, market_event_id=2,
+                             ticker="KXMLSGAME-y-H",
+                             outcome_key="home_win")
+        q2 = MarketQuote(id=5, market_contract_id=2,
+                         captured_at=datetime.now(UTC)
+                         - timedelta(minutes=1),
+                         yes_ask_c=60, yes_bid_c=58)
+        s.add_all([fx2, ev2, mc2, q2])
+        s.commit()
+
+    def test_a_quote_from_another_fixture_is_rejected(self, live_session):
+        from src.live import journal
+        _seed(live_session)
+        self._seed_other_fixture(live_session)
+        r = journal.record_view(1, "KXMLSGAME-y-H",
+                                outcome_key="home_win",
+                                stated_price="0.60", market_quote_id=5)
+        assert "error" in r
+        assert "belongs to fixture 2" in r["error"]
+        # rejected means NOT recorded — not downgraded, not kept
+        assert journal.journal_summary()["total_recorded"] == 0
+
+    def test_a_quote_for_another_outcome_is_rejected(self, live_session):
+        from src.live import journal
+        _seed(live_session)
+        r = journal.record_view(1, "KXMLSGAME-x-H",
+                                outcome_key="away_win",
+                                market_quote_id=1)
+        assert "error" in r
+        assert "home_win" in r["error"] and "away_win" in r["error"]
+
+    def test_a_quote_for_another_ticker_is_rejected(self, live_session):
+        from src.live import journal
+        _seed(live_session)
+        r = journal.record_view(1, "KXMLSGAME-x-T",
+                                outcome_key="home_win",
+                                market_quote_id=1)
+        assert "error" in r
+        assert "KXMLSGAME-x-H" in r["error"]
+        assert "KXMLSGAME-x-T" in r["error"]
+
+    def test_an_unapproved_event_mapping_is_rejected(self, live_session):
+        from src.live import journal
+        _seed(live_session)
+        ev = live_session.get(MarketEvent, 1)
+        ev.mapping_approved = False
+        live_session.commit()
+        r = journal.record_view(1, "KXMLSGAME-x-H",
+                                outcome_key="home_win",
+                                market_quote_id=1)
+        assert "error" in r
+        assert "not approved" in r["error"]
+
+    def test_the_verified_chain_fills_the_contract_fk(self, live_session):
+        from src.live import journal
+        _seed(live_session)
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  market_quote_id=1)
+        assert bet["price_basis"] == "observed_quote"
+        stored = live_session.get(PersonalBet, bet["id"])
+        assert stored.market_contract_id == 1
+
+
+class TestExecutionLifecycle:
+    """journal-P0 F5: considered → taken → filled|partial → settled →
+    reconciled, append-only. Invalid transitions are rejected, fill
+    facts are never manufactured, and retries are no-ops."""
+
+    def _taken(self, journal):
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  stated_price="0.45", stated_size="100",
+                                  market_quote_id=1)
+        journal.resolve_view(bet["id"], "taken")
+        return bet
+
+    def test_end_to_end_lifecycle(self, live_session):
+        from src.live import journal
+        _seed(live_session)
+        now = datetime.now(UTC)
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  stated_price="0.45", stated_size="100",
+                                  market_quote_id=1)
+        assert bet["status"] == "considered"
+        taken = journal.resolve_view(bet["id"], "taken")
+        assert taken["status"] == "taken"
+        ex = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=now,
+            fill_price="0.47", filled_contracts="100", fee_paid="1.20",
+            filled_at=now, market_quote_id_at_fill=1,
+            exchange_order_id="ORD-1")
+        assert ex["status"] == "filled"
+        st = journal.settle_execution(
+            ex["id"], settlement_credit="100", settled_at=now,
+            settled_outcome="home_win")
+        assert st["settled_at"] is not None
+        assert st["settlement_credit_dollars"] == "100"
+        assert Decimal(st["gaps"]["settlement_delta"]) == Decimal("0")
+        rec = journal.reconcile_execution(
+            ex["id"], note="matches the Kalshi statement line for ORD-1")
+        assert rec["reconciled"] is True
+        assert rec["reconciliation_note"]
+
+    def test_a_fill_against_a_passed_entry_is_rejected(self,
+                                                       live_session):
+        from src.live import journal
+        _seed(live_session)
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  market_quote_id=1)
+        journal.resolve_view(bet["id"], "passed")
+        r = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=datetime.now(UTC),
+            fill_price="0.47", filled_contracts="100", fee_paid="1.20",
+            filled_at=datetime.now(UTC))
+        assert "error" in r
+        assert "passed" in r["error"]
+
+    def test_a_fill_against_a_void_entry_is_rejected(self, live_session):
+        from src.live import journal
+        _seed(live_session, kickoff_in_hours=-1.0)
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  market_quote_id=1)
+        assert bet["status"] == "void"
+        r = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=datetime.now(UTC),
+            fill_price="0.47", filled_contracts="100", fee_paid="1.20",
+            filled_at=datetime.now(UTC))
+        assert "error" in r
+        assert "void" in r["error"]
+
+    def test_a_fill_against_an_unresolved_entry_is_rejected(
+            self, live_session):
+        """considered → filled skips the decision; the walk is
+        considered → taken → filled."""
+        from src.live import journal
+        _seed(live_session)
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  market_quote_id=1)
+        r = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=datetime.now(UTC),
+            fill_price="0.47", filled_contracts="100", fee_paid="1.20",
+            filled_at=datetime.now(UTC))
+        assert "error" in r
+        assert "considered" in r["error"]
+
+    def test_missing_economics_on_filled_is_rejected(self, live_session):
+        """A filled execution without price, quantity, fee and the real
+        fill moment measures nothing — and the server must not invent
+        the missing facts (it used to default filled_at to now())."""
+        from src.live import journal
+        _seed(live_session)
+        bet = self._taken(journal)
+        r = journal.record_execution(
+            bet["id"], "friend-A",
+            consent_recorded_at=datetime.now(UTC),
+            fill_price="0.47")           # no quantity, fee or timestamp
+        assert "error" in r
+        for field in ("filled_contracts", "fee_paid", "filled_at"):
+            assert field in r["error"], field
+
+    def test_a_repeat_post_is_a_no_op(self, live_session):
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+        now = datetime.now(UTC)
+        kw = dict(consent_recorded_at=now, fill_price="0.47",
+                  filled_contracts="100", fee_paid="1.20", filled_at=now,
+                  exchange_order_id="ORD-9")
+        first = journal.record_execution(bet["id"], "friend-A", **kw)
+        assert "error" not in first
+        again = journal.record_execution(bet["id"], "friend-A", **kw)
+        assert again.get("idempotent") is True
+        assert again["id"] == first["id"]
+        assert live_session.query(PBE).count() == 1
+
+    def test_the_database_itself_enforces_order_status_uniqueness(
+            self, live_session):
+        """Test-DB parity: the (exchange_order_id, status) uniqueness is
+        a real constraint the SQLite suite enforces too, not a promise
+        the handler makes."""
+        from sqlalchemy.exc import IntegrityError
+        from src.live.models import PersonalBetExecution as PBE
+        from src.live import journal
+        _seed(live_session)
+        bet = self._taken(journal)
+        now = datetime.now(UTC)
+        for _ in range(2):
+            live_session.add(PBE(
+                personal_bet_id=bet["id"], account_label="friend-A",
+                consent_recorded_at=now, status="filled",
+                fill_price_dollars="0.47", filled_contracts="100",
+                fee_paid_dollars="1.20", filled_at=now,
+                exchange_order_id="ORD-DUP"))
+        with pytest.raises(IntegrityError):
+            live_session.commit()
+        live_session.rollback()
+
+    def test_resolution_is_immutable_once_set(self, live_session):
+        from src.live import journal
+        _seed(live_session)
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  market_quote_id=1)
+        journal.resolve_view(bet["id"], "taken")
+        r = journal.resolve_view(bet["id"], "passed")
+        assert "error" in r
+        assert "immutable" in r["error"]
+        assert live_session.get(PersonalBet, bet["id"]).status == "taken"
+
+    def test_a_correction_is_a_new_row_referencing_the_old(
+            self, live_session):
+        from src.live import journal
+        _seed(live_session)
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  market_quote_id=1)
+        journal.resolve_view(bet["id"], "taken")
+        fix = journal.record_view(
+            1, "KXMLSGAME-x-H", outcome_key="home_win",
+            market_quote_id=1, rationale="mis-resolved; he passed",
+            corrects_bet_id=bet["id"])
+        assert fix["corrects_bet_id"] == bet["id"]
+        assert fix["id"] != bet["id"]
+        # the mistaken row is untouched — the record keeps its mistake
+        assert live_session.get(PersonalBet, bet["id"]).status == "taken"
+        bad = journal.record_view(1, "KXMLSGAME-x-H",
+                                  corrects_bet_id=999)
+        assert "error" in bad
+
+    def test_settlement_requires_a_fill_and_is_immutable(
+            self, live_session):
+        from src.live import journal
+        _seed(live_session)
+        bet = self._taken(journal)
+        now = datetime.now(UTC)
+        nf = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=now,
+            status="not_filled", not_filled_reason="price_moved")
+        r = journal.settle_execution(nf["id"], settlement_credit="0",
+                                     settled_at=now)
+        assert "error" in r                    # not_filled never settles
+        ex = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=now,
+            fill_price="0.47", filled_contracts="100", fee_paid="1.20",
+            filled_at=now, exchange_order_id="ORD-2")
+        ok = journal.settle_execution(ex["id"], settlement_credit="100",
+                                      settled_at=now)
+        assert "error" not in ok
+        # identical retry: no-op; conflicting rewrite: refused
+        again = journal.settle_execution(ex["id"],
+                                         settlement_credit="100",
+                                         settled_at=now)
+        assert again.get("idempotent") is True
+        bad = journal.settle_execution(ex["id"], settlement_credit="50",
+                                       settled_at=now)
+        assert "error" in bad
+        assert "immutable" in bad["error"]
+
+    def test_reconcile_requires_settlement_first(self, live_session):
+        from src.live import journal
+        _seed(live_session)
+        bet = self._taken(journal)
+        now = datetime.now(UTC)
+        ex = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=now,
+            fill_price="0.47", filled_contracts="100", fee_paid="1.20",
+            filled_at=now)
+        r = journal.reconcile_execution(ex["id"], note="premature")
+        assert "error" in r
+        assert "not settled" in r["error"]
+        journal.settle_execution(ex["id"], settlement_credit="100",
+                                 settled_at=now)
+        ok = journal.reconcile_execution(ex["id"], note="checked")
+        assert ok["reconciled"] is True
+        again = journal.reconcile_execution(ex["id"], note="checked")
+        assert again.get("idempotent") is True
+
+
 class TestExecutions:
     def test_consent_is_required(self, live_session):
         from src.live import journal
@@ -222,6 +522,7 @@ class TestExecutions:
         bet = journal.record_view(1, "KXMLSGAME-x-H",
                                   outcome_key="home_win",
                                   stated_price="0.31", market_quote_id=1)
+        journal.resolve_view(bet["id"], "taken")
         r = journal.record_execution(
             bet["id"], "friend-A", consent_recorded_at=datetime.now(UTC),
             status="not_filled", not_filled_reason="price_moved",
@@ -258,10 +559,11 @@ class TestExecutions:
         bet = journal.record_view(1, "KXMLSGAME-x-H",
                                   outcome_key="home_win",
                                   stated_price="0.45", market_quote_id=1)
+        journal.resolve_view(bet["id"], "taken")
         r = journal.record_execution(
             bet["id"], "friend-A", consent_recorded_at=datetime.now(UTC),
             fill_price="0.49", filled_contracts="100", fee_paid="1.30",
-            market_quote_id_at_fill=2)
+            filled_at=datetime.now(UTC), market_quote_id_at_fill=2)
         g = r["gaps"]
         # mid@record 0.44 · mid@fill 0.48 · stated 0.45 · fill 0.49
         assert Decimal(g["slippage"]) == Decimal("0.04")
@@ -284,10 +586,12 @@ class TestExecutions:
         bet = journal.record_view(1, "KXMLSGAME-x-H",
                                   outcome_key="home_win",
                                   stated_price="0.45", market_quote_id=1)
+        journal.resolve_view(bet["id"], "taken")
         r = journal.record_execution(
             bet["id"], "friend-A", consent_recorded_at=datetime.now(UTC),
             fill_price="0.45", filled_contracts="100",
-            fee_paid="2.00", market_quote_id_at_fill=1)
+            fee_paid="2.00", filled_at=datetime.now(UTC),
+            market_quote_id_at_fill=1)
         g = r["gaps"]
         assert Decimal(g["fee_delta"]) != 0
         assert Decimal(g["fee_paid"] if "fee_paid" in g
