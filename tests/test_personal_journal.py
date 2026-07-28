@@ -600,6 +600,116 @@ class TestExecutions:
         assert Decimal(g["fee_modelled"]) > 0
 
 
+class TestComposedFreshness:
+    """journal-P0-B, the reviewer's exact repro through the REAL path:
+    the bundle is assembled from inner event/market caches that serve
+    stale on failure, and the outer wrapper used to stamp assembly time
+    — laundering a two-hour-old ask into `live, age 0`. Fake network,
+    fake clock, real find_book/event_markets/find_all_books composition."""
+
+    DATE = "2026-07-28T23:30Z"
+    HOME, AWAY = "FC Cincinnati", "Columbus Crew"
+
+    class _FakeTime:
+        def __init__(self):
+            self.now = 1000.0
+
+        def monotonic(self):
+            return self.now
+
+        def sleep(self, _s):
+            pass
+
+    @pytest.fixture()
+    def market_world(self, monkeypatch):
+        """A live Kalshi world behind a kill switch: canned events and
+        markets while up, every fetch failing while down."""
+        from src import mls
+        ft = self._FakeTime()
+        monkeypatch.setattr(mls, "time", ft)
+        mls._cache.clear()
+        state = {"up": True}
+
+        def fake_get_json(url, params=None):
+            if not state["up"]:
+                return None
+            if "/events" in url:
+                return {"events": [{
+                    "event_ticker": "KXMLSGAME-26JUL28CINCLB",
+                    "title": "FC Cincinnati vs Columbus Crew"}]}
+            if "/markets" in url:
+                return {"markets": [{
+                    "ticker": "KXMLSGAME-26JUL28CINCLB-CIN",
+                    "yes_sub_title": "FC Cincinnati",
+                    "yes_ask_dollars": "0.45",
+                    "yes_bid_dollars": "0.43",
+                    "status": "active"}]}
+            return None
+
+        monkeypatch.setattr(mls, "_get_json", fake_get_json)
+        yield mls, ft, state
+        mls._cache.clear()
+
+    def test_stale_inner_caches_cannot_launder_into_live(
+            self, market_world):
+        mls, ft, state = market_world
+        books, meta = mls.find_all_books_with_freshness(
+            self.DATE, self.HOME, self.AWAY)
+        assert meta["status"] == "live" and books
+        # provider dies; every inner ttl expires; the bundle REBUILDS
+        # from stale inner caches — the old code stamped that live/age 0
+        state["up"] = False
+        ft.now += 200
+        books, meta = mls.find_all_books_with_freshness(
+            self.DATE, self.HOME, self.AWAY)
+        assert meta["status"] == "stale_fallback"     # NOT live
+        assert meta["age_seconds"] >= 200             # oldest constituent
+        assert books                                  # served, labelled
+        # beyond the ceiling: fail closed, no price presented at all
+        ft.now += 600
+        books, meta = mls.find_all_books_with_freshness(
+            self.DATE, self.HOME, self.AWAY)
+        assert meta["status"] == "unavailable"
+        assert books == []
+        assert meta["age_seconds"] >= 700
+        assert meta["observed_at"] is not None
+
+    def test_briefing_composes_the_real_price_path(
+            self, live_session, market_world, monkeypatch):
+        """Seeded caches older than MLS_PRICE_MAX_AGE_SECONDS + every
+        provider fetch failing -> the REAL briefing path answers
+        unavailable, empty current books, no live label."""
+        mls, ft, state = market_world
+        _seed(live_session)
+        monkeypatch.setattr(mls, "match_summary", lambda eid: {
+            "date": self.DATE, "home": {"name": self.HOME},
+            "away": {"name": self.AWAY}})
+        from src.live import runs as live_runs
+        monkeypatch.setattr(live_runs, "model_for_event",
+                            lambda eid: {}, raising=False)
+        from src.live import journal
+        out = journal.briefing("e1")
+        assert out["market_current"]["status"] == "live"
+        state["up"] = False
+        ft.now += 700          # past MLS_PRICE_MAX_AGE_SECONDS (600)
+        out = journal.briefing("e1")
+        cur = out["market_current"]
+        assert cur["status"] == "unavailable"
+        assert cur["basis"] != "live_read"
+        assert cur["books"] == []
+        assert cur["age_seconds"] >= 700
+
+    def test_price_ceiling_must_exceed_inner_ttls(self, monkeypatch):
+        """journal-P0-B: the ceiling is validated at startup against
+        the price-path TTL table — an incoherent config fails fast."""
+        from src import mls
+        monkeypatch.setattr(config, "MLS_PRICE_MAX_AGE_SECONDS", 60)
+        with pytest.raises(ValueError):
+            mls._validate_price_freshness_config()
+        monkeypatch.setattr(config, "MLS_PRICE_MAX_AGE_SECONDS", 600)
+        mls._validate_price_freshness_config()
+
+
 class TestPriceFreshness:
     """journal-P0 F4: a stale price must never wear a live label. The
     cache may serve a fallback — WITH its age — and past the TTL it
