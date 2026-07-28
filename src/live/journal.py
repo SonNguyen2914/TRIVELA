@@ -813,13 +813,31 @@ def broadcast(message: str, *, channel: str = "action",
                 "error": (f"refused: broadcast() was reached from {auto} "
                           f"— scheduled jobs and model code paths may "
                           f"never dispatch, whatever source they claim")}
-    body = f"🗣 {message}"
-    if channel == "action":
-        # server-side, unconditionally: the action channel reaches the
-        # person whose friend bets real money, so the number's
-        # uncertainty travels in the same message, not in a footnote
-        # somewhere the reader has to know to look
-        body = f"{body}\n{_shadow_qualifier()}"
+    # --- compose the wire payload WITHIN the transport limit ----------
+    # journal-P0-A: the transports truncate at TRANSPORT_MESSAGE_LIMIT,
+    # and on a long action message the tail they cut was exactly the
+    # qualifier. So the qualifier's space is RESERVED first and the
+    # operator prose is truncated (with an explicit marker) to fit —
+    # the uncertainty language is the one part that must never shed.
+    from src import alerts
+    limit = alerts.TRANSPORT_MESSAGE_LIMIT
+    qualifier = _shadow_qualifier() if channel == "action" else None
+    prefix = "🗣 "
+    reserved = len(prefix) + (len(qualifier) + 1 if qualifier else 0)
+    room = limit - reserved
+    if room <= 0:
+        return {"error": "transport limit cannot fit the qualifier — "
+                         "refusing to dispatch a number without its "
+                         "uncertainty"}
+    prose, truncated = message, False
+    if len(prose) > room:
+        marker = " …[truncated; full prose in the journal record]"
+        prose = prose[:room - len(marker)] + marker
+        truncated = True
+    body = f"{prefix}{prose}" + (f"\n{qualifier}" if qualifier else "")
+    assert len(body) <= limit, "composer must respect the wire limit"
+    body_sha = hashlib.sha256(body.encode("utf-8")).hexdigest()
+
     s = get_session()
     try:
         row = BroadcastLog(
@@ -827,13 +845,16 @@ def broadcast(message: str, *, channel: str = "action",
             session_label=session_label, message=message,
             claims_json=(json.dumps(claims, sort_keys=True, default=str)
                          if claims else None),
-            created_at=_now())
+            created_at=_now(),
+            # the wire record: what is actually being handed to the
+            # transports, not what the caller composed
+            dispatched_body=body, dispatched_sha256=body_sha)
         s.add(row)
         s.flush()
         transports: dict = {}
         try:
-            from src.alerts import send_alert
-            result = send_alert(body, title="Trivela", kind=channel)
+            result = alerts.send_alert(body, title="Trivela",
+                                       kind=channel)
             if isinstance(result, dict):
                 transports = result
         except Exception as exc:      # a failed send must not lose the record
@@ -843,9 +864,12 @@ def broadcast(message: str, *, channel: str = "action",
         # "dispatched without raising" is not delivery (journal-P1 F6)
         dispatched = bool(accepted)
         row.delivered = dispatched
+        row.transports_json = json.dumps(transports, sort_keys=True)
         s.commit()
         return {"id": row.id, "dispatched": dispatched,
                 "transports": transports, "accepted": accepted,
+                "payload_truncated": truncated,
+                "dispatched_sha256": body_sha,
                 "channel": channel, "source": source}
     finally:
         s.close()
@@ -866,6 +890,12 @@ def recent_broadcasts(fixture_id: int, limit: int = 20) -> list[dict]:
                  "claims": (json.loads(r.claims_json)
                             if r.claims_json else None),
                  "delivered": bool(r.delivered),
+                 # the wire record (journal-P0-A): what was actually
+                 # sent, verifiable against its hash
+                 "dispatched_body": r.dispatched_body,
+                 "dispatched_sha256": r.dispatched_sha256,
+                 "transports": (json.loads(r.transports_json)
+                                if r.transports_json else None),
                  "created_at": (r.created_at.isoformat()
                                 if r.created_at else None)}
                 for r in rows]

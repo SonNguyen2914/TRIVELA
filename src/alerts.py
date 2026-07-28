@@ -5,6 +5,15 @@ import requests
 
 import config
 
+# The per-transport payload ceiling, in characters (journal-P0-A).
+# Discord hard-caps content at 2000; ntfy is more generous. 1900 is the
+# historical safety margin. It is a NAMED constant because a caller
+# composing a message with a mandatory tail (the shadow qualifier) must
+# reserve space against the SAME number the transports truncate at —
+# two different literals here and in the composer is exactly how a
+# truncation silently eats the tail.
+TRANSPORT_MESSAGE_LIMIT = 1900
+
 
 def send_discord(message: str, channel: str = "action") -> bool:
     """Post to one of the two Discord channels: "action" (terse, act-now)
@@ -16,7 +25,9 @@ def send_discord(message: str, channel: str = "action") -> bool:
         print(f"[alert skipped - no webhook/{channel}] {message[:80]}")
         return False
     try:
-        resp = requests.post(url, json={"content": message[:1900]}, timeout=8)
+        resp = requests.post(
+            url, json={"content": message[:TRANSPORT_MESSAGE_LIMIT]},
+            timeout=8)
         return resp.status_code in (200, 204)
     except requests.RequestException as exc:
         print(f"[alert failed] {exc}")
@@ -60,7 +71,7 @@ def send_ntfy(message: str, title: str = "WC26", priority: str = "high") -> bool
     try:
         resp = requests.post(
             f"https://ntfy.sh/{config.NTFY_TOPIC}",
-            data=message[:1900].encode("utf-8"),
+            data=message[:TRANSPORT_MESSAGE_LIMIT].encode("utf-8"),
             headers={"Title": title, "Priority": priority, "Tags": "soccer"},
             timeout=8)
         return resp.status_code == 200

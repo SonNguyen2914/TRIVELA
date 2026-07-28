@@ -599,6 +599,14 @@ class BroadcastLog(LiveBase):
     claims_json = Column(Text)
     delivered = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True))
+    # journal-P0-A: the EXACT payload handed to the transports (prefix +
+    # possibly-truncated prose + qualifier), its hash, and each
+    # transport's own acceptance — so the log describes what was
+    # actually SENT, not what the caller composed. `message` above stays
+    # the operator's full prose; this is the wire record.
+    dispatched_body = Column(Text)
+    dispatched_sha256 = Column(String(64))
+    transports_json = Column(Text)
 
 
 class PaperEvaluationContext(LiveBase):

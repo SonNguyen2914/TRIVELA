@@ -1148,6 +1148,84 @@ class TestBroadcast:
         assert [b["message"] for b in said] == ["second", "first"]
 
 
+class TestWirePayloadIntegrity:
+    """journal-P0-A, composed path: REAL broadcast -> REAL send_alert ->
+    fake network. The transports truncate at TRANSPORT_MESSAGE_LIMIT,
+    so the qualifier's space is reserved and the PROSE is truncated —
+    and the stored dispatch record is the byte-exact wire payload."""
+
+    @pytest.fixture()
+    def wire(self, monkeypatch):
+        """Fake network capturing exactly what each transport POSTs."""
+        import src.alerts as alerts
+        monkeypatch.setattr(config, "DISCORD_ACTION_WEBHOOK_URL",
+                            "https://fake/discord-action")
+        monkeypatch.setattr(config, "DISCORD_DETAIL_WEBHOOK_URL",
+                            "https://fake/discord-detail")
+        monkeypatch.setattr(config, "NTFY_TOPIC", "fake-topic")
+        captured = {}
+
+        class _Resp:
+            status_code = 200
+
+        def fake_post(url, json=None, data=None, headers=None,
+                      timeout=None):
+            if "discord-action" in url:
+                captured["discord_action"] = json["content"]
+            elif "discord-detail" in url:
+                captured["discord_detail"] = json["content"]
+            elif "ntfy" in url:
+                captured["ntfy"] = data.decode("utf-8")
+            return _Resp()
+
+        monkeypatch.setattr(alerts.requests, "post", fake_post)
+        return captured
+
+    def test_oversized_action_message_keeps_the_full_qualifier(
+            self, live_session, wire):
+        """3000 chars of prose through the REAL transport wrappers:
+        both Discord and ntfy receive the COMPLETE qualifier, the prose
+        is what shrank, and the stored record IS the wire payload."""
+        import hashlib as _h
+        from src import alerts
+        from src.live import journal
+        _seed(live_session)
+        prose = "CIN drifting hard, book thinning. " * 100   # ~3400
+        assert len(prose) > alerts.TRANSPORT_MESSAGE_LIMIT
+        r = journal.broadcast(prose, channel="action", fixture_id=1)
+        assert r["dispatched"] is True
+        assert r["payload_truncated"] is True
+        # every transport got the same, complete payload
+        assert set(wire) == {"discord_action", "discord_detail", "ntfy"}
+        for name, payload in wire.items():
+            assert len(payload) <= alerts.TRANSPORT_MESSAGE_LIMIT, name
+            assert "[shadow]" in payload, name
+            assert "not a real-money signal" in payload, name
+            assert ("not significant" in payload
+                    or "no established edge" in payload), name
+            assert "…[truncated" in payload, name
+        assert wire["discord_action"] == wire["ntfy"]
+        # the stored dispatch record matches the actual wire bytes
+        said = journal.recent_broadcasts(1)[0]
+        assert said["dispatched_body"] == wire["discord_action"]
+        assert said["dispatched_sha256"] == _h.sha256(
+            wire["discord_action"].encode("utf-8")).hexdigest()
+        assert said["dispatched_sha256"] == r["dispatched_sha256"]
+        # the operator's full prose is preserved in the journal record
+        assert said["message"] == prose
+
+    def test_normal_sized_prose_is_not_truncated(self, live_session,
+                                                 wire):
+        from src.live import journal
+        _seed(live_session)
+        r = journal.broadcast("CIN 0.31, book thin", channel="action",
+                              fixture_id=1)
+        assert r["payload_truncated"] is False
+        assert "CIN 0.31, book thin" in wire["discord_action"]
+        assert "[shadow]" in wire["discord_action"]
+        assert "…[truncated" not in wire["discord_action"]
+
+
 class TestBroadcastBoundary:
     """journal-P0 F1: the action channel reaches a human whose friend
     bets real money. Only operator-authenticated session prose may
