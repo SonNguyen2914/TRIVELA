@@ -897,13 +897,34 @@ def briefing(espn_event_id: str) -> dict:
         summary = mls.match_summary(espn_event_id)
         out["fixture"] = summary
         if summary:
+            # journal-P0 F4: the read carries its own age and a truthful
+            # status. `basis` says live_read ONLY when the read is live;
+            # a failed refresh serves the cache AS a labelled fallback,
+            # and past MLS_PRICE_MAX_AGE_SECONDS it fails closed — no
+            # price is presented as current at all.
+            books, fresh = mls.find_all_books_with_freshness(
+                summary.get("date"),
+                (summary.get("home") or {}).get("name") or "",
+                (summary.get("away") or {}).get("name") or "")
+            status = fresh.get("status")
             out["market_current"] = {
-                "basis": "live_read",
-                "books": mls.find_all_books(
-                    summary.get("date"),
-                    (summary.get("home") or {}).get("name") or "",
-                    (summary.get("away") or {}).get("name") or ""),
+                "basis": {"live": "live_read",
+                          "stale_fallback": "cached_read"}.get(
+                              status, "unavailable"),
+                "status": status,
+                "observed_at": fresh.get("observed_at"),
+                "age_seconds": fresh.get("age_seconds"),
+                "books": books if status != "unavailable" else [],
             }
+            if status == "stale_fallback":
+                out["market_current"]["note"] = (
+                    "NOT a live read — refresh failed; serving the last "
+                    "observation WITH its age. Treat prices accordingly")
+            elif status != "live":
+                out["market_current"]["note"] = (
+                    "refresh failed and the last observation is beyond "
+                    "MLS_PRICE_MAX_AGE_SECONDS — no current price is "
+                    "presented")
     except Exception as exc:
         out["fixture_error"] = str(exc)[:160]
 
@@ -941,6 +962,9 @@ def briefing(espn_event_id: str) -> dict:
                     "outcome_key": c.outcome_key,
                     "ticker": mc.ticker if mc else None,
                     "model_probability": c.raw_probability,
+                    # the persisted id, so the documented record-view
+                    # flow can CITE this quote (journal-P0 F3)
+                    "market_quote_id": c.market_quote_id,
                     "frozen_yes_ask_dollars": (
                         q.yes_ask_dollars if q else None),
                     "frozen_yes_bid_dollars": (
@@ -957,6 +981,51 @@ def briefing(espn_event_id: str) -> dict:
                 "note": ("the book as it stood at T-10. Compare to "
                          "market_current deliberately, never accidentally"),
             }
+
+        # --- citable persisted quotes (journal-P0 F3 + F4) -------------
+        # The newest STORED quote per contract, with its id, capture
+        # time, age and a truthful status — so the documented flow
+        # ("cite market_quote_id from the briefing") can actually
+        # produce an id the server will accept, and no stored price is
+        # presented as current past the TTL.
+        from src.live.models import MarketEvent
+        now = _now()
+        max_age = config.MLS_PRICE_MAX_AGE_SECONDS
+        persisted = []
+        for me in (s.query(MarketEvent)
+                   .filter_by(fixture_id=fx.id, mapping_approved=True)
+                   .all()):
+            for mc in (s.query(MarketContract)
+                       .filter_by(market_event_id=me.id).all()):
+                q = (s.query(MarketQuote)
+                     .filter_by(market_contract_id=mc.id)
+                     .order_by(MarketQuote.captured_at.desc(),
+                               MarketQuote.id.desc()).first())
+                if q is None or q.captured_at is None:
+                    continue
+                age = int((now - _utc(q.captured_at)).total_seconds())
+                q_status = ("live" if age <= 60 else "stale_fallback"
+                            if age <= max_age else "unavailable")
+                entry = {"market_quote_id": q.id,
+                         "market_contract_id": mc.id,
+                         "ticker": mc.ticker,
+                         "outcome_key": mc.outcome_key,
+                         "captured_at": _utc(q.captured_at).isoformat(),
+                         "age_seconds": age,
+                         "status": q_status}
+                if q_status != "unavailable":
+                    entry["yes_ask_dollars"] = q.yes_ask_dollars
+                    entry["yes_bid_dollars"] = q.yes_bid_dollars
+                persisted.append(entry)
+        out["market_persisted"] = {
+            "basis": "persisted_observation",
+            "note": ("cite market_quote_id from here or from "
+                     "market_frozen_t10 when recording a view — these "
+                     "ids are server-verified against this fixture. "
+                     "Prices past the TTL are withheld; the id and "
+                     "capture time remain citable"),
+            "quotes": persisted,
+        }
 
         out["journal"] = open_entries(s, fx.id)
         out["said_already"] = recent_broadcasts(fx.id)

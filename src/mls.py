@@ -15,8 +15,11 @@ MLS model/trading work; this module exists so real data flows today.
 from __future__ import annotations
 
 import time
+from datetime import datetime, timezone
 
 import requests
+
+import config
 
 ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1"
 ESPN_STANDINGS = "https://site.api.espn.com/apis/v2/sports/soccer/usa.1/standings"
@@ -27,19 +30,58 @@ KALSHI_BASE = "https://api.elections.kalshi.com/trade-api/v2"
 KALSHI_MLS_GAME = "KXMLSGAME"
 KALSHI_MLS_CUP = "KXMLSCUP"
 
-_cache: dict[str, tuple[float, object]] = {}
+# key -> (monotonic_at_store, wall_clock_at_store, data). The wall clock
+# is carried so a freshness-aware caller can REPORT observed_at; the
+# monotonic clock stays the arithmetic basis (immune to wall adjustments).
+_cache: dict[str, tuple[float, datetime, object]] = {}
 
 
 def _cached(key: str, ttl: float, fetch):
     now = time.monotonic()
     hit = _cache.get(key)
     if hit and now - hit[0] < ttl:
-        return hit[1]
+        return hit[2]
     data = fetch()
     if data is not None:               # never cache a failed answer
-        _cache[key] = (now, data)
+        _cache[key] = (now, datetime.now(timezone.utc), data)
         return data
-    return hit[1] if hit else None     # stale beats nothing
+    return hit[2] if hit else None     # stale beats nothing
+
+
+def cached_with_freshness(key: str, ttl: float, fetch,
+                          max_age: float) -> tuple[object, dict]:
+    """`_cached`, but truthful about age (journal-P0 F4).
+
+    `_cached`'s "stale beats nothing" is right for resilience and wrong
+    for honesty: it serves an arbitrarily old value with nothing marking
+    it stale. This variant returns (data, meta) where meta always
+    carries `observed_at` (ISO), `age_seconds` and a `status`:
+
+        live            fresh fetch, or a cache hit within ttl
+        stale_fallback  refresh failed; cache older than ttl but within
+                        max_age — served, WITH its age
+        unavailable     refresh failed and nothing young enough exists —
+                        data is None; fail closed, no price presented
+
+    Shares `_cache` with `_cached`, so both views of a key agree."""
+    def _meta(hit, now: float, status: str) -> dict:
+        return {"observed_at": hit[1].isoformat(),
+                "age_seconds": int(now - hit[0]), "status": status}
+
+    now = time.monotonic()
+    hit = _cache.get(key)
+    if hit and now - hit[0] < ttl:
+        return hit[2], _meta(hit, now, "live")
+    data = fetch()
+    if data is not None:
+        _cache[key] = (now, datetime.now(timezone.utc), data)
+        return data, _meta(_cache[key], now, "live")
+    if hit and now - hit[0] <= max_age:
+        return hit[2], _meta(hit, now, "stale_fallback")
+    if hit:                            # too old to present as current
+        return None, _meta(hit, now, "unavailable")
+    return None, {"observed_at": None, "age_seconds": None,
+                  "status": "unavailable"}
 
 
 def _get_json(url: str, params: dict | None = None) -> dict | None:
@@ -750,9 +792,23 @@ def find_all_books(fixture_date: str, home_name: str,
     located by the approved-name matching; every other family shares
     its ticker suffix ({date}{HOME}{AWAY}), so the join is exact and
     needs no name resolution at all. 30s bundle cache."""
+    books, _meta = find_all_books_with_freshness(
+        fixture_date, home_name, away_name)
+    return books
+
+
+def find_all_books_with_freshness(
+        fixture_date: str, home_name: str,
+        away_name: str) -> tuple[list[dict], dict]:
+    """`find_all_books` plus the freshness meta a truthful caller needs
+    (journal-P0 F4): (books, {observed_at, age_seconds, status}). Past
+    `MLS_PRICE_MAX_AGE_SECONDS` with the provider down this fails
+    CLOSED — status `unavailable`, empty books, no price presented as
+    current."""
     game = find_book(fixture_date, home_name, away_name)
     if game is None:
-        return []
+        return [], {"observed_at": None, "age_seconds": None,
+                    "status": "unavailable"}
     suffix = game["event_ticker"].split("-", 1)[1]
     suffix_codes = suffix[7:]                # strip the YYMONDD date
 
@@ -780,7 +836,10 @@ def find_all_books(fixture_date: str, home_name: str,
                 fams.append({"key": key, "label": label,
                              "event_ticker": ticker, "markets": rows})
         return fams
-    return _cached(f"allbooks:{suffix}", 30, fetch) or []
+    data, meta = cached_with_freshness(
+        f"allbooks:{suffix}", 30, fetch,
+        config.MLS_PRICE_MAX_AGE_SECONDS)
+    return (data or []), meta
 
 
 def find_book(fixture_date: str, home_name: str, away_name: str,

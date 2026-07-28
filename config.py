@@ -266,6 +266,14 @@ COMPETITION = os.getenv("COMPETITION", "mls-2026").strip()
 # Shadow collection defaults ON: ingest, snapshot, lock, paper-trade.
 MLS_SHADOW_ENABLED = _parse_flag(
     os.getenv("MLS_SHADOW_ENABLED"), True, "MLS_SHADOW_ENABLED")
+# How old a cached market read may get before it is refused as a
+# "current" price (journal-P0 F4). The TTL cache serves stale on a
+# failed refresh — deliberately, for resilience — but past this age the
+# briefing fails CLOSED: status `unavailable`, no price presented as
+# current. Generous by default: ten minutes of staleness is clearly
+# labelled fallback, beyond it is misinformation.
+MLS_PRICE_MAX_AGE_SECONDS = int(
+    os.getenv("MLS_PRICE_MAX_AGE_SECONDS", "600"))
 # Money stays OFF by default and unknown-value-proof. Flipping this env
 # var alone is NOT sufficient by design: the readiness endpoint must
 # also report the model approved_for_real_money, which no code path

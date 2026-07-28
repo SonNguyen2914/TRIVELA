@@ -600,6 +600,126 @@ class TestExecutions:
         assert Decimal(g["fee_modelled"]) > 0
 
 
+class TestPriceFreshness:
+    """journal-P0 F4: a stale price must never wear a live label. The
+    cache may serve a fallback — WITH its age — and past the TTL it
+    fails closed. Plus the briefing half of F3: the payload carries the
+    persisted, citable quote ids."""
+
+    class _FakeTime:
+        def __init__(self):
+            self.now = 1000.0
+
+        def monotonic(self):
+            return self.now
+
+        def sleep(self, _s):
+            pass
+
+    def test_cached_price_past_ttl_with_failed_refresh_fails_closed(
+            self, monkeypatch):
+        """Cache a price, advance the clock, make refresh fail: within
+        max_age the answer is a LABELLED fallback with its age; past it
+        the answer is no price at all."""
+        from src import mls
+        ft = self._FakeTime()
+        monkeypatch.setattr(mls, "time", ft)
+        mls._cache.clear()
+        data, meta = mls.cached_with_freshness(
+            "k", 30, lambda: {"yes_ask": "0.45"}, 600)
+        assert meta["status"] == "live" and meta["age_seconds"] == 0
+        ft.now += 100                      # past ttl; refresh now fails
+        data, meta = mls.cached_with_freshness("k", 30, lambda: None,
+                                               600)
+        assert data == {"yes_ask": "0.45"}
+        assert meta["status"] == "stale_fallback"   # NOT live
+        assert meta["age_seconds"] == 100
+        assert meta["observed_at"] is not None
+        ft.now += 600                      # past max_age: fail CLOSED
+        data, meta = mls.cached_with_freshness("k", 30, lambda: None,
+                                               600)
+        assert data is None
+        assert meta["status"] == "unavailable"
+        assert meta["age_seconds"] == 700
+        mls._cache.clear()
+
+    def _briefing(self, monkeypatch, meta, books):
+        from src import mls
+        from src.live import runs as live_runs
+        monkeypatch.setattr(mls, "match_summary", lambda eid: {
+            "date": "2026-07-28T23:30Z",
+            "home": {"name": "FC Cincinnati"},
+            "away": {"name": "Columbus Crew"}})
+        monkeypatch.setattr(mls, "find_all_books_with_freshness",
+                            lambda *a, **kw: (books, meta),
+                            raising=False)
+        monkeypatch.setattr(live_runs, "model_for_event",
+                            lambda eid: {}, raising=False)
+        from src.live import journal
+        return journal.briefing("e1")
+
+    def test_briefing_never_labels_a_stale_book_live(self, live_session,
+                                                     monkeypatch):
+        _seed(live_session)
+        out = self._briefing(
+            monkeypatch,
+            {"observed_at": "2026-07-28T00:00:00+00:00",
+             "age_seconds": 120, "status": "stale_fallback"},
+            [{"key": "winner", "markets": []}])
+        cur = out["market_current"]
+        assert cur["basis"] == "cached_read"        # NOT live_read
+        assert cur["status"] == "stale_fallback"
+        assert cur["age_seconds"] == 120
+        assert cur["observed_at"] is not None
+        assert "NOT a live read" in cur["note"]
+
+    def test_briefing_fails_closed_when_the_price_is_too_old(
+            self, live_session, monkeypatch):
+        _seed(live_session)
+        out = self._briefing(
+            monkeypatch,
+            {"observed_at": "2026-07-27T00:00:00+00:00",
+             "age_seconds": 90000, "status": "unavailable"},
+            [{"key": "winner", "markets": [{"yes_ask": "0.45"}]}])
+        cur = out["market_current"]
+        assert cur["basis"] == "unavailable"
+        assert cur["status"] == "unavailable"
+        assert cur["books"] == []      # no price presented as current
+        assert cur["age_seconds"] == 90000
+
+    def test_briefing_carries_citable_quote_ids(self, live_session,
+                                                monkeypatch):
+        """journal-P0 F3: the documented happy path — 'cite
+        market_quote_id from the briefing' — must produce ids the
+        server accepts, for both the frozen and the persisted book."""
+        _seed(live_session)
+        live_session.add(PredictionRun(
+            id="lock1", fixture_id=1, run_type="t10", canonical=True,
+            status="complete", captured_at=datetime.now(UTC)))
+        live_session.flush()
+        live_session.add(PredictionContract(
+            prediction_run_id="lock1", market_contract_id=1,
+            market_quote_id=1, outcome_key="home_win",
+            raw_probability=0.52))
+        live_session.commit()
+        out = self._briefing(monkeypatch,
+                             {"observed_at": None, "age_seconds": None,
+                              "status": "unavailable"}, [])
+        frozen = out["market_frozen_t10"]["contracts"]
+        assert frozen and frozen[0]["market_quote_id"] == 1
+        assert frozen[0]["quote_captured_at"] is not None
+        quotes = out["market_persisted"]["quotes"]
+        assert quotes and quotes[0]["market_quote_id"] == 1
+        assert quotes[0]["captured_at"] is not None
+        assert "age_seconds" in quotes[0] and "status" in quotes[0]
+        # and the id the briefing hands out is one record_view ACCEPTS
+        from src.live import journal
+        bet = journal.record_view(
+            1, quotes[0]["ticker"], outcome_key=quotes[0]["outcome_key"],
+            market_quote_id=quotes[0]["market_quote_id"])
+        assert bet["price_basis"] == "observed_quote"
+
+
 class TestJsonBodies:
     """journal-P1 F8: mutation payloads travel as typed JSON bodies —
     the query string URL-decodes, so a rationale containing `&`, `%`,
