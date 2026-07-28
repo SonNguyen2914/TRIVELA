@@ -3319,3 +3319,76 @@ class TestV93ExecutionFidelity:
         monkeypatch.setattr(lineups_mod, "capture_lineup",
                             lambda fixture_id, **kw: None)
         assert runs.t10_locks()["locked"] == 0
+
+
+class TestStorageHeadroom:
+    """Railway's volume alerts are Teams/Pro-only, so the app must watch
+    its own headroom. The volume filled once (2026-07-25) and every
+    prediction write failed silently behind {"created": 0}."""
+
+    def _patch_used(self, monkeypatch, used_bytes, cap_bytes=5 * 1024**3,
+                    pct=70.0):
+        import config
+        from src.live import observability
+        monkeypatch.setattr(config, "LIVE_VOLUME_BYTES", cap_bytes,
+                            raising=False)
+        monkeypatch.setattr(config, "STORAGE_ALERT_PCT", pct, raising=False)
+        monkeypatch.setattr(observability, "storage_headroom",
+                            lambda: {
+                                "database_bytes": used_bytes,
+                                "volume_bytes": cap_bytes,
+                                "used_pct": round(
+                                    100.0 * used_bytes / cap_bytes, 2),
+                                "free_bytes": cap_bytes - used_bytes,
+                                "threshold_pct": pct,
+                                "over_threshold":
+                                    100.0 * used_bytes / cap_bytes >= pct,
+                                "capacity_is_configured": True})
+        return observability
+
+    def test_no_alert_below_threshold(self, monkeypatch):
+        obs = self._patch_used(monkeypatch, int(0.15 * 5 * 1024**3))
+        sent = []
+        monkeypatch.setattr("src.alerts.send_alert",
+                            lambda *a, **k: sent.append(a))
+        obs._last_storage_alert = None
+        r = obs.check_storage_headroom()
+        assert r["over_threshold"] is False
+        assert r["alerted"] is False
+        assert sent == []
+
+    def test_alert_fires_when_over_threshold(self, monkeypatch):
+        obs = self._patch_used(monkeypatch, int(0.85 * 5 * 1024**3))
+        sent = []
+        monkeypatch.setattr("src.alerts.send_alert",
+                            lambda msg, **k: sent.append(msg))
+        obs._last_storage_alert = None
+        r = obs.check_storage_headroom()
+        assert r["over_threshold"] is True
+        assert r["alerted"] is True
+        assert len(sent) == 1
+        # the message must name the silent-failure mode, not just a number
+        assert "SILENTLY" in sent[0]
+
+    def test_cooldown_suppresses_repeat_alerts(self, monkeypatch):
+        obs = self._patch_used(monkeypatch, int(0.85 * 5 * 1024**3))
+        sent = []
+        monkeypatch.setattr("src.alerts.send_alert",
+                            lambda msg, **k: sent.append(msg))
+        obs._last_storage_alert = None
+        obs.check_storage_headroom()
+        second = obs.check_storage_headroom()
+        assert second["alerted"] is False
+        assert second.get("suppressed") == "cooldown"
+        assert len(sent) == 1, "a filling disk must not page every hour"
+
+    def test_alert_failure_never_breaks_the_caller(self, monkeypatch):
+        obs = self._patch_used(monkeypatch, int(0.85 * 5 * 1024**3))
+
+        def boom(*a, **k):
+            raise RuntimeError("discord down")
+        monkeypatch.setattr("src.alerts.send_alert", boom)
+        obs._last_storage_alert = None
+        r = obs.check_storage_headroom()
+        assert r["alerted"] is False
+        assert "error" in r
