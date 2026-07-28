@@ -31,6 +31,7 @@ from src.live.models import (Competition, CorpusExport, Fixture,
                              MlsTeamMatchStat, ModelApprovalDecision,
                              ModelInputArtifact, ModelVersion,
                              PaperEvaluationContext, PaperFill,
+                             PersonalBet, PersonalBetExecution,
                              PaperSignal, Player, PredictionContract,
                              PredictionRun, RegistryDiscovery,
                              SourceObservation, Team, TeamAlias)
@@ -173,6 +174,17 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             # `SourceObservation` was not exported at all.
             "source_observations.json": [
                 _dump(x) for x in _book_observations(s, depth)],
+            # The personal journal and the pilot's real executions.
+            # Exported so the execution-fidelity evidence travels with
+            # the corpus — but they are a DIFFERENT evidence class from
+            # everything above and must never be folded into the
+            # forecast or market reports. Human-selected bets cannot
+            # measure edge; they measure whether execution behaves as
+            # modelled.
+            "personal_journal.json": [
+                _dump(x) for x in s.query(PersonalBet).all()],
+            "personal_journal_executions.json": [
+                _dump(x) for x in s.query(PersonalBetExecution).all()],
             # V9.5 eval C1: the frozen paper/risk state each lock was
             # evaluated against, so a reader can verify that a paper
             # decision was a pure function of frozen inputs
