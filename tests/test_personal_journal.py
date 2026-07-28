@@ -204,35 +204,38 @@ class TestFalsifiability:
         assert stored.prediction_run_id == "run1"
 
 
+def _seed_other_fixture(s):
+    """A second approved fixture/event/contract with quote id=5 —
+    shared by the view-time (F3) and fill-time (P0-E) identity tests."""
+    fx2 = Fixture(id=2, competition_slug="mls-2026",
+                  espn_event_id="e2", status="pre",
+                  current_kickoff_utc=datetime.now(UTC)
+                  + timedelta(hours=3))
+    ev2 = MarketEvent(id=2, competition_slug="mls-2026",
+                      kalshi_event_ticker="KXMLSGAME-y",
+                      series="KXMLSGAME", fixture_id=2,
+                      mapping_approved=True)
+    mc2 = MarketContract(id=2, market_event_id=2,
+                         ticker="KXMLSGAME-y-H",
+                         outcome_key="home_win")
+    q2 = MarketQuote(id=5, market_contract_id=2,
+                     captured_at=datetime.now(UTC)
+                     - timedelta(minutes=1),
+                     yes_ask_c=60, yes_bid_c=58)
+    s.add_all([fx2, ev2, mc2, q2])
+    s.commit()
+
+
 class TestQuoteIdentity:
     """journal-P0 F3: a cited quote must BELONG — fixture → approved
     MarketEvent → MarketContract → quote. One that exists but belongs
     elsewhere is rejected with the mismatch named, never accepted as a
     falsifiable price for the wrong match."""
 
-    def _seed_other_fixture(self, s):
-        fx2 = Fixture(id=2, competition_slug="mls-2026",
-                      espn_event_id="e2", status="pre",
-                      current_kickoff_utc=datetime.now(UTC)
-                      + timedelta(hours=3))
-        ev2 = MarketEvent(id=2, competition_slug="mls-2026",
-                          kalshi_event_ticker="KXMLSGAME-y",
-                          series="KXMLSGAME", fixture_id=2,
-                          mapping_approved=True)
-        mc2 = MarketContract(id=2, market_event_id=2,
-                             ticker="KXMLSGAME-y-H",
-                             outcome_key="home_win")
-        q2 = MarketQuote(id=5, market_contract_id=2,
-                         captured_at=datetime.now(UTC)
-                         - timedelta(minutes=1),
-                         yes_ask_c=60, yes_bid_c=58)
-        s.add_all([fx2, ev2, mc2, q2])
-        s.commit()
-
     def test_a_quote_from_another_fixture_is_rejected(self, live_session):
         from src.live import journal
         _seed(live_session)
-        self._seed_other_fixture(live_session)
+        _seed_other_fixture(live_session)
         r = journal.record_view(1, "KXMLSGAME-y-H",
                                 outcome_key="home_win",
                                 stated_price="0.60", market_quote_id=5)
@@ -299,7 +302,6 @@ class TestExecutionLifecycle:
     def test_end_to_end_lifecycle(self, live_session):
         from src.live import journal
         _seed(live_session)
-        now = datetime.now(UTC)
         bet = journal.record_view(1, "KXMLSGAME-x-H",
                                   outcome_key="home_win",
                                   stated_price="0.45", stated_size="100",
@@ -307,6 +309,9 @@ class TestExecutionLifecycle:
         assert bet["status"] == "considered"
         taken = journal.resolve_view(bet["id"], "taken")
         assert taken["status"] == "taken"
+        # the fill moment must not precede the taken moment (P0-D
+        # chronology), so it is captured AFTER the resolution above
+        now = datetime.now(UTC)
         ex = journal.record_execution(
             bet["id"], "friend-A", consent_recorded_at=now,
             fill_price="0.47", filled_contracts="100", fee_paid="1.20",
@@ -598,6 +603,350 @@ class TestExecutions:
                        else "2.00") == Decimal("2.00")
         # the modelled value is reported beside it, not instead of it
         assert Decimal(g["fee_modelled"]) > 0
+
+
+class TestLifecycleDomains:
+    """journal-P0-D: the lifecycle starts where the state machine says
+    it starts, operator-supplied values carry DOMAINS, timestamps carry
+    their timezone, and time runs forward. Every rejection is proven
+    against the DATABASE — an invalid request writes exactly nothing —
+    because round 1 validated some of this after rows were already
+    committed."""
+
+    HDRS = {"X-Admin-Token": "s3cret"}
+
+    @pytest.fixture()
+    def client(self, live_session, monkeypatch):
+        monkeypatch.setattr(config, "ADMIN_TOKEN", "s3cret")
+        from fastapi.testclient import TestClient
+        from api import main as api_main
+        api_main._rate_last.clear()
+        return TestClient(api_main.app)
+
+    def _taken(self, journal):
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  stated_price="0.45",
+                                  market_quote_id=1)
+        journal.resolve_view(bet["id"], "taken")
+        return bet
+
+    def test_an_initial_taken_cannot_be_posted_through_the_api(
+            self, live_session, client):
+        """The COMPOSED path: JournalViewIn.status was a default, not a
+        constraint — POSTing status="taken" skipped considered→resolve
+        entirely, and with it the moment the passes become recordable.
+        There is no spelling of a pre-resolved entry at any layer now."""
+        _seed(live_session)
+        r = client.post("/api/admin/mls/journal/view", headers=self.HDRS,
+                        json={"fixture_id": 1,
+                              "market_ticker": "KXMLSGAME-x-H",
+                              "outcome_key": "home_win",
+                              "market_quote_id": 1,
+                              "status": "taken"})
+        assert r.status_code == 200, r.text
+        assert r.json()["status"] == "considered"
+        stored = live_session.get(PersonalBet, r.json()["id"])
+        assert stored.status == "considered"
+
+    def test_record_view_accepts_no_status_at_all(self):
+        """Not an ignored value — the parameter does not exist, so no
+        future caller can quietly reintroduce the bypass."""
+        import inspect
+        from src.live import journal
+        assert "status" not in inspect.signature(
+            journal.record_view).parameters
+
+    def test_view_price_and_size_domains_reject_and_write_nothing(
+            self, live_session):
+        from src.live import journal
+        _seed(live_session)
+        cases = [{"stated_price": "NaN"}, {"stated_price": "Infinity"},
+                 {"stated_price": "-1"}, {"stated_price": "1.01"},
+                 {"stated_price": "garbage"},
+                 {"stated_size": "0"}, {"stated_size": "-5"},
+                 {"stated_size": "NaN"}]
+        for kw in cases:
+            r = journal.record_view(1, "KXMLSGAME-x-H",
+                                    outcome_key="home_win",
+                                    market_quote_id=1, **kw)
+            assert "error" in r, kw
+            (field, _), = kw.items()
+            assert field in r["error"]
+        assert live_session.query(PersonalBet).count() == 0
+
+    def test_execution_economics_domains_reject_and_write_nothing(
+            self, live_session):
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+        now = datetime.now(UTC)
+        base = dict(consent_recorded_at=now, filled_at=now,
+                    fill_price="0.47", filled_contracts="10",
+                    fee_paid="0.12")
+        cases = [{"fill_price": "1.01"}, {"fill_price": "-0.2"},
+                 {"fill_price": "NaN"}, {"fill_price": "inf"},
+                 {"filled_contracts": "0"}, {"filled_contracts": "-5"},
+                 {"fee_paid": "-0.01"},
+                 {"best_available_price": "2"}]
+        for kw in cases:
+            r = journal.record_execution(
+                bet["id"], "friend-A", **{**base, **kw})
+            assert "error" in r, kw
+            (field, _), = kw.items()
+            assert field in r["error"]
+        assert live_session.query(PBE).count() == 0
+
+    def test_naive_timestamps_are_rejected_never_relabelled(
+            self, live_session):
+        """'Assume UTC' converts a data-entry mistake into wrong
+        provenance with no trace — on the consent moment, the fill
+        moment and the settlement moment alike."""
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+        naive = datetime.now(UTC).replace(tzinfo=None)
+        aware = datetime.now(UTC)
+        econ = dict(fill_price="0.47", filled_contracts="10",
+                    fee_paid="0.12")
+        r = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=naive,
+            filled_at=aware, **econ)
+        assert "error" in r and "timezone-naive" in r["error"]
+        assert "consent_recorded_at" in r["error"]
+        r = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=aware,
+            filled_at=naive, **econ)
+        assert "error" in r and "filled_at" in r["error"]
+        assert live_session.query(PBE).count() == 0
+        ok = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=aware,
+            filled_at=datetime.now(UTC), exchange_order_id="ORD-TZ",
+            **econ)
+        assert "error" not in ok
+        r = journal.settle_execution(
+            ok["id"], settlement_credit="10",
+            settled_at=datetime.now(UTC).replace(tzinfo=None))
+        assert "error" in r and "settled_at" in r["error"]
+        live_session.expire_all()
+        assert live_session.get(PBE, ok["id"]).settled_at is None
+
+    def test_a_fill_cannot_antedate_the_taken_moment(self, live_session):
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+        r = journal.record_execution(
+            bet["id"], "friend-A",
+            consent_recorded_at=datetime.now(UTC),
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=datetime.now(UTC) - timedelta(minutes=10))
+        assert "error" in r and "antedate" in r["error"]
+        assert live_session.query(PBE).count() == 0
+
+    def test_settlement_cannot_precede_the_fill(self, live_session):
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+        now = datetime.now(UTC)
+        ex = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=now,
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=now, exchange_order_id="ORD-CHR")
+        r = journal.settle_execution(
+            ex["id"], settlement_credit="10",
+            settled_at=now - timedelta(hours=1))
+        assert "error" in r and "settle before the fill" in r["error"]
+        live_session.expire_all()
+        row = live_session.get(PBE, ex["id"])
+        assert row.settled_at is None
+        assert row.settlement_credit_dollars is None
+
+    def test_a_gap_computation_failure_cannot_unrecord_a_fill(
+            self, live_session, monkeypatch):
+        """The execution row COMMITS before the derived-gap computation
+        runs, so a failure there must degrade to an explicit marker on
+        the response — never a 500 that makes a recorded fill look
+        unrecorded."""
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+
+        def boom(*a, **kw):
+            raise RuntimeError("fee model exploded")
+        monkeypatch.setattr(journal, "gaps_for", boom)
+        now = datetime.now(UTC)
+        r = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=now,
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=now, exchange_order_id="ORD-GAP")
+        assert "error" not in r
+        assert "fee model exploded" in r["gaps"]["gaps_computation_error"]
+        assert live_session.query(PBE).count() == 1
+
+
+class TestFillBookIdentity:
+    """journal-P0-E: `market_quote_id_at_fill` earns the SAME identity
+    chain the view-time quote got — validated against the PARENT BET's
+    fixture/contract/outcome, with a capture time consistent with the
+    fill moment. Round 1 stored the id raw, and gaps_for() then derived
+    drift and execution cost from whatever book the id happened to
+    name."""
+
+    def _taken(self, journal, ticker="KXMLSGAME-x-H",
+               market_quote_id=1):
+        bet = journal.record_view(1, ticker, outcome_key="home_win",
+                                  stated_price="0.45",
+                                  market_quote_id=market_quote_id)
+        journal.resolve_view(bet["id"], "taken")
+        return bet
+
+    def _fill(self, journal, bet, quote_id, filled_at=None):
+        return journal.record_execution(
+            bet["id"], "friend-A",
+            consent_recorded_at=datetime.now(UTC),
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=filled_at or datetime.now(UTC),
+            market_quote_id_at_fill=quote_id)
+
+    def test_a_fill_book_from_another_fixture_is_rejected(
+            self, live_session):
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        _seed_other_fixture(live_session)
+        bet = self._taken(journal)
+        r = self._fill(journal, bet, 5)
+        assert "error" in r and "belongs to fixture 2" in r["error"]
+        assert live_session.query(PBE).count() == 0
+
+    def test_a_fill_book_on_another_contract_is_rejected(
+            self, live_session):
+        """Same fixture, wrong contract — the away-side book cannot be
+        the book the home-side bet filled against."""
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        live_session.add_all([
+            MarketContract(id=3, market_event_id=1,
+                           ticker="KXMLSGAME-x-T",
+                           outcome_key="away_win"),
+            MarketQuote(id=7, market_contract_id=3,
+                        captured_at=datetime.now(UTC)
+                        - timedelta(minutes=1),
+                        yes_ask_c=55, yes_bid_c=53)])
+        live_session.commit()
+        bet = self._taken(journal)
+        r = self._fill(journal, bet, 7)
+        assert "error" in r
+        assert "market contract 3" in r["error"]
+        assert live_session.query(PBE).count() == 0
+
+    def test_a_fill_book_for_another_outcome_is_rejected(
+            self, live_session):
+        """A stated-ticker-only bet (no resolved contract FK) still gets
+        the outcome check against the parent bet."""
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        live_session.add_all([
+            MarketContract(id=3, market_event_id=1,
+                           ticker="KXMLSGAME-x-T",
+                           outcome_key="away_win"),
+            MarketQuote(id=7, market_contract_id=3,
+                        captured_at=datetime.now(UTC)
+                        - timedelta(minutes=1),
+                        yes_ask_c=55, yes_bid_c=53)])
+        live_session.commit()
+        # the bet states the away contract's TICKER but the home
+        # outcome, and cites no view quote — so only the outcome check
+        # can catch the mismatch
+        bet = journal.record_view(1, "KXMLSGAME-x-T",
+                                  outcome_key="home_win",
+                                  stated_price="0.45")
+        journal.resolve_view(bet["id"], "taken")
+        r = self._fill(journal, bet, 7)
+        assert "error" in r
+        assert "away_win" in r["error"] and "home_win" in r["error"]
+        assert live_session.query(PBE).count() == 0
+
+    def test_an_unapproved_event_fill_book_is_rejected(
+            self, live_session):
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+        ev = live_session.get(MarketEvent, 1)
+        ev.mapping_approved = False
+        live_session.commit()
+        r = self._fill(journal, bet, 1)
+        assert "error" in r and "not approved" in r["error"]
+        assert live_session.query(PBE).count() == 0
+
+    def test_a_fill_book_captured_after_the_fill_is_rejected(
+            self, live_session):
+        """An impossible capture time: a book observed after the fill
+        cannot be the book at fill."""
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        live_session.add(MarketQuote(
+            id=8, market_contract_id=1,
+            captured_at=datetime.now(UTC) + timedelta(hours=1),
+            yes_ask_c=45, yes_bid_c=43))
+        live_session.commit()
+        bet = self._taken(journal)
+        r = self._fill(journal, bet, 8,
+                       filled_at=datetime.now(UTC))
+        assert "error" in r and "AFTER the fill" in r["error"]
+        assert live_session.query(PBE).count() == 0
+
+    def test_a_nonexistent_fill_book_is_rejected(self, live_session):
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+        r = self._fill(journal, bet, 999)
+        assert "error" in r and "names no stored quote" in r["error"]
+        assert live_session.query(PBE).count() == 0
+
+    def test_a_missing_fill_book_is_classified_not_silent(
+            self, live_session):
+        """gaps_basis names the evidence: with no fill book the
+        decomposed metrics are explicitly ABSENT under
+        `no_fill_book`, never silently missing — and never computed
+        from a wrong book."""
+        from src.live import journal
+        _seed(live_session)
+        bet = self._taken(journal)
+        r = journal.record_execution(
+            bet["id"], "friend-A",
+            consent_recorded_at=datetime.now(UTC),
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=datetime.now(UTC))
+        g = r["gaps"]
+        assert g["gaps_basis"] == "no_fill_book"
+        for k in ("market_drift", "execution_cost", "aggressiveness"):
+            assert k not in g
+        # CONTROL, passes both ways: with both books the decomposition
+        # is present and labelled accordingly
+        bet2 = journal.record_view(1, "KXMLSGAME-x-H",
+                                   outcome_key="home_win",
+                                   stated_price="0.45",
+                                   market_quote_id=1)
+        journal.resolve_view(bet2["id"], "taken")
+        r2 = journal.record_execution(
+            bet2["id"], "friend-A",
+            consent_recorded_at=datetime.now(UTC),
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=datetime.now(UTC), market_quote_id_at_fill=1,
+            exchange_order_id="ORD-BOTH")
+        assert r2["gaps"]["gaps_basis"] == "record_and_fill_books"
+        assert "market_drift" in r2["gaps"]
 
 
 class TestComposedFreshness:
@@ -909,7 +1258,11 @@ class TestJsonBodies:
                                   outcome_key="home_win",
                                   market_quote_id=1)
         journal.resolve_view(bet["id"], "taken")
-        now = datetime.now(UTC).replace(microsecond=0)
+        # whole-second for exact isoformat round-trips, rounded UP —
+        # rounding down would put the fill before the taken moment,
+        # which P0-D chronology rejects
+        now = (datetime.now(UTC)
+               + timedelta(seconds=1)).replace(microsecond=0)
         ex = journal.record_execution(
             bet["id"], "friend-A", consent_recorded_at=now,
             fill_price="0.47", filled_contracts="10", fee_paid="0.12",

@@ -70,12 +70,71 @@ def _utc(dt):
 
 
 def _d(v) -> Decimal | None:
+    """Lenient decimal parse for INTERNAL reads (values this module
+    already stored). Operator input goes through `_dec`, which enforces
+    a domain instead of silently swallowing garbage."""
     if v in (None, ""):
         return None
     try:
-        return Decimal(str(v))
+        d = Decimal(str(v))
     except (ArithmeticError, TypeError, ValueError):
         return None
+    return d if d.is_finite() else None
+
+
+def _dec(v, field: str, *, lo=None, hi=None,
+         lo_exclusive: bool = False):
+    """Operator-supplied decimal with a DOMAIN (journal-P0-D).
+
+    Returns (value, error). None/"" is (None, None) — absent, for the
+    caller's required-field logic to judge. Anything present must parse,
+    be FINITE (NaN/inf are not prices), and sit inside the stated
+    domain — a fill at $-1 or $1.01 is not a weaker record, it is a
+    data-entry error, refused before anything touches the database."""
+    if v in (None, ""):
+        return None, None
+    try:
+        d = Decimal(str(v))
+    except (ArithmeticError, TypeError, ValueError):
+        return None, f"{field}={v!r} is not a decimal number"
+    if not d.is_finite():
+        return None, f"{field}={v!r} must be a finite number"
+    if lo is not None and (d <= lo if lo_exclusive else d < lo):
+        op = ">" if lo_exclusive else ">="
+        return None, f"{field}={v!r} out of domain (must be {op} {lo})"
+    if hi is not None and d > hi:
+        return None, f"{field}={v!r} out of domain (must be <= {hi})"
+    return d, None
+
+
+def _price(v, field):
+    """Contract price in dollars: [0, 1]."""
+    return _dec(v, field, lo=Decimal(0), hi=Decimal(1))
+
+
+def _qty(v, field):
+    """Contract quantity: strictly positive."""
+    return _dec(v, field, lo=Decimal(0), lo_exclusive=True)
+
+
+def _money(v, field):
+    """Fee / settlement credit: non-negative."""
+    return _dec(v, field, lo=Decimal(0))
+
+
+def _aware(v, field: str):
+    """Operator-supplied timestamp: must carry an explicit timezone
+    (journal-P0-D). Returns (utc_datetime, error). A naive timestamp is
+    REJECTED, never silently relabelled UTC — 'assume UTC' converts a
+    data-entry mistake into wrong provenance with no trace."""
+    if v is None:
+        return None, None
+    if not isinstance(v, datetime):
+        return None, f"{field} must be a datetime"
+    if v.tzinfo is None:
+        return None, (f"{field} is timezone-naive — supply an explicit "
+                      f"offset; the server will not guess UTC")
+    return v.astimezone(timezone.utc), None
 
 
 def _content_hash(doc: dict) -> str:
@@ -138,7 +197,6 @@ def record_view(fixture_id: int, market_ticker: str, *,
                 rationale: str | None = None,
                 market_quote_id: int | None = None,
                 market_contract_id: int | None = None,
-                status: str = "considered",
                 corrects_bet_id: int | None = None) -> dict:
     """Record a view at the moment it FORMS.
 
@@ -159,11 +217,21 @@ def record_view(fixture_id: int, market_ticker: str, *,
       so a later re-run cannot change what was recorded.
     - `corrects_bet_id` names the immutable entry this row corrects
       (journal-P0 F5); corrections are new rows, never rewrites.
+    - every new view starts `considered` (journal-P0-D): there is no
+      way to record a pre-resolved entry, because considered→resolve is
+      what makes the passes recordable at all.
     """
     if not plane_ready():
         return {"error": "dormant"}
-    if status not in STATUSES:
-        return {"error": f"status must be one of {STATUSES}"}
+    # journal-P0-D: operator-supplied values are validated BEFORE any
+    # row is built — a rejection writes nothing
+    price, err = _price(stated_price, "stated_price")
+    if err:
+        return {"error": err}
+    size, err = _qty(stated_size, "stated_size")
+    if err:
+        return {"error": err}
+    status = "considered"
     s = get_session()
     try:
         fx = s.get(Fixture, fixture_id)
@@ -205,10 +273,9 @@ def record_view(fixture_id: int, market_ticker: str, *,
             market_ticker=market_ticker,
             market_contract_id=market_contract_id,
             outcome_key=outcome_key, status=status,
-            stated_price_dollars=(str(_d(stated_price))
-                                  if _d(stated_price) is not None else None),
-            stated_size=(str(_d(stated_size))
-                         if _d(stated_size) is not None else None),
+            stated_price_dollars=(str(price)
+                                  if price is not None else None),
+            stated_size=(str(size) if size is not None else None),
             price_basis=basis, market_quote_id=market_quote_id,
             quote_observed_at=quote_at, recorded_at=now,
             rationale=rationale, model_probability=model_p,
@@ -314,24 +381,50 @@ def record_execution(bet_id: int, account_label: str, *,
 
     Idempotency: (exchange_order_id, status) is unique. A retried POST
     for a pair already recorded returns the existing row as a no-op.
+
+    Validation ordering (journal-P0-D): every value-domain, timezone,
+    lifecycle, chronology and quote-identity check runs BEFORE any row
+    is built — a rejection writes exactly nothing. The fill book cited
+    by `market_quote_id_at_fill` must belong to the PARENT BET's
+    fixture/contract/outcome and be captured at or before the fill
+    moment (journal-P0-E) — the same identity discipline the view-time
+    quote gets.
     """
     if not plane_ready():
         return {"error": "dormant"}
+    # --- parameter validation: nothing touches the DB past a bad value
     if status not in EXEC_STATUSES:
         return {"error": f"status must be one of {EXEC_STATUSES}"}
     if not consent_recorded_at:
         return {"error": "consent_recorded_at is required — this is a "
                          "third party's money"}
+    consent_at, err = _aware(consent_recorded_at, "consent_recorded_at")
+    if err:
+        return {"error": err}
+    filled_at_utc, err = _aware(filled_at, "filled_at")
+    if err:
+        return {"error": err}
+    price, err = _price(fill_price, "fill_price")
+    if err:
+        return {"error": err}
+    qty, err = _qty(filled_contracts, "filled_contracts")
+    if err:
+        return {"error": err}
+    fee, err = _money(fee_paid, "fee_paid")
+    if err:
+        return {"error": err}
+    best, err = _price(best_available_price, "best_available_price")
+    if err:
+        return {"error": err}
     if not account_label:
         return {"error": "account_label is required"}
     if status == "not_filled" and not not_filled_reason:
         return {"error": "not_filled requires a reason"}
     if status in ("filled", "partial"):
         missing = [name for name, v in (
-            ("fill_price", _d(fill_price)),
-            ("filled_contracts", _d(filled_contracts)),
-            ("fee_paid", _d(fee_paid)),
-            ("filled_at", _utc(filled_at))) if v is None]
+            ("fill_price", price), ("filled_contracts", qty),
+            ("fee_paid", fee), ("filled_at", filled_at_utc))
+            if v is None]
         if missing:
             return {"error": f"a '{status}' execution requires its real "
                              f"economics and fill moment — missing: "
@@ -347,6 +440,40 @@ def record_execution(bet_id: int, account_label: str, *,
                              f"execution attaches only to a taken view "
                              f"(considered → taken → filled|partial → "
                              f"settled → reconciled)"}
+        # chronology (journal-P0-D): the fill cannot precede the
+        # decision it executes
+        if filled_at_utc is not None and bet.resolved_at is not None \
+                and filled_at_utc < _utc(bet.resolved_at):
+            return {"error": f"filled_at {filled_at_utc.isoformat()} "
+                             f"precedes the taken moment "
+                             f"{_utc(bet.resolved_at).isoformat()} — a "
+                             f"fill cannot antedate the decision it "
+                             f"executes"}
+        # fill-book identity (journal-P0-E): the SAME chain check the
+        # view-time quote gets, against the parent bet
+        if market_quote_id_at_fill is not None:
+            fq = s.get(MarketQuote, market_quote_id_at_fill)
+            if fq is None:
+                return {"error": f"market_quote_id_at_fill "
+                                 f"{market_quote_id_at_fill} names no "
+                                 f"stored quote — the fill book must "
+                                 f"be a persisted observation"}
+            id_err, _mc = _validate_quote_identity(
+                s, bet.fixture_id, bet.market_ticker, bet.outcome_key,
+                bet.market_contract_id, fq)
+            if id_err is not None:
+                return id_err
+            cap = _utc(fq.captured_at)
+            if cap is None:
+                return {"error": f"fill quote {fq.id} has no capture "
+                                 f"time — unusable as the book at fill"}
+            ref = filled_at_utc if filled_at_utc is not None else _now()
+            if cap > ref:
+                return {"error": f"fill quote {fq.id} was captured "
+                                 f"{cap.isoformat()}, AFTER the fill "
+                                 f"moment {ref.isoformat()} — a book "
+                                 f"observed after the fill cannot be "
+                                 f"the book at fill"}
         if exchange_order_id:
             existing = (s.query(PersonalBetExecution)
                         .filter_by(exchange_order_id=exchange_order_id,
@@ -360,18 +487,15 @@ def record_execution(bet_id: int, account_label: str, *,
                 return out
         row = PersonalBetExecution(
             personal_bet_id=bet_id, account_label=account_label,
-            consent_recorded_at=_utc(consent_recorded_at),
+            consent_recorded_at=consent_at,
             status=status, not_filled_reason=not_filled_reason,
-            best_available_price_dollars=(
-                str(_d(best_available_price))
-                if _d(best_available_price) is not None else None),
-            fill_price_dollars=(str(_d(fill_price))
-                                if _d(fill_price) is not None else None),
-            filled_contracts=(str(_d(filled_contracts))
-                              if _d(filled_contracts) is not None else None),
-            fee_paid_dollars=(str(_d(fee_paid))
-                              if _d(fee_paid) is not None else None),
-            filled_at=_utc(filled_at),
+            best_available_price_dollars=(str(best)
+                                          if best is not None else None),
+            fill_price_dollars=(str(price)
+                                if price is not None else None),
+            filled_contracts=(str(qty) if qty is not None else None),
+            fee_paid_dollars=(str(fee) if fee is not None else None),
+            filled_at=filled_at_utc,
             market_quote_id_at_fill=market_quote_id_at_fill,
             exchange_order_id=exchange_order_id,
             publication_consent=bool(publication_consent))
@@ -400,8 +524,12 @@ def settle_execution(execution_id: int, *, settlement_credit,
     computable."""
     if not plane_ready():
         return {"error": "dormant"}
-    credit = _d(settlement_credit)
-    when = _utc(settled_at)
+    credit, err = _money(settlement_credit, "settlement_credit")
+    if err:
+        return {"error": err}
+    when, err = _aware(settled_at, "settled_at")
+    if err:
+        return {"error": err}
     if credit is None or when is None:
         return {"error": "settlement requires settlement_credit and the "
                          "exchange's settled_at — the server never "
@@ -415,6 +543,12 @@ def settle_execution(execution_id: int, *, settlement_credit,
             return {"error": f"execution {execution_id} is "
                              f"'{row.status}' — only filled or partial "
                              f"executions settle"}
+        # chronology (journal-P0-D): settlement cannot precede the fill
+        if row.filled_at is not None and when < _utc(row.filled_at):
+            return {"error": f"settled_at {when.isoformat()} precedes "
+                             f"the fill moment "
+                             f"{_utc(row.filled_at).isoformat()} — a "
+                             f"market cannot settle before the fill"}
         if row.settled_at is not None:
             same = (_d(row.settlement_credit_dollars) == credit
                     and when == _utc(row.settled_at))
@@ -526,6 +660,17 @@ def gaps_for(s, bet: PersonalBet, ex: PersonalBetExecution) -> dict:
     "the exchange charged more than modelled".
     """
     out: dict = {"status": ex.status}
+    # journal-P0-E: name the EVIDENCE the decomposition rests on. The
+    # decomposed metrics (drift / execution cost / aggressiveness) need
+    # BOTH books; with either missing they are explicitly absent under
+    # this classification, never silently missing.
+    has_rec = bet.market_quote_id is not None
+    has_fill = ex.market_quote_id_at_fill is not None
+    out["gaps_basis"] = (
+        "record_and_fill_books" if has_rec and has_fill
+        else "no_fill_book" if has_rec
+        else "no_record_book" if has_fill
+        else "no_books")
     stated = _d(bet.stated_price_dollars)
     fill = _d(ex.fill_price_dollars)
     if fill is not None and stated is not None:
@@ -533,16 +678,15 @@ def gaps_for(s, bet: PersonalBet, ex: PersonalBetExecution) -> dict:
     if ex.filled_at and bet.recorded_at:
         out["latency_seconds"] = int(
             (_utc(ex.filled_at) - _utc(bet.recorded_at)).total_seconds())
-    mid_rec = _mid(s.get(MarketQuote, bet.market_quote_id)
-                   if bet.market_quote_id else None)
-    mid_fill = _mid(s.get(MarketQuote, ex.market_quote_id_at_fill)
-                    if ex.market_quote_id_at_fill else None)
-    if mid_rec is not None and mid_fill is not None:
-        out["market_drift"] = str(mid_fill - mid_rec)
-    if fill is not None and mid_fill is not None:
-        out["execution_cost"] = str(fill - mid_fill)
-    if stated is not None and mid_rec is not None:
-        out["aggressiveness"] = str(stated - mid_rec)
+    if has_rec and has_fill:
+        mid_rec = _mid(s.get(MarketQuote, bet.market_quote_id))
+        mid_fill = _mid(s.get(MarketQuote, ex.market_quote_id_at_fill))
+        if mid_rec is not None and mid_fill is not None:
+            out["market_drift"] = str(mid_fill - mid_rec)
+        if fill is not None and mid_fill is not None:
+            out["execution_cost"] = str(fill - mid_fill)
+        if stated is not None and mid_rec is not None:
+            out["aggressiveness"] = str(stated - mid_rec)
     # the identity is asserted, not assumed — if it ever fails, one of
     # the components is measured against the wrong reference
     if all(k in out for k in ("slippage", "market_drift",
@@ -568,6 +712,21 @@ def gaps_for(s, bet: PersonalBet, ex: PersonalBetExecution) -> dict:
             else Decimal(0)
         out["settlement_delta"] = str(credit - expected)
     return out
+
+
+def _safe_gaps(s, bet, row) -> dict:
+    """gaps_for, guaranteed not to raise (journal-P0-D): the execution
+    row is already committed when the response is assembled, so a
+    derived-metric failure must degrade to an explicit marker — never
+    surface as a 500 that makes a recorded fill look unrecorded."""
+    if bet is None:
+        return {}
+    try:
+        return gaps_for(s, bet, row)
+    except Exception as exc:
+        print(f"[journal] gap computation failed for execution "
+              f"{row.id}: {exc}")
+        return {"gaps_computation_error": str(exc)[:160]}
 
 
 def _bet_dict(row: PersonalBet) -> dict:
@@ -612,7 +771,7 @@ def _execution_dict(s, row: PersonalBetExecution) -> dict:
         "reconciled": bool(row.reconciled),
         "reconciliation_note": row.reconciliation_note,
         "publication_consent": bool(row.publication_consent),
-        "gaps": gaps_for(s, bet, row) if bet else {},
+        "gaps": _safe_gaps(s, bet, row),
     }
 
 

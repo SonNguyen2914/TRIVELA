@@ -250,6 +250,11 @@ def mls_journal(fixture_id: int | None = Query(None)):
 # truncated or mangled — in the one table whose whole value is verbatim
 # provenance. JSON round-trips the text exactly.
 class JournalViewIn(BaseModel):
+    # No `status` field (journal-P0-D): every view starts `considered`.
+    # The old default was a default, not a constraint — a caller could
+    # post status="taken" and skip the considered→resolve lifecycle
+    # entirely. There is no spelling of a pre-resolved entry at any
+    # layer now; a posted `status` is ignored, never honoured.
     fixture_id: int
     market_ticker: str
     outcome_key: str | None = None
@@ -257,7 +262,6 @@ class JournalViewIn(BaseModel):
     stated_size: str | None = None
     market_quote_id: int | None = None
     rationale: str | None = None
-    status: str = "considered"
     corrects_bet_id: int | None = None
 
 
@@ -362,7 +366,7 @@ def mls_journal_record_view(request: Request, body: JournalViewIn):
         outcome_key=body.outcome_key,
         stated_price=body.stated_price, stated_size=body.stated_size,
         market_quote_id=body.market_quote_id, rationale=body.rationale,
-        status=body.status, corrects_bet_id=body.corrects_bet_id)
+        corrects_bet_id=body.corrects_bet_id)
 
 
 @app.post("/api/admin/mls/journal/resolve")
