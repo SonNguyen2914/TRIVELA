@@ -355,6 +355,77 @@ def mls_stats_job() -> None:
         print(f"[mls-bridge] error: {exc}")
 
 
+# --- readiness watch -----------------------------------------------------
+# Since the V9.5 remediations, boot FAILS CLOSED on approval: a deploy
+# leaves the model unapproved and shadow runs refused until an operator
+# calls /approval/activate. That is deliberate.
+#
+# The gap it opens: if whoever deployed does not follow through — a
+# session that pushed and then died, a deploy nobody was watching — the
+# shadow plane simply stops collecting, and NOTHING says so. Every
+# existing alert fires on MLS events (locks, fills), so silence is
+# indistinguishable from a quiet evening. The DiskFull incident failed
+# exactly this way: silently, behind a response that looked fine.
+#
+# So this watches the one thing no other alert covers. Process-local
+# state is correct here: a fresh container restarts the clock, which is
+# what we want after a legitimate deploy.
+_unapproved_since: object = None
+_unapproved_alerted = False
+UNAPPROVED_ALERT_AFTER_S = 600      # a normal deploy + reactivation is ~2 min
+
+
+def mls_readiness_watch() -> None:
+    """Alert when shadow collection has stopped and nobody noticed."""
+    global _unapproved_since, _unapproved_alerted
+    try:
+        from datetime import datetime, timezone
+
+        from src.live.db import plane_ready
+        if not plane_ready():
+            return
+        from src.live import model_mls
+        from src.live.db import get_session
+        from src.live.models import ModelVersion
+        s = get_session()
+        try:
+            mv = (s.query(ModelVersion)
+                  .filter_by(name=model_mls.MODEL_NAME).first())
+            approved = bool(mv and mv.approved_for_shadow)
+        finally:
+            s.close()
+        now = datetime.now(timezone.utc)
+
+        if approved:
+            # recovered — say so, but only if we complained first
+            if _unapproved_alerted:
+                from src.alerts import send_alert
+                send_alert("✅ shadow collection RESUMED — model approved "
+                           "again, locks will be taken normally",
+                           title="Trivela readiness")
+            _unapproved_since = None
+            _unapproved_alerted = False
+            return
+
+        if _unapproved_since is None:
+            _unapproved_since = now
+            return
+        stalled = (now - _unapproved_since).total_seconds()
+        if stalled >= UNAPPROVED_ALERT_AFTER_S and not _unapproved_alerted:
+            from src.alerts import send_alert
+            mins = int(stalled // 60)
+            send_alert(
+                f"🛑 SHADOW COLLECTION STOPPED — the model has been "
+                f"unapproved for {mins} min. A deploy invalidates the "
+                f"approval and it stays invalid until someone calls "
+                f"POST /api/admin/mls/approval/activate. No T-10 locks "
+                f"are being taken until then.",
+                title="Trivela readiness")
+            _unapproved_alerted = True
+    except Exception as exc:
+        print(f"[mls-readiness] watch error: {exc}")
+
+
 def mls_t10_job() -> None:
     """The atomic T-10 lock sweep (book freeze + canonical run)."""
     try:
@@ -414,6 +485,11 @@ def start_scheduler() -> BackgroundScheduler:
                       id="mls_stats", coalesce=True, max_instances=1)
     scheduler.add_job(mls_t10_job, "interval", seconds=60,
                       id="mls_t10", coalesce=True, max_instances=1)
+    # The one thing no other alert covers: shadow collection stopped and
+    # nobody noticed. Every other alert fires on MLS events, so silence
+    # reads as a quiet evening rather than as a halt.
+    scheduler.add_job(mls_readiness_watch, "interval", minutes=2,
+                      id="mls_readiness", coalesce=True, max_instances=1)
     # Live-plane boot is its OWN one-shot, never chained into the archive
     # boot_sequence: a live failure must not delay or break the archive.
     scheduler.add_job(mls_boot, "date", id="mls_boot")
