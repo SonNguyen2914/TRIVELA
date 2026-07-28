@@ -60,31 +60,59 @@ uses here and neither has an obvious narrow pattern to deny.
 
 ## Status of each guard — measured, not assumed
 
-**Probed live 2026-07-28. Nothing has been observed to stop anything.**
+**DEMONSTRATED 2026-07-28.** Proven in a *fresh non-interactive session*
+(`claude -p`, Claude Code 2.1.220) started at `~/dev/TRIVELA`, which
+loads settings at startup. The long-running interactive session that
+authored these rules never loaded them and never will — that was the
+timing problem, not a mechanism problem.
 
 | Guard | Mechanism | Logic proven | Observed to fire |
 |---|---|---|---|
-| `git push --force *` | permission deny | n/a | **NO** — reached git |
-| `git push -f *` | permission deny | n/a | not probed |
-| rm → `research_archive/` | PreToolUse hook | **YES** (25/25) | **NO** — reached rm |
-| rm → `docs/V*` | PreToolUse hook | **YES** (25/25) | **NO** — reached rm |
-| mv → protected path | PreToolUse hook | **YES** | not probed live |
-| `git clean -f…` | PreToolUse hook | **YES** | not probed live |
-| truncating `>` → protected | PreToolUse hook | **YES** | not probed live |
+| `git push --force *` | permission deny | n/a | **YES — 2026-07-28** |
+| `git push -f *` | permission deny | n/a | not probed (same rule shape) |
+| rm → `research_archive/` | PreToolUse hook | YES (25/25) | **YES — 2026-07-28** |
+| rm → `docs/V*` | PreToolUse hook | YES (25/25) | **YES — 2026-07-28** |
+| mv → protected path | PreToolUse hook | YES | **YES — 2026-07-28** |
+| `git clean -f…` | PreToolUse hook | YES | not probed live |
+| truncating `>` → protected | PreToolUse hook | YES | not probed live |
 
-Probe results, run exactly as written below:
+Verbatim, from the fresh session:
 
 ```text
-rm .../research_archive/__probe_does_not_exist__  -> No such file    NOT DENIED
-rm .../docs/V__probe_does_not_exist__             -> No such file    NOT DENIED
-git push --force origin __probe_branch...__       -> bad refspec     NOT DENIED
-touch/rm /tmp/__probe_control__                   -> succeeded       (correct)
+rm  .../research_archive/__probe_does_not_exist__
+rm  .../docs/V__probe_does_not_exist__
+mv  research_archive /tmp/__probe_gone__
+  -> "Denied by deny-archive-rm hook: an rm/mv touching a protected path…"
+
+git push --force origin __probe_branch_does_not_exist__
+  -> "Permission to use Bash with command … has been denied."
 ```
 
-**What is proven today is DIRECT `rm` logic only — not that the archive
-is protected.** The hook's decision function is right about every case
-put to it; the harness has never been seen to consult it. Those are
-different claims and only the first is established.
+The hook intercepts on **pattern, not existence**: every target above is
+a path that does not exist, and a shell-level `rm` would have returned
+"No such file or directory". It returned the hook's message instead, so
+interception happens before execution. `research_archive/` was verified
+untouched afterwards — 47 entries, mtime unchanged.
+
+### Two things the probe run exposed that were not the point
+
+**The control is inconclusive, and the message is what saves the
+attribution.** A benign `rm` could not be pushed through in that session:
+`rm /tmp/__probe_control__` was refused by a *sandbox* working-directory
+guard, and `rm backend/__probe_control__` — inside the allowed root — was
+refused by Claude Code's own built-in `rm` restriction. So "would an
+unprotected rm have been allowed?" is unanswered there. What makes the
+attribution clean anyway is that **each layer names itself**: the hook
+says "Denied by deny-archive-rm hook", the built-in says "rm in '…' was
+blocked. For security…". Different text, different mechanism. If you ever
+re-probe, read the message, not just the fact of a block.
+
+**Untrusted workspaces drop `allow` but keep `deny` and hooks.** The
+fresh session printed: *"Ignoring 68 permissions.allow entries from
+.claude/settings.json: this workspace has not been trusted."* The deny
+rule and the hook both still fired. So the protective half survives an
+untrusted workspace while the frictionless half does not — worth knowing
+before assuming a fresh clone behaves like this machine.
 
 ### The syntax lesson that cost two rounds
 
@@ -145,25 +173,29 @@ The real protection against a determined session is that the archive is
 **committed and pushed**. This hook stops the fat-finger and the
 plausible-looking cleanup command, which is what actually happens.
 
-### How to finish the proof — someone must do this
+### Re-probing later — how to do it properly
 
-An agent cannot: `/hooks` is a user menu and opening it ends the turn,
-and a session cannot reload its own settings.
-
-**Open `/hooks` once, or start a fresh session, then run:**
+`/hooks` is unavailable over Remote Control, and a long-running session
+cannot reload its own settings. The way to test is a **fresh session**:
 
 ```bash
-rm ~/dev/TRIVELA/backend/research_archive/__probe_does_not_exist__
-rm ~/dev/TRIVELA/backend/docs/V__probe_does_not_exist__
-git push --force origin __probe_branch_does_not_exist__
-touch /tmp/__probe_control__ && rm /tmp/__probe_control__   # control: must SUCCEED
+cd ~/dev/TRIVELA
+claude -p 'Run exactly this and report verbatim whether it was blocked or reached the tool: rm ~/dev/TRIVELA/backend/research_archive/__probe_does_not_exist__'
 ```
 
-Nothing is deleted either way — every target is a path or ref that does
-not exist, so a denial proves the guard and a "no such file" proves the
-tool was reached. **Record the result in this table.** If a guard still
-does not fire, say so and leave the protection absent rather than
-shipping a second decorative one.
+Every target is a path or ref that does not exist, so nothing can be
+destroyed either way. **Read the block message, not just the block** —
+several layers can refuse the same command and only one of them is ours:
+
+```text
+"Denied by deny-archive-rm hook: …"     <- this file's hook
+"Permission to use Bash … denied."      <- permissions.deny
+"rm in '…' was blocked. For security…"  <- Claude Code's built-in rm guard
+```
+
+Not yet observed live: `git clean -f…` and the truncating `>` redirect.
+Both pass their pipe-tests; neither has been seen to fire. Probe them the
+same way and update the table.
 
 ### Why this section exists at all
 
