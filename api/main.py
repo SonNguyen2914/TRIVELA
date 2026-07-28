@@ -18,7 +18,7 @@ Endpoints
 from __future__ import annotations
 
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -242,16 +242,72 @@ def mls_journal(fixture_id: int | None = Query(None)):
         raise HTTPException(503, "journal unavailable")
 
 
+# Journal mutation payloads travel as typed JSON bodies (journal-P1 F8).
+# They used to ride the query string, which URL-decodes: a rationale
+# containing `&`, `%`, newlines or unencoded Unicode was silently
+# truncated or mangled — in the one table whose whole value is verbatim
+# provenance. JSON round-trips the text exactly.
+class JournalViewIn(BaseModel):
+    fixture_id: int
+    market_ticker: str
+    outcome_key: str | None = None
+    stated_price: str | None = None
+    stated_size: str | None = None
+    market_quote_id: int | None = None
+    rationale: str | None = None
+    status: str = "considered"
+    corrects_bet_id: int | None = None
+
+
+class JournalResolveIn(BaseModel):
+    bet_id: int
+    status: str
+
+
+class JournalExecutionIn(BaseModel):
+    bet_id: int
+    account_label: str
+    # REQUIRED and operator-supplied (journal-P0 F5): the server used to
+    # stamp utcnow() here, manufacturing the provenance of a third
+    # party's consent. The operator states when consent was recorded;
+    # the server refuses to invent it.
+    consent_recorded_at: datetime
+    status: str = "filled"
+    fill_price: str | None = None
+    filled_contracts: str | None = None
+    fee_paid: str | None = None
+    filled_at: datetime | None = None
+    market_quote_id_at_fill: int | None = None
+    not_filled_reason: str | None = None
+    best_available_price: str | None = None
+    exchange_order_id: str | None = None
+    publication_consent: bool = False
+
+
+class JournalSettlementIn(BaseModel):
+    execution_id: int
+    # the exchange's own numbers, operator-supplied — never invented
+    settlement_credit: str
+    settled_at: datetime
+    settled_outcome: str | None = None
+
+
+class JournalReconcileIn(BaseModel):
+    execution_id: int
+    note: str
+    publication_consent: bool | None = None
+
+
+class BroadcastIn(BaseModel):
+    message: str
+    channel: str = "action"
+    source: str = "session"
+    session_label: str | None = None
+    fixture_id: int | None = None
+
+
 @app.post("/api/admin/mls/journal/view")
-def mls_journal_record_view(request: Request,
-                            fixture_id: int = Query(...),
-                            market_ticker: str = Query(...),
-                            outcome_key: str | None = Query(None),
-                            stated_price: str | None = Query(None),
-                            stated_size: str | None = Query(None),
-                            market_quote_id: int | None = Query(None),
-                            rationale: str | None = Query(None),
-                            status: str = Query("considered")):
+def mls_journal_record_view(request: Request, body: JournalViewIn):
     """Operator-only: record a view AT THE MOMENT IT FORMS.
 
     Record at `considered`, then resolve to `taken` or `passed`. The
@@ -260,65 +316,90 @@ def mls_journal_record_view(request: Request,
     retained rejections exist to prevent.
 
     Falsifiability is enforced server-side: citing a quote that does not
-    exist, or one captured after this moment, silently downgrades the
-    entry to `stated_only`, and it then counts nowhere."""
+    exist, or one captured after this moment, downgrades the entry to
+    `stated_only`, and it then counts nowhere. A quote that exists but
+    belongs to a DIFFERENT fixture, contract or outcome is refused
+    outright with the mismatch named (journal-P0 F3)."""
     if not _admin_ok(request):
         raise HTTPException(403, "operator credentials required")
     from src.live import journal
     return journal.record_view(
-        fixture_id, market_ticker, outcome_key=outcome_key,
-        stated_price=stated_price, stated_size=stated_size,
-        market_quote_id=market_quote_id, rationale=rationale,
-        status=status)
+        body.fixture_id, body.market_ticker,
+        outcome_key=body.outcome_key,
+        stated_price=body.stated_price, stated_size=body.stated_size,
+        market_quote_id=body.market_quote_id, rationale=body.rationale,
+        status=body.status, corrects_bet_id=body.corrects_bet_id)
 
 
 @app.post("/api/admin/mls/journal/resolve")
-def mls_journal_resolve(request: Request, bet_id: int = Query(...),
-                        status: str = Query(...)):
-    """Operator-only: resolve a recorded view to `taken` or `passed`."""
+def mls_journal_resolve(request: Request, body: JournalResolveIn):
+    """Operator-only: resolve a recorded view to `taken` or `passed`.
+    A resolution is immutable once set — a correction is a NEW view
+    citing `corrects_bet_id`, never a rewrite (journal-P0 F5)."""
     if not _admin_ok(request):
         raise HTTPException(403, "operator credentials required")
     from src.live import journal
-    return journal.resolve_view(bet_id, status)
+    return journal.resolve_view(body.bet_id, body.status)
 
 
 @app.post("/api/admin/mls/journal/execution")
-def mls_journal_execution(request: Request, bet_id: int = Query(...),
-                          account_label: str = Query(...),
-                          status: str = Query("filled"),
-                          fill_price: str | None = Query(None),
-                          filled_contracts: str | None = Query(None),
-                          fee_paid: str | None = Query(None),
-                          market_quote_id_at_fill: int | None = Query(None),
-                          not_filled_reason: str | None = Query(None),
-                          best_available_price: str | None = Query(None),
-                          exchange_order_id: str | None = Query(None)):
+def mls_journal_execution(request: Request, body: JournalExecutionIn):
     """Operator-only: record a REAL fill, or a real failure to fill.
 
     Consent is required and never defaulted — this is a third party's
     money, and the provenance of that consent belongs in the row rather
-    than in anyone's memory. A `not_filled` row is as valuable as a
+    than in anyone's memory; the operator supplies the timestamp and the
+    server refuses to invent one. A `not_filled` row is as valuable as a
     fill: it is evidence about liquidity, half of what this pilot
     measures."""
     if not _admin_ok(request):
         raise HTTPException(403, "operator credentials required")
     from src.live import journal
     return journal.record_execution(
-        bet_id, account_label, consent_recorded_at=utcnow(),
-        status=status, fill_price=fill_price,
-        filled_contracts=filled_contracts, fee_paid=fee_paid,
-        market_quote_id_at_fill=market_quote_id_at_fill,
-        not_filled_reason=not_filled_reason,
-        best_available_price=best_available_price,
-        exchange_order_id=exchange_order_id)
+        body.bet_id, body.account_label,
+        consent_recorded_at=body.consent_recorded_at,
+        status=body.status, fill_price=body.fill_price,
+        filled_contracts=body.filled_contracts, fee_paid=body.fee_paid,
+        filled_at=body.filled_at,
+        market_quote_id_at_fill=body.market_quote_id_at_fill,
+        not_filled_reason=body.not_filled_reason,
+        best_available_price=body.best_available_price,
+        exchange_order_id=body.exchange_order_id,
+        publication_consent=body.publication_consent)
+
+
+@app.post("/api/admin/mls/journal/settlement")
+def mls_journal_settlement(request: Request, body: JournalSettlementIn):
+    """Operator-only: record the exchange's settlement of one real
+    execution (filled|partial → settled). Settlement facts are written
+    once — a retried identical call is a no-op, a conflicting one is
+    refused. The columns existed without any writer (journal-P0 F5);
+    this is the writer."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import journal
+    return journal.settle_execution(
+        body.execution_id, settlement_credit=body.settlement_credit,
+        settled_at=body.settled_at, settled_outcome=body.settled_outcome)
+
+
+@app.post("/api/admin/mls/journal/reconcile")
+def mls_journal_reconcile(request: Request, body: JournalReconcileIn):
+    """Operator-only: mark one settled execution as reconciled against
+    the exchange's own record (settled → reconciled, the final state).
+    Requires settlement first; repeat calls are no-ops. This is also
+    where `publication_consent` can be granted explicitly for the
+    corpus (journal-P0 F2)."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import journal
+    return journal.reconcile_execution(
+        body.execution_id, note=body.note,
+        publication_consent=body.publication_consent)
 
 
 @app.post("/api/admin/mls/broadcast")
-def mls_broadcast(request: Request, message: str = Query(...),
-                  channel: str = Query("action"),
-                  source: str = Query("session"),
-                  session_label: str | None = Query(None),
-                  fixture_id: int | None = Query(None)):
+def mls_broadcast(request: Request, body: BroadcastIn):
     """Operator-only: a live session speaks to Discord/ntfy.
 
     The session is the analyser; this is its megaphone. Operator-gated
@@ -327,9 +408,10 @@ def mls_broadcast(request: Request, message: str = Query(...),
 
     Every broadcast is persisted, so a session that dropped mid-match
     can read what it already said, and so what was claimed live becomes
-    part of the record. `source` separates a computed rule (⚙︎) from an
-    agent's judgement (🗣): a measurement and an opinion must never look
-    alike in the channel.
+    part of the record. Only `source="session"` dispatches — a computed
+    message is a model-generated signal and is refused server-side
+    (journal-P0 F1); the action channel carries the standing-edge
+    qualifier appended by the server.
 
     Figures should come from a briefing read in the SAME turn, never
     from recall — a confident agent narrating a stale price is the
@@ -337,9 +419,10 @@ def mls_broadcast(request: Request, message: str = Query(...),
     if not _admin_ok(request):
         raise HTTPException(403, "operator credentials required")
     from src.live import journal
-    return journal.broadcast(message, channel=channel, source=source,
-                             session_label=session_label,
-                             fixture_id=fixture_id)
+    return journal.broadcast(body.message, channel=body.channel,
+                             source=body.source,
+                             session_label=body.session_label,
+                             fixture_id=body.fixture_id)
 
 
 @app.post("/api/admin/mls/sweep")

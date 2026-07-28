@@ -600,6 +600,132 @@ class TestExecutions:
         assert Decimal(g["fee_modelled"]) > 0
 
 
+class TestJsonBodies:
+    """journal-P1 F8: mutation payloads travel as typed JSON bodies —
+    the query string URL-decodes, so a rationale containing `&`, `%`,
+    newlines or Unicode was mangled in the one table whose whole value
+    is verbatim provenance. Plus the API half of P0 F5: consent is
+    operator-supplied, never manufactured server-side."""
+
+    HDRS = {"X-Admin-Token": "s3cret"}
+
+    @pytest.fixture()
+    def client(self, live_session, monkeypatch):
+        monkeypatch.setattr(config, "ADMIN_TOKEN", "s3cret")
+        from fastapi.testclient import TestClient
+        from api import main as api_main
+        api_main._rate_last.clear()
+        return TestClient(api_main.app)
+
+    def test_a_hostile_rationale_round_trips_exactly(self, live_session,
+                                                     client):
+        _seed(live_session)
+        rationale = ("draw looks rich & CIN pressing high?\n"
+                     "2nd half: ünïcode ✓ 100% — \"quotes\" 'single' "
+                     "%26%3D literal\nfinal line")
+        r = client.post("/api/admin/mls/journal/view", headers=self.HDRS,
+                        json={"fixture_id": 1,
+                              "market_ticker": "KXMLSGAME-x-H",
+                              "outcome_key": "home_win",
+                              "stated_price": "0.45",
+                              "market_quote_id": 1,
+                              "rationale": rationale})
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["rationale"] == rationale
+        stored = live_session.get(PersonalBet, body["id"])
+        assert stored.rationale == rationale
+
+    def test_consent_is_operator_supplied_never_fabricated(
+            self, live_session, client):
+        """The route used to stamp consent_recorded_at=utcnow() —
+        manufacturing the provenance of a third party's consent. Absent
+        consent is refused; supplied consent is stored VERBATIM, not
+        replaced with the server clock."""
+        from src.live import journal
+        _seed(live_session)
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  market_quote_id=1)
+        journal.resolve_view(bet["id"], "taken")
+        now = datetime.now(UTC)
+        payload = {"bet_id": bet["id"], "account_label": "friend-A",
+                   "fill_price": "0.47", "filled_contracts": "10",
+                   "fee_paid": "0.12",
+                   "filled_at": now.isoformat(),
+                   "exchange_order_id": "ORD-API-1"}
+        r = client.post("/api/admin/mls/journal/execution",
+                        headers=self.HDRS, json=payload)
+        assert r.status_code == 422        # consent absent -> refused
+        supplied = (now - timedelta(hours=6)).replace(microsecond=0)
+        payload["consent_recorded_at"] = supplied.isoformat()
+        ok = client.post("/api/admin/mls/journal/execution",
+                         headers=self.HDRS, json=payload)
+        assert ok.status_code == 200, ok.text
+        from src.live.models import PersonalBetExecution as PBE
+        stored = live_session.get(PBE, ok.json()["id"])
+        got = stored.consent_recorded_at
+        got = got if got.tzinfo else got.replace(tzinfo=UTC)
+        assert got == supplied             # verbatim, hours from now()
+
+    def test_settlement_and_reconcile_routes_write_the_columns(
+            self, live_session, client):
+        """journal-P0 F5: the settlement/reconciliation columns get an
+        authenticated writer."""
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  market_quote_id=1)
+        journal.resolve_view(bet["id"], "taken")
+        now = datetime.now(UTC).replace(microsecond=0)
+        ex = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=now,
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=now, exchange_order_id="ORD-API-2")
+        st = client.post("/api/admin/mls/journal/settlement",
+                         headers=self.HDRS,
+                         json={"execution_id": ex["id"],
+                               "settlement_credit": "10",
+                               "settled_at": now.isoformat(),
+                               "settled_outcome": "home_win"})
+        assert st.status_code == 200, st.text
+        assert st.json()["settlement_credit_dollars"] == "10"
+        rc = client.post("/api/admin/mls/journal/reconcile",
+                         headers=self.HDRS,
+                         json={"execution_id": ex["id"],
+                               "note": "matches statement",
+                               "publication_consent": True})
+        assert rc.status_code == 200, rc.text
+        live_session.expire_all()
+        stored = live_session.get(PBE, ex["id"])
+        assert stored.settlement_credit_dollars == "10"
+        assert stored.settled_at is not None
+        assert stored.reconciled is True
+        assert stored.reconciliation_note == "matches statement"
+        assert stored.publication_consent is True
+        assert live_session.get(PersonalBet,
+                                bet["id"]).settled_outcome == "home_win"
+
+    def test_broadcast_rides_a_json_body(self, live_session, client,
+                                         monkeypatch):
+        import src.alerts as alerts
+        sent = []
+        monkeypatch.setattr(
+            alerts, "send_alert",
+            lambda m, **kw: (sent.append(m), {"discord_action": True})[1])
+        _seed(live_session)
+        msg = "draw & over 2.5 both moved\nsecond line ✓"
+        r = client.post("/api/admin/mls/broadcast", headers=self.HDRS,
+                        json={"message": msg, "channel": "action",
+                              "fixture_id": 1, "session_label": "live"})
+        assert r.status_code == 200, r.text
+        assert r.json()["dispatched"] is True
+        from src.live import journal
+        assert journal.recent_broadcasts(1)[0]["message"] == msg
+
+
 class TestReportingFloor:
     def test_no_summary_statistic_below_the_minimum(self, live_session):
         """Three fills tell you the fee model is not OBVIOUSLY broken.

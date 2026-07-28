@@ -52,29 +52,68 @@ X" using one price and the other's probability).
 ## Recording
 
 When Son forms a view, record it AS IT FORMS — before you know the
-outcome, before he decides:
+outcome, before he decides. Payloads are JSON bodies (`--data`), never
+query strings: a rationale with spaces, `&`, newlines or Unicode must
+round-trip exactly.
 
 ```bash
 curl -s -X POST -H "X-Admin-Token: $T" \
-  "$PROD/api/admin/mls/journal/view?fixture_id=<id>&market_ticker=<t>\
-&outcome_key=home_win&stated_price=0.31&market_quote_id=<q>\
-&rationale=<why>"
+  -H "Content-Type: application/json" \
+  --data '{"fixture_id": <id>, "market_ticker": "<t>",
+           "outcome_key": "home_win", "stated_price": "0.31",
+           "market_quote_id": <q>, "rationale": "<why>"}' \
+  "$PROD/api/admin/mls/journal/view"
 ```
 
-Then resolve it to `taken` or `passed` when he decides. **Record the
-passes.** A journal of only the bets he took cannot distinguish a good
-model from a good memory, and the pass is half the data.
+Then resolve it to `taken` or `passed` when he decides — once. A
+resolution is immutable; a mistake is corrected by a NEW view carrying
+`corrects_bet_id`, never a rewrite. **Record the passes.** A journal of
+only the bets he took cannot distinguish a good model from a good
+memory, and the pass is half the data.
 
-Cite `market_quote_id` from the briefing. Omit it and the entry is
-downgraded to `stated_only` and counts toward nothing — correctly, since
-nobody could check it.
+```bash
+curl -s -X POST -H "X-Admin-Token: $T" \
+  -H "Content-Type: application/json" \
+  --data '{"bet_id": <id>, "status": "taken"}' \
+  "$PROD/api/admin/mls/journal/resolve"
+```
+
+Cite `market_quote_id` from the briefing — the frozen contracts and the
+persisted current book both carry their quote ids and capture times.
+Omit it and the entry is downgraded to `stated_only` and counts toward
+nothing — correctly, since nobody could check it. A quote id belonging
+to a different fixture, contract or outcome is refused with the
+mismatch named.
+
+When the friend reports a REAL fill, every fact comes from him and the
+exchange — consent timestamp, price, size, fee, fill time. The server
+refuses to invent any of them:
+
+```bash
+curl -s -X POST -H "X-Admin-Token: $T" \
+  -H "Content-Type: application/json" \
+  --data '{"bet_id": <id>, "account_label": "friend-A",
+           "consent_recorded_at": "<iso8601, from Son>",
+           "fill_price": "0.47", "filled_contracts": "10",
+           "fee_paid": "0.12", "filled_at": "<iso8601, from exchange>",
+           "exchange_order_id": "<id>"}' \
+  "$PROD/api/admin/mls/journal/execution"
+```
+
+After the market settles, `/api/admin/mls/journal/settlement` records
+the exchange's credit (`execution_id`, `settlement_credit`,
+`settled_at`, optional `settled_outcome`), and
+`/api/admin/mls/journal/reconcile` closes the loop against the
+exchange statement (`execution_id`, `note`).
 
 ## Speaking to Discord
 
 ```bash
 curl -s -X POST -H "X-Admin-Token: $T" \
-  "$PROD/api/admin/mls/broadcast?message=<text>&channel=action\
-&fixture_id=<id>&session_label=live"
+  -H "Content-Type: application/json" \
+  --data '{"message": "<text>", "channel": "action",
+           "fixture_id": <id>, "session_label": "live"}' \
+  "$PROD/api/admin/mls/broadcast"
 ```
 
 `action` interrupts him; `detail` is ambient. Use `action` for something
