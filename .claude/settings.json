@@ -82,7 +82,6 @@
         "hooks": [
           {
             "type": "command",
-            "if": "Bash(rm *)",
             "command": "$HOME/dev/TRIVELA/backend/scripts/deny-archive-rm.sh",
             "timeout": 10,
             "statusMessage": "checking archive protection"

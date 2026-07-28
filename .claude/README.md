@@ -60,15 +60,31 @@ uses here and neither has an obvious narrow pattern to deny.
 
 ## Status of each guard — measured, not assumed
 
-| Guard | Mechanism | Logic proven | Fires in a live session |
-|---|---|---|---|
-| `git push --force *` | permission deny | n/a | **NOT YET OBSERVED** |
-| `git push -f *` | permission deny | n/a | **NOT YET OBSERVED** |
-| rm touching `research_archive/` | PreToolUse hook | **YES** (11/11) | **NOT YET OBSERVED** |
-| rm touching `docs/V*` | PreToolUse hook | **YES** (11/11) | **NOT YET OBSERVED** |
+**Probed live 2026-07-28. Nothing has been observed to stop anything.**
 
-**Nothing here has been seen to stop anything.** Treat all four as
-unproven until a probe is observed to fail closed.
+| Guard | Mechanism | Logic proven | Observed to fire |
+|---|---|---|---|
+| `git push --force *` | permission deny | n/a | **NO** — reached git |
+| `git push -f *` | permission deny | n/a | not probed |
+| rm → `research_archive/` | PreToolUse hook | **YES** (25/25) | **NO** — reached rm |
+| rm → `docs/V*` | PreToolUse hook | **YES** (25/25) | **NO** — reached rm |
+| mv → protected path | PreToolUse hook | **YES** | not probed live |
+| `git clean -f…` | PreToolUse hook | **YES** | not probed live |
+| truncating `>` → protected | PreToolUse hook | **YES** | not probed live |
+
+Probe results, run exactly as written below:
+
+```text
+rm .../research_archive/__probe_does_not_exist__  -> No such file    NOT DENIED
+rm .../docs/V__probe_does_not_exist__             -> No such file    NOT DENIED
+git push --force origin __probe_branch...__       -> bad refspec     NOT DENIED
+touch/rm /tmp/__probe_control__                   -> succeeded       (correct)
+```
+
+**What is proven today is DIRECT `rm` logic only — not that the archive
+is protected.** The hook's decision function is right about every case
+put to it; the harness has never been seen to consult it. Those are
+different claims and only the first is established.
 
 ### The syntax lesson that cost two rounds
 
@@ -91,30 +107,43 @@ a hook, not a permission rule.**
 
 ### The hook: logic proven, firing not
 
-`scripts/deny-archive-rm.sh` was pipe-tested against 11 synthesised
-payloads before being wired, and got all 11 right:
+`scripts/deny-archive-rm.sh` was pipe-tested against 25 synthesised
+payloads before wiring, and got all 25 right. It covers four destruction
+paths, not just `rm`:
 
 ```text
-DENY   rm .../research_archive/__probe...__      rm -rf research_archive/
-       rm backend/docs/V9/RUNBOOK.md             rm docs/V9.5/DEFECT-ANALYSIS.md
-       cd /tmp && rm -rf .../research_archive
-ALLOW  rm /tmp/__probe_control__                 ls research_archive/
-       git rm --cached somefile                  grep -r research_archive src/
-       rm -rf node_modules                       python3 -c "print(1)"
+DENY   rm -rf research_archive/          mv research_archive /tmp/gone
+       rm docs/V9.5/DEFECT-ANALYSIS.md   mv docs/V9 /tmp/
+       cd /tmp && rm -rf .../archive     git clean -fdx | -f | -xfd | --force
+       echo "" > research_archive/x.json cat /dev/null > docs/V9/RUNBOOK.md
+ALLOW  rm /tmp/__probe_control__         ls research_archive/
+       git rm --cached somefile          grep -r research_archive src/
+       rm -rf node_modules               cp research_archive/x.json /tmp/
+       git clean -n | --dry-run          echo x >> research_archive/notes.log
+       cat research_archive/x.json > /tmp/copy.json
 ```
 
-The ALLOW half matters as much as the DENY half: `git rm --cached` and
-`grep -r research_archive` are exactly what a naive substring match would
-have blocked, making the guard so annoying it would be removed.
+The ALLOW half matters as much as the DENY half. `git rm --cached`,
+`grep -r research_archive`, `git clean --dry-run`, `cp` into the archive
+and `>>` append are all things a naive substring match would block —
+making the guard annoying enough to be deleted within a week.
 
-Schema validated with
-`jq -e '.hooks.PreToolUse[] | select(.matcher=="Bash") | .hooks[] | .command'`
-— exit 0.
+Two deliberate asymmetries: **`cp` is allowed where `mv` is denied** (so
+adding to the archive still works — use `cp`, then remove the source
+separately), and **`>>` is allowed where `>` is denied** (append cannot
+destroy existing bytes).
 
-**It still did not fire when probed live.** Per the hooks documentation,
-the settings watcher only watches directories that already had a settings
-file when the session started, and `backend/.claude/` did not exist at
-this session's start. The same explains the permission rules.
+### Threat model: this guards mistakes, not an adversary
+
+Evasion is trivial and **deliberately uncovered**: `bash -c 'rm …'`,
+`xargs rm`, `find … -exec rm {} +`, a python one-liner, a variable
+holding the path. Chasing those means either a shell parser that is
+wrong in new ways, or a denylist broad enough to block ordinary work —
+strictly worse than a narrow guard that is honest about its scope.
+
+The real protection against a determined session is that the archive is
+**committed and pushed**. This hook stops the fat-finger and the
+plausible-looking cleanup command, which is what actually happens.
 
 ### How to finish the proof — someone must do this
 
