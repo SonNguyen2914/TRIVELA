@@ -432,3 +432,62 @@ STORAGE_ALERT_PCT = float(os.getenv("STORAGE_ALERT_PCT", "70"))
 # is not urgent-by-the-minute, and an hourly repeat is noise.
 STORAGE_ALERT_COOLDOWN_MINUTES = int(
     os.getenv("STORAGE_ALERT_COOLDOWN_MINUTES", "360"))
+
+
+# --- league-derived xG via API-Football ------------------------------------
+# A paid API-Football key fills the xG gap for leagues with no free
+# team-level xG source. MLS is deliberately NOT one of them: it already has
+# real Sportec xG, free, with a measured effect, and it is inside the MLS
+# engine signature — so MLS keeps Sportec and this provider is never allowed
+# to supply it.
+#
+# The key is a SECRET: it is read from the environment, or from
+# ~/.apifootball_key when that file is owner-only. It is never logged, never
+# placed in a path or query string, and redacted out of provider error text.
+APIFOOTBALL_BASE = os.getenv("APIFOOTBALL_BASE",
+                             "https://v3.football.api-sports.io")
+# Dark by default. Ingestion is an explicit operator action, exactly like the
+# other league planes — a deploy must not silently start spending quota.
+APIFOOTBALL_XG_ENABLED = os.getenv(
+    "APIFOOTBALL_XG_ENABLED", "false").lower() == "true"
+# Plan limits measured on the live key 2026-07-29: 300 requests/minute,
+# 7500/day (Pro). The delay keeps a full-season ingest inside the per-minute
+# limit with headroom; the budget is a per-process ceiling that aborts rather
+# than spending someone else's quota.
+APIFOOTBALL_REQUEST_DELAY_SECONDS = float(
+    os.getenv("APIFOOTBALL_REQUEST_DELAY_SECONDS", "0.25"))
+APIFOOTBALL_REQUEST_BUDGET = int(
+    os.getenv("APIFOOTBALL_REQUEST_BUDGET", "3000"))
+APIFOOTBALL_TIMEOUT_SECONDS = float(
+    os.getenv("APIFOOTBALL_TIMEOUT_SECONDS", "20"))
+# 429 backoff: the provider's per-minute window is 60s, so one full window is
+# the honest wait. Two attempts, never a tight retry loop.
+APIFOOTBALL_BACKOFF_SECONDS = float(
+    os.getenv("APIFOOTBALL_BACKOFF_SECONDS", "60"))
+APIFOOTBALL_MAX_RETRIES = int(os.getenv("APIFOOTBALL_MAX_RETRIES", "1"))
+# Refresh cadence for the rolling xG top-up, in minutes. Config, not a
+# constant, because the right cadence depends on how many leagues are on.
+APIFOOTBALL_XG_JOB_MINUTES = int(
+    os.getenv("APIFOOTBALL_XG_JOB_MINUTES", "720"))
+# How long a measured coverage verdict stands before it is re-probed.
+APIFOOTBALL_COVERAGE_TTL_DAYS = int(
+    os.getenv("APIFOOTBALL_COVERAGE_TTL_DAYS", "30"))
+# Fixtures sampled per league when measuring coverage, spread evenly across
+# the season. A most-recent-N sample is BIASED: the newest completed fixtures
+# on a split-year league are the promotion/relegation playoff block, which
+# carries no xG, and that alone made three fully-covered leagues read
+# 'partial' on 2026-07-29.
+APIFOOTBALL_COVERAGE_SAMPLES = int(
+    os.getenv("APIFOOTBALL_COVERAGE_SAMPLES", "6"))
+
+# xG rating shrinkage for league-derived ratings. A STARTING POINT carried
+# from MLS (model_mls.XG_SHRINK_GAMES, swept on 162 MLS fixtures to a clean
+# interior optimum at k=4-6), NOT swept on any of these leagues' own data.
+# Nothing prices off these ratings, so the parameter is a display choice
+# until someone measures it — which is why the provenance is stated here
+# rather than implied.
+LEAGUE_XG_SHRINK_GAMES = float(os.getenv("LEAGUE_XG_SHRINK_GAMES", "6.0"))
+# A club needs this many xG-carrying fixtures before it is rated at all.
+# Below it the surface says 'not enough fixtures', never a number: mirrors
+# model_mls.MIN_GAMES rather than inventing a second standard.
+LEAGUE_XG_MIN_FIXTURES = int(os.getenv("LEAGUE_XG_MIN_FIXTURES", "5"))
