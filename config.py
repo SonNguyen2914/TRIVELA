@@ -266,6 +266,14 @@ COMPETITION = os.getenv("COMPETITION", "mls-2026").strip()
 # Shadow collection defaults ON: ingest, snapshot, lock, paper-trade.
 MLS_SHADOW_ENABLED = _parse_flag(
     os.getenv("MLS_SHADOW_ENABLED"), True, "MLS_SHADOW_ENABLED")
+# How old a cached market read may get before it is refused as a
+# "current" price (journal-P0 F4). The TTL cache serves stale on a
+# failed refresh — deliberately, for resilience — but past this age the
+# briefing fails CLOSED: status `unavailable`, no price presented as
+# current. Generous by default: ten minutes of staleness is clearly
+# labelled fallback, beyond it is misinformation.
+MLS_PRICE_MAX_AGE_SECONDS = int(
+    os.getenv("MLS_PRICE_MAX_AGE_SECONDS", "600"))
 # Money stays OFF by default and unknown-value-proof. Flipping this env
 # var alone is NOT sufficient by design: the readiness endpoint must
 # also report the model approved_for_real_money, which no code path
@@ -315,6 +323,49 @@ def _normalize_pg_url(url: str) -> str:
 LIVE_DATABASE_URL = _normalize_pg_url(os.getenv("LIVE_DATABASE_URL", ""))
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "").strip()
 RATE_LIMIT_SECONDS = float(os.getenv("RATE_LIMIT_SECONDS", "30"))
+
+# --- Journal: interactive-session capability (journal-P0-G) ---------------
+# The action channel reaches Son, whose consenting friend places REAL
+# bets. `source="session"` used to be a CLAIM any holder of ADMIN_TOKEN
+# could make over HTTP — the stack-frame check only ever bound in-process
+# callers. Dispatch now requires a short-lived capability minted through
+# a challenge/response handshake, so the generic operator token alone
+# cannot produce one.
+#
+# This secret is the SECOND factor and must differ from ADMIN_TOKEN;
+# unset means no interactive session can ever be opened, which fails
+# closed (the relay simply cannot dispatch). It is never transmitted:
+# the client proves possession by HMAC over a server-issued nonce.
+JOURNAL_SESSION_SECRET = os.getenv("JOURNAL_SESSION_SECRET", "").strip()
+# How long a minted capability may dispatch for, and how long an
+# unanswered challenge stays open. Short by design — a capability is a
+# live session's, not a deployment's.
+JOURNAL_SESSION_TTL_SECONDS = int(
+    os.getenv("JOURNAL_SESSION_TTL_SECONDS", "3600"))
+JOURNAL_CHALLENGE_TTL_SECONDS = int(
+    os.getenv("JOURNAL_CHALLENGE_TTL_SECONDS", "120"))
+
+# --- Journal: quote capture-age ceilings (journal-P0-H) -------------------
+# Kalshi publishes NO quote timestamp, so our capture clock is the only
+# evidence of when a book was observed. Without a ceiling an arbitrarily
+# old same-contract quote could be promoted into "the book at the time"
+# and into the decomposed execution-fidelity metrics.
+#
+# Record-time ceiling: generous enough that the documented flow (cite the
+# frozen T-10 book, which is at most ten minutes old before a view goes
+# void) keeps working, tight enough that an hours-old quote can never
+# become `observed_quote`.
+JOURNAL_QUOTE_MAX_AGE_SECONDS = int(
+    os.getenv("JOURNAL_QUOTE_MAX_AGE_SECONDS", "900"))
+# Fill-time ceiling: the fill book must be CONTEMPORANEOUS with the fill
+# it is claimed to describe, so this is tighter than the record ceiling.
+JOURNAL_FILL_QUOTE_MAX_AGE_SECONDS = int(
+    os.getenv("JOURNAL_FILL_QUOTE_MAX_AGE_SECONDS", "300"))
+# Tolerance for operator/exchange clock skew on supplied timestamps. A
+# moment slightly ahead of the server clock is skew; minutes ahead is a
+# data-entry error and is refused.
+JOURNAL_FUTURE_TOLERANCE_SECONDS = int(
+    os.getenv("JOURNAL_FUTURE_TOLERANCE_SECONDS", "60"))
 
 # Ceiling on an inline public response body (V9.3 eval F20). The corpus
 # PREVIEW is assembled from current state and therefore grows without

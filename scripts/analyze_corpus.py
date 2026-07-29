@@ -289,6 +289,61 @@ def market_report(corpus_dir) -> dict:
                      "frozen quotes; full scoring lands with settlement")}
 
 
+def execution_fidelity_report(corpus_dir) -> dict:
+    """The personal journal and the pilot's real executions.
+
+    Reported SEPARATELY from forecast and market, and never folded into
+    them. These bets are human-selected, so they cannot measure edge —
+    they measure whether execution behaves as modelled. Conflating the
+    two would be the most misleading number the corpus could produce.
+
+    Below the policy minimum this returns counts and NO summary
+    statistic. Absent, not zero: a zero reads as a measured result."""
+    try:
+        bets = _load(corpus_dir, "personal_journal.json")
+        execs = _load(corpus_dir, "personal_journal_executions.json")
+    except FileNotFoundError:
+        return {"present": False,
+                "note": "no personal journal in this corpus"}
+    counts: dict = {}
+    for b in bets:
+        counts[b.get("status")] = counts.get(b.get("status"), 0) + 1
+    settled = [e for e in execs
+               if e.get("status") in ("filled", "partial")
+               and e.get("settled_at")]
+    out = {
+        "present": True,
+        "evidence_class": "personal_journal",
+        "counts_toward_edge": False,
+        "entries": len(bets),
+        "by_status": counts,
+        "countable": sum(1 for b in bets
+                         if b.get("price_basis") == "observed_quote"
+                         and b.get("status") != "void"),
+        "excluded_stated_only": sum(
+            1 for b in bets if b.get("price_basis") == "stated_only"),
+        "executions": {
+            "total": len(execs),
+            "filled": sum(1 for e in execs
+                          if e.get("status") == "filled"),
+            "not_filled": sum(1 for e in execs
+                              if e.get("status") == "not_filled"),
+            "settled": len(settled),
+        },
+        "note": ("execution fidelity only. Human-selected bets; NEVER "
+                 "edge evidence. Never sums with the paper ledger."),
+    }
+    minimum = 20
+    if len(settled) < minimum:
+        out["aggregate_withheld"] = {
+            "reason": "below_minimum_observations",
+            "settled_executions": len(settled), "minimum": minimum,
+            "note": ("counts only; no mean, rate or ROI. A summary over "
+                     "this many observations would be a narrative."),
+        }
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("corpus_dir")
@@ -312,6 +367,10 @@ def main() -> int:
         "reproducibility": replay_report(args.corpus_dir),
         "forecast": forecast_report(args.corpus_dir),
         "market": market_report(args.corpus_dir),
+        # a SEPARATE dimension — never folded into forecast
+        # or market, because these bets are human-selected
+        "execution_fidelity": execution_fidelity_report(
+            args.corpus_dir),
     }
     if args.json:
         print(json.dumps(report, indent=2))
@@ -334,7 +393,13 @@ def main() -> int:
         print(f"  reproducibility: {rp['reproduced']}/{rp['runs_checked']} "
               f"runs replay exactly (max delta {rp['max_delta']})")
         print(f"  forecast: {report['forecast']}")
-        print(f"  market: {report['market']}\n")
+        print(f"  market: {report['market']}")
+        ef = report["execution_fidelity"]
+        if ef.get("present"):
+            print(f"  execution fidelity: {ef['entries']} entries "
+                  f"({ef['by_status']}) · {ef['executions']} "
+                  f"— NOT edge evidence")
+        print()
     # fail on EITHER dimension — file integrity or chain provenance
     return 1 if (report["integrity_problems"]
                  or not report["provenance"]["chain_intact"]) else 0

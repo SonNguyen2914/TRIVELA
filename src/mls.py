@@ -15,8 +15,11 @@ MLS model/trading work; this module exists so real data flows today.
 from __future__ import annotations
 
 import time
+from datetime import datetime, timezone
 
 import requests
+
+import config
 
 ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1"
 ESPN_STANDINGS = "https://site.api.espn.com/apis/v2/sports/soccer/usa.1/standings"
@@ -27,19 +30,119 @@ KALSHI_BASE = "https://api.elections.kalshi.com/trade-api/v2"
 KALSHI_MLS_GAME = "KXMLSGAME"
 KALSHI_MLS_CUP = "KXMLSCUP"
 
-_cache: dict[str, tuple[float, object]] = {}
+# key -> (monotonic_at_store, wall_clock_at_store, data). The wall clock
+# is carried so a freshness-aware caller can REPORT observed_at; the
+# monotonic clock stays the arithmetic basis (immune to wall adjustments).
+_cache: dict[str, tuple[float, datetime, object]] = {}
+
+# TTLs of every cache on the PRICE path (journal-P0-B). One named table
+# rather than scattered literals, because MLS_PRICE_MAX_AGE_SECONDS is
+# the fail-closed ceiling over data ASSEMBLED from these caches: the
+# ceiling must exceed every inner TTL or perfectly healthy data would
+# be refused as stale.
+PRICE_PATH_TTLS = {"events": 120, "mkts": 15, "allbooks": 30}
+
+
+def _validate_price_freshness_config() -> None:
+    """Fail fast at import (journal-P0-B): an incoherent ceiling is a
+    config error, not something to discover mid-match."""
+    import config as _config
+    worst = max(PRICE_PATH_TTLS.values())
+    if _config.MLS_PRICE_MAX_AGE_SECONDS <= worst:
+        raise ValueError(
+            f"MLS_PRICE_MAX_AGE_SECONDS="
+            f"{_config.MLS_PRICE_MAX_AGE_SECONDS} must exceed the "
+            f"largest price-path cache TTL ({worst}s; {PRICE_PATH_TTLS})"
+            f" — a smaller ceiling would refuse healthy data as stale")
+
+
+_validate_price_freshness_config()
 
 
 def _cached(key: str, ttl: float, fetch):
     now = time.monotonic()
     hit = _cache.get(key)
     if hit and now - hit[0] < ttl:
-        return hit[1]
+        return hit[2]
     data = fetch()
     if data is not None:               # never cache a failed answer
-        _cache[key] = (now, data)
+        _cache[key] = (now, datetime.now(timezone.utc), data)
         return data
-    return hit[1] if hit else None     # stale beats nothing
+    return hit[2] if hit else None     # stale beats nothing
+
+
+def _cached_meta(key: str, ttl: float, fetch):
+    """`_cached` plus the raw provenance a COMPOSED caller needs
+    (journal-P0-B): (data, meta) with meta = {mono, wall, fresh}.
+    `mono`/`wall` are the store clocks of the value actually served —
+    a stale serve keeps the ORIGINAL store time, never now — and
+    `fresh` is False exactly when a refresh failed and an old value was
+    served. meta is None when nothing exists at all."""
+    now = time.monotonic()
+    hit = _cache.get(key)
+    if hit and now - hit[0] < ttl:
+        return hit[2], {"mono": hit[0], "wall": hit[1], "fresh": True}
+    data = fetch()
+    if data is not None:
+        _cache[key] = (now, datetime.now(timezone.utc), data)
+        h = _cache[key]
+        return data, {"mono": h[0], "wall": h[1], "fresh": True}
+    if hit:                            # stale serve: original clocks
+        return hit[2], {"mono": hit[0], "wall": hit[1], "fresh": False}
+    return None, None
+
+
+def aggregate_freshness(metas: list, max_age: float) -> dict:
+    """The freshness of a COMPOSED result is its least trustworthy
+    constituent (journal-P0-B). age = now - the OLDEST constituent's
+    store time — never assembly time, which is how a bundle rebuilt
+    from stale inner caches used to launder a two-hour-old ask into
+    `live, age 0`. Any stale constituent taints the whole to
+    stale_fallback; past max_age the whole is unavailable."""
+    ms = [m for m in metas if m]
+    if not ms:
+        return {"observed_at": None, "age_seconds": None,
+                "status": "unavailable"}
+    now = time.monotonic()
+    oldest = min(ms, key=lambda m: m["mono"])
+    age = int(now - oldest["mono"])
+    if age > max_age:
+        status = "unavailable"
+    elif any(not m["fresh"] for m in ms):
+        status = "stale_fallback"
+    else:
+        status = "live"
+    return {"observed_at": oldest["wall"].isoformat(),
+            "age_seconds": age, "status": status}
+
+
+def cached_with_freshness(key: str, ttl: float, fetch,
+                          max_age: float) -> tuple[object, dict]:
+    """`_cached`, but truthful about age (journal-P0 F4) — the
+    SINGLE-KEY view, built on `_cached_meta`. For composed results use
+    `aggregate_freshness` over every constituent's meta instead: a
+    single outer key stamps assembly time and launders inner staleness.
+
+        live            fresh fetch, or a cache hit within ttl
+        stale_fallback  refresh failed; cache older than ttl but within
+                        max_age — served, WITH its age
+        unavailable     refresh failed and nothing young enough exists —
+                        data is None; fail closed, no price presented
+    """
+    data, meta = _cached_meta(key, ttl, fetch)
+    if meta is None:
+        return None, {"observed_at": None, "age_seconds": None,
+                      "status": "unavailable"}
+    now = time.monotonic()
+    age = int(now - meta["mono"])
+    if meta["fresh"]:
+        return data, {"observed_at": meta["wall"].isoformat(),
+                      "age_seconds": age, "status": "live"}
+    if age <= max_age:
+        return data, {"observed_at": meta["wall"].isoformat(),
+                      "age_seconds": age, "status": "stale_fallback"}
+    return None, {"observed_at": meta["wall"].isoformat(),
+                  "age_seconds": age, "status": "unavailable"}
 
 
 def _get_json(url: str, params: dict | None = None) -> dict | None:
@@ -266,22 +369,30 @@ def standings() -> list[dict]:
 TRADEABLE = ("active", "open", "initialized")
 
 
-def _game_events(limit: int = 60) -> list[dict]:
+def _game_events_meta(limit: int = 60):
     """The KXMLSGAME event list — one cheap call, 120s cache. NO status
     filter: an in-play fixture's event stops reporting "open" while its
     markets keep trading as "active" (found live on MLS night one — the
     CLB-NYC book was active at 38/33/30 while the open-filtered list
-    omitted it). Tradability is judged per MARKET, at market-fetch time."""
+    omitted it). Tradability is judged per MARKET, at market-fetch time.
+
+    Returns (events, meta) — the meta travels so composed callers can
+    report the OLDEST constituent honestly (journal-P0-B)."""
     def fetch():
         d = _get_json(f"{KALSHI_BASE}/events",
                       {"series_ticker": KALSHI_MLS_GAME, "limit": limit})
         return (d.get("events") or []) if d else None
-    return _cached("events", 120, fetch) or []
+    data, meta = _cached_meta("events", PRICE_PATH_TTLS["events"], fetch)
+    return (data or []), meta
 
 
-def event_markets(event_ticker: str) -> list[dict]:
+def _game_events(limit: int = 60) -> list[dict]:
+    return _game_events_meta(limit)[0]
+
+
+def event_markets_meta(event_ticker: str):
     """One event's tradeable markets, 15s cache — cheap enough for the
-    match page's 30s poll to ride."""
+    match page's 30s poll to ride. Returns (markets, meta)."""
     def fetch():
         # limit 50: correct-score events carry 30+ markets
         md = _get_json(f"{KALSHI_BASE}/markets",
@@ -290,7 +401,13 @@ def event_markets(event_ticker: str) -> list[dict]:
             return None
         return [m for m in (md.get("markets") or [])
                 if m.get("status") in TRADEABLE]
-    return _cached(f"mkts:{event_ticker}", 15, fetch) or []
+    data, meta = _cached_meta(f"mkts:{event_ticker}",
+                              PRICE_PATH_TTLS["mkts"], fetch)
+    return (data or []), meta
+
+
+def event_markets(event_ticker: str) -> list[dict]:
+    return event_markets_meta(event_ticker)[0]
 
 
 def game_books(limit: int = 60) -> list[dict]:
@@ -750,13 +867,36 @@ def find_all_books(fixture_date: str, home_name: str,
     located by the approved-name matching; every other family shares
     its ticker suffix ({date}{HOME}{AWAY}), so the join is exact and
     needs no name resolution at all. 30s bundle cache."""
-    game = find_book(fixture_date, home_name, away_name)
+    books, _meta = find_all_books_with_freshness(
+        fixture_date, home_name, away_name)
+    return books
+
+
+def find_all_books_with_freshness(
+        fixture_date: str, home_name: str,
+        away_name: str) -> tuple[list[dict], dict]:
+    """`find_all_books` plus the freshness meta a truthful caller needs
+    (journal-P0 F4/P0-B): (books, {observed_at, age_seconds, status}).
+
+    The bundle is COMPOSED from inner caches (the event list, each
+    family's markets), every one of which serves stale on a failed
+    refresh. So the meta is computed over EVERY constituent's store
+    time and freshness — the aggregate status is the least trustworthy
+    constituent, and age is the OLDEST constituent's, never assembly
+    time. Past `MLS_PRICE_MAX_AGE_SECONDS` this fails CLOSED — status
+    `unavailable`, empty books, no price presented as current."""
+    game, game_metas = find_book_with_meta(fixture_date, home_name,
+                                           away_name)
     if game is None:
-        return []
+        return [], {"observed_at": None, "age_seconds": None,
+                    "status": "unavailable"}
     suffix = game["event_ticker"].split("-", 1)[1]
     suffix_codes = suffix[7:]                # strip the YYMONDD date
 
     def fetch():
+        # constituent metas are stored WITH the bundle so a cached
+        # serve still reports the build-time constituents' ages
+        metas = [m for m in game_metas if m]
         fams = [{"key": "winner", "label": "Winner · 3-way",
                  "event_ticker": game["event_ticker"],
                  "markets": [dict(r, model_key=None)
@@ -765,7 +905,9 @@ def find_all_books(fixture_date: str, home_name: str,
             if series == "KXMLSGAME":
                 continue
             ticker = f"{series}-{suffix}"
-            ms = event_markets(ticker)
+            ms, m_meta = event_markets_meta(ticker)
+            if m_meta:
+                metas.append(m_meta)
             time.sleep(0.1)                  # burst-throttle (Kalshi 429s)
             rows = [{
                 "ticker": m.get("ticker"),
@@ -779,25 +921,42 @@ def find_all_books(fixture_date: str, home_name: str,
             if rows:
                 fams.append({"key": key, "label": label,
                              "event_ticker": ticker, "markets": rows})
-        return fams
-    return _cached(f"allbooks:{suffix}", 30, fetch) or []
+        return {"fams": fams, "metas": metas}
+    bundle, outer_meta = _cached_meta(
+        f"allbooks:{suffix}", PRICE_PATH_TTLS["allbooks"], fetch)
+    if bundle is None:
+        return [], {"observed_at": None, "age_seconds": None,
+                    "status": "unavailable"}
+    # every constituent counts: the bundle's build-time inputs, the
+    # bundle store itself, and the CURRENT call's game-location inputs
+    # (the current event list may be staler than the stored bundle)
+    metas = list(bundle["metas"]) + [outer_meta] + \
+        [m for m in game_metas if m]
+    meta = aggregate_freshness(metas, config.MLS_PRICE_MAX_AGE_SECONDS)
+    books = bundle["fams"] if meta["status"] != "unavailable" else []
+    return books, meta
 
 
-def find_book(fixture_date: str, home_name: str, away_name: str,
-              books: list[dict] | None = None) -> dict | None:
-    """This fixture's KXMLSGAME book: ET-date segment must match the
-    ticker (teams meet twice inside one open window — SJ played Jul 22
-    AND Jul 25 on the day this shipped), then both title sides must
-    match the ESPN names."""
+def find_book_with_meta(fixture_date: str, home_name: str,
+                        away_name: str,
+                        books: list[dict] | None = None):
+    """`find_book` plus the constituent cache metas that produced the
+    answer (journal-P0-B): (game|None, [metas]). The metas let a
+    composed caller report the oldest constituent instead of stamping
+    assembly time."""
     want = _fixture_et_date(fixture_date)
+    metas: list = []
     if books is not None:               # injected (tests)
         pool = books
     else:
         # two cheap calls instead of a full sweep: match on the EVENT
         # list first, then fetch only this fixture's markets
+        evs, ev_meta = _game_events_meta()
+        if ev_meta:
+            metas.append(ev_meta)
         pool = [{"event_ticker": ev.get("event_ticker"),
                  "title": ev.get("title"), "markets": None}
-                for ev in _game_events()]
+                for ev in evs]
     for b in pool:
         if _ticker_et_date(b.get("event_ticker", "")) != want:
             continue
@@ -808,8 +967,20 @@ def find_book(fixture_date: str, home_name: str, away_name: str,
         if _side_matches(k_home, home_name) and \
                 _side_matches(k_away, away_name):
             if b["markets"] is None:
+                ms, m_meta = event_markets_meta(b["event_ticker"])
+                if m_meta:
+                    metas.append(m_meta)
                 b = parse_game_books(
-                    [b], {b["event_ticker"]:
-                          event_markets(b["event_ticker"])})[0]
-            return b if b["markets"] else None
-    return None
+                    [b], {b["event_ticker"]: ms})[0]
+            return (b if b["markets"] else None), metas
+    return None, metas
+
+
+def find_book(fixture_date: str, home_name: str, away_name: str,
+              books: list[dict] | None = None) -> dict | None:
+    """This fixture's KXMLSGAME book: ET-date segment must match the
+    ticker (teams meet twice inside one open window — SJ played Jul 22
+    AND Jul 25 on the day this shipped), then both title sides must
+    match the ESPN names."""
+    return find_book_with_meta(fixture_date, home_name, away_name,
+                               books=books)[0]

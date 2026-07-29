@@ -20,7 +20,7 @@ import time
 from sqlalchemy import select
 
 import config
-from src.alerts import send_alert
+from src.alerts import MODEL_SIGNAL, send_alert
 from src.db import SessionLocal, TrackedPosition, utcnow
 
 
@@ -93,8 +93,16 @@ def evaluate_positions(rows_by_market: dict, match_id: str,
 
 
 def _maybe_alert(pos, item: dict, minute) -> None:
-    """Push on flips INTO exit territory (and back to strong hold), with the
-    signals cooldown so a wobbling book can't spam."""
+    """OFFER a flip read to the alert gate — into exit territory, or back
+    to strong hold — with the signals cooldown so a wobbling book can't
+    spam.
+
+    A cash-out read is MODEL_SIGNAL: it tells a human to sell a real
+    position at a real price, which is precisely the content the money
+    lock governs. With REAL_MONEY_SIGNALS_ENABLED false the gate refuses
+    it and no transport is touched. `evaluate_positions` still COMPUTES
+    the verdict — the read is available on the API and inside the
+    narrator's detail brief; what stops is the push."""
     now = time.time()
     prev = _state.get(pos.id)
     verdict = item["verdict"]
@@ -112,9 +120,11 @@ def _maybe_alert(pos, item: dict, minute) -> None:
             f"Selling now ≈ ${item['cashout_now']:.0f} beats holding "
             f"(EV ${item['hold_ev']:.0f}; live {item['live_probability']:.0%} "
             f"vs {item['bid']:.2f} bid). Net if you cash: "
-            f"{item['net_if_cashout']:+.0f}")
+            f"{item['net_if_cashout']:+.0f}",
+            dispatch_class=MODEL_SIGNAL)
     elif verdict == "HOLD" and prev and prev["verdict"] == "EXIT":
         send_alert(
             f"💼 back to HOLD{at}: {pos.market_title} — live "
             f"{item['live_probability']:.0%} vs {item['bid']:.2f} bid; "
-            f"holding beats cashing again.")
+            f"holding beats cashing again.",
+            dispatch_class=MODEL_SIGNAL)

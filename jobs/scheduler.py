@@ -18,7 +18,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy import select
 
 import config
-from src.alerts import alert_final_lock, alert_new_take, alert_ripe, send_discord
+from src.alerts import (OPERATIONAL, alert_final_lock, alert_new_take,
+                        alert_ripe, send_alert)
 from src.bracket import resolve_bracket
 from src.db import SessionLocal, WatchlistItem, utcnow
 from src.kalshi_client import KalshiClient
@@ -174,10 +175,16 @@ def resolve_bracket_job() -> None:
     except Exception as exc:  # never let bracket work disturb the scheduler
         print(f"[bracket] resolve FAILED: {exc}")
         return
+    # OPERATIONAL, not a betting signal: this announces a FIXTURE FACT
+    # already settled by a played match — no model output, no price, no
+    # market view, nothing that says a contract is mispriced. It rides
+    # the gate like everything else so the classification is recorded at
+    # the call site rather than assumed.
     for c in changed:
-        send_discord(
+        send_alert(
             f"🗓️ Quarter-final set: **{c['team']}** advances into "
-            f"{c['qf']} ({c['side']}).")
+            f"{c['qf']} ({c['side']}).",
+            title="Bracket", dispatch_class=OPERATIONAL)
 
 
 def boot_sequence() -> None:
@@ -399,10 +406,16 @@ def mls_readiness_watch() -> None:
         if approved:
             # recovered — say so, but only if we complained first
             if _unapproved_alerted:
-                from src.alerts import send_alert
+                # OPERATIONAL: a statement about the PLATFORM's
+                # collection state. No model output, no market view —
+                # and silencing it under the money lock would restore
+                # exactly the invisible-halt failure this watch exists
+                # to prevent.
+                from src.alerts import OPERATIONAL, send_alert
                 send_alert("✅ shadow collection RESUMED — model approved "
                            "again, locks will be taken normally",
-                           title="Trivela readiness")
+                           title="Trivela readiness",
+                           dispatch_class=OPERATIONAL)
             _unapproved_since = None
             _unapproved_alerted = False
             return
@@ -412,7 +425,7 @@ def mls_readiness_watch() -> None:
             return
         stalled = (now - _unapproved_since).total_seconds()
         if stalled >= UNAPPROVED_ALERT_AFTER_S and not _unapproved_alerted:
-            from src.alerts import send_alert
+            from src.alerts import OPERATIONAL, send_alert
             mins = int(stalled // 60)
             send_alert(
                 f"🛑 SHADOW COLLECTION STOPPED — the model has been "
@@ -420,7 +433,7 @@ def mls_readiness_watch() -> None:
                 f"approval and it stays invalid until someone calls "
                 f"POST /api/admin/mls/approval/activate. No T-10 locks "
                 f"are being taken until then.",
-                title="Trivela readiness")
+                title="Trivela readiness", dispatch_class=OPERATIONAL)
             _unapproved_alerted = True
     except Exception as exc:
         print(f"[mls-readiness] watch error: {exc}")

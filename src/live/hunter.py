@@ -1308,8 +1308,27 @@ def _dispatch_alert(s, row: HunterFinding, f: dict) -> bool:
     if not _try_claim_alert(s, row.id, now):
         return False      # another process owns it, or it already alerted
     try:
-        from src.alerts import send_alert
-        results = send_alert(_alert_message(f), title="Trivela hunter")
+        # MODEL_SIGNAL, deliberately — and the consequence is that while
+        # REAL_MONEY_SIGNALS_ENABLED is false the gate REFUSES these, so
+        # findings are recorded and served but never pushed to Discord.
+        #
+        # A structural finding is not a forecast: "these three asks sum to
+        # 96.8c net of fees" is arithmetic on observed prices, closer to
+        # the friendlies implied-probability work than to a model view. By
+        # that reading it deserves a class of its own — mechanically
+        # verifiable market fact, permitted while the lock is on.
+        #
+        # It does not get one here. The gate's own line is that a
+        # statement about a MARKET is a model signal, and inventing a
+        # fourth class to exempt the scanner would be me widening the
+        # money boundary to fit a feature I built. That is Son's call, not
+        # mine: if he wants structural findings to alert under the lock,
+        # the gate needs an explicit class and this comment is the
+        # argument for it. Until then the scanner is fail-closed and the
+        # findings live at GET /api/hunter/findings.
+        from src.alerts import MODEL_SIGNAL, send_alert
+        results = send_alert(_alert_message(f), title="Trivela hunter",
+                             dispatch_class=MODEL_SIGNAL)
         if not isinstance(results, dict):
             results = {"unknown_transport_contract": False}
     except Exception as exc:              # alerting must never break a scan
