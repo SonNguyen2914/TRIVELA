@@ -1,7 +1,29 @@
 """EPL data-layer parsers + fixture/book matching (canned payloads — no
 network in tests). Shapes are reduced from the archived real responses
 in research_archive/epl/ (fetched 2026-07-28)."""
+import json
+import os
+from datetime import date, timedelta
+
 from src import epl
+
+ARCHIVE = os.path.join(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__))), "research_archive", "epl")
+
+
+def _archived_game_events() -> list[dict]:
+    """The REAL committed KXEPLGAME event list (387 events, 2025-26).
+    Read from the archive rather than reduced, because the whole point of
+    the horizon bound is what a full season of history costs."""
+    with open(os.path.join(
+            ARCHIVE,
+            "kalshi_events_KXEPLGAME_full_2026-07-28T1015Z.json"),
+            encoding="utf-8") as fh:
+        return json.load(fh)["events"]
+
+
+def _ticker_for(day: date, codes: str = "ARSCHE") -> str:
+    return f"KXEPLGAME-{day.strftime('%y%b%d').upper()}{codes}"
 
 # --- standings: the preseason zero-row trap --------------------------------
 # Reduced from espn_standings_2026-07-28T1015Z.json: ESPN's preseason
@@ -239,6 +261,102 @@ class TestSummaryReuse:
         assert (g["team_score"], g["opponent_score"]) == (0, 2)
         assert g["result"] == "L"
         assert epl.scoreline_disagreements(d) == []
+
+
+# --- P0-1: the public route is bounded, with an explicit call budget -------
+# KXEPLGAME's archived 2025-26 season is 387 events and there are no
+# current listings. Unbounded, `game_books` issues one /markets call PER
+# EVENT — a full-season fan-out that returns nothing.
+
+
+class _Provider:
+    """A counting stand-in for epl._get_json. Serves the archived event
+    list on /events and an empty book on /markets, and records exactly
+    how many per-event market calls were made."""
+
+    def __init__(self, events):
+        self.events = events
+        self.market_calls: list[str] = []
+
+    def __call__(self, url, params=None):
+        params = params or {}
+        if url.endswith("/events"):
+            return {"events": list(self.events)}
+        if url.endswith("/markets"):
+            self.market_calls.append(params.get("event_ticker"))
+            return {"markets": []}
+        return None
+
+
+class TestMarketRetrievalIsBounded:
+    def _install(self, monkeypatch, events):
+        prov = _Provider(events)
+        monkeypatch.setattr(epl, "_get_json", prov)
+        monkeypatch.setattr(epl, "_cache", {})
+        return prov
+
+    def test_archived_history_costs_zero_per_event_market_calls(
+            self, monkeypatch):
+        """THE budget assertion. With a full archived season listed and
+        nothing current, the public route must make NO per-event market
+        calls at all — and in no case more than the declared budget.
+        (Proven to fail: without the horizon bound this issues 60.)"""
+        prov = self._install(monkeypatch, _archived_game_events())
+        state = epl.game_books_state()
+        assert state["events_seen"] == 387
+        assert state["events_in_horizon"] == 0
+        assert len(prov.market_calls) == 0
+        assert len(prov.market_calls) <= epl.EVENT_MARKET_CALL_BUDGET
+        assert state["games"] == []
+        assert state["budget_exhausted"] is False
+
+    def test_a_current_event_is_still_retrieved(self, monkeypatch):
+        """CONTROL: the bound is on the DATE, not on the archive — a
+        today-dated event inside the same archived list is fetched."""
+        today = _ticker_for(date.today())
+        prov = self._install(
+            monkeypatch,
+            _archived_game_events() + [{"event_ticker": today,
+                                        "title": "Arsenal vs Chelsea"}])
+        state = epl.game_books_state()
+        assert state["events_in_horizon"] == 1
+        assert prov.market_calls == [today]
+
+    def test_a_recent_non_open_event_is_still_included(self, monkeypatch):
+        """The MLS lesson, kept: an in-play or just-settled fixture stops
+        reporting status 'open' while its markets still trade. The bound
+        must never be a status filter — a yesterday-dated event whose
+        provider status is 'closed' is still retrieved."""
+        yday = _ticker_for(date.today() - timedelta(days=1))
+        prov = self._install(monkeypatch, [
+            {"event_ticker": yday, "title": "Arsenal vs Chelsea",
+             "status": "closed"}])
+        state = epl.game_books_state()
+        assert state["events_in_horizon"] == 1
+        assert prov.market_calls == [yday]
+
+    def test_the_budget_caps_a_crowded_horizon_and_says_so(
+            self, monkeypatch):
+        crowded = [{"event_ticker": _ticker_for(
+            date.today() + timedelta(days=i % 14), f"A{i:02d}CHE"),
+            "title": "Arsenal vs Chelsea"}
+            for i in range(epl.EVENT_MARKET_CALL_BUDGET + 16)]
+        prov = self._install(monkeypatch, crowded)
+        state = epl.game_books_state()
+        assert len(prov.market_calls) == epl.EVENT_MARKET_CALL_BUDGET
+        assert state["market_calls"] == epl.EVENT_MARKET_CALL_BUDGET
+        assert state["budget_exhausted"] is True
+
+    def test_an_unparseable_ticker_date_is_kept_not_discarded(
+            self, monkeypatch):
+        """Missing evidence is never silently converted into a
+        conclusion: a ticker whose date segment cannot be read is not
+        proof the event is history."""
+        prov = self._install(monkeypatch, [
+            {"event_ticker": "KXEPLGAME-WEIRD", "title": "A vs B"}])
+        state = epl.game_books_state()
+        assert state["events_in_horizon"] == 1
+        assert prov.market_calls == ["KXEPLGAME-WEIRD"]
 
 
 # --- API surface -----------------------------------------------------------

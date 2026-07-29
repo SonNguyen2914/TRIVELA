@@ -642,9 +642,17 @@ def epl_markets():
     """Open EPL game books. Empty until Kalshi lists 2026-27 events —
     see /api/epl/markets/discovery for the live probe. No futures
     section: no EPL winner-futures series was found under any probed
-    name (research_archive/epl/), and none is invented."""
+    name (research_archive/epl/), and none is invented.
+
+    Retrieval is bounded to a fixture horizon with an explicit
+    provider-call budget (P0-1): KXEPLGAME lists a whole archived
+    season, and a per-event market fan-out across it costs the rate
+    budget the slate needs. `retrieval` reports what the bound did, so a
+    truncated answer names itself instead of looking complete."""
     from src import epl
-    return {"games": epl.game_books(),
+    state = epl.game_books_state()
+    return {"games": state["games"],
+            "retrieval": {k: v for k, v in state.items() if k != "games"},
             "generated_at": utcnow().isoformat()}
 
 

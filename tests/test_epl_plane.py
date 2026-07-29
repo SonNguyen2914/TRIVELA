@@ -198,6 +198,46 @@ class TestEplDiscovery:
         assert reg.competition_slug == "epl-2026"
         assert reg.complete is True
 
+    def test_archived_history_creates_no_rows(self, epl_session,
+                                              monkeypatch):
+        """P0-1, the persistence half: the provider answers with a full
+        archived season (387 real KXEPLGAME events, 2025-26) and no
+        current listings. Discovery must record NOTHING — a settled event
+        is not registry material, and writing 387 of them costs the rate
+        budget the slate needs. (Proven to fail: without the horizon
+        bound this writes 387 MarketEvent rows.)"""
+        from tests.test_epl import _archived_game_events
+        events = _archived_game_events()
+        assert len(events) == 387
+        monkeypatch.setattr(markets, "_kalshi_paged",
+                            _fake_kalshi_paged({"KXEPLGAME": events}, {}))
+        out = epl_plane.discover_and_map()
+        assert out["events_seen"] == 387
+        assert out["historical_skipped"] == 387
+        assert out["newly_mapped"] == 0 and out["unmapped"] == 0
+        assert out["contracts_filled"] == 0
+        assert epl_session.query(MarketEvent).count() == 0
+
+    def test_a_current_event_in_the_same_sweep_is_recorded(
+            self, epl_session, monkeypatch):
+        """CONTROL for the test above: the bound is the DATE, not the
+        sweep — one current event inside the same archived answer is
+        recorded normally."""
+        from datetime import date as _date
+        from tests.test_epl import _archived_game_events, _ticker_for
+        cur = _ticker_for(_date.today(), "ARSMUN")
+        monkeypatch.setattr(
+            markets, "_kalshi_paged",
+            _fake_kalshi_paged(
+                {"KXEPLGAME": _archived_game_events() + [
+                    {"event_ticker": cur, "title": "Arsenal vs Man Utd"}]},
+                {cur: []}))
+        out = epl_plane.discover_and_map()
+        assert out["historical_skipped"] == 387
+        assert epl_session.query(MarketEvent).count() == 1
+        assert (epl_session.query(MarketEvent).one()
+                .kalshi_event_ticker) == cur
+
     def test_unbridged_promoted_club_stays_unmapped(
             self, epl_session, monkeypatch):
         """A 26/27 Kalshi title for a promoted club (no verified bridge)

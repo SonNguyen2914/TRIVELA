@@ -156,6 +156,53 @@ def standings() -> list[dict]:
 
 TRADEABLE = ("active", "open", "initialized")
 
+# --- fixture horizon + provider-call budget (P0-1) -------------------------
+# KXEPLGAME carries 387 ARCHIVED 2025-26 events and, as of 2026-07-28,
+# ZERO current listings. An unbounded per-event market fan-out therefore
+# spends the whole Kalshi rate budget on settled history and returns
+# nothing — the events call is one request, but the /markets calls are one
+# PER EVENT, so the cost is linear in the size of the archive.
+#
+# Retrieval is bounded by the ticker's DATE, never by provider status: an
+# in-play fixture's event stops reporting "open" while its markets keep
+# trading (the MLS lesson above), so a recent event is retained whatever
+# its status says. The number of per-event market calls is additionally
+# capped, and the cap is REPORTED (`game_books_state`) rather than
+# silently truncating.
+EVENT_HISTORY_DAYS = 2          # yesterday + today's late finishes
+EVENT_HORIZON_DAYS = 14         # two matchweeks ahead
+EVENT_MARKET_CALL_BUDGET = 24   # per-event /markets calls per sweep
+
+
+def _ticker_day(event_ticker: str):
+    """'KXEPLGAME-26MAY24WHULEE' -> date(2026, 5, 24), or None."""
+    from datetime import datetime
+    seg = _ticker_et_date(event_ticker)
+    if not seg:
+        return None
+    try:
+        return datetime.strptime(seg, "%y%b%d").date()
+    except ValueError:
+        return None
+
+
+def events_in_horizon(events: list[dict], today=None) -> list[dict]:
+    """The subset of a game-series event list inside the fixture horizon.
+
+    An event whose ticker date cannot be parsed is KEPT: an unreadable
+    date is missing evidence, and dropping it would silently convert
+    "we don't know when this is" into "this is history"."""
+    from datetime import date, timedelta
+    today = today or date.today()
+    lo = today - timedelta(days=EVENT_HISTORY_DAYS)
+    hi = today + timedelta(days=EVENT_HORIZON_DAYS)
+    out = []
+    for ev in events:
+        day = _ticker_day(ev.get("event_ticker") or "")
+        if day is None or lo <= day <= hi:
+            out.append(ev)
+    return out
+
 
 def _game_events(limit: int = 60) -> list[dict]:
     """The configured game-series event list — one cheap call, 120s
@@ -180,14 +227,41 @@ def event_markets(event_ticker: str) -> list[dict]:
     return _cached(f"mkts:{event_ticker}", 15, fetch) or []
 
 
+def game_books_state(limit: int = 60) -> dict:
+    """Every in-horizon fixture's tradeable book, PLUS what it cost.
+
+    `market_calls` never exceeds EVENT_MARKET_CALL_BUDGET, and
+    `budget_exhausted` says so explicitly when the horizon held more
+    events than the budget allows — a truncated answer must name itself
+    (the same rule the registry sweep follows)."""
+    all_events = _game_events(limit)
+    events = events_in_horizon(all_events)
+    fetched: list[dict] = []
+    markets: dict[str, list] = {}
+    for ev in events:
+        if len(fetched) >= EVENT_MARKET_CALL_BUDGET:
+            break
+        ticker = ev.get("event_ticker")
+        if not ticker:
+            continue
+        markets[ticker] = event_markets(ticker)
+        fetched.append(ev)
+    books = parse_game_books(fetched, markets)
+    return {
+        "games": [b for b in books if b["markets"]],
+        "events_seen": len(all_events),
+        "events_in_horizon": len(events),
+        "market_calls": len(fetched),
+        "market_call_budget": EVENT_MARKET_CALL_BUDGET,
+        "budget_exhausted": len(events) > len(fetched),
+        "horizon_days": [EVENT_HISTORY_DAYS, EVENT_HORIZON_DAYS],
+    }
+
+
 def game_books(limit: int = 60) -> list[dict]:
-    """Every fixture's tradeable book. Empty until Kalshi lists 26/27 —
-    an honest empty, surfaced as such by the frontend."""
-    events = _game_events(limit)
-    markets = {ev["event_ticker"]: event_markets(ev["event_ticker"])
-               for ev in events}
-    books = parse_game_books(events, markets)
-    return [b for b in books if b["markets"]]
+    """Every in-horizon fixture's tradeable book. Empty until Kalshi
+    lists 26/27 — an honest empty, surfaced as such by the frontend."""
+    return game_books_state(limit)["games"]
 
 
 # --- per-match summary (reuses the MLS parser verbatim) --------------------
