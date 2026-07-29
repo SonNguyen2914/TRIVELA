@@ -204,6 +204,34 @@ class TestFalsifiability:
         assert stored.prediction_run_id == "run1"
 
 
+@pytest.fixture()
+def session_cap(monkeypatch):
+    """A REAL interactive-session capability, minted through the REAL
+    challenge/response handshake (journal-P0-G).
+
+    Deliberately not a stub. `journal.broadcast` re-checks the object
+    against the live capability store, so a hand-built `SessionCapability`
+    would be rejected — which is the property under test. Every broadcast
+    test therefore exercises the composed path: handshake -> capability
+    -> dispatch."""
+    from src.live import session_capability as sc
+    monkeypatch.setattr(config, "ADMIN_TOKEN", "s3cret")
+    monkeypatch.setattr(config, "JOURNAL_SESSION_SECRET",
+                        "second-factor-not-the-admin-token")
+    sc._reset_for_tests()
+    ch = sc.challenge()
+    assert "error" not in ch, ch
+    opened = sc.open_session(ch["challenge_id"],
+                             sc.expected_response(ch["nonce"]),
+                             label="trivela-live")
+    assert "error" not in opened, opened
+    token = opened["session_token"]
+    yield {"token": token, "capability": sc.verify(token),
+           "headers": {"X-Admin-Token": "s3cret",
+                       "X-Session-Token": token}}
+    sc._reset_for_tests()
+
+
 def _seed_other_fixture(s):
     """A second approved fixture/event/contract with quote id=5 —
     shared by the view-time (F3) and fill-time (P0-E) identity tests."""
@@ -1292,7 +1320,7 @@ class TestJsonBodies:
                                 bet["id"]).settled_outcome == "home_win"
 
     def test_broadcast_rides_a_json_body(self, live_session, client,
-                                         monkeypatch):
+                                         monkeypatch, session_cap):
         import src.alerts as alerts
         sent = []
         monkeypatch.setattr(
@@ -1300,7 +1328,8 @@ class TestJsonBodies:
             lambda m, **kw: (sent.append(m), {"discord_action": True})[1])
         _seed(live_session)
         msg = "draw & over 2.5 both moved\nsecond line ✓"
-        r = client.post("/api/admin/mls/broadcast", headers=self.HDRS,
+        r = client.post("/api/admin/mls/broadcast",
+                        headers=session_cap["headers"],
                         json={"message": msg, "channel": "action",
                               "fixture_id": 1, "session_label": "live"})
         assert r.status_code == 200, r.text
@@ -1342,7 +1371,7 @@ class TestPublicRedaction:
         api_main._rate_last.clear()
         return TestClient(api_main.app)
 
-    def _record_full(self, live_session, monkeypatch):
+    def _record_full(self, live_session, monkeypatch, session_cap):
         """A journal entry + settled, reconciled REAL execution + a
         broadcast, every private field carrying a sentinel.
         publication_consent False."""
@@ -1372,7 +1401,8 @@ class TestPublicRedaction:
                                  settled_at=now,
                                  settled_outcome="home_win")
         journal.reconcile_execution(ex["id"], note="RECON-SENTINEL")
-        journal.broadcast(self.BCAST, channel="action", fixture_id=1)
+        journal.broadcast(self.BCAST, channel="action", fixture_id=1,
+                          capability=session_cap["capability"])
         return bet, ex
 
     def _mock_providers(self, monkeypatch):
@@ -1391,8 +1421,9 @@ class TestPublicRedaction:
                             lambda eid: {}, raising=False)
 
     def test_public_briefing_redacts_field_by_field(self, live_session,
-                                                    client, monkeypatch):
-        self._record_full(live_session, monkeypatch)
+                                                    client, monkeypatch,
+                                                    session_cap):
+        self._record_full(live_session, monkeypatch, session_cap)
         self._mock_providers(monkeypatch)
         r = client.get("/api/mls/briefing/4013212")
         assert r.status_code == 200, r.text
@@ -1413,17 +1444,18 @@ class TestPublicRedaction:
             assert sentinel not in r.text, sentinel
 
     def test_public_journal_summary_carries_no_private_values(
-            self, live_session, client, monkeypatch):
-        self._record_full(live_session, monkeypatch)
+            self, live_session, client, monkeypatch, session_cap):
+        self._record_full(live_session, monkeypatch, session_cap)
         r = client.get("/api/mls/journal")
         assert r.status_code == 200
         for sentinel in self.SENTINELS:
             assert sentinel not in r.text, sentinel
 
     def test_corpus_preview_and_published_redact(self, live_session,
-                                                 client, monkeypatch):
+                                                 client, monkeypatch,
+                                                 session_cap):
         from src.live import corpus
-        self._record_full(live_session, monkeypatch)
+        self._record_full(live_session, monkeypatch, session_cap)
         r = client.get("/api/mls/corpus?preview=1&full=1")
         assert r.status_code == 200, r.text
         bundle = r.json()
@@ -1449,13 +1481,14 @@ class TestPublicRedaction:
             assert sentinel not in pub.text, sentinel
 
     def test_publication_consent_releases_the_execution_fields(
-            self, live_session, monkeypatch):
+            self, live_session, monkeypatch, session_cap):
         """The explicit gate: with consent set on the ROW, the corpus
         carries the full execution record; the bet's rationale and
         sizing still never travel."""
         from src.live import corpus
         from src.live.models import PersonalBetExecution as PBE
-        _bet, ex = self._record_full(live_session, monkeypatch)
+        _bet, ex = self._record_full(live_session, monkeypatch,
+                                     session_cap)
         row = live_session.get(PBE, ex["id"])
         row.publication_consent = True
         live_session.commit()
@@ -1467,9 +1500,31 @@ class TestPublicRedaction:
         assert all("rationale" not in b and "stated_size" not in b
                    for b in bets)
 
+    def test_the_private_field_list_is_enforced_not_decorative(
+            self, live_session, monkeypatch, session_cap):
+        """`_PRIVATE_EXECUTION_FIELDS` sits beside the privacy boundary
+        and reads like a guarantee. Assert it against the REAL redacted
+        projection so that it is one — round 3 added fields derived from
+        the private economics (fill-book age, payload hashes), and a
+        list nobody checks would have quietly fallen behind them."""
+        from src.live import journal
+        self._record_full(live_session, monkeypatch, session_cap)
+        entries = journal.open_entries(live_session, 1)   # redacted
+        assert entries
+        for entry in entries:
+            for field in journal._PRIVATE_EXECUTION_FIELDS:
+                assert field not in entry, field
+            assert set(entry["executions"]) == {"count"}
+        # and each named field really is on the operator record, so the
+        # list cannot pass by naming fields that do not exist
+        full = journal.full_entries(1)[0]["executions"][0]
+        for field in journal._PRIVATE_EXECUTION_FIELDS:
+            assert field in full, field
+
     def test_operator_surface_keeps_the_full_record(self, live_session,
-                                                    client, monkeypatch):
-        self._record_full(live_session, monkeypatch)
+                                                    client, monkeypatch,
+                                                    session_cap):
+        self._record_full(live_session, monkeypatch, session_cap)
         denied = client.get("/api/admin/mls/journal")
         assert denied.status_code == 403
         r = client.get("/api/admin/mls/journal", headers=self.HDRS)
@@ -1597,7 +1652,7 @@ class TestCorpusScoping:
         from src.live import corpus
         mls_bet, epl_bet = self._seed_two_competitions(live_session)
         bundle = corpus.build_corpus()
-        assert bundle["manifest"]["schema_version"] == "corpus-v4"
+        assert bundle["manifest"]["schema_version"] == "corpus-v5"
         bets = bundle["sections"]["personal_journal.json"]
         assert [b["id"] for b in bets] == [mls_bet["id"]]
         assert all(b["competition_slug"] == "mls-2026" for b in bets)
@@ -1758,7 +1813,7 @@ class TestCorrectionScope:
 
 class TestBroadcast:
     def test_a_broadcast_is_persisted_even_if_dispatch_fails(
-            self, live_session, monkeypatch):
+            self, live_session, monkeypatch, session_cap):
         from src.live import journal
         import src.alerts as alerts
         _seed(live_session)
@@ -1767,22 +1822,27 @@ class TestBroadcast:
             raise RuntimeError("discord down")
         monkeypatch.setattr(alerts, "send_alert", boom)
         r = journal.broadcast("CIN drifted to 0.34", fixture_id=1,
-                              session_label="trivela-live")
+                              session_label="trivela-live",
+                              capability=session_cap["capability"])
         assert r["dispatched"] is False
         assert journal.recent_broadcasts(1)[0]["message"] == \
             "CIN drifted to 0.34"
 
     def test_a_reopened_session_can_read_what_it_already_said(
-            self, live_session, monkeypatch):
+            self, live_session, monkeypatch, session_cap):
         from src.live import journal
         import src.alerts as alerts
         monkeypatch.setattr(alerts, "send_alert",
                             lambda m, **kw: {"discord_action": True})
         _seed(live_session)
-        journal.broadcast("first", fixture_id=1)
-        journal.broadcast("second", fixture_id=1)
+        cap = session_cap["capability"]
+        journal.broadcast("first", fixture_id=1, capability=cap)
+        journal.broadcast("second", fixture_id=1, capability=cap)
         said = journal.recent_broadcasts(1)
         assert [b["message"] for b in said] == ["second", "first"]
+        # journal-P0-G: the record names the capability the server
+        # VERIFIED, not merely the source the caller claimed
+        assert all(b["dispatch_capability_id"] == cap.id for b in said)
 
 
 class TestWirePayloadIntegrity:
@@ -1819,7 +1879,7 @@ class TestWirePayloadIntegrity:
         return captured
 
     def test_oversized_action_message_keeps_the_full_qualifier(
-            self, live_session, wire):
+            self, live_session, wire, session_cap):
         """3000 chars of prose through the REAL transport wrappers:
         both Discord and ntfy receive the COMPLETE qualifier, the prose
         is what shrank, and the stored record IS the wire payload."""
@@ -1829,7 +1889,8 @@ class TestWirePayloadIntegrity:
         _seed(live_session)
         prose = "CIN drifting hard, book thinning. " * 100   # ~3400
         assert len(prose) > alerts.TRANSPORT_MESSAGE_LIMIT
-        r = journal.broadcast(prose, channel="action", fixture_id=1)
+        r = journal.broadcast(prose, channel="action", fixture_id=1,
+                              capability=session_cap["capability"])
         assert r["dispatched"] is True
         assert r["payload_truncated"] is True
         # every transport got the same, complete payload
@@ -1852,11 +1913,12 @@ class TestWirePayloadIntegrity:
         assert said["message"] == prose
 
     def test_normal_sized_prose_is_not_truncated(self, live_session,
-                                                 wire):
+                                                 wire, session_cap):
         from src.live import journal
         _seed(live_session)
         r = journal.broadcast("CIN 0.31, book thin", channel="action",
-                              fixture_id=1)
+                              fixture_id=1,
+                              capability=session_cap["capability"])
         assert r["payload_truncated"] is False
         assert "CIN 0.31, book thin" in wire["discord_action"]
         assert "[shadow]" in wire["discord_action"]
@@ -1872,7 +1934,7 @@ class TestBroadcastBoundary:
     uncertainty."""
 
     def test_session_action_broadcast_dispatches_with_the_qualifier(
-            self, live_session, monkeypatch):
+            self, live_session, monkeypatch, session_cap):
         """The carve-out: with REAL_MONEY_SIGNALS_ENABLED=false, session
         prose still dispatches — WITH the uncertainty attached."""
         from src.live import journal
@@ -1884,7 +1946,8 @@ class TestBroadcastBoundary:
             lambda m, **kw: (sent.append(m), {"discord_action": True})[1])
         _seed(live_session)
         r = journal.broadcast("CIN value at 0.31", channel="action",
-                              source="session", fixture_id=1)
+                              source="session", fixture_id=1,
+                              capability=session_cap["capability"])
         assert r["dispatched"] is True
         assert len(sent) == 1
         assert sent[0].startswith("🗣")
@@ -1896,7 +1959,10 @@ class TestBroadcastBoundary:
                 or "no established edge" in sent[0])
 
     def test_a_non_session_source_is_refused(self, live_session,
-                                             monkeypatch):
+                                             monkeypatch, session_cap):
+        """Refused even holding a VALID capability — the source check and
+        the origin check are independent gates, not one gate spelled
+        twice."""
         from src.live import journal
         import src.alerts as alerts
         sent = []
@@ -1905,7 +1971,8 @@ class TestBroadcastBoundary:
             lambda m, **kw: (sent.append(m), {"discord_action": True})[1])
         _seed(live_session)
         r = journal.broadcast("flip: exit > hold", source="computed",
-                              fixture_id=1)
+                              fixture_id=1,
+                              capability=session_cap["capability"])
         assert r.get("refused") is True
         assert r["dispatched"] is False
         assert "error" in r
@@ -1914,9 +1981,10 @@ class TestBroadcastBoundary:
         assert journal.recent_broadcasts(1) == []
 
     def test_a_scheduler_frame_is_refused_even_claiming_session(
-            self, live_session, monkeypatch):
+            self, live_session, monkeypatch, session_cap):
         """The stack check: source="session" is verified against the
-        call stack, not taken on the caller's word."""
+        call stack, not taken on the caller's word — and holding a real
+        capability does not buy a scheduler frame a dispatch."""
         from src.live import journal
         import src.alerts as alerts
         monkeypatch.setattr(alerts, "send_alert",
@@ -1924,8 +1992,9 @@ class TestBroadcastBoundary:
         _seed(live_session)
         code = compile(
             "result = journal.broadcast('auto', source='session', "
-            "fixture_id=1)", "<scheduler>", "exec")
-        g = {"__name__": "jobs.scheduler", "journal": journal}
+            "fixture_id=1, capability=cap)", "<scheduler>", "exec")
+        g = {"__name__": "jobs.scheduler", "journal": journal,
+             "cap": session_cap["capability"]}
         exec(code, g)
         assert g["result"].get("refused") is True
         assert "jobs.scheduler" in g["result"]["error"]
@@ -1954,23 +2023,26 @@ class TestBroadcastBoundary:
                 f"must never reach the relay")
 
     def test_dispatched_reports_per_transport_truth(self, live_session,
-                                                    monkeypatch):
+                                                    monkeypatch,
+                                                    session_cap):
         """journal-P1 F6: dispatched=true only when a transport ACCEPTED;
         all-fail reports false; the accepting transports are named."""
         from src.live import journal
         import src.alerts as alerts
         _seed(live_session)
+        cap = session_cap["capability"]
         monkeypatch.setattr(alerts, "send_alert",
                             lambda m, **kw: {"discord_action": False,
                                              "ntfy": True})
-        r = journal.broadcast("one leg down", fixture_id=1)
+        r = journal.broadcast("one leg down", fixture_id=1, capability=cap)
         assert r["dispatched"] is True
         assert r["accepted"] == ["ntfy"]
         assert r["transports"] == {"discord_action": False, "ntfy": True}
         monkeypatch.setattr(alerts, "send_alert",
                             lambda m, **kw: {"discord_action": False,
                                              "ntfy": False})
-        r2 = journal.broadcast("all legs down", fixture_id=1)
+        r2 = journal.broadcast("all legs down", fixture_id=1,
+                               capability=cap)
         assert r2["dispatched"] is False
         assert r2["accepted"] == []
 
@@ -1987,3 +2059,952 @@ class TestBroadcastBoundary:
                        "ntfy": False}
         assert alerts.send_alert("x", kind="detail") == {
             "discord_detail": False}
+
+
+# ===========================================================================
+# Round 3 — the three confirmed P0s, each exercised on the COMPOSED path.
+#
+# The recurring failure across rounds 1 and 2 was that a fix stopped one
+# layer short of the boundary and the test checked the layer above the
+# defect. So: the origin tests go over HTTP with a real TestClient, the
+# quote-age tests go through record_view/record_execution AND through the
+# read surfaces that consume them, and the idempotency tests assert the
+# HTTP status code AND the database afterwards.
+# ===========================================================================
+
+def _open_session_over_http(client, admin_headers):
+    """Walk the REAL handshake through the REAL routes and return the
+    headers an authorised interactive session would send."""
+    ch = client.post("/api/admin/mls/session/challenge",
+                     headers=admin_headers)
+    assert ch.status_code == 200, ch.text
+    from src.live import session_capability as sc
+    op = client.post("/api/admin/mls/session/open", headers=admin_headers,
+                     json={"challenge_id": ch.json()["challenge_id"],
+                           "response": sc.expected_response(
+                               ch.json()["nonce"]),
+                           "session_label": "trivela-live"})
+    assert op.status_code == 200, op.text
+    return ({**admin_headers,
+             "X-Session-Token": op.json()["session_token"]},
+            op.json())
+
+
+class TestBroadcastOriginIsVerified:
+    """journal-P0-G: `source="session"` must be a fact the SERVER can
+    check, not a string the client sends.
+
+    Round 2 added a call-stack check, which is real — but it only ever
+    bound in-process callers. Over HTTP the stack is uvicorn -> fastapi
+    -> api.main and contains no guarded frame, so any automated client
+    holding the generic operator token could POST source="session" and
+    reach the Discord/ntfy channel Son's friend reads before placing
+    real money. Every test here goes through the HTTP route.
+    """
+
+    ADMIN = {"X-Admin-Token": "s3cret"}
+
+    @pytest.fixture()
+    def client(self, live_session, monkeypatch):
+        from src.live import session_capability as sc
+        monkeypatch.setattr(config, "ADMIN_TOKEN", "s3cret")
+        monkeypatch.setattr(config, "JOURNAL_SESSION_SECRET",
+                            "second-factor-not-the-admin-token")
+        monkeypatch.setattr(config, "RATE_LIMIT_SECONDS", 0)
+        sc._reset_for_tests()
+        from fastapi.testclient import TestClient
+        from api import main as api_main
+        api_main._rate_last.clear()
+        yield TestClient(api_main.app)
+        sc._reset_for_tests()
+
+    @pytest.fixture()
+    def transports(self, monkeypatch):
+        """Records every message that reached a transport. Empty is the
+        assertion that matters: a refusal must not merely report
+        failure, it must never call one."""
+        import src.alerts as alerts
+        sent = []
+        monkeypatch.setattr(
+            alerts, "send_alert",
+            lambda m, **kw: (sent.append(m), {"discord_action": True})[1])
+        return sent
+
+    def test_a_generic_admin_client_cannot_dispatch(
+            self, live_session, client, transports):
+        """THE defect. A valid operator token, source="session", and no
+        interactive-session capability: refused, no transport touched,
+        and nothing persisted as having been said."""
+        from src.live import journal
+        _seed(live_session)
+        r = client.post("/api/admin/mls/broadcast", headers=self.ADMIN,
+                        json={"message": "CIN value at 0.31",
+                              "channel": "action", "source": "session",
+                              "fixture_id": 1})
+        assert r.status_code == 403, r.text
+        assert transports == []
+        assert journal.recent_broadcasts(1) == []
+
+    def test_an_authorised_interactive_session_can_dispatch(
+            self, live_session, client, transports):
+        """The other half: an explicitly authorised session DOES
+        dispatch, and the stored record names the capability the server
+        verified rather than the source the caller claimed."""
+        from src.live import journal
+        _seed(live_session)
+        headers, opened = _open_session_over_http(client, self.ADMIN)
+        r = client.post("/api/admin/mls/broadcast", headers=headers,
+                        json={"message": "CIN value at 0.31",
+                              "channel": "action", "source": "session",
+                              "fixture_id": 1})
+        assert r.status_code == 200, r.text
+        assert r.json()["dispatched"] is True
+        assert len(transports) == 1
+        said = journal.recent_broadcasts(1)
+        assert len(said) == 1
+        assert said[0]["dispatch_capability_id"] == opened["capability_id"]
+
+    def test_the_operator_token_alone_cannot_mint_a_capability(
+            self, live_session, client):
+        """The handshake needs a SECOND factor. Signing the nonce with
+        the admin token — the only secret a generic operator client
+        holds — does not verify."""
+        import hashlib
+        import hmac
+        _seed(live_session)
+        ch = client.post("/api/admin/mls/session/challenge",
+                         headers=self.ADMIN)
+        assert ch.status_code == 200, ch.text
+        forged = hmac.new(b"s3cret", ch.json()["nonce"].encode(),
+                          hashlib.sha256).hexdigest()
+        bad = client.post("/api/admin/mls/session/open",
+                          headers=self.ADMIN,
+                          json={"challenge_id": ch.json()["challenge_id"],
+                                "response": forged})
+        assert bad.status_code == 403, bad.text
+        assert "second factor" in bad.json()["detail"]
+
+    def test_a_challenge_is_single_use(self, live_session, client):
+        """A captured nonce is worth nothing twice — otherwise a replayed
+        request would mint a fresh capability."""
+        from src.live import session_capability as sc
+        _seed(live_session)
+        ch = client.post("/api/admin/mls/session/challenge",
+                         headers=self.ADMIN).json()
+        body = {"challenge_id": ch["challenge_id"],
+                "response": sc.expected_response(ch["nonce"])}
+        assert client.post("/api/admin/mls/session/open",
+                           headers=self.ADMIN, json=body).status_code == 200
+        again = client.post("/api/admin/mls/session/open",
+                            headers=self.ADMIN, json=body)
+        assert again.status_code == 403
+        assert "already-answered" in again.json()["detail"]
+
+    def test_an_unset_second_factor_disables_dispatch_entirely(
+            self, live_session, client, monkeypatch, transports):
+        """Fail-closed: with no session secret configured there is no
+        way to open a session, so the relay simply cannot dispatch."""
+        from src.live import journal
+        monkeypatch.setattr(config, "JOURNAL_SESSION_SECRET", "")
+        _seed(live_session)
+        ch = client.post("/api/admin/mls/session/challenge",
+                         headers=self.ADMIN)
+        assert ch.status_code == 503
+        assert "JOURNAL_SESSION_SECRET is unset" in ch.json()["detail"]
+        r = client.post("/api/admin/mls/broadcast", headers=self.ADMIN,
+                        json={"message": "x", "fixture_id": 1})
+        assert r.status_code == 403
+        assert transports == []
+        assert journal.recent_broadcasts(1) == []
+
+    def test_the_second_factor_must_differ_from_the_admin_token(
+            self, live_session, client, monkeypatch):
+        """Setting them equal would collapse two factors into one and
+        restore exactly the defect, so it is refused rather than
+        accepted as configuration."""
+        monkeypatch.setattr(config, "JOURNAL_SESSION_SECRET", "s3cret")
+        _seed(live_session)
+        ch = client.post("/api/admin/mls/session/challenge",
+                         headers=self.ADMIN)
+        assert ch.status_code == 503
+        assert "collapses the two factors" in ch.json()["detail"]
+
+    def test_closing_a_session_revokes_dispatch(
+            self, live_session, client, transports):
+        """A leaked token must be revocable without waiting out the TTL
+        or restarting the service."""
+        from src.live import journal
+        _seed(live_session)
+        headers, _ = _open_session_over_http(client, self.ADMIN)
+        assert client.post("/api/admin/mls/session/close",
+                           headers=headers).json()["closed"] is True
+        r = client.post("/api/admin/mls/broadcast", headers=headers,
+                        json={"message": "after close", "fixture_id": 1})
+        assert r.status_code == 403
+        assert transports == []
+        assert journal.recent_broadcasts(1) == []
+
+    def test_a_hand_built_capability_object_is_not_a_capability(
+            self, live_session, monkeypatch):
+        """The in-process half: `SessionCapability` is an ordinary
+        dataclass, so the check cannot be "did the caller pass one" — it
+        is "is this one the store actually issued"."""
+        from src.live import journal
+        from src.live.session_capability import SessionCapability
+        import src.alerts as alerts
+        sent = []
+        monkeypatch.setattr(
+            alerts, "send_alert",
+            lambda m, **kw: (sent.append(m), {"discord_action": True})[1])
+        _seed(live_session)
+        forged = SessionCapability(
+            id="not-issued-by-the-store", label="live",
+            issued_at=datetime.now(UTC),
+            expires_at=datetime.now(UTC) + timedelta(hours=1))
+        r = journal.broadcast("forged", fixture_id=1, capability=forged)
+        assert r.get("refused") is True
+        assert r["dispatched"] is False
+        assert sent == []
+        assert journal.recent_broadcasts(1) == []
+
+    def test_an_expired_capability_cannot_dispatch(
+            self, live_session, monkeypatch):
+        from src.live import journal
+        from src.live import session_capability as sc
+        import src.alerts as alerts
+        sent = []
+        monkeypatch.setattr(
+            alerts, "send_alert",
+            lambda m, **kw: (sent.append(m), {"discord_action": True})[1])
+        monkeypatch.setattr(config, "JOURNAL_SESSION_SECRET", "sf")
+        monkeypatch.setattr(config, "ADMIN_TOKEN", "s3cret")
+        monkeypatch.setattr(config, "JOURNAL_SESSION_TTL_SECONDS", 0)
+        sc._reset_for_tests()
+        _seed(live_session)
+        ch = sc.challenge()
+        opened = sc.open_session(ch["challenge_id"],
+                                 sc.expected_response(ch["nonce"]))
+        assert "error" not in opened, opened
+        assert sc.verify(opened["session_token"]) is None
+        r = journal.broadcast("stale session", fixture_id=1,
+                              capability=SessionCapabilityFromDict(opened))
+        assert r.get("refused") is True
+        assert sent == []
+        assert journal.recent_broadcasts(1) == []
+        sc._reset_for_tests()
+
+
+def SessionCapabilityFromDict(opened):
+    """Rebuild the capability object a caller would have been holding
+    when its TTL ran out — the store has already dropped it."""
+    from src.live.session_capability import SessionCapability
+    return SessionCapability(
+        id=opened["capability_id"], label=opened.get("session_label"),
+        issued_at=datetime.fromisoformat(opened["issued_at"]),
+        expires_at=datetime.fromisoformat(opened["expires_at"]))
+
+
+class TestQuoteTemporalProvenance:
+    """journal-P0-H: Kalshi publishes NO quote timestamp, so our capture
+    clock is the only evidence of when a book was observed. Round 2
+    bounded the citation on one side only — a quote could not postdate
+    the moment it described, but it could predate it by any amount. An
+    hours-old same-contract quote therefore became `observed_quote`,
+    counted toward the aggregate, and fed market_drift/execution_cost as
+    though it were the book at the time.
+    """
+
+    def _stale_quote(self, s, qid, minutes, contract=1):
+        s.add(MarketQuote(
+            id=qid, market_contract_id=contract,
+            captured_at=datetime.now(UTC) - timedelta(minutes=minutes),
+            yes_ask_c=45, yes_bid_c=43, market_snapshot_id=1))
+        s.commit()
+
+    def test_a_stale_same_contract_quote_is_refused_and_classified(
+            self, live_session):
+        """Same fixture, same contract, same outcome — identity is fine.
+        It is the AGE that disqualifies it, and the refusal is named on
+        the row rather than left as an absent field."""
+        from src.live import journal
+        _seed(live_session)
+        self._stale_quote(live_session, 20, minutes=120)
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  stated_price="0.45", market_quote_id=20)
+        assert "error" not in bet, bet
+        assert bet["price_basis"] == "stated_only"
+        assert bet["market_quote_id"] is None
+        assert bet["quote_rejection_reason"] == "stale_capture"
+        assert bet["quote_age_seconds"] >= 7200
+        assert bet["quote_max_age_seconds"] == \
+            config.JOURNAL_QUOTE_MAX_AGE_SECONDS
+        assert bet["counts_toward_aggregate"] is False
+        out = journal.journal_summary()
+        assert out["countable"] == 0
+        assert out["excluded_stale_quote"] == 0   # basis was downgraded
+        assert out["excluded_stated_only"] == 1
+
+    def test_a_fresh_quote_is_accepted_with_its_age_reported(
+            self, live_session):
+        """CONTROL — passes before and after. The ceiling must refuse
+        stale evidence without refusing the ordinary case."""
+        from src.live import journal
+        _seed(live_session)                      # quote 1: ~60s old
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  stated_price="0.45", market_quote_id=1)
+        assert bet["price_basis"] == "observed_quote"
+        assert bet["counts_toward_aggregate"] is True
+        assert 0 <= bet["quote_age_seconds"] <= 120
+        assert bet["quote_rejection_reason"] is None
+
+    def test_the_ceiling_is_configuration_not_a_literal(
+            self, live_session, monkeypatch):
+        """Tightening the ceiling reclassifies the SAME quote — proof the
+        decision is the age against the ceiling, not a hardcoded shape
+        of the test data."""
+        from src.live import journal
+        monkeypatch.setattr(config, "JOURNAL_QUOTE_MAX_AGE_SECONDS", 5)
+        _seed(live_session)
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  market_quote_id=1)
+        assert bet["price_basis"] == "stated_only"
+        assert bet["quote_rejection_reason"] == "stale_capture"
+
+    def test_a_stale_fill_book_is_refused_and_writes_nothing(
+            self, live_session):
+        """The fill book is what market_drift and execution_cost are
+        measured against, so it must be CONTEMPORANEOUS with the fill it
+        claims to describe."""
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        self._stale_quote(live_session, 21, minutes=60)
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  stated_price="0.45", market_quote_id=1)
+        journal.resolve_view(bet["id"], "taken")
+        now = datetime.now(UTC)
+        r = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=now,
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=now, market_quote_id_at_fill=21)
+        assert "error" in r
+        assert "contemporaneity ceiling" in r["error"]
+        assert str(config.JOURNAL_FILL_QUOTE_MAX_AGE_SECONDS) in r["error"]
+        assert live_session.query(PBE).count() == 0
+
+    def test_a_contemporaneous_fill_book_is_accepted_with_its_age(
+            self, live_session):
+        """CONTROL — passes before and after."""
+        from src.live import journal
+        _seed(live_session)
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  stated_price="0.45", market_quote_id=1)
+        journal.resolve_view(bet["id"], "taken")
+        now = datetime.now(UTC)
+        r = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=now,
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=now, market_quote_id_at_fill=1,
+            exchange_order_id="ORD-FRESH")
+        assert "error" not in r, r
+        assert r["gaps"]["gaps_basis"] == "record_and_fill_books"
+        assert r["gaps"]["fill_quote_age_seconds"] <= \
+            config.JOURNAL_FILL_QUOTE_MAX_AGE_SECONDS
+        assert r["gaps"]["fill_quote_freshness"] == "fresh"
+
+    def _legacy_stale_entry(self, s, bet_id=500, hours=6):
+        """A row as it would have been written BEFORE the ceiling
+        existed: observed_quote, an ancient capture, and no stored age.
+        The reader is where these rows are actually used, so the reader
+        is where they have to be caught."""
+        now = datetime.now(UTC)
+        s.add(PersonalBet(
+            id=bet_id, competition_slug="mls-2026", fixture_id=1,
+            market_ticker="KXMLSGAME-x-H", outcome_key="home_win",
+            market_contract_id=1, status="taken",
+            stated_price_dollars="0.45", price_basis="observed_quote",
+            market_quote_id=1,
+            quote_observed_at=now - timedelta(hours=hours),
+            recorded_at=now, resolved_at=now))
+        s.commit()
+        return bet_id
+
+    def test_a_row_recorded_before_the_ceiling_stops_counting(
+            self, live_session):
+        """Fixing the writer alone would leave every already-recorded
+        entry counting off an arbitrarily old book. The read-side check
+        is derived from the two timestamps the row already carries."""
+        from src.live import journal
+        _seed(live_session)
+        self._legacy_stale_entry(live_session)
+        out = journal.journal_summary()
+        assert out["total_recorded"] == 1
+        assert out["countable"] == 0
+        assert out["excluded_stale_quote"] == 1
+        entry = journal.open_entries(live_session, 1)[0]
+        assert entry["quote_freshness"] == "stale"
+        assert entry["counts_toward_aggregate"] is False
+
+    def test_gaps_refuse_to_decompose_off_a_stale_book(
+            self, live_session):
+        """`record_and_fill_books` is a claim about evidence. A book that
+        exists but is nowhere near the moment it describes does not earn
+        it, and the decomposed metrics stay absent under an explicit
+        classification instead."""
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet_id = self._legacy_stale_entry(live_session)
+        now = datetime.now(UTC)
+        live_session.add(PBE(
+            personal_bet_id=bet_id, account_label="friend-A",
+            consent_recorded_at=now, status="filled",
+            fill_price_dollars="0.47", filled_contracts="10",
+            fee_paid_dollars="0.12", filled_at=now,
+            market_quote_id_at_fill=1, exchange_order_id="ORD-LEGACY"))
+        live_session.commit()
+        row = journal.full_entries(1)[0]["executions"][0]
+        g = row["gaps"]
+        assert g["gaps_basis"] == "stale_record_book"
+        for k in ("market_drift", "execution_cost", "aggressiveness"):
+            assert k not in g, k
+        # the age is REPORTED, so the classification is checkable
+        assert g["record_quote_age_seconds"] >= 6 * 3600
+        assert g["record_quote_freshness"] == "stale"
+        assert g["fill_quote_freshness"] == "fresh"
+
+    def test_the_public_projection_carries_the_capture_age(
+            self, live_session, monkeypatch):
+        """The whole point of citing a quote is that a reader can check
+        it — and they cannot check a book whose age they are not told."""
+        from src.live import corpus, journal
+        _seed(live_session)
+        journal.record_view(1, "KXMLSGAME-x-H", outcome_key="home_win",
+                            stated_price="0.45", market_quote_id=1)
+        row = corpus.build_corpus()["sections"]["personal_journal.json"][0]
+        assert "quote_age_seconds" in row
+        assert "quote_max_age_seconds" in row
+        assert "quote_freshness" in row
+        assert row["quote_freshness"] == "fresh"
+
+
+class TestPayloadSensitiveIdempotency:
+    """journal-P0-I: a retry is the SAME payload arriving twice. The key
+    (exchange_order_id, status) alone identified a row, so the same key
+    carrying different economics got the earlier row back with
+    `idempotent: true` — the API reported that the new numbers had been
+    confirmed when it had discarded them. On a third party's money that
+    is the worst available failure mode.
+    """
+
+    ADMIN = {"X-Admin-Token": "s3cret"}
+
+    @pytest.fixture()
+    def client(self, live_session, monkeypatch):
+        monkeypatch.setattr(config, "ADMIN_TOKEN", "s3cret")
+        monkeypatch.setattr(config, "RATE_LIMIT_SECONDS", 0)
+        from fastapi.testclient import TestClient
+        from api import main as api_main
+        api_main._rate_last.clear()
+        return TestClient(api_main.app)
+
+    def _taken(self, journal):
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  stated_price="0.45", market_quote_id=1)
+        journal.resolve_view(bet["id"], "taken")
+        return bet
+
+    def _payload(self, bet_id, now):
+        return {"bet_id": bet_id, "account_label": "friend-A",
+                "consent_recorded_at": now.isoformat(),
+                "fill_price": "0.47", "filled_contracts": "10",
+                "fee_paid": "0.12", "filled_at": now.isoformat(),
+                "exchange_order_id": "ORD-IDEM",
+                "publication_consent": False}
+
+    def test_an_exact_repeat_is_a_no_op(self, live_session, client):
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+        # whole-second so isoformat round-trips exactly, rounded
+        # UP: rounding down would put the fill before the taken
+        # moment, which P0-D chronology rejects
+        now = (datetime.now(UTC)
+               + timedelta(seconds=1)).replace(microsecond=0)
+        body = self._payload(bet["id"], now)
+        first = client.post("/api/admin/mls/journal/execution",
+                            headers=self.ADMIN, json=body)
+        assert first.status_code == 200, first.text
+        assert "error" not in first.json(), first.text
+        again = client.post("/api/admin/mls/journal/execution",
+                            headers=self.ADMIN, json=body)
+        assert again.status_code == 200, again.text
+        assert again.json()["idempotent"] is True
+        assert again.json()["id"] == first.json()["id"]
+        assert live_session.query(PBE).count() == 1
+
+    def test_any_changed_canonical_field_is_409_and_writes_nothing(
+            self, live_session, client):
+        """Every canonical field, one at a time, over the COMPOSED HTTP
+        path: the status code is 409, the response says conflict, and
+        the stored row is byte-for-byte what the first call wrote."""
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+        # whole-second so isoformat round-trips exactly, rounded
+        # UP: rounding down would put the fill before the taken
+        # moment, which P0-D chronology rejects
+        now = (datetime.now(UTC)
+               + timedelta(seconds=1)).replace(microsecond=0)
+        body = self._payload(bet["id"], now)
+        first = client.post("/api/admin/mls/journal/execution",
+                            headers=self.ADMIN, json=body)
+        assert first.status_code == 200, first.text
+        assert "error" not in first.json(), first.text
+        before = {c.name: getattr(
+            live_session.get(PBE, first.json()["id"]), c.name)
+            for c in PBE.__table__.columns}
+        changes = [
+            {"fill_price": "0.48"},
+            {"filled_contracts": "11"},
+            {"fee_paid": "0.13"},
+            {"filled_at": (now + timedelta(seconds=1)).isoformat()},
+            {"consent_recorded_at":
+                (now - timedelta(hours=1)).isoformat()},
+            {"account_label": "friend-B"},
+            {"publication_consent": True},
+            {"best_available_price": "0.49"},
+        ]
+        for change in changes:
+            r = client.post("/api/admin/mls/journal/execution",
+                            headers=self.ADMIN, json={**body, **change})
+            assert r.status_code == 409, (change, r.status_code, r.text)
+            assert r.json()["conflict"] is True
+            assert r.json()["conflicting_write"] == "execution"
+            assert live_session.query(PBE).count() == 1, change
+            live_session.expire_all()
+            after = {c.name: getattr(
+                live_session.get(PBE, first.json()["id"]), c.name)
+                for c in PBE.__table__.columns}
+            assert after == before, change
+
+    def test_decimal_spelling_is_not_a_conflict(self, live_session,
+                                                client):
+        """0.47 and 0.470 are the same fill. The hash is over VALUES, so
+        an honest retry must not 409 on formatting."""
+        from src.live import journal
+        _seed(live_session)
+        bet = self._taken(journal)
+        # whole-second so isoformat round-trips exactly, rounded
+        # UP: rounding down would put the fill before the taken
+        # moment, which P0-D chronology rejects
+        now = (datetime.now(UTC)
+               + timedelta(seconds=1)).replace(microsecond=0)
+        body = self._payload(bet["id"], now)
+        first = client.post("/api/admin/mls/journal/execution",
+                            headers=self.ADMIN, json=body)
+        assert first.status_code == 200, first.text
+        assert "error" not in first.json(), first.text
+        again = client.post("/api/admin/mls/journal/execution",
+                            headers=self.ADMIN,
+                            json={**body, "fill_price": "0.4700",
+                                  "filled_contracts": "10.0",
+                                  "fee_paid": "0.120"})
+        assert again.status_code == 200, again.text
+        assert again.json()["idempotent"] is True
+
+    def test_a_row_written_before_the_hash_existed_is_still_checked(
+            self, live_session, client):
+        """Rows predating this fix carry no stored hash, and they are
+        exactly the rows most likely to be retried. Treating "no
+        recorded hash" as "matches" would reintroduce the defect for
+        them, so the hash is recomputed from the stored columns."""
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+        # whole-second so isoformat round-trips exactly, rounded
+        # UP: rounding down would put the fill before the taken
+        # moment, which P0-D chronology rejects
+        now = (datetime.now(UTC)
+               + timedelta(seconds=1)).replace(microsecond=0)
+        live_session.add(PBE(
+            personal_bet_id=bet["id"], account_label="friend-A",
+            consent_recorded_at=now, status="filled",
+            fill_price_dollars="0.47", filled_contracts="10",
+            fee_paid_dollars="0.12", filled_at=now,
+            exchange_order_id="ORD-IDEM"))
+        live_session.commit()
+        assert live_session.query(PBE).first().execution_payload_hash \
+            is None
+        body = self._payload(bet["id"], now)
+        same = client.post("/api/admin/mls/journal/execution",
+                           headers=self.ADMIN, json=body)
+        assert same.status_code == 200, same.text
+        assert same.json().get("idempotent") is True, same.text
+        bad = client.post("/api/admin/mls/journal/execution",
+                          headers=self.ADMIN,
+                          json={**body, "fill_price": "0.99"})
+        assert bad.status_code == 409, bad.text
+        assert live_session.query(PBE).count() == 1
+
+    def test_a_conflicting_settlement_is_409_including_the_outcome(
+            self, live_session, client):
+        """The old check compared credit and timestamp only, so a retry
+        carrying a DIFFERENT settled_outcome was answered `idempotent`
+        and the outcome-conflict check was never reached."""
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+        # whole-second so isoformat round-trips exactly, rounded
+        # UP: rounding down would put the fill before the taken
+        # moment, which P0-D chronology rejects
+        now = (datetime.now(UTC)
+               + timedelta(seconds=1)).replace(microsecond=0)
+        ex = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=now,
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=now, exchange_order_id="ORD-SET")
+        base = {"execution_id": ex["id"], "settlement_credit": "10",
+                "settled_at": now.isoformat(),
+                "settled_outcome": "home_win"}
+        settled = client.post("/api/admin/mls/journal/settlement",
+                              headers=self.ADMIN, json=base)
+        assert settled.status_code == 200, settled.text
+        assert "error" not in settled.json(), settled.text
+        assert client.post("/api/admin/mls/journal/settlement",
+                           headers=self.ADMIN,
+                           json=base).json()["idempotent"] is True
+        for change in ({"settlement_credit": "5"},
+                       # a different, still-plausible settled_at: after
+                       # the fill and inside the clock-skew tolerance,
+                       # so it is refused for CONFLICTING, not for being
+                       # out of domain
+                       {"settled_at":
+                        (now + timedelta(seconds=5)).isoformat()},
+                       {"settled_outcome": "away_win"}):
+            r = client.post("/api/admin/mls/journal/settlement",
+                            headers=self.ADMIN, json={**base, **change})
+            assert r.status_code == 409, (change, r.text)
+            assert r.json()["conflicting_write"] == "settlement"
+            live_session.expire_all()
+            row = live_session.get(PBE, ex["id"])
+            assert row.settlement_credit_dollars == "10", change
+            assert live_session.get(
+                PersonalBet, bet["id"]).settled_outcome == "home_win"
+
+    def test_a_conflicting_reconciliation_is_409_including_consent(
+            self, live_session, client):
+        """The old check looked only at the `reconciled` flag, so a
+        second call granting or revoking publication_consent returned
+        success and wrote nothing — the consent of a third party over
+        their own financial record, silently discarded."""
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+        # whole-second so isoformat round-trips exactly, rounded
+        # UP: rounding down would put the fill before the taken
+        # moment, which P0-D chronology rejects
+        now = (datetime.now(UTC)
+               + timedelta(seconds=1)).replace(microsecond=0)
+        ex = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=now,
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=now, exchange_order_id="ORD-REC")
+        journal.settle_execution(ex["id"], settlement_credit="10",
+                                 settled_at=now)
+        base = {"execution_id": ex["id"], "note": "matches statement"}
+        rec = client.post("/api/admin/mls/journal/reconcile",
+                          headers=self.ADMIN, json=base)
+        assert rec.status_code == 200, rec.text
+        assert "error" not in rec.json(), rec.text
+        assert client.post("/api/admin/mls/journal/reconcile",
+                           headers=self.ADMIN,
+                           json=base).json()["idempotent"] is True
+        for change in ({"note": "actually it did not match"},
+                       {"publication_consent": True},
+                       {"publication_consent": False}):
+            r = client.post("/api/admin/mls/journal/reconcile",
+                            headers=self.ADMIN, json={**base, **change})
+            assert r.status_code == 409, (change, r.text)
+            assert r.json()["conflicting_write"] == "reconciliation"
+            live_session.expire_all()
+            row = live_session.get(PBE, ex["id"])
+            assert row.reconciliation_note == "matches statement", change
+            assert row.publication_consent is False, change
+
+
+class TestLifecycleContradictions:
+    """journal-P1-H: combinations that cannot describe a real event are
+    refused rather than stored. Round 2 validated each field's domain and
+    two chronology edges; a row could still assert "nothing filled" AND a
+    fill price, or claim a fill in the future (which produced a negative
+    latency in the fidelity metrics)."""
+
+    def _taken(self, journal):
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  stated_price="0.45", market_quote_id=1)
+        journal.resolve_view(bet["id"], "taken")
+        return bet
+
+    def test_not_filled_cannot_carry_fill_facts(self, live_session):
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+        now = datetime.now(UTC)
+        base = dict(consent_recorded_at=now, status="not_filled",
+                    not_filled_reason="price_moved")
+        for kw in ({"fill_price": "0.47"}, {"filled_contracts": "10"},
+                   {"fee_paid": "0.12"}, {"filled_at": now},
+                   {"market_quote_id_at_fill": 1}):
+            r = journal.record_execution(bet["id"], "friend-A",
+                                         **{**base, **kw})
+            assert "error" in r, kw
+            (field, _), = kw.items()
+            assert field in r["error"], kw
+        assert live_session.query(PBE).count() == 0
+        # CONTROL: the honest not_filled row still records, with the
+        # liquidity evidence that makes it worth having
+        ok = journal.record_execution(
+            bet["id"], "friend-A", best_available_price="0.52", **base)
+        assert "error" not in ok, ok
+        assert ok["best_available_price_dollars"] == "0.52"
+
+    def test_a_fill_cannot_carry_a_not_filled_reason(self, live_session):
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+        now = datetime.now(UTC)
+        r = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=now,
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=now, not_filled_reason="price_moved")
+        assert "error" in r and "not_filled_reason" in r["error"]
+        assert live_session.query(PBE).count() == 0
+
+    def test_no_recorded_moment_may_lie_in_the_future(self, live_session):
+        """A fill that has not happened yet has nothing to record, and a
+        future filled_at made latency_seconds negative."""
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+        now = datetime.now(UTC)
+        soon = now + timedelta(hours=2)
+        r = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=now,
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=soon)
+        assert "error" in r and "filled_at" in r["error"]
+        assert "future" in r["error"]
+        r = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=soon,
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=now)
+        assert "error" in r and "consent_recorded_at" in r["error"]
+        assert live_session.query(PBE).count() == 0
+        ex = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=now,
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=now, exchange_order_id="ORD-FUT")
+        assert "error" not in ex, ex
+        bad = journal.settle_execution(ex["id"], settlement_credit="10",
+                                       settled_at=soon)
+        assert "error" in bad and "future" in bad["error"]
+        live_session.expire_all()
+        assert live_session.get(PBE, ex["id"]).settled_at is None
+
+    def test_settlement_cannot_exceed_the_contracts_held(self,
+                                                         live_session):
+        """A Kalshi contract settles at $1 or $0, so a credit above the
+        contracts filled is a data-entry error — and settlement_delta
+        would have carried it into the fidelity metrics as a measured
+        discrepancy."""
+        from src.live import journal
+        from src.live.models import PersonalBetExecution as PBE
+        _seed(live_session)
+        bet = self._taken(journal)
+        now = datetime.now(UTC)
+        ex = journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=now,
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=now, exchange_order_id="ORD-CAP")
+        r = journal.settle_execution(ex["id"], settlement_credit="1000",
+                                     settled_at=now)
+        assert "error" in r and "maximum payout" in r["error"]
+        live_session.expire_all()
+        assert live_session.get(PBE, ex["id"]).settled_at is None
+        ok = journal.settle_execution(ex["id"], settlement_credit="10",
+                                      settled_at=now)
+        assert "error" not in ok, ok
+
+
+class TestCorrectionChainLinearityUnderRace:
+    """journal-P1-G: the handler's read-then-insert head check cannot
+    survive concurrency — two simultaneous corrections of one entry both
+    read "no head" and both commit, leaving an ambiguous effective
+    observation. The database is the only place this can be settled."""
+
+    def _taken(self, journal):
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  stated_price="0.45", market_quote_id=1)
+        journal.resolve_view(bet["id"], "taken")
+        return bet
+
+    def test_the_database_itself_refuses_a_second_head(self,
+                                                       live_session):
+        """Test-DB parity: the partial unique index is a real constraint
+        the SQLite suite enforces too, not a promise the handler makes."""
+        from sqlalchemy.exc import IntegrityError
+        from src.live import journal
+        _seed(live_session)
+        bet = self._taken(journal)
+        now = datetime.now(UTC)
+        for i in range(2):
+            live_session.add(PersonalBet(
+                competition_slug="mls-2026", fixture_id=1,
+                market_ticker="KXMLSGAME-x-H", outcome_key="home_win",
+                status="considered", price_basis="stated_only",
+                recorded_at=now, corrects_bet_id=bet["id"]))
+        with pytest.raises(IntegrityError):
+            live_session.commit()
+        live_session.rollback()
+
+    def test_a_lost_race_reads_as_the_linear_chain_error(
+            self, live_session, monkeypatch):
+        """Simulate the interleaving: the pre-check passes (as it would
+        for both racers) and the INSERT is the thing that loses. The
+        caller must get the same message the sequential path gives, not
+        a 500 — concurrency is not a different API contract."""
+        from src.live import journal
+        _seed(live_session)
+        bet = self._taken(journal)
+        first = journal.record_view(1, "KXMLSGAME-x-H",
+                                    outcome_key="home_win",
+                                    market_quote_id=1,
+                                    corrects_bet_id=bet["id"])
+        assert "error" not in first, first
+
+        real_query = journal.get_session
+
+        class _BlindSession:
+            """The head pre-check sees nothing — exactly what the losing
+            racer saw when it read before the winner committed."""
+            def __init__(self, inner):
+                self._inner = inner
+                self._blinded = True
+
+            def query(self, *a, **kw):
+                q = self._inner.query(*a, **kw)
+                if self._blinded and a and a[0] is PersonalBet:
+                    self._blinded = False
+                    class _Empty:
+                        def filter_by(self, **kw):
+                            return self
+                        def first(self):
+                            return None
+                    return _Empty()
+                return q
+
+            def __getattr__(self, name):
+                return getattr(self._inner, name)
+
+        monkeypatch.setattr(journal, "get_session",
+                            lambda: _BlindSession(real_query()))
+        r = journal.record_view(1, "KXMLSGAME-x-H",
+                                outcome_key="home_win",
+                                market_quote_id=1,
+                                corrects_bet_id=bet["id"])
+        assert "error" in r, r
+        assert "already corrected" in r["error"]
+        assert str(first["id"]) in r["error"]
+        # restore only THIS patch — monkeypatch.undo() would also revert
+        # the live-plane fixture and leave the journal dormant
+        monkeypatch.setattr(journal, "get_session", real_query)
+        # and the losing insert left NOTHING behind: still one chain,
+        # one effective observation
+        assert live_session.query(PersonalBet).count() == 2
+        assert journal.journal_summary()["effective_recorded"] == 1
+
+
+class TestCorpusReferentialClosure:
+    """corpus-v5: the corpus claims to be SELF-CONTAINED. Quotes were
+    scoped to lock snapshots, but a journal entry may cite any persisted
+    observation — so an exported entry's `market_quote_id` could name a
+    quote no file in the bundle contained, and a reader could not check
+    the one price the entry exists to make checkable."""
+
+    def _cite_a_non_lock_quote(self, s):
+        """A quote on the approved chain that belongs to NO market
+        snapshot — the ordinary observation stream."""
+        from src.live import journal
+        s.add(MarketQuote(id=30, market_contract_id=1,
+                          captured_at=datetime.now(UTC)
+                          - timedelta(seconds=30),
+                          yes_ask_c=46, yes_bid_c=44,
+                          market_snapshot_id=None))
+        s.commit()
+        return journal.record_view(1, "KXMLSGAME-x-H",
+                                   outcome_key="home_win",
+                                   stated_price="0.45",
+                                   market_quote_id=30)
+
+    def test_every_cited_quote_resolves_inside_the_bundle(
+            self, live_session):
+        from src.live import corpus
+        _seed(live_session)
+        bet = self._cite_a_non_lock_quote(live_session)
+        assert bet["price_basis"] == "observed_quote"
+        bundle = corpus.build_corpus()
+        exported = {q["id"] for q in
+                    bundle["sections"]["market_quotes.json"]}
+        for row in bundle["sections"]["personal_journal.json"]:
+            assert row["market_quote_id"] is None \
+                or row["market_quote_id"] in exported, row
+        assert 30 in exported
+        assert bundle["manifest"]["counts"][
+            "journal_referenced_quotes"] == 1
+        assert bundle["manifest"]["quote_scope"] == \
+            "lock_snapshot_plus_journal_referenced"
+
+    def test_a_withheld_executions_fill_book_is_not_pulled_in(
+            self, live_session):
+        """Closure must not become a leak: including a quote referenced
+        ONLY by an execution with no publication consent would tell a
+        reader which book that withheld execution used."""
+        from src.live import corpus, journal
+        _seed(live_session)
+        live_session.add(MarketQuote(
+            id=31, market_contract_id=1,
+            captured_at=datetime.now(UTC) - timedelta(seconds=10),
+            yes_ask_c=47, yes_bid_c=45, market_snapshot_id=None))
+        live_session.commit()
+        bet = journal.record_view(1, "KXMLSGAME-x-H",
+                                  outcome_key="home_win",
+                                  stated_price="0.45")
+        journal.resolve_view(bet["id"], "taken")
+        now = datetime.now(UTC)
+        journal.record_execution(
+            bet["id"], "friend-A", consent_recorded_at=now,
+            fill_price="0.47", filled_contracts="10", fee_paid="0.12",
+            filled_at=now, market_quote_id_at_fill=31,
+            exchange_order_id="ORD-PRIV", publication_consent=False)
+        bundle = corpus.build_corpus()
+        exported = {q["id"] for q in
+                    bundle["sections"]["market_quotes.json"]}
+        assert 31 not in exported
+        assert bundle["sections"]["personal_journal_executions.json"] == []

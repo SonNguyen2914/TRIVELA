@@ -70,7 +70,20 @@ from src.live.models import (Competition, CorpusExport, Fixture,
 # Corrections are scope-checked at write time (same competition/
 # fixture/market/outcome), so a competition-scoped corpus cannot
 # contain a dangling corrects_bet_id.
-CORPUS_SCHEMA = "corpus-v4"
+#
+# v5 (journal-P0-H + closure): the journal sections are REFERENTIALLY
+# CLOSED. `market_quotes.json` was scoped to lock-snapshot quotes only,
+# but a journal entry may cite any persisted observation — so an
+# exported entry's `market_quote_id` (and an exported execution's
+# `market_quote_id_at_fill`) could name a quote no file in the bundle
+# contained. The corpus claims to be self-contained; a reader could not
+# check the one price the entry exists to make checkable. Journal-
+# referenced quotes are now included, scoped to what actually exports:
+# entry quotes always, fill-book quotes only for executions that carry
+# publication consent. Entries additionally carry the quote's capture
+# age, the ceiling applied and any refusal reason, so a reader can
+# verify the falsifiability claim rather than take it on trust.
+CORPUS_SCHEMA = "corpus-v5"
 _GIT_REV = os.getenv("RAILWAY_GIT_COMMIT_SHA", "")[:40]
 
 
@@ -182,6 +195,8 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
         quote_ids = {q.id for q in quotes}
         depth = [d for d in s.query(MarketDepthLevel).all()
                  if d.market_quote_id in quote_ids]
+        # journal quote evidence — resolved below, once the journal rows
+        # are known, so the bundle closes over what it actually exports
         lineups = [ln for ln in s.query(LineupSnapshot).all()
                    if ln.fixture_id in fixture_ids]
         lineup_ids = {ln.id for ln in lineups}
@@ -198,6 +213,25 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
         # labelled superseded — one effective observation per chain
         journal_superseded = {b.corrects_bet_id for b in journal_bets
                               if b.corrects_bet_id is not None}
+        # corpus-v5: close the bundle over the quotes the journal
+        # sections REFER TO. Entry quotes always (every entry exports);
+        # fill-book quotes only for executions that actually export,
+        # i.e. those carrying publication consent — pulling in a quote
+        # referenced solely by a withheld execution would leak which
+        # book that execution used.
+        published_execs = [e for e in journal_execs
+                           if e.publication_consent]
+        journal_quote_ids = {b.market_quote_id for b in journal_bets
+                             if b.market_quote_id is not None}
+        journal_quote_ids |= {e.market_quote_id_at_fill
+                              for e in published_execs
+                              if e.market_quote_id_at_fill is not None}
+        missing_quote_ids = journal_quote_ids - quote_ids
+        if missing_quote_ids:
+            extra = (s.query(MarketQuote)
+                     .filter(MarketQuote.id.in_(missing_quote_ids)).all())
+            quotes = quotes + extra
+            quote_ids = quote_ids | {q.id for q in extra}
 
         sections = {
             "competitions.json": [_dump(x) for x in
@@ -240,8 +274,7 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
                     x, superseded=x.id in journal_superseded)
                 for x in journal_bets],
             "personal_journal_executions.json": [
-                _dump(x) for x in journal_execs
-                if x.publication_consent],
+                _dump(x) for x in published_execs],
             # V9.5 eval C1: the frozen paper/risk state each lock was
             # evaluated against, so a reader can verify that a paper
             # decision was a pure function of frozen inputs
@@ -299,6 +332,10 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             "input_artifacts": len(artifact_ids),
             "lock_snapshots": len(snapshots),
             "frozen_quotes": len(quotes),
+            # corpus-v5: how many of the exported quotes are there only
+            # because a journal row cites them. Stated, so `quote_scope`
+            # cannot be read as "lock snapshots only" when it is not.
+            "journal_referenced_quotes": len(missing_quote_ids),
             "depth_rows": len(depth),
             "missed_locks": audit_summary.get("missed_locks", 0),
             "failed_snapshots": audit_summary.get("failed_snapshots", 0),
@@ -327,7 +364,7 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             "backend_revision": _GIT_REV,
             "model_versions": [m["name"] for m in
                                sections["model_versions.json"]],
-            "quote_scope": "lock_snapshot_only",
+            "quote_scope": "lock_snapshot_plus_journal_referenced",
             "files": files,
             "counts": counts,
         }

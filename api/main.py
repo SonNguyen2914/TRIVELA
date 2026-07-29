@@ -312,6 +312,75 @@ class BroadcastIn(BaseModel):
     fixture_id: int | None = None
 
 
+class SessionOpenIn(BaseModel):
+    challenge_id: str
+    # HMAC-SHA256(JOURNAL_SESSION_SECRET, nonce), hex
+    response: str
+    session_label: str | None = None
+
+
+def _journal_write(result):
+    """Journal mutation responses, with a payload CONFLICT surfaced as
+    HTTP 409 (journal-P0-I).
+
+    A conflicting retry must not read as success at any layer. The
+    handler already refuses to write; returning it inside a 200 body
+    would leave a client that checks only the status code believing its
+    corrected economics had been accepted."""
+    from fastapi.responses import JSONResponse
+    if isinstance(result, dict) and result.get("conflict"):
+        return JSONResponse(status_code=409, content=result)
+    return result
+
+
+@app.post("/api/admin/mls/session/challenge")
+def mls_session_challenge(request: Request):
+    """Operator-only: step one of the interactive-session handshake
+    (journal-P0-G).
+
+    Returns a single-use nonce for the operator to sign with
+    JOURNAL_SESSION_SECRET. The secret is a SECOND factor and never
+    crosses the wire; the operator token alone cannot mint a capability,
+    which is precisely the hole this closes — the round-2 stack-frame
+    check bound in-process callers only, so over HTTP any token holder
+    could claim `source="session"` and reach the channel Son's friend
+    reads."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import session_capability
+    out = session_capability.challenge()
+    if "error" in out:
+        raise HTTPException(503, out["error"])
+    return out
+
+
+@app.post("/api/admin/mls/session/open")
+def mls_session_open(request: Request, body: SessionOpenIn):
+    """Operator-only: step two — answer the challenge, receive a
+    short-lived capability token. Present it as `X-Session-Token` on
+    /api/admin/mls/broadcast. Capabilities live in process memory, so a
+    restart revokes every live session; that errs closed."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import session_capability
+    out = session_capability.open_session(
+        body.challenge_id, body.response, body.session_label)
+    if "error" in out:
+        raise HTTPException(403, out["error"])
+    return out
+
+
+@app.post("/api/admin/mls/session/close")
+def mls_session_close(request: Request):
+    """Operator-only: end an interactive session early. An operator who
+    thinks a session token leaked must not have to wait out the TTL."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import session_capability
+    return session_capability.close_session(
+        request.headers.get("x-session-token"))
+
+
 @app.get("/api/admin/mls/broadcasts")
 def mls_admin_broadcasts(request: Request,
                          fixture_id: int = Query(...),
@@ -393,7 +462,7 @@ def mls_journal_execution(request: Request, body: JournalExecutionIn):
     if not _admin_ok(request):
         raise HTTPException(403, "operator credentials required")
     from src.live import journal
-    return journal.record_execution(
+    return _journal_write(journal.record_execution(
         body.bet_id, body.account_label,
         consent_recorded_at=body.consent_recorded_at,
         status=body.status, fill_price=body.fill_price,
@@ -403,7 +472,7 @@ def mls_journal_execution(request: Request, body: JournalExecutionIn):
         not_filled_reason=body.not_filled_reason,
         best_available_price=body.best_available_price,
         exchange_order_id=body.exchange_order_id,
-        publication_consent=body.publication_consent)
+        publication_consent=body.publication_consent))
 
 
 @app.post("/api/admin/mls/journal/settlement")
@@ -416,9 +485,9 @@ def mls_journal_settlement(request: Request, body: JournalSettlementIn):
     if not _admin_ok(request):
         raise HTTPException(403, "operator credentials required")
     from src.live import journal
-    return journal.settle_execution(
+    return _journal_write(journal.settle_execution(
         body.execution_id, settlement_credit=body.settlement_credit,
-        settled_at=body.settled_at, settled_outcome=body.settled_outcome)
+        settled_at=body.settled_at, settled_outcome=body.settled_outcome))
 
 
 @app.post("/api/admin/mls/journal/reconcile")
@@ -431,9 +500,9 @@ def mls_journal_reconcile(request: Request, body: JournalReconcileIn):
     if not _admin_ok(request):
         raise HTTPException(403, "operator credentials required")
     from src.live import journal
-    return journal.reconcile_execution(
+    return _journal_write(journal.reconcile_execution(
         body.execution_id, note=body.note,
-        publication_consent=body.publication_consent)
+        publication_consent=body.publication_consent))
 
 
 @app.post("/api/admin/mls/broadcast")
@@ -451,16 +520,35 @@ def mls_broadcast(request: Request, body: BroadcastIn):
     (journal-P0 F1); the action channel carries the standing-edge
     qualifier appended by the server.
 
+    `source="session"` is now a VERIFIED fact, not a claim
+    (journal-P0-G). The operator token authenticates the request; it
+    does not establish that a human session is speaking, and any
+    automated client holding it could previously dispatch to the channel
+    Son's friend reads. An `X-Session-Token` from the interactive-session
+    handshake is required, and a request without a live one is refused
+    here — no transport is called and nothing is persisted as said.
+
     Figures should come from a briefing read in the SAME turn, never
     from recall — a confident agent narrating a stale price is the
     failure mode this endpoint makes possible."""
     if not _admin_ok(request):
         raise HTTPException(403, "operator credentials required")
-    from src.live import journal
+    from src.live import journal, session_capability
+    cap = session_capability.verify(
+        request.headers.get("x-session-token"))
+    if cap is None:
+        raise HTTPException(
+            403, "action dispatch requires a live interactive-session "
+                 "capability: POST /api/admin/mls/session/challenge, sign "
+                 "the nonce with JOURNAL_SESSION_SECRET, POST "
+                 "/api/admin/mls/session/open, then send the returned "
+                 "token as X-Session-Token. The operator token alone "
+                 "cannot mint one")
     return journal.broadcast(body.message, channel=body.channel,
                              source=body.source,
                              session_label=body.session_label,
-                             fixture_id=body.fixture_id)
+                             fixture_id=body.fixture_id,
+                             capability=cap)
 
 
 # === Club Friendlies — VIEWER surface, additive block, 2026-07-28 ==========

@@ -32,8 +32,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+
+from sqlalchemy.exc import IntegrityError
 
 import config
 from src.live.db import get_session, plane_ready
@@ -140,6 +142,130 @@ def _aware(v, field: str):
 def _content_hash(doc: dict) -> str:
     return hashlib.sha256(
         json.dumps(doc, sort_keys=True, default=str).encode()).hexdigest()
+
+
+# --- canonical payload hashing (journal-P0-I) ------------------------------
+# Idempotency was keyed on (exchange_order_id, status) alone, so a retry
+# carrying DIFFERENT economics got the earlier row back as though that
+# row had confirmed the new payload. On a third party's money that is
+# the worst possible failure: two contradictory accounts of one fill,
+# and the API reported agreement.
+#
+# So every idempotent write path hashes the payload it accepted. An
+# exact repeat is a no-op; anything else is a CONFLICT that writes
+# nothing. The hash is over VALUES, not their spelling: "0.47" and
+# "0.470" are the same fill, and a retry must not fail on formatting.
+
+def _canon(v):
+    """One payload value in canonical form.
+
+    Decimals compare by VALUE (0.47 == 0.470 == 0.4700), datetimes in
+    UTC, everything else as its string. This is what makes the hash a
+    statement about the economics rather than about the JSON."""
+    if v is None or isinstance(v, bool):
+        return v
+    if isinstance(v, Decimal):
+        d = v.normalize()
+        exp = d.as_tuple().exponent
+        if isinstance(exp, int) and exp > 0:
+            # normalize() renders 100 as 1E+2; re-expand so the exact
+            # same quantity never hashes two ways
+            d = d.quantize(Decimal(1))
+        return format(d, "f")
+    if isinstance(v, datetime):
+        return _utc(v).isoformat()
+    return str(v)
+
+
+def _payload_hash(kind: str, fields: dict) -> str:
+    doc = {"__kind__": kind}
+    doc.update({k: _canon(v) for k, v in fields.items()})
+    return hashlib.sha256(
+        json.dumps(doc, sort_keys=True).encode()).hexdigest()
+
+
+def _same_payload(stored: str | None, incoming: str) -> bool:
+    import hmac
+    return bool(stored) and hmac.compare_digest(str(stored), incoming)
+
+
+def _conflict(what: str, stored_hash: str, incoming_hash: str,
+              detail: str) -> dict:
+    """A refused retry. `conflict` is what the route turns into HTTP 409;
+    the two hashes let an operator see that the server compared payloads
+    rather than guessing."""
+    return {"conflict": True, "error": detail,
+            "conflicting_write": what,
+            "recorded_payload_hash": stored_hash,
+            "submitted_payload_hash": incoming_hash}
+
+
+# --- quote capture age (journal-P0-H) --------------------------------------
+# Kalshi publishes no quote timestamp (the `updated_time` field is the
+# market DEFINITION clock and can be ~30h stale on an ACTIVE market), so
+# our capture clock is the ONLY evidence of when a book was observed.
+# Without a ceiling, a same-contract quote of any age could be promoted
+# into `observed_quote` and into the decomposed execution-fidelity
+# metrics — an ancient capture silently becoming "the book at the time".
+
+def _age_seconds(captured_at, reference) -> int | None:
+    if captured_at is None or reference is None:
+        return None
+    return int((_utc(reference) - _utc(captured_at)).total_seconds())
+
+
+def _quote_freshness(row) -> str:
+    """Whether a recorded entry's cited book is still admissible:
+    none | fresh | stale | unknown.
+
+    Applied at READ time as well as write time, deliberately. Fixing the
+    writer alone would leave every row recorded before the ceiling
+    existed still counting toward aggregates off an arbitrarily old
+    book — the reader is where those rows are actually used.
+
+    The ceiling STORED on the row wins over the current config: a row
+    accepted under one ceiling must not be reclassified when the config
+    moves, which would rewrite history."""
+    if row.price_basis != "observed_quote":
+        return "none"
+    ceiling = row.quote_max_age_seconds
+    if ceiling is None:
+        ceiling = int(config.JOURNAL_QUOTE_MAX_AGE_SECONDS)
+    age = row.quote_age_seconds
+    if age is None:      # pre-ceiling row: derive from what it carries
+        age = _age_seconds(row.quote_observed_at, row.recorded_at)
+    if age is None:
+        return "unknown"
+    return "fresh" if age <= ceiling else "stale"
+
+
+def _fill_quote_freshness(s, ex) -> str:
+    """The same question for an execution's fill book, measured against
+    the FILL moment rather than now."""
+    if ex.market_quote_id_at_fill is None:
+        return "none"
+    ceiling = ex.fill_quote_max_age_seconds
+    if ceiling is None:
+        ceiling = int(config.JOURNAL_FILL_QUOTE_MAX_AGE_SECONDS)
+    age = ex.fill_quote_age_seconds
+    if age is None:
+        q = s.get(MarketQuote, ex.market_quote_id_at_fill)
+        age = _age_seconds(q.captured_at if q else None, ex.filled_at)
+    if age is None:
+        return "unknown"
+    return "fresh" if age <= ceiling else "stale"
+
+
+def _counts_toward_aggregate(row, superseded: bool) -> bool:
+    """The ONE predicate every surface uses. An entry counts only when
+    its price is falsifiable (observed_quote), the view was a forecast
+    (not void), it is the head of its correction chain, and the book it
+    cites was CONTEMPORANEOUS with the view (journal-P0-H). `unknown`
+    freshness never counts — missing evidence is not confidence."""
+    return (row.price_basis == "observed_quote"
+            and row.status != "void"
+            and not superseded
+            and _quote_freshness(row) == "fresh")
 
 
 def _validate_quote_identity(s, fixture_id: int, market_ticker: str,
@@ -288,19 +414,38 @@ def record_view(fixture_id: int, market_ticker: str, *,
 
         # 1. price basis — falsifiable or explicitly not
         basis, quote_at = "stated_only", None
+        cited_quote_id = market_quote_id
+        quote_age, quote_reject = None, None
+        ceiling = int(config.JOURNAL_QUOTE_MAX_AGE_SECONDS)
         if market_quote_id is not None:
             q = s.get(MarketQuote, market_quote_id)
-            if q is None or q.captured_at is None \
-                    or _utc(q.captured_at) > now:
-                market_quote_id = None      # refuse to cite what we lack
+            if q is None:
+                market_quote_id, quote_reject = None, "not_found"
+            elif q.captured_at is None:
+                market_quote_id, quote_reject = None, "no_capture_time"
+            elif _utc(q.captured_at) > now:
+                market_quote_id, quote_reject = None, "future_capture"
             else:
+                # identity BEFORE age: a quote from another match is an
+                # identity error at any age, and calling it "stale"
+                # would name the wrong fault
                 err, resolved_mc = _validate_quote_identity(
                     s, fixture_id, market_ticker, outcome_key,
                     market_contract_id, q)
                 if err is not None:
                     return err
-                market_contract_id = resolved_mc
-                basis, quote_at = "observed_quote", _utc(q.captured_at)
+                age = _age_seconds(q.captured_at, now)
+                if age > ceiling:
+                    # journal-P0-H: refused as the price basis AND said.
+                    # The entry is still recorded — rule 1 is that views
+                    # get recorded — but it counts nowhere and the
+                    # reason is on the row, never an absent field.
+                    market_quote_id = None
+                    quote_reject, quote_age = "stale_capture", age
+                else:
+                    market_contract_id = resolved_mc
+                    basis, quote_at = "observed_quote", _utc(q.captured_at)
+                    quote_age = age
 
         # 2. after kickoff a view is not a forecast
         ko = _utc(fx.current_kickoff_utc)
@@ -322,17 +467,45 @@ def record_view(fixture_id: int, market_ticker: str, *,
             price_basis=basis, market_quote_id=market_quote_id,
             quote_observed_at=quote_at, recorded_at=now,
             rationale=rationale, model_probability=model_p,
-            prediction_run_id=run_id, corrects_bet_id=corrects_bet_id)
+            prediction_run_id=run_id, corrects_bet_id=corrects_bet_id,
+            # journal-P0-H: the age actually measured and the ceiling
+            # that was applied travel WITH the row
+            quote_age_seconds=quote_age,
+            quote_max_age_seconds=(ceiling if cited_quote_id is not None
+                                   else None),
+            quote_rejection_reason=quote_reject)
         row.content_hash = _content_hash({
             "fixture_id": fixture_id, "market_ticker": market_ticker,
             "outcome_key": outcome_key,
             "stated_price": row.stated_price_dollars,
             "stated_size": row.stated_size, "price_basis": basis,
             "market_quote_id": market_quote_id,
+            "quote_age_seconds": quote_age,
+            "quote_rejection_reason": quote_reject,
             "recorded_at": now.isoformat(),
             "model_probability": model_p, "prediction_run_id": run_id})
         s.add(row)
-        s.commit()
+        try:
+            s.commit()
+        except IntegrityError:
+            # journal-P1-G: the read-then-insert head check above loses
+            # the race — two concurrent corrections of one entry both
+            # read "no head". The partial unique index settles it in the
+            # database; translate its refusal into the same message the
+            # sequential path gives, so concurrency is not a different
+            # API contract.
+            s.rollback()
+            if corrects_bet_id is not None:
+                head = (s.query(PersonalBet)
+                        .filter_by(corrects_bet_id=corrects_bet_id)
+                        .first())
+                if head is not None:
+                    return {"error":
+                            f"entry {corrects_bet_id} is already corrected "
+                            f"by entry {head.id} — correction chains are "
+                            f"linear; correct the head "
+                            f"(corrects_bet_id={head.id})"}
+            raise
         return _bet_dict(row)
     finally:
         s.close()
@@ -475,6 +648,48 @@ def record_execution(bet_id: int, account_label: str, *,
                              f"economics and fill moment — missing: "
                              f"{', '.join(missing)}. The server never "
                              f"invents a fill fact"}
+    # journal-P1-H: combinations that describe an impossible event are
+    # refused, not stored. A row asserting both "nothing filled" and a
+    # fill price is not a weaker record — it is two contradictory claims
+    # about a third party's money, and gaps_for would happily compute a
+    # latency for a fill that never happened.
+    if status == "not_filled":
+        contradictory = [n for n, v in (
+            ("fill_price", price), ("filled_contracts", qty),
+            ("fee_paid", fee), ("filled_at", filled_at_utc),
+            ("market_quote_id_at_fill", market_quote_id_at_fill))
+            if v is not None]
+        if contradictory:
+            return {"error": f"a 'not_filled' execution cannot carry fill "
+                             f"facts — remove {', '.join(contradictory)}. "
+                             f"Nothing filled, so there is no fill price, "
+                             f"quantity, fee, moment or book. The "
+                             f"liquidity evidence is the reason and "
+                             f"best_available_price"}
+    elif not_filled_reason:
+        return {"error": f"a '{status}' execution cannot carry "
+                         f"not_filled_reason={not_filled_reason!r} — it "
+                         f"filled"}
+    # journal-P1-H: time runs forward at BOTH ends. Round 2 stopped a
+    # fill antedating its decision, but nothing stopped a fill, a
+    # consent record or a settlement from postdating its own recording —
+    # and a filled_at in the future silently produced a NEGATIVE
+    # latency_seconds in the fidelity metrics.
+    #
+    # Deliberately NOT checked here: whether consent precedes the fill.
+    # The column records when consent was RECORDED, not when it was
+    # given, and an operator writing the provenance down after the fill
+    # is ordinary practice, not a contradiction. Asserting an ordering
+    # the field does not claim would refuse honest rows.
+    horizon = _now() + timedelta(
+        seconds=config.JOURNAL_FUTURE_TOLERANCE_SECONDS)
+    for name, when in (("consent_recorded_at", consent_at),
+                       ("filled_at", filled_at_utc)):
+        if when is not None and when > horizon:
+            return {"error": f"{name} {when.isoformat()} is in the "
+                             f"future beyond clock-skew tolerance — a "
+                             f"recorded fact cannot postdate its own "
+                             f"recording"}
     s = get_session()
     try:
         bet = s.get(PersonalBet, bet_id)
@@ -496,6 +711,7 @@ def record_execution(bet_id: int, account_label: str, *,
                              f"executes"}
         # fill-book identity (journal-P0-E): the SAME chain check the
         # view-time quote gets, against the parent bet
+        fill_age, fill_ceiling = None, None
         if market_quote_id_at_fill is not None:
             fq = s.get(MarketQuote, market_quote_id_at_fill)
             if fq is None:
@@ -519,16 +735,63 @@ def record_execution(bet_id: int, account_label: str, *,
                                  f"moment {ref.isoformat()} — a book "
                                  f"observed after the fill cannot be "
                                  f"the book at fill"}
+            # journal-P0-H: and it must be CONTEMPORANEOUS with the fill.
+            # Round 2 bounded this on one side only, so a quote from any
+            # distance in the past passed and became "the book at fill"
+            # for market_drift and execution_cost.
+            fill_ceiling = int(config.JOURNAL_FILL_QUOTE_MAX_AGE_SECONDS)
+            fill_age = _age_seconds(cap, ref)
+            if fill_age > fill_ceiling:
+                return {"error": f"fill quote {fq.id} was captured "
+                                 f"{fill_age}s before the fill moment "
+                                 f"{ref.isoformat()}, beyond the "
+                                 f"{fill_ceiling}s contemporaneity "
+                                 f"ceiling — Kalshi publishes no quote "
+                                 f"timestamp, so an old capture cannot "
+                                 f"stand in for the book at fill. Cite a "
+                                 f"contemporaneous quote, or record the "
+                                 f"fill without one and read the "
+                                 f"no_fill_book classification"}
+        # journal-P0-I: the idempotency key is (exchange_order_id,
+        # status) + the CANONICAL PAYLOAD. Same key, same economics is a
+        # retry; same key, different economics is contradictory evidence
+        # and is refused rather than answered with the earlier row.
+        payload_hash = _payload_hash("execution", {
+            "personal_bet_id": bet_id, "account_label": account_label,
+            "consent_recorded_at": consent_at, "status": status,
+            "fill_price": price, "filled_contracts": qty,
+            "fee_paid": fee, "filled_at": filled_at_utc,
+            "market_quote_id_at_fill": market_quote_id_at_fill,
+            "not_filled_reason": not_filled_reason,
+            "best_available_price": best,
+            "exchange_order_id": exchange_order_id,
+            "publication_consent": bool(publication_consent)})
         if exchange_order_id:
             existing = (s.query(PersonalBetExecution)
                         .filter_by(exchange_order_id=exchange_order_id,
                                    status=status).first())
             if existing is not None:
+                # a row written before this check carries no hash;
+                # recompute it from the STORED columns rather than
+                # assuming agreement
+                stored = (existing.execution_payload_hash
+                          or _execution_payload_hash_from_row(existing))
+                if not _same_payload(stored, payload_hash):
+                    return _conflict(
+                        "execution", stored, payload_hash,
+                        f"exchange order {exchange_order_id} with status "
+                        f"'{status}' is already recorded with DIFFERENT "
+                        f"values (execution {existing.id}). A retry must "
+                        f"repeat the payload exactly; differing "
+                        f"economics are two accounts of one fill, not a "
+                        f"retry. Nothing was written — reconcile the "
+                        f"discrepancy against the exchange record")
                 out = _execution_dict(s, existing)
                 out["idempotent"] = True
                 out["note"] = (f"exchange order {exchange_order_id} with "
-                               f"status '{status}' is already recorded — "
-                               f"retry treated as a no-op")
+                               f"status '{status}' is already recorded "
+                               f"with an identical payload — retry "
+                               f"treated as a no-op")
                 return out
         row = PersonalBetExecution(
             personal_bet_id=bet_id, account_label=account_label,
@@ -543,12 +806,39 @@ def record_execution(bet_id: int, account_label: str, *,
             filled_at=filled_at_utc,
             market_quote_id_at_fill=market_quote_id_at_fill,
             exchange_order_id=exchange_order_id,
-            publication_consent=bool(publication_consent))
+            publication_consent=bool(publication_consent),
+            fill_quote_age_seconds=fill_age,
+            fill_quote_max_age_seconds=fill_ceiling,
+            execution_payload_hash=payload_hash)
         s.add(row)
         s.commit()
         return _execution_dict(s, row)
     finally:
         s.close()
+
+
+def _execution_payload_hash_from_row(row) -> str:
+    """The canonical execution hash recomputed from a STORED row.
+
+    Rows written before journal-P0-I carry no hash, and a retry against
+    one must still be checked — treating "no recorded hash" as "matches"
+    would reintroduce the defect for exactly the rows most likely to be
+    retried. Recomputing also means the comparison is against what the
+    database actually holds, not against a remembered summary of it."""
+    return _payload_hash("execution", {
+        "personal_bet_id": row.personal_bet_id,
+        "account_label": row.account_label,
+        "consent_recorded_at": _utc(row.consent_recorded_at),
+        "status": row.status,
+        "fill_price": _d(row.fill_price_dollars),
+        "filled_contracts": _d(row.filled_contracts),
+        "fee_paid": _d(row.fee_paid_dollars),
+        "filled_at": _utc(row.filled_at),
+        "market_quote_id_at_fill": row.market_quote_id_at_fill,
+        "not_filled_reason": row.not_filled_reason,
+        "best_available_price": _d(row.best_available_price_dollars),
+        "exchange_order_id": row.exchange_order_id,
+        "publication_consent": bool(row.publication_consent)})
 
 
 def settle_execution(execution_id: int, *, settlement_credit,
@@ -579,6 +869,15 @@ def settle_execution(execution_id: int, *, settlement_credit,
         return {"error": "settlement requires settlement_credit and the "
                          "exchange's settled_at — the server never "
                          "invents a settlement fact"}
+    if when > _now() + timedelta(
+            seconds=config.JOURNAL_FUTURE_TOLERANCE_SECONDS):
+        return {"error": f"settled_at {when.isoformat()} is in the "
+                         f"future beyond clock-skew tolerance — a market "
+                         f"that has not settled yet has no settlement "
+                         f"record to copy"}
+    payload_hash = _payload_hash("settlement", {
+        "settlement_credit": credit, "settled_at": when,
+        "settled_outcome": settled_outcome or None})
     s = get_session()
     try:
         row = s.get(PersonalBetExecution, execution_id)
@@ -594,19 +893,41 @@ def settle_execution(execution_id: int, *, settlement_credit,
                              f"the fill moment "
                              f"{_utc(row.filled_at).isoformat()} — a "
                              f"market cannot settle before the fill"}
-        if row.settled_at is not None:
-            same = (_d(row.settlement_credit_dollars) == credit
-                    and when == _utc(row.settled_at))
-            if same:
-                out = _execution_dict(s, row)
-                out["idempotent"] = True
-                return out
-            return {"error": f"execution {execution_id} is already "
-                             f"settled ({row.settlement_credit_dollars} "
-                             f"at {_utc(row.settled_at).isoformat()}) — "
-                             f"settlement is immutable; record the "
-                             f"discrepancy in reconciliation instead"}
         bet = s.get(PersonalBet, row.personal_bet_id)
+        # journal-P1-H: a binary contract pays $1 or $0, so the credit
+        # can never exceed the contracts filled. A credit above that is
+        # a data-entry error, and settlement_delta would silently carry
+        # it into the fidelity metrics as a measured discrepancy.
+        held = _d(row.filled_contracts)
+        if held is not None and credit > held:
+            return {"error": f"settlement_credit {credit} exceeds the "
+                             f"maximum payout for {held} binary "
+                             f"contracts (${held}) — a contract settles "
+                             f"at $1 or $0"}
+        if row.settled_at is not None:
+            # journal-P0-I: payload-sensitive. The old check compared
+            # credit and timestamp only, so a retry carrying a DIFFERENT
+            # settled_outcome was answered "idempotent" — the outcome
+            # conflict check below was never reached.
+            stored = (row.settlement_payload_hash
+                      or _payload_hash("settlement", {
+                          "settlement_credit": _d(
+                              row.settlement_credit_dollars),
+                          "settled_at": _utc(row.settled_at),
+                          "settled_outcome": (bet.settled_outcome or None)
+                          if bet is not None else None}))
+            if not _same_payload(stored, payload_hash):
+                return _conflict(
+                    "settlement", stored, payload_hash,
+                    f"execution {execution_id} is already settled "
+                    f"({row.settlement_credit_dollars} at "
+                    f"{_utc(row.settled_at).isoformat()}) and this call "
+                    f"differs — settlement is immutable, so a differing "
+                    f"payload is a conflict, not a retry. Nothing was "
+                    f"written; record the discrepancy in reconciliation")
+            out = _execution_dict(s, row)
+            out["idempotent"] = True
+            return out
         if settled_outcome:
             if bet.settled_outcome and bet.settled_outcome \
                     != settled_outcome:
@@ -619,6 +940,7 @@ def settle_execution(execution_id: int, *, settlement_credit,
                 bet.settled_at = when
         row.settlement_credit_dollars = str(credit)
         row.settled_at = when
+        row.settlement_payload_hash = payload_hash
         s.commit()
         return _execution_dict(s, row)
     finally:
@@ -634,14 +956,23 @@ def reconcile_execution(execution_id: int, *, note: str,
 
     Requires settlement first: reconciling an unsettled fill would
     assert agreement with an exchange record that does not exist yet.
-    Repeat calls are no-ops. `publication_consent` may be set here
-    explicitly (it defaults false at recording); it is the only field
-    this transition may change besides the reconciliation itself."""
+    An IDENTICAL repeat is a no-op; a repeat carrying a different note
+    or a different `publication_consent` is a CONFLICT (journal-P0-I).
+    The old check looked only at the `reconciled` flag, so a second call
+    changing either field returned success and wrote nothing — the
+    publication consent of a third party's financial record could be
+    "granted" by a call the server silently discarded.
+
+    `publication_consent` may be set here explicitly (it defaults false
+    at recording); it is the only field this transition may change
+    besides the reconciliation itself."""
     if not plane_ready():
         return {"error": "dormant"}
     if not note:
         return {"error": "reconciliation requires a note naming what "
                          "was checked against the exchange record"}
+    payload_hash = _payload_hash("reconciliation", {
+        "note": note, "publication_consent": publication_consent})
     s = get_session()
     try:
         row = s.get(PersonalBetExecution, execution_id)
@@ -656,6 +987,19 @@ def reconcile_execution(execution_id: int, *, note: str,
                              f"— reconcile follows settlement "
                              f"(filled|partial → settled → reconciled)"}
         if row.reconciled:
+            stored = (row.reconciliation_payload_hash
+                      or _payload_hash("reconciliation",
+                                       {"note": row.reconciliation_note,
+                                        "publication_consent": None}))
+            if not _same_payload(stored, payload_hash):
+                return _conflict(
+                    "reconciliation", stored, payload_hash,
+                    f"execution {execution_id} is already reconciled "
+                    f"with a different note or publication consent — a "
+                    f"differing payload is a conflict, not a retry, and "
+                    f"nothing was written. Publication consent is a "
+                    f"third party's decision about their own financial "
+                    f"record; changing it is not a reconciliation retry")
             out = _execution_dict(s, row)
             out["idempotent"] = True
             return out
@@ -663,6 +1007,7 @@ def reconcile_execution(execution_id: int, *, note: str,
         row.reconciliation_note = note
         if publication_consent is not None:
             row.publication_consent = bool(publication_consent)
+        row.reconciliation_payload_hash = payload_hash
         s.commit()
         return _execution_dict(s, row)
     finally:
@@ -709,13 +1054,44 @@ def gaps_for(s, bet: PersonalBet, ex: PersonalBetExecution) -> dict:
     # decomposed metrics (drift / execution cost / aggressiveness) need
     # BOTH books; with either missing they are explicitly absent under
     # this classification, never silently missing.
+    #
+    # journal-P0-H: and a book that EXISTS is not automatically evidence.
+    # Kalshi publishes no quote timestamp, so a capture far from the
+    # moment it is claimed to describe is not "the book at the time".
+    # Present-but-stale gets its own classification rather than being
+    # promoted into `record_and_fill_books` — this is the READ side of
+    # the ceiling, and it is what catches rows recorded before the
+    # ceiling existed.
     has_rec = bet.market_quote_id is not None
     has_fill = ex.market_quote_id_at_fill is not None
-    out["gaps_basis"] = (
-        "record_and_fill_books" if has_rec and has_fill
-        else "no_fill_book" if has_rec
-        else "no_record_book" if has_fill
-        else "no_books")
+    rec_fresh = _quote_freshness(bet)
+    fill_fresh = _fill_quote_freshness(s, ex)
+    if has_rec and has_fill:
+        rec_ok, fill_ok = rec_fresh == "fresh", fill_fresh == "fresh"
+        out["gaps_basis"] = (
+            "record_and_fill_books" if rec_ok and fill_ok
+            else "stale_books" if not rec_ok and not fill_ok
+            else "stale_record_book" if not rec_ok
+            else "stale_fill_book")
+    else:
+        out["gaps_basis"] = (
+            "no_fill_book" if has_rec
+            else "no_record_book" if has_fill
+            else "no_books")
+    if has_rec:
+        out["record_quote_age_seconds"] = (
+            bet.quote_age_seconds
+            if bet.quote_age_seconds is not None
+            else _age_seconds(bet.quote_observed_at, bet.recorded_at))
+        out["record_quote_freshness"] = rec_fresh
+    if has_fill:
+        out["fill_quote_age_seconds"] = (
+            ex.fill_quote_age_seconds
+            if ex.fill_quote_age_seconds is not None
+            else _age_seconds(
+                getattr(s.get(MarketQuote, ex.market_quote_id_at_fill),
+                        "captured_at", None), ex.filled_at))
+        out["fill_quote_freshness"] = fill_fresh
     stated = _d(bet.stated_price_dollars)
     fill = _d(ex.fill_price_dollars)
     if fill is not None and stated is not None:
@@ -723,7 +1099,7 @@ def gaps_for(s, bet: PersonalBet, ex: PersonalBetExecution) -> dict:
     if ex.filled_at and bet.recorded_at:
         out["latency_seconds"] = int(
             (_utc(ex.filled_at) - _utc(bet.recorded_at)).total_seconds())
-    if has_rec and has_fill:
+    if out["gaps_basis"] == "record_and_fill_books":
         mid_rec = _mid(s.get(MarketQuote, bet.market_quote_id))
         mid_fill = _mid(s.get(MarketQuote, ex.market_quote_id_at_fill))
         if mid_rec is not None and mid_fill is not None:
@@ -806,11 +1182,17 @@ def _bet_dict(row: PersonalBet, *, superseded: bool = False) -> dict:
         "settled_outcome": row.settled_outcome,
         "content_hash": row.content_hash,
         "corrects_bet_id": row.corrects_bet_id,
+        # journal-P0-H: the capture age of the cited book, the ceiling
+        # applied, and — when a citation was refused — why. Reported, so
+        # a reader can check the classification instead of trusting it.
+        "quote_age_seconds": row.quote_age_seconds,
+        "quote_max_age_seconds": row.quote_max_age_seconds,
+        "quote_rejection_reason": row.quote_rejection_reason,
+        "quote_freshness": _quote_freshness(row),
         # journal-P1-F: a corrected row is audit, not an observation
         "superseded": superseded,
-        "counts_toward_aggregate": (row.price_basis == "observed_quote"
-                                    and row.status != "void"
-                                    and not superseded),
+        "counts_toward_aggregate": _counts_toward_aggregate(row,
+                                                            superseded),
     }
 
 
@@ -819,6 +1201,11 @@ def _execution_dict(s, row: PersonalBetExecution) -> dict:
     return {
         "id": row.id, "personal_bet_id": row.personal_bet_id,
         "account_label": row.account_label, "status": row.status,
+        # the consent provenance the operator surface documents itself
+        # as serving. It was required at write, stored, and then
+        # readable through NO api — a record nobody can read is not
+        # provenance, it is a promise.
+        "consent_recorded_at": _iso(row.consent_recorded_at),
         "not_filled_reason": row.not_filled_reason,
         "best_available_price_dollars": row.best_available_price_dollars,
         "fill_price_dollars": row.fill_price_dollars,
@@ -832,6 +1219,13 @@ def _execution_dict(s, row: PersonalBetExecution) -> dict:
         "reconciled": bool(row.reconciled),
         "reconciliation_note": row.reconciliation_note,
         "publication_consent": bool(row.publication_consent),
+        # journal-P0-H / P0-I: the evidence the server verified, so an
+        # operator can audit the acceptance rather than trust it
+        "fill_quote_age_seconds": row.fill_quote_age_seconds,
+        "fill_quote_max_age_seconds": row.fill_quote_max_age_seconds,
+        "execution_payload_hash": row.execution_payload_hash,
+        "settlement_payload_hash": row.settlement_payload_hash,
+        "reconciliation_payload_hash": row.reconciliation_payload_hash,
         "gaps": _safe_gaps(s, bet, row),
     }
 
@@ -876,9 +1270,13 @@ def journal_summary(fixture_id: int | None = None,
         counts = {k: 0 for k in STATUSES}
         for b in effective:
             counts[b.status] = counts.get(b.status, 0) + 1
+        # journal-P0-H: `countable` uses the SAME predicate the row-level
+        # surfaces use, so an entry citing a stale book cannot be
+        # excluded per-row and still counted in the denominator here.
         countable = [b for b in effective
-                     if b.price_basis == "observed_quote"
-                     and b.status != "void"]
+                     if _counts_toward_aggregate(b, superseded=False)]
+        stale_quote = [b for b in effective
+                       if _quote_freshness(b) == "stale"]
         ids = {b.id for b in bets}
         execs = (s.query(PersonalBetExecution)
                  .filter(PersonalBetExecution.personal_bet_id.in_(ids)).all()
@@ -898,6 +1296,15 @@ def journal_summary(fixture_id: int | None = None,
             "countable": len(countable),
             "excluded_stated_only": sum(
                 1 for b in effective if b.price_basis == "stated_only"),
+            # journal-P0-H: entries whose cited book is outside the
+            # capture-age ceiling. Reported as its own number rather
+            # than folded into stated_only — "we had no price" and "the
+            # price we had was too old to be the book" are different
+            # findings, and only the second says something about the
+            # capture pipeline.
+            "excluded_stale_quote": len(stale_quote),
+            "quote_max_age_seconds": int(
+                config.JOURNAL_QUOTE_MAX_AGE_SECONDS),
             "executions": {
                 "total": len(execs),
                 "filled": sum(1 for e in execs if e.status == "filled"),
@@ -953,6 +1360,13 @@ def journal_summary(fixture_id: int | None = None,
 #   - only source="session" may dispatch; any other source is refused
 #   - a call whose stack contains a scheduler or model frame is refused
 #     even when it CLAIMS source="session"
+#   - the caller must present a CAPABILITY minted by the interactive-
+#     session handshake (journal-P0-G). The stack check binds only
+#     in-process callers: over HTTP the stack is uvicorn → fastapi →
+#     api.main and contains no guarded frame, so any holder of the
+#     generic operator token could claim source="session" and dispatch.
+#     A capability is a server-side artifact ADMIN_TOKEN alone cannot
+#     produce — see src/live/session_capability.py
 #   - every action-channel dispatch carries the standing-edge qualifier
 #     appended server-side, so no relayed number can travel without its
 #     uncertainty
@@ -1006,7 +1420,8 @@ def _shadow_qualifier() -> str:
 def broadcast(message: str, *, channel: str = "action",
               source: str = "session", session_label: str | None = None,
               fixture_id: int | None = None,
-              claims: dict | None = None) -> dict:
+              claims: dict | None = None,
+              capability=None) -> dict:
     """Push a message to Discord/ntfy AND persist what was said.
 
     The live session is the analyser; this is its megaphone. Persisting
@@ -1022,6 +1437,13 @@ def broadcast(message: str, *, channel: str = "action",
     silently dropped. `dispatched` is true only when at least one
     transport ACCEPTED the message (journal-P1 F6), and the accepting
     transports are named.
+
+    `capability` must be a live `SessionCapability` minted by the
+    interactive-session handshake (journal-P0-G). It is re-checked
+    against the server-side store, so neither a forged parameter nor a
+    hand-built object passes — and a caller holding only the generic
+    operator token has no way to obtain one. Every refusal below returns
+    BEFORE any row is written: a refused broadcast is not "said".
     """
     if not plane_ready():
         return {"error": "dormant"}
@@ -1047,6 +1469,23 @@ def broadcast(message: str, *, channel: str = "action",
                 "error": (f"refused: broadcast() was reached from {auto} "
                           f"— scheduled jobs and model code paths may "
                           f"never dispatch, whatever source they claim")}
+    # journal-P0-G: source="session" must be a server-VERIFIABLE fact,
+    # not a claim. The stack check above binds in-process callers only;
+    # this is what binds the HTTP path.
+    from src.live import session_capability
+    cap = session_capability.is_live(capability)
+    if cap is None:
+        print("[journal] broadcast REFUSED: no live interactive-session "
+              "capability was presented")
+        return {"refused": True, "dispatched": False,
+                "error": ("refused: action dispatch requires a live "
+                          "interactive-session capability. The operator "
+                          "token authenticates the request; it does not "
+                          "establish that a human session is speaking. "
+                          "Open one via POST /api/admin/mls/session/"
+                          "challenge then /session/open, and present the "
+                          "X-Session-Token header")}
+    session_label = session_label or cap.label
     # --- compose the wire payload WITHIN the transport limit ----------
     # journal-P0-A: the transports truncate at TRANSPORT_MESSAGE_LIMIT,
     # and on a long action message the tail they cut was exactly the
@@ -1082,7 +1521,11 @@ def broadcast(message: str, *, channel: str = "action",
             created_at=_now(),
             # the wire record: what is actually being handed to the
             # transports, not what the caller composed
-            dispatched_body=body, dispatched_sha256=body_sha)
+            dispatched_body=body, dispatched_sha256=body_sha,
+            # journal-P0-G: WHICH authorised session said it. The gate is
+            # useless as evidence if the record cannot name the origin it
+            # verified.
+            dispatch_capability_id=cap.id)
         s.add(row)
         s.flush()
         transports: dict = {}
@@ -1104,6 +1547,7 @@ def broadcast(message: str, *, channel: str = "action",
                 "transports": transports, "accepted": accepted,
                 "payload_truncated": truncated,
                 "dispatched_sha256": body_sha,
+                "dispatch_capability_id": cap.id,
                 "channel": channel, "source": source}
     finally:
         s.close()
@@ -1128,6 +1572,8 @@ def recent_broadcasts(fixture_id: int, limit: int = 20) -> list[dict]:
                  # sent, verifiable against its hash
                  "dispatched_body": r.dispatched_body,
                  "dispatched_sha256": r.dispatched_sha256,
+                 # journal-P0-G: the verified origin of the dispatch
+                 "dispatch_capability_id": r.dispatch_capability_id,
                  "transports": (json.loads(r.transports_json)
                                 if r.transports_json else None),
                  "created_at": (r.created_at.isoformat()
@@ -1149,11 +1595,22 @@ def recent_broadcasts(fixture_id: int, limit: int = 20) -> list[dict]:
 #   - no stated_size (position sizing is third-party financial detail)
 #   - executions appear on public surfaces as COUNTS only, and in the
 #     corpus only under the row's explicit publication_consent
+#
+# NOTE this list DOCUMENTS the boundary; it does not enforce it. The
+# enforcement is structural — public surfaces call
+# `public_bet_projection` and an execution count, and never
+# `_execution_dict`. Keep it accurate anyway: a stale list beside a
+# privacy boundary reads as a guarantee to the next person.
 _PRIVATE_EXECUTION_FIELDS = frozenset({
     "account_label", "consent_recorded_at", "exchange_order_id",
     "fill_price_dollars", "filled_contracts", "fee_paid_dollars",
     "best_available_price_dollars", "settlement_credit_dollars",
-    "reconciliation_note", "gaps", "publication_consent"})
+    "reconciliation_note", "gaps", "publication_consent",
+    # round 3: the fill-book age and the payload hashes are derived from
+    # the private economics, so they belong on this side of the line too
+    "fill_quote_age_seconds", "fill_quote_max_age_seconds",
+    "execution_payload_hash", "settlement_payload_hash",
+    "reconciliation_payload_hash"})
 
 
 def _iso(dt):
@@ -1188,11 +1645,18 @@ def public_bet_projection(row: PersonalBet, *,
         "settled_at": _iso(row.settled_at),
         "content_hash": row.content_hash,
         "corrects_bet_id": row.corrects_bet_id,
+        # journal-P0-H: capture age, applied ceiling and refusal reason
+        # are PUBLIC — the whole point of citing a quote is that a
+        # reader can check it, and they cannot check a book whose age
+        # they are not told
+        "quote_age_seconds": row.quote_age_seconds,
+        "quote_max_age_seconds": row.quote_max_age_seconds,
+        "quote_rejection_reason": row.quote_rejection_reason,
+        "quote_freshness": _quote_freshness(row),
         # journal-P1-F: a corrected row is audit, not an observation
         "superseded": superseded,
-        "counts_toward_aggregate": (row.price_basis == "observed_quote"
-                                    and row.status != "void"
-                                    and not superseded),
+        "counts_toward_aggregate": _counts_toward_aggregate(row,
+                                                            superseded),
     }
 
 
