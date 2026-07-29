@@ -75,7 +75,7 @@ backend's migrations live in `live_migrations/`, not `alembic/`
 - **Real money stays disabled.** `REAL_MONEY_SIGNALS_ENABLED=false`, and
   no code path may enable it. Verify the current setting; never relax it.
 
-  > **Journal-relay carve-out — PENDING SON'S SIGN-OFF AT MERGE.**
+  > **Journal-relay carve-out — SIGNED OFF by Son, 2026-07-29, by explicit directive after plain-language explanation (recorded in the co-producer session).**
   > Operator-authenticated, session-sourced prose relayed to Son over
   > the broadcast channel is NOT a model signal; the real-money lock
   > governs model-generated signals. The boundary is mechanical, not
