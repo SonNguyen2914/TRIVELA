@@ -319,33 +319,65 @@ def identity_tokens(s: object) -> frozenset[str]:
                      if t not in _GENERIC_TOKENS)
 
 
-# Evidence-backed ESPN -> API-Football search bridges. Each entry exists
-# because the plain search MEASURABLY failed or was ambiguous on 2026-07-29,
-# and the archived probe records which. Never add one from intuition: an
-# unverified bridge is exactly the guess `ambiguous_team` exists to prevent.
-SEARCH_ALIASES = {
+# Evidence-backed ESPN -> API-Football name bridges. Each entry exists because
+# the name forms MEASURABLY differ beyond what the tiers can bridge, and the
+# archived resolution run (research_archive/xg_ratings_club_league_resolution_
+# 2026-07-29.json) records the miss it fixes:
+#   ESPN 'Internazionale'   x API-Football 'Inter'          (no shared token)
+#   ESPN 'Bayern Munich'    x API-Football 'Bayern Munchen'  (Munich/Munchen)
+#   ESPN 'Stade Rennais'    x API-Football 'Rennes'          (no shared token)
+# Never add one from intuition: an unverified bridge is exactly the guess
+# `ambiguous_team` exists to prevent. Applied to the search term AND to roster
+# matching — an alias that only reached the search would fix discovery while
+# leaving the authoritative resolution broken, which is what happened first.
+CLUB_NAME_ALIASES = {
     "internazionale": "Inter",
     "bayern munich": "Bayern Munchen",
-    "ajax amsterdam": "Ajax",
-    "feyenoord rotterdam": "Feyenoord",
     "stade rennais": "Rennes",
-    "paris saint germain": "Paris Saint Germain",
-    "borussia dortmund": "Borussia Dortmund",
 }
+# Back-compat name for the same table; the search path was its first caller.
+SEARCH_ALIASES = CLUB_NAME_ALIASES
+
+
+def ascii_search_term(name: str) -> str:
+    """A name API-Football's `search` parameter will actually accept.
+
+    The provider rejects non-alphanumerics inside a 200 body: 'Almería' and
+    'Atlético Madrid' both came back `search: The Search field may only
+    contain alpha-numeric characters and spaces.` on 2026-07-29 — a provider
+    error, not a miss, and reading it as 'club not found' would have quietly
+    dropped two La Liga sides."""
+    folded = norm_name(name)
+    return " ".join("".join(c for c in tok if c.isalnum())
+                    for tok in folded.split()).strip()
 
 
 def match_tier(query: str, candidate: str) -> str | None:
-    """'exact' | 'token_set' | None. Substring containment is NOT a tier:
-    it is what attached a reserve side to a senior club's book with full
-    confidence on the friendlies surface (review P0-1), and B/academy teams
-    make that a live hazard rather than a corner case."""
+    """'exact' | 'token_set' | 'unique_containment' | None.
+
+    The first two are safe on their own. `unique_containment` is DIRECTIONAL
+    and weaker: it fires only when the candidate's identity tokens are a
+    strict SUBSET of the query's — 'Newcastle' for ESPN's 'Newcastle United',
+    'Cardiff' for 'Cardiff City'. The direction is the safety property. The
+    reverse direction is what makes 'Real Madrid' match 'Real Madrid
+    Castilla', which attached a reserve side to a senior club's book with full
+    confidence elsewhere on this surface (review P0-1); B and academy teams
+    make that a live hazard rather than a corner case. Plain substring
+    containment is banned outright in both directions.
+
+    A containment match is only ever USED when it is unique across the whole
+    roster index — see `resolve_from_index`. The tier is recorded so the
+    weaker basis stays visible in the stored mapping."""
     q, c = norm_name(query), norm_name(candidate)
     if not q or not c:
         return None
     if q == c:
         return "exact"
-    if identity_tokens(query) and identity_tokens(query) == identity_tokens(candidate):
+    qt, ct = identity_tokens(query), identity_tokens(candidate)
+    if qt and qt == ct:
         return "token_set"
+    if ct and qt and ct < qt:
+        return "unique_containment"
     return None
 
 
@@ -513,6 +545,7 @@ def store_coverage(m: dict) -> dict:
         row.country = m.get("country")
         row.verdict = m["verdict"]
         row.measured_rate = m["measured_rate"]
+        row.completed_fixtures_visible = m.get("completed_visible")
         row.samples_taken = m["samples_taken"]
         row.samples_with_xg = m["samples_with_xg"]
         row.type_without_value_seen = bool(m["type_without_value_seen"])
@@ -541,6 +574,7 @@ def coverage_table() -> list[dict]:
                 "league_id": r.league_id, "season": r.season,
                 "league_name": r.league_name, "country": r.country,
                 "verdict": r.verdict, "measured_rate": r.measured_rate,
+                "completed_fixtures_visible": r.completed_fixtures_visible,
                 "samples_taken": r.samples_taken,
                 "samples_with_xg": r.samples_with_xg,
                 "type_without_value_seen": bool(r.type_without_value_seen),
@@ -555,24 +589,49 @@ def coverage_table() -> list[dict]:
         s.close()
 
 
+def _coverage_dict(r) -> dict:
+    return {"league_id": r.league_id, "season": r.season,
+            "league_name": r.league_name, "verdict": r.verdict,
+            "measured_rate": r.measured_rate,
+            "completed_fixtures_visible": r.completed_fixtures_visible,
+            "samples_taken": r.samples_taken,
+            "samples_with_xg": r.samples_with_xg,
+            "measured_at": (r.measured_at.isoformat()
+                            if r.measured_at else None),
+            "fittable": r.verdict in FITTABLE_VERDICTS}
+
+
 def coverage_for(league_id: int, season: int | None = None) -> dict | None:
+    """The coverage row a rating for this league should be fitted from.
+
+    With `season` given, exactly that row. Without it, THE SEASON WITH THE MOST
+    COMPLETED FIXTURES among the fittable ones — not the newest.
+
+    That choice is load-bearing rather than a tie-break. Measured 2026-07-29:
+    the provider's 'current' Premier League season was 2026, barely under way,
+    while the xG history sat in 2025 (380 completed); the club->league
+    resolution likewise reported J1 clubs under season 2027 (the J-League moved
+    to an autumn-spring calendar) against 200 completed fixtures in 2026.
+    Fitting the newest season would have produced ratings from a handful of
+    fixtures — or none — and called them league form. Falling back to the
+    season that actually holds the data is the honest reading, and
+    `window_start`/`window_end` on every rating say which window was used."""
     if not plane_ready():
         return None
     s = get_session()
     try:
         q = s.query(ApiFootballLeagueCoverage).filter_by(league_id=league_id)
         if season is not None:
-            q = q.filter_by(season=season)
-        r = q.order_by(ApiFootballLeagueCoverage.season.desc()).first()
-        if r is None:
+            r = q.filter_by(season=season).first()
+            return _coverage_dict(r) if r else None
+        rows = q.all()
+        if not rows:
             return None
-        return {"league_id": r.league_id, "season": r.season,
-                "league_name": r.league_name, "verdict": r.verdict,
-                "measured_rate": r.measured_rate,
-                "samples_taken": r.samples_taken,
-                "measured_at": (r.measured_at.isoformat()
-                                if r.measured_at else None),
-                "fittable": r.verdict in FITTABLE_VERDICTS}
+        fittable = [r for r in rows if r.verdict in FITTABLE_VERDICTS]
+        pool = fittable or rows
+        best = max(pool, key=lambda r: ((r.completed_fixtures_visible or 0),
+                                        r.season))
+        return _coverage_dict(best)
     finally:
         s.close()
 
@@ -796,13 +855,188 @@ def league_xg_rows(league_id: int, season: int | None = None) -> list[dict]:
         s.close()
 
 
+# --- bridge to OUR fixtures (for the evaluation ladder) -------------------
+
+def bridge_fixture_xg(competition_slug: str, league_id: int,
+                      season: int | None = None) -> dict:
+    """{our_fixture_id: {'home': {...}, 'away': {...}}} — the SAME contract as
+    `mls_stats.team_xg_map`, so the ladder's M3 rung consumes it unchanged.
+
+    The store is provider-native, so this is where provider fixtures are
+    attached to our own. A fixture matches on the two clubs' resolved
+    `Team.api_football_id` plus a kickoff within three days; anything that does
+    not match uniquely is SKIPPED, never guessed — same discipline as
+    `mls_stats._find_fixture`.
+
+    Returns `{}` freely, and that is a real answer rather than a failure: on
+    2026-07-29 our live plane holds the 2026/27 fixtures for these leagues
+    while the provider's xG history is the completed 2025/26 season, so there
+    is no overlap to bridge yet. `bridge_coverage` reports that as a measured
+    zero instead of letting an empty map read as 'no xG source exists'."""
+    if not plane_ready():
+        return {}
+    from src.live.models import Fixture, Team
+    rows = league_xg_rows(league_id, season)
+    if not rows:
+        return {}
+    s = get_session()
+    try:
+        by_apif: dict[int, int] = {}
+        for t in (s.query(Team)
+                  .filter_by(competition_slug=competition_slug)
+                  .filter(Team.api_football_id.isnot(None)).all()):
+            by_apif[int(t.api_football_id)] = t.id
+        if not by_apif:
+            return {}
+        fixtures = [f for f in (s.query(Fixture)
+                                .filter_by(competition_slug=competition_slug)
+                                .filter(Fixture.home_team_id.isnot(None),
+                                        Fixture.away_team_id.isnot(None))
+                                .all())
+                    if f.current_kickoff_utc is not None]
+        # index our fixtures by the unordered team pair
+        by_pair: dict[frozenset, list] = {}
+        for f in fixtures:
+            by_pair.setdefault(
+                frozenset((f.home_team_id, f.away_team_id)), []).append(f)
+        # group provider rows into one record per provider fixture
+        prov: dict[int, dict] = {}
+        for r in rows:
+            prov.setdefault(r["provider_fixture_id"], {})[r["side"]] = r
+        out: dict[int, dict] = {}
+        for pfid, sides in prov.items():
+            if "home" not in sides or "away" not in sides:
+                continue                      # one-sided: never half-bridged
+            h = by_apif.get(sides["home"]["provider_team_id"])
+            a = by_apif.get(sides["away"]["provider_team_id"])
+            if h is None or a is None:
+                continue
+            cands = by_pair.get(frozenset((h, a))) or []
+            ko = sides["home"].get("kickoff_utc")
+            if not cands or ko is None:
+                continue
+            ko = ko if ko.tzinfo else ko.replace(tzinfo=timezone.utc)
+
+            def _gap(f, ko=ko):
+                k = f.current_kickoff_utc
+                k = k if k.tzinfo else k.replace(tzinfo=timezone.utc)
+                return abs((k - ko).total_seconds())
+            best = min(cands, key=_gap)
+            if _gap(best) > 3 * 86400:
+                continue
+            # orientation from OUR fixture, never assumed to match the
+            # provider's home/away
+            side_for = {h: "home", a: "away"}
+            rec = {}
+            for prov_side in ("home", "away"):
+                r = sides[prov_side]
+                our_team = by_apif.get(r["provider_team_id"])
+                rec[side_for[our_team]] = {
+                    "xg": r["xg"], "xg_against": r["xg_against"],
+                    "goals": r["goals"],
+                    "goals_conceded": r["goals_conceded"]}
+            out[best.id] = rec
+        return out
+    finally:
+        s.close()
+
+
+def bridge_coverage(competition_slug: str, league_id: int,
+                    season: int | None = None) -> dict:
+    """How much of a competition's completed history the bridge actually
+    covers. An empty bridge is reported as a measured zero WITH its reason
+    candidates, so it can never be mistaken for 'this league has no xG'."""
+    if not plane_ready():
+        return {"dormant": True}
+    from src.live.models import Fixture, Team
+    bridged = bridge_fixture_xg(competition_slug, league_id, season)
+    s = get_session()
+    try:
+        completed = (s.query(Fixture)
+                     .filter_by(competition_slug=competition_slug,
+                                status="post")
+                     .filter(Fixture.home_goals.isnot(None)).count())
+        teams = (s.query(Team).filter_by(competition_slug=competition_slug)
+                 .count())
+        mapped_teams = (s.query(Team)
+                        .filter_by(competition_slug=competition_slug)
+                        .filter(Team.api_football_id.isnot(None)).count())
+        held = len({r["provider_fixture_id"]
+                    for r in league_xg_rows(league_id, season)})
+        return {
+            "competition_slug": competition_slug, "league_id": league_id,
+            "season": season,
+            "our_completed_fixtures": completed,
+            "provider_fixtures_held": held,
+            "bridged_fixtures": len(bridged),
+            "teams": teams, "teams_with_api_football_id": mapped_teams,
+            "reason_if_zero": (
+                None if bridged else
+                ("no Team.api_football_id populated for this competition"
+                 if mapped_teams == 0 else
+                 "no provider xG held for this league"
+                 if held == 0 else
+                 "provider xG and our fixtures cover different seasons — "
+                 "our plane holds the current campaign while the provider's "
+                 "xG history is the completed previous one")),
+        }
+    finally:
+        s.close()
+
+
 # --- club -> domestic league resolution -----------------------------------
 
-def _domestic_leagues(payload: object, season: int | None) -> list[dict]:
-    """League rows of type 'League' (a domestic competition) from a
-    `/leagues?team=` response. Cups and continental competitions are excluded:
-    a club's xG FORM comes from the league it plays in, not from six cup
-    ties, and pooling them would mix populations."""
+# Competition names that are NOT a club's domestic league even though
+# API-Football types them "League". Each was MEASURED to pollute a
+# `/leagues?team=` response on 2026-07-29: Liverpool and Sunderland both came
+# back with 'Premier League - Summer Series' (a PRE-SEASON FRIENDLY tournament)
+# beside the actual Premier League, and Wrexham with a 2018 'National League -
+# Play-offs' registration. Fitting a club's league form on a friendly
+# tournament would be circular on this surface of all places.
+_NON_LEAGUE_MARKERS = ("summer series", "play offs", "group ", "friendl")
+
+# Development, reserve and women's competitions. Excluded for TWO reasons, and
+# the second is the important one:
+#
+#   1. a club's senior league xG form does not come from its U18 side, and a
+#      women's competition is a different team entirely;
+#   2. indexing them manufactures precisely the reserve-side ambiguity that
+#      review P0-1 exists to prevent. 'Premier League 2 Division One' carries
+#      29 clubs whose names are the senior clubs' names, so a query for any
+#      Premier League club would match two rosters and be refused as
+#      ambiguous — a false ambiguity created entirely by indexing the wrong
+#      competitions. MEASURED: this is what refused Arsenal and Juventus on
+#      the first authoritative run.
+_NON_SENIOR_MARKERS = ("u18", "u19", "u20", "u21", "u23", "under 18",
+                       "under 21", "women", "youth", "reserve", "academy",
+                       "development", "premier league 2", "primavera",
+                       "juvenil", "sub 20")
+
+
+def _looks_domestic_league(name: object) -> bool:
+    """Is this the senior domestic league whose fixtures a club's xG form is
+    fitted on? Name-based, because API-Football's `type` field says 'League'
+    for pre-season friendly tournaments and U18 competitions alike."""
+    n = norm_name(name)                      # already de-accented, '-' -> ' '
+    if any(m in n for m in _NON_LEAGUE_MARKERS):
+        return False
+    return not any(m in n for m in _NON_SENIOR_MARKERS)
+
+
+def propose_leagues(payload: object) -> list[dict]:
+    """Candidate domestic leagues for one club, from `/leagues?team=`.
+
+    PROPOSAL ONLY — this is deliberately allowed to return several. The
+    provider's own club->league answer is structurally ambiguous: it mixes the
+    real league with pre-season friendly tournaments and years-stale lower-tier
+    registrations, and no field distinguishes them. Which league a club
+    ACTUALLY plays in is decided authoritatively against league rosters
+    (`resolve_from_index`), not here. This step exists only to discover which
+    leagues are worth indexing at all, which is what keeps the roster fetch
+    bounded.
+
+    Cups and continental competitions are excluded by type: a club's league xG
+    form comes from its league, and pooling cup ties would mix populations."""
     out = []
     for row in response_items(payload):
         if not isinstance(row, dict):
@@ -810,79 +1044,245 @@ def _domestic_leagues(payload: object, season: int | None) -> list[dict]:
         lg = row.get("league") or {}
         if str(lg.get("type") or "").lower() != "league":
             continue
-        seasons = [s for s in (row.get("seasons") or [])
-                   if isinstance(s, dict)]
+        if not _looks_domestic_league(lg.get("name")):
+            continue
+        seasons = [s for s in (row.get("seasons") or []) if isinstance(s, dict)]
         years = sorted(s.get("year") for s in seasons
                        if isinstance(s.get("year"), int))
         if not years:
             continue
-        pick = season if (season in years) else years[-1]
+        # the provider's own 'current' flag first; the latest visible year is
+        # the fallback, never a calendar guess
+        cur = next((s.get("year") for s in seasons if s.get("current") is True),
+                   None)
         out.append({"league_id": lg.get("id"), "league_name": lg.get("name"),
                     "league_country": (row.get("country") or {}).get("name"),
-                    "season": pick, "seasons_visible": years})
+                    "season": cur if isinstance(cur, int) else years[-1],
+                    "provider_current_season": cur,
+                    "seasons_visible": years})
     return out
 
 
-def resolve_club_league(query_name: str, client: Client | None = None,
-                        season: int | None = None) -> dict:
-    """Which domestic league does this club play in? Provider-derived.
+def discover_club_leagues(query_name: str,
+                          client: Client | None = None) -> dict:
+    """Discovery probe: which leagues might this club play in?
 
-    Two calls: `/teams?search=` for the club, then `/leagues?team=` for its
-    competitions. Refuses rather than guesses:
-      resolved          exactly one club matched at the deciding tier AND
-                        exactly one domestic league came back
-      ambiguous_team    more than one club matched at the deciding tier
-      ambiguous_league  the club plays in more than one domestic league
-      unresolved        nothing matched
-    A near-miss name is NOT a match: only normalized equality or token-set
-    equality counts, and substring containment is banned outright (it is what
-    attached a reserve side to a senior club elsewhere on this surface)."""
+    `/teams?search=` then `/leagues?team=`. Returns every proposed league —
+    ambiguity here is expected and harmless, because this output only decides
+    which rosters to fetch. The search term is ASCII-folded because the
+    provider rejects accents outright (see `ascii_search_term`)."""
     c = client or Client()
-    search = SEARCH_ALIASES.get(norm_name(query_name), query_name)
-    tb = c.get("teams", {"search": search})
-    cands = []
+    alias = SEARCH_ALIASES.get(norm_name(query_name))
+    search = ascii_search_term(alias or query_name)
+    out = {"query_name": query_name, "searched_as": search,
+           "candidates": [], "leagues": []}
+    if not search:
+        return out
+
+    def _search(term: str) -> list[dict]:
+        tb = c.get("teams", {"search": term})
+        rows = []
+        for row in response_items(tb):
+            if not isinstance(row, dict):
+                continue
+            t = row.get("team") or {}
+            tier = match_tier(query_name, t.get("name"))
+            if tier is None and alias:
+                tier = match_tier(alias, t.get("name"))
+            rows.append({
+                "provider_team_id": t.get("id"), "name": t.get("name"),
+                "country": ((row.get("country") or {}).get("name")
+                            if isinstance(row.get("country"), dict)
+                            else row.get("country")),
+                "tier": tier})
+        return rows
+
+    cands = _search(search)
+    # The provider's search matches on the club's own name form, so an ESPN
+    # name carrying a city qualifier finds NOTHING: 'ajax amsterdam' and
+    # 'feyenoord rotterdam' both returned zero candidates on 2026-07-29 while
+    # 'ajax' and 'feyenoord' are exactly what API-Football calls them. Retry
+    # once with the longest single token. Safe to be loose here — this only
+    # decides which rosters to fetch, and roster membership still decides
+    # identity.
+    if not cands:
+        tokens = sorted(search.split(), key=len, reverse=True)
+        if tokens and tokens[0] != search:
+            out["retried_as"] = tokens[0]
+            cands = _search(tokens[0])
+    out["candidates"] = cands
+    # ONLY named-tier candidates get their leagues probed. Falling back to
+    # every search hit pulled same-named foreign clubs' leagues into the index
+    # — a Nicaraguan 'Juventus' and a Russian 'Arsenal' — and each of those
+    # then collided with the real club at the exact tier, refusing both as
+    # ambiguous. Discovery must not widen the index with leagues no queried
+    # club plays in.
+    named = [x for x in cands if x["tier"] in ("exact", "token_set",
+                                               "unique_containment")]
+    leagues: list[dict] = []
+    for club in named[:3]:                       # bounded: 3 probes at most
+        if not club.get("provider_team_id"):
+            continue
+        lb = c.get("leagues", {"team": club["provider_team_id"],
+                               "current": "true"})
+        for lg in propose_leagues(lb):
+            if lg["league_id"] not in {x["league_id"] for x in leagues}:
+                leagues.append(lg)
+    out["leagues"] = leagues
+    return out
+
+
+def league_roster(league_id: int, season: int,
+                  client: Client | None = None) -> list[dict]:
+    """Every club in one league-season, from `/teams?league=&season=`.
+
+    ONE request buys the authoritative membership of a whole league. That is
+    why resolution is inverted to work this way: two requests per club against
+    a 44-club slate is both more expensive and structurally ambiguous, while a
+    roster is neither — a club belongs to exactly one domestic league roster,
+    so membership answers the question the club-side probe could only guess
+    at."""
+    c = client or Client()
+    tb = c.get("teams", {"league": league_id, "season": season})
+    out = []
     for row in response_items(tb):
         if not isinstance(row, dict):
             continue
         t = row.get("team") or {}
-        tier = match_tier(query_name, t.get("name"))
-        if tier is None and search != query_name:
-            tier = match_tier(search, t.get("name"))
-        cands.append({"provider_team_id": t.get("id"), "name": t.get("name"),
-                      "country": (row.get("country")
-                                  or (t.get("country"))),
-                      "tier": tier})
-    base = {"query_name": query_name, "searched_as": search,
-            "candidates": cands, "resolved_at": _now().isoformat()}
-    exact = [x for x in cands if x["tier"] == "exact"]
-    tokens = [x for x in cands if x["tier"] == "token_set"]
-    deciding = exact or tokens
-    if not deciding:
-        return {**base, "resolution": "unresolved"}
-    if len(deciding) > 1:
-        return {**base, "resolution": "ambiguous_team"}
-    club = deciding[0]
-    lb = c.get("leagues", {"team": club["provider_team_id"],
-                           "current": "true"})
-    leagues = _domestic_leagues(lb, season)
-    out = {**base, "provider_team_id": club["provider_team_id"],
-           "provider_team_name": club["name"], "country": club["country"],
-           "match_tier": club["tier"], "leagues": leagues}
-    if not leagues:
-        return {**out, "resolution": "unresolved"}
-    if len(leagues) > 1:
-        return {**out, "resolution": "ambiguous_league"}
-    lg = leagues[0]
-    return {**out, "resolution": "resolved", "league_id": lg["league_id"],
-            "league_name": lg["league_name"],
-            "league_country": lg["league_country"], "season": lg["season"]}
+        if t.get("id") is None:
+            continue
+        out.append({"provider_team_id": t.get("id"), "name": t.get("name"),
+                    "country": t.get("country"), "league_id": league_id,
+                    "season": season})
+    return out
+
+
+def build_roster_index(leagues: list[dict],
+                       client: Client | None = None) -> dict:
+    """{(league_id, season): [teams]} for a set of candidate leagues, one
+    request each. `leagues` items need `league_id`, `season` and optionally
+    `league_name` / `league_country`."""
+    c = client or Client()
+    index: dict = {}
+    meta: dict = {}
+    for lg in leagues:
+        lid, season = lg["league_id"], lg["season"]
+        if lid is None or season is None or lid == MLS_LEAGUE_ID:
+            continue
+        if (lid, season) in index:
+            continue
+        try:
+            index[(lid, season)] = league_roster(lid, season, client=c)
+        except ApiFootballError as exc:
+            meta[(lid, season)] = {"error": str(exc)[:200]}
+            continue
+        meta[(lid, season)] = {
+            "league_name": lg.get("league_name"),
+            "league_country": lg.get("league_country"),
+            "clubs": len(index[(lid, season)])}
+    return {"index": index, "meta": meta, "requests_used": c.used}
+
+
+def resolve_from_index(query_name: str, index: dict, meta: dict | None = None,
+                       ) -> dict:
+    """Resolve one club name against league rosters. PURE — no network.
+
+    Membership in a league roster is the authoritative answer to 'which league
+    does this club play in'. Tiers are tried strongest-first and a stronger
+    tier WINS OUTRIGHT: a name that matches one roster exactly is resolved even
+    if it also loosely resembles a club in another league. Ambiguity is only
+    ever declared within the strongest tier that matched at all.
+
+      resolved              exactly one club at the strongest matching tier
+      ambiguous_team        several, at that tier — never guessed
+      league_not_indexed    no roster contains this club. This is NOT 'the
+                            club has no league': it is 'no league we index
+                            contains it', which is a statement about our
+                            coverage and must be worded as one.
+    """
+    meta = meta or {}
+    alias = CLUB_NAME_ALIASES.get(norm_name(query_name))
+    hits: dict[str, list[dict]] = {"exact": [], "token_set": [],
+                                   "unique_containment": []}
+    for (lid, season), teams in index.items():
+        for t in teams:
+            tier = match_tier(query_name, t["name"])
+            if tier is None and alias:
+                # an evidence-backed alias resolves at the tier the ALIAS
+                # earns, not at a weaker one: 'Internazionale' -> 'Inter' is
+                # an exact identity, established by the archived run
+                tier = match_tier(alias, t["name"])
+            if tier is None:
+                continue
+            m = meta.get((lid, season)) or {}
+            hits[tier].append({
+                "provider_team_id": t["provider_team_id"],
+                "provider_team_name": t["name"],
+                "league_id": lid, "season": season,
+                "league_name": m.get("league_name"),
+                "league_country": m.get("league_country"),
+                "country": t.get("country"), "match_tier": tier})
+    base = {"query_name": query_name, "resolved_at": _now().isoformat()}
+    for tier in ("exact", "token_set", "unique_containment"):
+        found = hits[tier]
+        if not found:
+            continue
+        if len(found) > 1:
+            return {**base, "resolution": "ambiguous_team",
+                    "candidates": found, "tier_attempted": tier}
+        return {**base, "resolution": "resolved", "candidates": found,
+                **found[0]}
+    return {**base, "resolution": "league_not_indexed", "candidates": []}
+
+
+def resolve_all_from_index(names: list[str], index: dict,
+                           meta: dict | None = None) -> list[dict]:
+    """Resolve a whole slate, then narrow the leftover homonyms. PURE.
+
+    A single pass leaves country homonyms unresolvable, and they are not rare:
+    on 2026-07-29 'Arsenal' matched Arsenal (England) and Arsenal (Belarus)
+    exactly, 'Juventus' matched Italy, Haiti and Brazil, and 'Inter' matched
+    Italy and El Salvador twice. Refusing all three would have been honest but
+    needlessly lossy, because the slate itself carries the information needed
+    to tell them apart.
+
+    SECOND PASS: a league that at least one club resolved into UNAMBIGUOUSLY is
+    a league this slate demonstrably draws on. Where an ambiguous club has
+    exactly one candidate in such a league, that candidate wins, recorded at
+    tier `slate_confirmed_league` so the weaker basis stays visible in the
+    stored mapping. Where two or more candidates sit in confirmed leagues, or
+    none does, the refusal stands — the narrowing breaks ties, it never
+    invents one."""
+    first = [resolve_from_index(n, index, meta) for n in names]
+    confirmed = {(r["league_id"], r["season"]) for r in first
+                 if r["resolution"] == "resolved"}
+    out = []
+    for r in first:
+        if r["resolution"] != "ambiguous_team":
+            out.append(r)
+            continue
+        inside = [c for c in r["candidates"]
+                  if (c["league_id"], c["season"]) in confirmed]
+        if len(inside) == 1:
+            out.append({**{k: v for k, v in r.items()
+                           if k not in ("tier_attempted",)},
+                        "resolution": "resolved", **inside[0],
+                        "match_tier": "slate_confirmed_league",
+                        "narrowed_from": [
+                            {"provider_team_id": c["provider_team_id"],
+                             "league_id": c["league_id"],
+                             "league_name": c["league_name"],
+                             "country": c.get("country")}
+                            for c in r["candidates"]]})
+        else:
+            out.append(r)
+    return out
 
 
 def store_club_league(r: dict) -> dict:
-    """Archive one club->league resolution, ambiguous and unresolved cases
-    included. Storing the refusals is the point: it is what stops the same
-    unresolvable club being re-probed against the quota every request, and it
-    keeps the reason in words."""
+    """Archive one club->league resolution, refusals included. Storing the
+    refusals is the point: it stops the same unresolvable club being re-probed
+    against the quota on every request, and it keeps the reason in words."""
     if not plane_ready():
         return {"skipped": "dormant"}
     s = get_session()
@@ -904,6 +1304,7 @@ def store_club_league(r: dict) -> dict:
         row.match_tier = r.get("match_tier")
         row.candidates_json = json.dumps(
             {"searched_as": r.get("searched_as"),
+             "tier_attempted": r.get("tier_attempted"),
              "candidates": r.get("candidates") or [],
              "leagues": r.get("leagues") or []})[:60000]
         row.resolved_at = _now()

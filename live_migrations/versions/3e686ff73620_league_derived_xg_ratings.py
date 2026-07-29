@@ -56,6 +56,7 @@ def upgrade() -> None:
         sa.Column('country', sa.String(length=64), nullable=True),
         sa.Column('verdict', sa.String(length=40), nullable=False),
         sa.Column('measured_rate', sa.Float(), nullable=True),
+        sa.Column('completed_fixtures_visible', sa.Integer(), nullable=True),
         sa.Column('samples_taken', sa.Integer(), nullable=False,
                   server_default='0'),
         sa.Column('samples_with_xg', sa.Integer(), nullable=False,

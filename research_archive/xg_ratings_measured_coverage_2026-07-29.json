@@ -1,0 +1,1842 @@
+{
+ "_what": "EMPIRICAL per-(league, season) xG coverage for API-Football. The provider's documentation is 403-walled, so this measurement IS the coverage documentation — there is nothing published to check it against.",
+ "_governing_rule": "coverage is measured on VALUES, not on the statistic type: the expected-goals TYPE appears in responses where every value is null, so a type-presence check succeeds while carrying no data. null/''/'-'/non-numeric and exactly 0 are all ABSENT.",
+ "_sampling": "fixtures are sampled SPREAD EVENLY across the season, not the most recent N. A most-recent-N sample is biased: the newest completed fixtures on a split-year league are the promotion/relegation playoff block, which carries no xG, and that alone made three fully-covered leagues read 'partial'.",
+ "measured_utc": "2026-07-29T23:50:31.101306+00:00",
+ "samples_per_league": 6,
+ "requests_used": 119,
+ "rate_limit": {
+  "remaining_minute": "228",
+  "remaining_day": "6637",
+  "limit_day": "7500"
+ },
+ "table": [
+  {
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "country": "England",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "completed_fixtures_visible": 0,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:49:36.658125-07:00",
+   "fittable": false
+  },
+  {
+   "league_id": 39,
+   "season": 2025,
+   "league_name": "Premier League",
+   "country": "England",
+   "verdict": "xg_available",
+   "measured_rate": 1.0,
+   "completed_fixtures_visible": 380,
+   "samples_taken": 6,
+   "samples_with_xg": 6,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:49:39.828042-07:00",
+   "fittable": true
+  },
+  {
+   "league_id": 40,
+   "season": 2026,
+   "league_name": "Championship",
+   "country": "England",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "completed_fixtures_visible": 0,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:49:40.316716-07:00",
+   "fittable": false
+  },
+  {
+   "league_id": 40,
+   "season": 2025,
+   "league_name": "Championship",
+   "country": "England",
+   "verdict": "xg_available",
+   "measured_rate": 1.0,
+   "completed_fixtures_visible": 557,
+   "samples_taken": 6,
+   "samples_with_xg": 6,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:49:43.492057-07:00",
+   "fittable": true
+  },
+  {
+   "league_id": 42,
+   "season": 2026,
+   "league_name": "League Two",
+   "country": "England",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "completed_fixtures_visible": 0,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:49:43.983417-07:00",
+   "fittable": false
+  },
+  {
+   "league_id": 42,
+   "season": 2025,
+   "league_name": "League Two",
+   "country": "England",
+   "verdict": "xg_partial",
+   "measured_rate": 0.5,
+   "completed_fixtures_visible": 557,
+   "samples_taken": 6,
+   "samples_with_xg": 3,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Regular Season - 10",
+    "Regular Season - 19",
+    "Regular Season - 38"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:49:47.169224-07:00",
+   "fittable": true
+  },
+  {
+   "league_id": 61,
+   "season": 2026,
+   "league_name": "Ligue 1",
+   "country": "France",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "completed_fixtures_visible": 0,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:49:47.642674-07:00",
+   "fittable": false
+  },
+  {
+   "league_id": 61,
+   "season": 2025,
+   "league_name": "Ligue 1",
+   "country": "France",
+   "verdict": "xg_partial",
+   "measured_rate": 0.833,
+   "completed_fixtures_visible": 309,
+   "samples_taken": 6,
+   "samples_with_xg": 5,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Final"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:49:50.849195-07:00",
+   "fittable": true
+  },
+  {
+   "league_id": 78,
+   "season": 2026,
+   "league_name": "Bundesliga",
+   "country": "Germany",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "completed_fixtures_visible": 0,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:49:51.338622-07:00",
+   "fittable": false
+  },
+  {
+   "league_id": 78,
+   "season": 2025,
+   "league_name": "Bundesliga",
+   "country": "Germany",
+   "verdict": "xg_partial",
+   "measured_rate": 0.833,
+   "completed_fixtures_visible": 308,
+   "samples_taken": 6,
+   "samples_with_xg": 5,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Final"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:49:54.592259-07:00",
+   "fittable": true
+  },
+  {
+   "league_id": 88,
+   "season": 2026,
+   "league_name": "Eredivisie",
+   "country": "Netherlands",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "completed_fixtures_visible": 0,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:49:55.057460-07:00",
+   "fittable": false
+  },
+  {
+   "league_id": 88,
+   "season": 2025,
+   "league_name": "Eredivisie",
+   "country": "Netherlands",
+   "verdict": "xg_available",
+   "measured_rate": 1.0,
+   "completed_fixtures_visible": 309,
+   "samples_taken": 6,
+   "samples_with_xg": 6,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:49:58.277492-07:00",
+   "fittable": true
+  },
+  {
+   "league_id": 89,
+   "season": 2026,
+   "league_name": "Eerste Divisie",
+   "country": "Netherlands",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "completed_fixtures_visible": 0,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:49:58.761086-07:00",
+   "fittable": false
+  },
+  {
+   "league_id": 89,
+   "season": 2025,
+   "league_name": "Eerste Divisie",
+   "country": "Netherlands",
+   "verdict": "xg_partial",
+   "measured_rate": 0.5,
+   "completed_fixtures_visible": 392,
+   "samples_taken": 6,
+   "samples_with_xg": 3,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Regular Season - 9",
+    "Regular Season - 16",
+    "Final"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:50:02.025535-07:00",
+   "fittable": true
+  },
+  {
+   "league_id": 94,
+   "season": 2026,
+   "league_name": "Primeira Liga",
+   "country": "Portugal",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "completed_fixtures_visible": 0,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:50:02.515126-07:00",
+   "fittable": false
+  },
+  {
+   "league_id": 94,
+   "season": 2025,
+   "league_name": "Primeira Liga",
+   "country": "Portugal",
+   "verdict": "xg_partial",
+   "measured_rate": 0.833,
+   "completed_fixtures_visible": 308,
+   "samples_taken": 6,
+   "samples_with_xg": 5,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Final"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:50:05.809919-07:00",
+   "fittable": true
+  },
+  {
+   "league_id": 98,
+   "season": 2027,
+   "league_name": "J1 League",
+   "country": "Japan",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "completed_fixtures_visible": 0,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:50:06.283824-07:00",
+   "fittable": false
+  },
+  {
+   "league_id": 98,
+   "season": 2026,
+   "league_name": "J1 League",
+   "country": "Japan",
+   "verdict": "xg_partial",
+   "measured_rate": 0.667,
+   "completed_fixtures_visible": 200,
+   "samples_taken": 6,
+   "samples_with_xg": 4,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Regular Season - 11",
+    "7th place"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:50:09.450545-07:00",
+   "fittable": true
+  },
+  {
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "country": "Italy",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "completed_fixtures_visible": 0,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:50:09.921417-07:00",
+   "fittable": false
+  },
+  {
+   "league_id": 135,
+   "season": 2025,
+   "league_name": "Serie A",
+   "country": "Italy",
+   "verdict": "xg_available",
+   "measured_rate": 1.0,
+   "completed_fixtures_visible": 380,
+   "samples_taken": 6,
+   "samples_with_xg": 6,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:50:13.136434-07:00",
+   "fittable": true
+  },
+  {
+   "league_id": 140,
+   "season": 2026,
+   "league_name": "La Liga",
+   "country": "Spain",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "completed_fixtures_visible": 0,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:50:13.612216-07:00",
+   "fittable": false
+  },
+  {
+   "league_id": 140,
+   "season": 2025,
+   "league_name": "La Liga",
+   "country": "Spain",
+   "verdict": "xg_available",
+   "measured_rate": 1.0,
+   "completed_fixtures_visible": 380,
+   "samples_taken": 6,
+   "samples_with_xg": 6,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:50:16.799665-07:00",
+   "fittable": true
+  },
+  {
+   "league_id": 141,
+   "season": 2026,
+   "league_name": "Segunda División",
+   "country": "Spain",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "completed_fixtures_visible": 0,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:50:17.274301-07:00",
+   "fittable": false
+  },
+  {
+   "league_id": 141,
+   "season": 2025,
+   "league_name": "Segunda División",
+   "country": "Spain",
+   "verdict": "xg_partial",
+   "measured_rate": 0.333,
+   "completed_fixtures_visible": 468,
+   "samples_taken": 6,
+   "samples_with_xg": 2,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Regular Season - 9",
+    "Regular Season - 18",
+    "Regular Season - 35",
+    "Final"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:50:20.505921-07:00",
+   "fittable": true
+  },
+  {
+   "league_id": 203,
+   "season": 2026,
+   "league_name": "Süper Lig",
+   "country": "Turkey",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "completed_fixtures_visible": 0,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:50:20.997820-07:00",
+   "fittable": false
+  },
+  {
+   "league_id": 203,
+   "season": 2025,
+   "league_name": "Süper Lig",
+   "country": "Turkey",
+   "verdict": "xg_available",
+   "measured_rate": 1.0,
+   "completed_fixtures_visible": 306,
+   "samples_taken": 6,
+   "samples_with_xg": 6,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:50:24.208216-07:00",
+   "fittable": true
+  },
+  {
+   "league_id": 292,
+   "season": 2026,
+   "league_name": "K League 1",
+   "country": "South-Korea",
+   "verdict": "xg_absent",
+   "measured_rate": 0.0,
+   "completed_fixtures_visible": 120,
+   "samples_taken": 6,
+   "samples_with_xg": 0,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Regular Season - 1",
+    "Regular Season - 5",
+    "Regular Season - 9",
+    "Regular Season - 12",
+    "Regular Season - 16",
+    "Regular Season - 20"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:50:27.420631-07:00",
+   "fittable": false
+  },
+  {
+   "league_id": 305,
+   "season": 2026,
+   "league_name": "Stars League",
+   "country": "Qatar",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "completed_fixtures_visible": 0,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:50:27.889755-07:00",
+   "fittable": false
+  },
+  {
+   "league_id": 305,
+   "season": 2025,
+   "league_name": "Stars League",
+   "country": "Qatar",
+   "verdict": "xg_absent",
+   "measured_rate": 0.0,
+   "completed_fixtures_visible": 133,
+   "samples_taken": 6,
+   "samples_with_xg": 0,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Regular Season - 1",
+    "Regular Season - 5",
+    "Regular Season - 7",
+    "Regular Season - 14",
+    "Regular Season - 19",
+    "Final"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T16:50:31.100378-07:00",
+   "fittable": false
+  }
+ ],
+ "detail": [
+  {
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "country": "England",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "completed_visible": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:49:36.654931+00:00",
+   "samples": []
+  },
+  {
+   "league_id": 39,
+   "season": 2025,
+   "league_name": "Premier League",
+   "country": "England",
+   "verdict": "xg_available",
+   "measured_rate": 1.0,
+   "samples_taken": 6,
+   "samples_with_xg": 6,
+   "completed_visible": 380,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:49:39.825659+00:00",
+   "samples": [
+    {
+     "provider_fixture_id": 1378969,
+     "kickoff": "2025-08-15",
+     "round_label": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1379042,
+     "kickoff": "2025-10-18",
+     "round_label": "Regular Season - 8",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1379121,
+     "kickoff": "2025-12-13",
+     "round_label": "Regular Season - 16",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1379191,
+     "kickoff": "2026-01-25",
+     "round_label": "Regular Season - 23",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1379273,
+     "kickoff": "2026-03-21",
+     "round_label": "Regular Season - 31",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1379346,
+     "kickoff": "2026-05-24",
+     "round_label": "Regular Season - 38",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    }
+   ]
+  },
+  {
+   "league_id": 40,
+   "season": 2026,
+   "league_name": "Championship",
+   "country": "England",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "completed_visible": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:49:40.315426+00:00",
+   "samples": []
+  },
+  {
+   "league_id": 40,
+   "season": 2025,
+   "league_name": "Championship",
+   "country": "England",
+   "verdict": "xg_available",
+   "measured_rate": 1.0,
+   "samples_taken": 6,
+   "samples_with_xg": 6,
+   "completed_visible": 557,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:49:43.489611+00:00",
+   "samples": [
+    {
+     "provider_fixture_id": 1386551,
+     "kickoff": "2025-08-08",
+     "round_label": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1386666,
+     "kickoff": "2025-10-18",
+     "round_label": "Regular Season - 10",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1386777,
+     "kickoff": "2025-12-06",
+     "round_label": "Regular Season - 19",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1386893,
+     "kickoff": "2026-01-24",
+     "round_label": "Regular Season - 29",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1386999,
+     "kickoff": "2026-03-14",
+     "round_label": "Regular Season - 38",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1545715,
+     "kickoff": "2026-05-23",
+     "round_label": "Final",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    }
+   ]
+  },
+  {
+   "league_id": 42,
+   "season": 2026,
+   "league_name": "League Two",
+   "country": "England",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "completed_visible": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:49:43.980118+00:00",
+   "samples": []
+  },
+  {
+   "league_id": 42,
+   "season": 2025,
+   "league_name": "League Two",
+   "country": "England",
+   "verdict": "xg_partial",
+   "measured_rate": 0.5,
+   "samples_taken": 6,
+   "samples_with_xg": 3,
+   "completed_visible": 557,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Regular Season - 10",
+    "Regular Season - 19",
+    "Regular Season - 38"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:49:47.166533+00:00",
+   "samples": [
+    {
+     "provider_fixture_id": 1385998,
+     "kickoff": "2025-08-02",
+     "round_label": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1386115,
+     "kickoff": "2025-09-27",
+     "round_label": "Regular Season - 10",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1386219,
+     "kickoff": "2025-12-09",
+     "round_label": "Regular Season - 19",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1386344,
+     "kickoff": "2026-01-31",
+     "round_label": "Regular Season - 30",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1386445,
+     "kickoff": "2026-03-17",
+     "round_label": "Regular Season - 38",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1545251,
+     "kickoff": "2026-05-25",
+     "round_label": "Final",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    }
+   ]
+  },
+  {
+   "league_id": 61,
+   "season": 2026,
+   "league_name": "Ligue 1",
+   "country": "France",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "completed_visible": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:49:47.639551+00:00",
+   "samples": []
+  },
+  {
+   "league_id": 61,
+   "season": 2025,
+   "league_name": "Ligue 1",
+   "country": "France",
+   "verdict": "xg_partial",
+   "measured_rate": 0.833,
+   "samples_taken": 6,
+   "samples_with_xg": 5,
+   "completed_visible": 309,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Final"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:49:50.847832+00:00",
+   "samples": [
+    {
+     "provider_fixture_id": 1387706,
+     "kickoff": "2025-08-15",
+     "round_label": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1387755,
+     "kickoff": "2025-10-05",
+     "round_label": "Regular Season - 7",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1387817,
+     "kickoff": "2025-11-30",
+     "round_label": "Regular Season - 14",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1387878,
+     "kickoff": "2026-02-08",
+     "round_label": "Regular Season - 21",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1387941,
+     "kickoff": "2026-04-05",
+     "round_label": "Regular Season - 28",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1545409,
+     "kickoff": "2026-05-29",
+     "round_label": "Final",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    }
+   ]
+  },
+  {
+   "league_id": 78,
+   "season": 2026,
+   "league_name": "Bundesliga",
+   "country": "Germany",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "completed_visible": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:49:51.337568+00:00",
+   "samples": []
+  },
+  {
+   "league_id": 78,
+   "season": 2025,
+   "league_name": "Bundesliga",
+   "country": "Germany",
+   "verdict": "xg_partial",
+   "measured_rate": 0.833,
+   "samples_taken": 6,
+   "samples_with_xg": 5,
+   "completed_visible": 308,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Final"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:49:54.589833+00:00",
+   "samples": [
+    {
+     "provider_fixture_id": 1388308,
+     "kickoff": "2025-08-22",
+     "round_label": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1388364,
+     "kickoff": "2025-10-19",
+     "round_label": "Regular Season - 7",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1388429,
+     "kickoff": "2025-12-14",
+     "round_label": "Regular Season - 14",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1388494,
+     "kickoff": "2026-02-07",
+     "round_label": "Regular Season - 21",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1388556,
+     "kickoff": "2026-04-04",
+     "round_label": "Regular Season - 28",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1545418,
+     "kickoff": "2026-05-25",
+     "round_label": "Final",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    }
+   ]
+  },
+  {
+   "league_id": 88,
+   "season": 2026,
+   "league_name": "Eredivisie",
+   "country": "Netherlands",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "completed_visible": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:49:55.056152+00:00",
+   "samples": []
+  },
+  {
+   "league_id": 88,
+   "season": 2025,
+   "league_name": "Eredivisie",
+   "country": "Netherlands",
+   "verdict": "xg_available",
+   "measured_rate": 1.0,
+   "samples_taken": 6,
+   "samples_with_xg": 6,
+   "completed_visible": 309,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:49:58.275095+00:00",
+   "samples": [
+    {
+     "provider_fixture_id": 1380867,
+     "kickoff": "2025-08-08",
+     "round_label": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1380929,
+     "kickoff": "2025-09-28",
+     "round_label": "Regular Season - 7",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1380990,
+     "kickoff": "2025-11-30",
+     "round_label": "Regular Season - 14",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1381050,
+     "kickoff": "2026-02-01",
+     "round_label": "Regular Season - 21",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1381118,
+     "kickoff": "2026-03-21",
+     "round_label": "Regular Season - 28",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1546052,
+     "kickoff": "2026-05-24",
+     "round_label": "Final",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    }
+   ]
+  },
+  {
+   "league_id": 89,
+   "season": 2026,
+   "league_name": "Eerste Divisie",
+   "country": "Netherlands",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "completed_visible": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:49:58.758534+00:00",
+   "samples": []
+  },
+  {
+   "league_id": 89,
+   "season": 2025,
+   "league_name": "Eerste Divisie",
+   "country": "Netherlands",
+   "verdict": "xg_partial",
+   "measured_rate": 0.5,
+   "samples_taken": 6,
+   "samples_with_xg": 3,
+   "completed_visible": 392,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Regular Season - 9",
+    "Regular Season - 16",
+    "Final"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:50:02.023513+00:00",
+   "samples": [
+    {
+     "provider_fixture_id": 1381914,
+     "kickoff": "2025-08-08",
+     "round_label": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1381996,
+     "kickoff": "2025-09-29",
+     "round_label": "Regular Season - 9",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1382068,
+     "kickoff": "2025-11-21",
+     "round_label": "Regular Season - 16",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1382154,
+     "kickoff": "2026-01-30",
+     "round_label": "Regular Season - 25",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1382229,
+     "kickoff": "2026-03-17",
+     "round_label": "Regular Season - 32",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1545425,
+     "kickoff": "2026-05-23",
+     "round_label": "Final",
+     "teams_in_stats": 0,
+     "type_present": 0,
+     "value_present": 0,
+     "both_teams_have_value": false
+    }
+   ]
+  },
+  {
+   "league_id": 94,
+   "season": 2026,
+   "league_name": "Primeira Liga",
+   "country": "Portugal",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "completed_visible": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:50:02.513237+00:00",
+   "samples": []
+  },
+  {
+   "league_id": 94,
+   "season": 2025,
+   "league_name": "Primeira Liga",
+   "country": "Portugal",
+   "verdict": "xg_partial",
+   "measured_rate": 0.833,
+   "samples_taken": 6,
+   "samples_with_xg": 5,
+   "completed_visible": 308,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Final"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:50:05.807337+00:00",
+   "samples": [
+    {
+     "provider_fixture_id": 1396240,
+     "kickoff": "2025-08-08",
+     "round_label": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1396297,
+     "kickoff": "2025-09-28",
+     "round_label": "Regular Season - 7",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1396360,
+     "kickoff": "2025-12-15",
+     "round_label": "Regular Season - 14",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1396425,
+     "kickoff": "2026-02-08",
+     "round_label": "Regular Season - 21",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1396486,
+     "kickoff": "2026-04-04",
+     "round_label": "Regular Season - 28",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1545404,
+     "kickoff": "2026-05-28",
+     "round_label": "Final",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    }
+   ]
+  },
+  {
+   "league_id": 98,
+   "season": 2027,
+   "league_name": "J1 League",
+   "country": "Japan",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "completed_visible": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:50:06.281457+00:00",
+   "samples": []
+  },
+  {
+   "league_id": 98,
+   "season": 2026,
+   "league_name": "J1 League",
+   "country": "Japan",
+   "verdict": "xg_partial",
+   "measured_rate": 0.667,
+   "samples_taken": 6,
+   "samples_with_xg": 4,
+   "completed_visible": 200,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Regular Season - 11",
+    "7th place"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:50:09.447765+00:00",
+   "samples": [
+    {
+     "provider_fixture_id": 1501295,
+     "kickoff": "2026-02-06",
+     "round_label": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1504689,
+     "kickoff": "2026-03-07",
+     "round_label": "Regular Season - 5",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1504756,
+     "kickoff": "2026-04-01",
+     "round_label": "Regular Season - 11",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1504769,
+     "kickoff": "2026-04-29",
+     "round_label": "Regular Season - 13",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1504768,
+     "kickoff": "2026-05-13",
+     "round_label": "Regular Season - 12",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1546407,
+     "kickoff": "2026-06-06",
+     "round_label": "7th place",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    }
+   ]
+  },
+  {
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "country": "Italy",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "completed_visible": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:50:09.919375+00:00",
+   "samples": []
+  },
+  {
+   "league_id": 135,
+   "season": 2025,
+   "league_name": "Serie A",
+   "country": "Italy",
+   "verdict": "xg_available",
+   "measured_rate": 1.0,
+   "samples_taken": 6,
+   "samples_with_xg": 6,
+   "completed_visible": 380,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:50:13.134742+00:00",
+   "samples": [
+    {
+     "provider_fixture_id": 1377872,
+     "kickoff": "2025-08-23",
+     "round_label": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1377940,
+     "kickoff": "2025-10-26",
+     "round_label": "Regular Season - 8",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1378014,
+     "kickoff": "2025-12-21",
+     "round_label": "Regular Season - 16",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1378090,
+     "kickoff": "2026-02-01",
+     "round_label": "Regular Season - 23",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1378164,
+     "kickoff": "2026-04-05",
+     "round_label": "Regular Season - 31",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1378238,
+     "kickoff": "2026-05-24",
+     "round_label": "Regular Season - 38",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    }
+   ]
+  },
+  {
+   "league_id": 140,
+   "season": 2026,
+   "league_name": "La Liga",
+   "country": "Spain",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "completed_visible": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:50:13.610284+00:00",
+   "samples": []
+  },
+  {
+   "league_id": 140,
+   "season": 2025,
+   "league_name": "La Liga",
+   "country": "Spain",
+   "verdict": "xg_available",
+   "measured_rate": 1.0,
+   "samples_taken": 6,
+   "samples_with_xg": 6,
+   "completed_visible": 380,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:50:16.796823+00:00",
+   "samples": [
+    {
+     "provider_fixture_id": 1390824,
+     "kickoff": "2025-08-15",
+     "round_label": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1390898,
+     "kickoff": "2025-10-05",
+     "round_label": "Regular Season - 8",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1390977,
+     "kickoff": "2025-12-12",
+     "round_label": "Regular Season - 16",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1391048,
+     "kickoff": "2026-02-09",
+     "round_label": "Regular Season - 23",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1391120,
+     "kickoff": "2026-04-11",
+     "round_label": "Regular Season - 31",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1391198,
+     "kickoff": "2026-05-24",
+     "round_label": "Regular Season - 38",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    }
+   ]
+  },
+  {
+   "league_id": 141,
+   "season": 2026,
+   "league_name": "Segunda División",
+   "country": "Spain",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "completed_visible": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:50:17.273055+00:00",
+   "samples": []
+  },
+  {
+   "league_id": 141,
+   "season": 2025,
+   "league_name": "Segunda División",
+   "country": "Spain",
+   "verdict": "xg_partial",
+   "measured_rate": 0.333,
+   "samples_taken": 6,
+   "samples_with_xg": 2,
+   "completed_visible": 468,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Regular Season - 9",
+    "Regular Season - 18",
+    "Regular Season - 35",
+    "Final"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:50:20.504315+00:00",
+   "samples": [
+    {
+     "provider_fixture_id": 1396944,
+     "kickoff": "2025-08-15",
+     "round_label": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1391343,
+     "kickoff": "2025-10-12",
+     "round_label": "Regular Season - 9",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1391955,
+     "kickoff": "2025-12-12",
+     "round_label": "Regular Season - 18",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1392040,
+     "kickoff": "2026-02-15",
+     "round_label": "Regular Season - 26",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1392139,
+     "kickoff": "2026-04-10",
+     "round_label": "Regular Season - 35",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1551272,
+     "kickoff": "2026-06-20",
+     "round_label": "Final",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    }
+   ]
+  },
+  {
+   "league_id": 203,
+   "season": 2026,
+   "league_name": "Süper Lig",
+   "country": "Turkey",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "completed_visible": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:50:20.995929+00:00",
+   "samples": []
+  },
+  {
+   "league_id": 203,
+   "season": 2025,
+   "league_name": "Süper Lig",
+   "country": "Turkey",
+   "verdict": "xg_available",
+   "measured_rate": 1.0,
+   "samples_taken": 6,
+   "samples_with_xg": 6,
+   "completed_visible": 306,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:50:24.205835+00:00",
+   "samples": [
+    {
+     "provider_fixture_id": 1394436,
+     "kickoff": "2025-08-08",
+     "round_label": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1394504,
+     "kickoff": "2025-10-03",
+     "round_label": "Regular Season - 8",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1394550,
+     "kickoff": "2025-11-30",
+     "round_label": "Regular Season - 14",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1394619,
+     "kickoff": "2026-02-08",
+     "round_label": "Regular Season - 21",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1394684,
+     "kickoff": "2026-04-04",
+     "round_label": "Regular Season - 28",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    },
+    {
+     "provider_fixture_id": 1394730,
+     "kickoff": "2026-05-17",
+     "round_label": "Regular Season - 34",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both_teams_have_value": true
+    }
+   ]
+  },
+  {
+   "league_id": 292,
+   "season": 2026,
+   "league_name": "K League 1",
+   "country": "South-Korea",
+   "verdict": "xg_absent",
+   "measured_rate": 0.0,
+   "samples_taken": 6,
+   "samples_with_xg": 0,
+   "completed_visible": 120,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Regular Season - 1",
+    "Regular Season - 5",
+    "Regular Season - 9",
+    "Regular Season - 12",
+    "Regular Season - 16",
+    "Regular Season - 20"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:50:27.418073+00:00",
+   "samples": [
+    {
+     "provider_fixture_id": 1506896,
+     "kickoff": "2026-02-28",
+     "round_label": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1506922,
+     "kickoff": "2026-03-22",
+     "round_label": "Regular Season - 5",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1506945,
+     "kickoff": "2026-04-21",
+     "round_label": "Regular Season - 9",
+     "teams_in_stats": 0,
+     "type_present": 0,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1506967,
+     "kickoff": "2026-05-05",
+     "round_label": "Regular Season - 12",
+     "teams_in_stats": 0,
+     "type_present": 0,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1506989,
+     "kickoff": "2026-07-05",
+     "round_label": "Regular Season - 16",
+     "teams_in_stats": 0,
+     "type_present": 0,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1507015,
+     "kickoff": "2026-07-26",
+     "round_label": "Regular Season - 20",
+     "teams_in_stats": 0,
+     "type_present": 0,
+     "value_present": 0,
+     "both_teams_have_value": false
+    }
+   ]
+  },
+  {
+   "league_id": 305,
+   "season": 2026,
+   "league_name": "Stars League",
+   "country": "Qatar",
+   "verdict": "indeterminate_no_completed_fixture",
+   "measured_rate": null,
+   "samples_taken": 0,
+   "samples_with_xg": 0,
+   "completed_visible": 0,
+   "type_without_value_seen": false,
+   "miss_rounds": [],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:50:27.888090+00:00",
+   "samples": []
+  },
+  {
+   "league_id": 305,
+   "season": 2025,
+   "league_name": "Stars League",
+   "country": "Qatar",
+   "verdict": "xg_absent",
+   "measured_rate": 0.0,
+   "samples_taken": 6,
+   "samples_with_xg": 0,
+   "completed_visible": 133,
+   "type_without_value_seen": true,
+   "miss_rounds": [
+    "Regular Season - 1",
+    "Regular Season - 5",
+    "Regular Season - 7",
+    "Regular Season - 14",
+    "Regular Season - 19",
+    "Final"
+   ],
+   "sampling_method": "spread_across_season",
+   "measured_at": "2026-07-29T23:50:31.098915+00:00",
+   "samples": [
+    {
+     "provider_fixture_id": 1393729,
+     "kickoff": "2025-08-14",
+     "round_label": "Regular Season - 1",
+     "teams_in_stats": 0,
+     "type_present": 0,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1393755,
+     "kickoff": "2025-09-20",
+     "round_label": "Regular Season - 5",
+     "teams_in_stats": 0,
+     "type_present": 0,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1393765,
+     "kickoff": "2025-11-09",
+     "round_label": "Regular Season - 7",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1491613,
+     "kickoff": "2026-01-29",
+     "round_label": "Regular Season - 14",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1491644,
+     "kickoff": "2026-03-17",
+     "round_label": "Regular Season - 19",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both_teams_have_value": false
+    },
+    {
+     "provider_fixture_id": 1543785,
+     "kickoff": "2026-05-08",
+     "round_label": "Final",
+     "teams_in_stats": 0,
+     "type_present": 0,
+     "value_present": 0,
+     "both_teams_have_value": false
+    }
+   ]
+  }
+ ]
+}

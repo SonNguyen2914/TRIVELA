@@ -776,6 +776,14 @@ class ApiFootballLeagueCoverage(LiveBase):
     country = Column(String(64))
     verdict = Column(String(40), nullable=False)
     measured_rate = Column(Float)                 # fraction of samples with
+    # completed fixtures the provider showed for this season. Load-bearing for
+    # SEASON CHOICE, not decoration: on 2026-07-29 the provider's 'current'
+    # season for the Premier League was 2026 (barely started, a handful of
+    # completed fixtures) while the xG history sat in 2025 (380), and J1's
+    # 'current' was 2027 against 200 completed in 2026 — the J-League moved to
+    # an autumn-spring calendar. A rating fitted on the 'current' season would
+    # have been fitted on almost nothing, so the season with the data wins.
+    completed_fixtures_visible = Column(Integer)
     samples_taken = Column(Integer, nullable=False, default=0)
     samples_with_xg = Column(Integer, nullable=False, default=0)
     type_without_value_seen = Column(Boolean, default=False, nullable=False)
@@ -844,12 +852,26 @@ class ApiFootballClubLeague(LiveBase):
     the league that club plays in. The resolution is provider-derived
     (`/teams?search=` then `/leagues?team=`), never guessed from a name.
 
-    `resolution` is one of resolved (exactly one team matched and exactly one
-    domestic league came back), ambiguous_team (the search returned more than
-    one candidate at the deciding tier), ambiguous_league (more than one
-    domestic league), or unresolved (nothing matched). Only `resolved` may be
-    used to pick a rating; every other value is shown in words. An ambiguous
-    identity match fails explicitly — it never silently picks a club."""
+    Resolution is authoritative against LEAGUE ROSTERS, not against the
+    provider's own club->league answer. That answer is structurally ambiguous:
+    `/leagues?team=` mixes the real league with pre-season friendly
+    tournaments ('Premier League - Summer Series') and years-stale lower-tier
+    registrations, with no field distinguishing them. Membership of a league
+    roster has no such problem — a club belongs to exactly one domestic league
+    roster — and one request buys a whole league.
+
+    `resolution` is one of resolved (exactly one roster club at the strongest
+    matching tier), ambiguous_team (several at that tier — never guessed), or
+    league_not_indexed (no roster we hold contains this club, which is a
+    statement about OUR coverage and is worded as one, never as 'this club has
+    no league'). Only `resolved` may be used to pick a rating; every other
+    value is shown in words.
+
+    `match_tier` records HOW it matched, because the tiers are not equally
+    strong: exact and token_set are safe alone, while unique_containment
+    ('Newcastle' for 'Newcastle United') is directional — the roster name's
+    tokens must be a strict subset of the query's. The reverse direction is
+    what makes 'Real Madrid' match 'Real Madrid Castilla'."""
     __tablename__ = "apifootball_club_league"
     id = Column(Integer, primary_key=True)
     # the name we asked about (an ESPN displayName on the friendlies surface)

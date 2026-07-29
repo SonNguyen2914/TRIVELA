@@ -1016,6 +1016,95 @@ def ligamx_status():
 # === end Liga MX block =====================================================
 
 
+# --- league-derived xG ratings ---------------------------------------------
+# Read-only. Nothing here prices, predicts or forecasts anything, and there is
+# no admin/ingest route: spending a shared provider quota is an operator action
+# run from scripts/ingest_league_xg.py, not something a public GET can trigger.
+
+
+@app.get("/api/xg/summary")
+def xg_summary():
+    """What this surface can and cannot say: the MEASURED per-league xG
+    coverage table, the ingest census, and any retroactive provider
+    corrections detected.
+
+    The coverage table is the interesting part — API-Football's documentation
+    is 403-walled, so this measurement is the only coverage documentation that
+    exists for it. Every row carries the date it was measured and whether the
+    hollow form (statistic type present, value null) was seen."""
+    from src.mls import _cached
+
+    def _run():
+        from src.live import xg_ratings
+        return xg_ratings.summary()
+    try:
+        return _cached("xg_summary", 300, _run) or {}
+    except Exception as exc:
+        print(f"[xg] summary failed: {exc}")
+        raise HTTPException(503, "xg summary unavailable")
+
+
+@app.get("/api/xg/league/{league_id}")
+def xg_league(league_id: int):
+    """One league's fitted club ratings, or the named reason there are none.
+
+    Ratings are relative to THIS league's own mean and carry no meaning
+    outside it — `comparable_across_competitions` is False on every row."""
+    from src.live import xg_ratings
+    try:
+        out = xg_ratings.league_ratings(league_id)
+    except Exception as exc:
+        print(f"[xg] league {league_id} failed: {exc}")
+        raise HTTPException(503, "league ratings unavailable")
+    return {
+        "league_id": league_id,
+        "season": out.get("season"),
+        "competition_key": out.get("scope"),
+        "coverage": out.get("coverage"),
+        "refused_reason": out.get("refused_reason"),
+        "league_mean_xg": out.get("league_mean_xg"),
+        "n_team_matches": out.get("n_team_matches"),
+        "ratings": [r.as_dict() for r in (out.get("ratings") or {}).values()],
+        "unrated_clubs": out.get("refused") or {},
+        "attribution": xg_ratings.RATINGS_ATTRIBUTION,
+    }
+
+
+@app.get("/api/xg/friendlies")
+def xg_friendlies(days: int = Query(1, ge=1, le=8)):
+    """Each club-friendly fixture with BOTH clubs' league-derived xG ratings,
+    or a named refusal per club — never a blank and never a zero.
+
+    `forecast` is always null and `forecast_available` always false. Two clubs'
+    ratings are fitted in different leagues against different means, so no
+    match probability is or can be derived from them; the payload says so in
+    `not_comparable_note` and `forecast_unavailable_reason` rather than leaving
+    a consumer to infer it.
+
+    Fixtures come from ESPN's club.friendly feed (free, unmetered). No
+    API-Football request is made by this route — ratings are read from the
+    stored observations, so a page load never spends provider quota."""
+    from src.mls import _cached
+
+    def _run():
+        from src.live import xg_ratings
+        rows = xg_ratings.friendly_fixture_ratings(days=days)
+        return rows
+    try:
+        rows = _cached(f"xg_friendlies:{days}", 120, _run)
+    except Exception as exc:
+        print(f"[xg] friendlies failed: {exc}")
+        raise HTTPException(503, "friendlies xg unavailable")
+    from src.live import xg_ratings
+    return {
+        "fixtures": rows or [],
+        "comparable": False,
+        "not_comparable_note": xg_ratings.NOT_COMPARABLE_NOTE,
+        "attribution": xg_ratings.RATINGS_ATTRIBUTION,
+        "generated_at": utcnow().isoformat(),
+    }
+
+
 @app.get("/api/ready")
 def ready():
     """Readiness, distinct from liveness (V7 evaluation F7): reports

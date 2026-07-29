@@ -113,11 +113,43 @@ GOALS_ONLY_LADDER = {
 GOALS_ONLY_EDGE_PAIRS = (("M2", "M0"), ("M2", "M1"), ("M1", "M0"),
                          ("M2C", "M2"), ("M2C", "M0"))
 GOALS_ONLY_FUTURE_RUNGS = {
-    "M3": "provider xG ratings — NO trustworthy team-level xG source "
-          "exists for this league in this stack, so this rung is not "
-          "merely unbuilt, it is unavailable",
+    # CORRECTED 2026-07-29: this used to say no trustworthy team-level xG
+    # source EXISTS for these leagues. One does now — a paid API-Football key,
+    # with per-league coverage MEASURED rather than assumed (see
+    # src/live/apifootball.py). What the rung still waits on is fixture
+    # OVERLAP: the provider's xG history is the completed previous season while
+    # our live plane holds the current campaign, so the bridge is empty until
+    # this season generates completed fixtures. "Unavailable" would now be
+    # false; "measured, and waiting for overlap" is the truth, and
+    # apifootball.bridge_coverage reports which.
+    "M3": "provider xG ratings — a MEASURED xG source now exists for this "
+          "league (API-Football), but the bridge to our own fixtures is "
+          "empty until the current season generates completed fixtures; "
+          "apifootball.bridge_coverage reports the measured overlap",
     "M4": "availability / lineup effects — no lineup capture yet",
     "M5": "goalkeeper effects — no GK capture yet",
+}
+
+# The goals-only ladder PLUS the provider-xG rung, for a league that has both a
+# measured xG source and real overlap with our fixtures. Selected at call time
+# by LadderSpec.active_ladder() — never at import, which would make the ladder
+# a function of database state at module load.
+LEAGUE_XG_LADDER = {
+    **GOALS_ONLY_LADDER,
+    "M3": {"use_ratings": True, "recency": True, "shrink": 24.0,
+           "calibrate": True, "xg_alpha": 1.0,
+           "desc": "+ provider xG attack/defence ratings (API-Football, "
+                   "own lighter shrink — xG is far less noisy than goals)"},
+}
+LEAGUE_XG_EDGE_PAIRS = GOALS_ONLY_EDGE_PAIRS + (("M3", "M2C"), ("M3", "M0"))
+
+# (competition_slug -> API-Football league id) for the leagues whose xG this
+# stack can source. MLS is ABSENT deliberately: it keeps Sportec, and
+# apifootball refuses league 253 by name.
+DARK_LEAGUE_APIFOOTBALL_IDS = {
+    "epl-2026": 39,
+    "la-liga-2026": 140,
+    "liga-mx-2026": 262,
 }
 
 
@@ -134,7 +166,8 @@ class LadderSpec:
                  edge_pairs, future_rungs: dict,
                  calibration_alpha_fn=None, xg_map_fn=None,
                  corpus_version_fn=None, model_parameters_fn=None,
-                 label: str = ""):
+                 label: str = "", xg_ladder: dict | None = None,
+                 xg_edge_pairs=None):
         self.slug = slug
         self.model = model_module
         self.ladder = ladder
@@ -147,6 +180,10 @@ class LadderSpec:
         self.xg_map_fn = xg_map_fn
         self._corpus_version_fn = corpus_version_fn
         self._model_parameters_fn = model_parameters_fn
+        # An OPTIONAL richer ladder, used only when this league's xG map is
+        # actually populated. MLS passes neither and is unaffected.
+        self.xg_ladder = xg_ladder
+        self.xg_edge_pairs = tuple(xg_edge_pairs or ())
 
     # --- hyperparameters, read from the model module -------------------
     @property
@@ -178,6 +215,28 @@ class LadderSpec:
 
     def xg_map(self) -> dict:
         return self.xg_map_fn() if self.xg_map_fn else {}
+
+    def active_ladder(self) -> tuple[dict, tuple]:
+        """(ladder, edge_pairs) for THIS run.
+
+        MLS is returned untouched — its ladder and edge pairs are frozen, its
+        approval rests on them, and `tests/test_ladder_parity.py` requires the
+        report to stay byte-identical.
+
+        For a league carrying `xg_ladder`, the xG rung is included only when the
+        xG map is NON-EMPTY. That condition is the honest one: declaring an M3
+        rung whose map is empty would report a rung measured on nothing, while
+        omitting it when real xG is bridged would hide a measurement we can
+        actually make. The map is read once here, not per rung."""
+        if not self.xg_ladder or not self.xg_map_fn:
+            return self.ladder, self.edge_pairs
+        try:
+            if self.xg_map():
+                return self.xg_ladder, self.xg_edge_pairs
+        except Exception as exc:                 # never fail a ladder run on
+            print(f"[model_eval] xg map probe failed for "  # a provider read
+                  f"{self.slug}: {exc}")
+        return self.ladder, self.edge_pairs
 
     def latest_corpus_version(self) -> str | None:
         """The published corpus this league's approval can bind to. Only
@@ -262,6 +321,16 @@ _DARK_LEAGUE_REGISTRY = (
 )
 
 
+def _apifootball_xg_map_fn(slug: str, league_id: int):
+    """A per-competition xG map reader, in the same shape MLS's Sportec reader
+    has. Returns {} when nothing bridges — which `active_ladder` treats as 'no
+    M3 rung', never as a rung measured on zeros."""
+    def _fn() -> dict:
+        from src.live import apifootball
+        return apifootball.bridge_fixture_xg(slug, league_id)
+    return _fn
+
+
 def _config_alpha_fn(name: str):
     def _fn() -> float:
         import config
@@ -279,12 +348,20 @@ def _build_specs() -> dict:
             # the league's model module is not on this branch yet — the
             # registry row is a declaration, not a promise
             continue
+        apif_id = DARK_LEAGUE_APIFOOTBALL_IDS.get(slug)
         specs[slug] = LadderSpec(
             slug=slug, model_module=mod, ladder=GOALS_ONLY_LADDER,
             edge_pairs=GOALS_ONLY_EDGE_PAIRS,
             future_rungs=GOALS_ONLY_FUTURE_RUNGS,
             calibration_alpha_fn=_config_alpha_fn(alpha_const),
-            xg_map_fn=None, label=label)
+            # a MEASURED xG source, bridged onto our own fixtures. None where
+            # this stack has no id for the league — honestly absent, not wired
+            # to an empty stub.
+            xg_map_fn=(_apifootball_xg_map_fn(slug, apif_id)
+                       if apif_id else None),
+            xg_ladder=(LEAGUE_XG_LADDER if apif_id else None),
+            xg_edge_pairs=(LEAGUE_XG_EDGE_PAIRS if apif_id else None),
+            label=label)
     return specs
 
 
@@ -498,7 +575,7 @@ def score_rows(rows, spec: LadderSpec | None = None,
     second copy of this loop.
     """
     spec = spec or MLS_LADDER_SPEC
-    ladder = spec.ladder
+    ladder, _pairs = spec.active_ladder()
     xg_map = xg_by_fixture or {}
     prior_fn = prior_fn or (lambda rs, i: rs[:i])
     keys: list = []
@@ -541,7 +618,7 @@ def ladder_from_fixtures(rows, spec: LadderSpec | None = None,
     away_goals (plus `id` when an xG map is supplied).
     """
     spec = spec or MLS_LADDER_SPEC
-    ladder = spec.ladder
+    ladder, edge_pairs = spec.active_ladder()
     _keys, per_fixture = score_rows(rows, spec=spec,
                                     xg_by_fixture=xg_by_fixture,
                                     prior_fn=prior_fn)
@@ -562,7 +639,7 @@ def ladder_from_fixtures(rows, spec: LadderSpec | None = None,
 
     # match-cluster bootstrap: resample fixtures with replacement
     rng = np.random.default_rng(seed)
-    pairs = [tuple(p) for p in spec.edge_pairs]
+    pairs = [tuple(p) for p in edge_pairs]
     boot = {f"{a}_vs_{b}": [] for a, b in pairs}
     for _ in range(n_boot):
         idx = rng.integers(0, n, n)
@@ -788,12 +865,24 @@ def deployed_variant(spec: LadderSpec | None = None) -> str:
 
     `spec` defaults to MLS. For a league with no xG rung at all, M3 is
     not merely off — it is absent from the ladder, so it can never be
-    selected here."""
+    selected here.
+
+    The xG gate differs by league, and deliberately: MLS's rung tracks
+    `MLS_XG_RATING_ALPHA` because that env flag is what ships in the MLS
+    engine, while a league-derived rung carries its own `xg_alpha` in the rung
+    config and is present in the ladder only when real xG actually bridged
+    (see `active_ladder`). Reading MLS's flag for another league would gate one
+    competition's rung on a different competition's deployment switch."""
     import config
     spec = spec or MLS_LADDER_SPEC
-    if "M3" in spec.ladder and config.MLS_XG_RATING_ALPHA > 0:
-        return "M3"
-    if "M2C" in spec.ladder and spec.calibration_alpha() > 0:
+    ladder, _pairs = spec.active_ladder()
+    if "M3" in ladder:
+        if spec.slug == MLS_LADDER_SPEC.slug:
+            if config.MLS_XG_RATING_ALPHA > 0:
+                return "M3"
+        elif float(ladder["M3"].get("xg_alpha") or 0.0) > 0:
+            return "M3"
+    if "M2C" in ladder and spec.calibration_alpha() > 0:
         return "M2C"
     return "M2"
 

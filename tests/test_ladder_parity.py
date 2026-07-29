@@ -268,13 +268,55 @@ class TestSpecRegistry:
             assert spec.ladder, f"{slug} has no rungs"
             assert "M0" in spec.ladder and "M2" in spec.ladder
 
-    def test_dark_leagues_are_registered_and_goals_only(self):
-        """EPL and Liga MX have no xG source in this stack, so their
-        ladders must not carry an xG rung claiming a measurement that
-        cannot exist."""
+    def test_dark_leagues_never_claim_an_xg_rung_without_bridged_xg(self):
+        """PREMISE UPDATED 2026-07-29, and the change is deliberate.
+
+        This test used to assert `xg_map_fn is None` for the dark leagues,
+        because at the time NO team-level xG source existed for them in this
+        stack — that None WAS the encoding of 'no source'. A measured source
+        exists now (a paid API-Football key, per-league coverage measured
+        rather than assumed), so the old assertion would pin the code to a fact
+        that is no longer true.
+
+        What it protected is still protected, and more directly: the defect to
+        prevent is a ladder ADVERTISING an M3 rung when no xG has actually
+        bridged onto our fixtures — a rung 'measured' on nothing. So the
+        invariant is now asserted on `active_ladder()`, which is what a run
+        consumes:
+
+          - the base ladder still carries no M3 rung;
+          - with an EMPTY xG map, the active ladder is goals-only;
+          - with a POPULATED map, the M3 rung appears (proving the wiring is
+            real rather than decorative)."""
         from src.live import model_eval
         specs = model_eval.ladder_specs()
         for slug in ("epl-2026", "liga-mx-2026"):
             assert slug in specs, f"{slug} not registered"
-            assert "M3" not in specs[slug].ladder
-            assert specs[slug].xg_map_fn is None
+            spec = specs[slug]
+            assert "M3" not in spec.ladder
+            # empty map -> no M3, whatever the spec is wired with
+            spec.xg_map_fn = lambda: {}
+            ladder, pairs = spec.active_ladder()
+            assert "M3" not in ladder, slug
+            assert all("M3" not in p for p in pairs), slug
+            # populated map -> the rung becomes available and is measured
+            spec.xg_map_fn = lambda: {1: {"home": {"xg": 1.2,
+                                                   "xg_against": 0.8},
+                                          "away": {"xg": 0.8,
+                                                   "xg_against": 1.2}}}
+            ladder, pairs = spec.active_ladder()
+            assert "M3" in ladder, slug
+            assert float(ladder["M3"]["xg_alpha"]) > 0
+            assert ("M3", "M2C") in pairs
+
+    def test_mls_ladder_is_unaffected_by_the_league_xg_wiring(self):
+        """MLS keeps Sportec and its ladder is frozen: its approval rests on
+        those rungs. It must carry no league-xG ladder at all, so no provider
+        read can alter what MLS evaluates."""
+        from src.live import model_eval
+        spec = model_eval.MLS_LADDER_SPEC
+        assert spec.xg_ladder is None
+        assert spec.xg_edge_pairs == ()
+        ladder, pairs = spec.active_ladder()
+        assert ladder is spec.ladder
+        assert pairs == spec.edge_pairs

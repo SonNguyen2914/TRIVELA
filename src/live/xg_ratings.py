@@ -77,12 +77,25 @@ SOURCE_SPORTEC = "sportec"
 # Refusal reasons a club can carry instead of a rating. Each is a DIFFERENT
 # truth and gets different words on any surface — never a blank, never a zero.
 NO_LEAGUE_LOOKUP = "league_not_looked_up"
-LEAGUE_UNRESOLVED = "league_unresolved"
+LEAGUE_NOT_INDEXED = "league_not_indexed"
 LEAGUE_AMBIGUOUS = "league_ambiguous"
 COVERAGE_UNMEASURED = "league_coverage_unmeasured"
 COVERAGE_ABSENT = "league_has_no_xg"
 NOT_INGESTED = "league_not_ingested"
 INSUFFICIENT_SAMPLE = "insufficient_fixtures"
+
+# Human wording for each refusal. Kept beside the constants so a surface
+# cannot invent its own phrasing — and so `league_not_indexed` never gets
+# rendered as "this club has no league", which is a different and false claim.
+REFUSAL_WORDS = {
+    NO_LEAGUE_LOOKUP: "this club's league has not been looked up yet",
+    LEAGUE_NOT_INDEXED: "no xG data for this club's league",
+    LEAGUE_AMBIGUOUS: "club identity ambiguous — not guessing a league",
+    COVERAGE_UNMEASURED: "this league's xG coverage has not been measured",
+    COVERAGE_ABSENT: "no xG data for this club's league",
+    NOT_INGESTED: "no xG data held for this club's league yet",
+    INSUFFICIENT_SAMPLE: "not enough xG fixtures to rate this club",
+}
 
 
 class CrossCompetitionArithmetic(Exception):
@@ -431,6 +444,7 @@ NOT_COMPARABLE_NOTE = (
 
 def _refusal(club: str, reason: str, detail: dict | None = None) -> dict:
     return {"club": club, "rated": False, "reason": reason,
+            "reason_words": REFUSAL_WORDS.get(reason, reason),
             "rating": None, **(detail or {})}
 
 
@@ -441,7 +455,9 @@ def club_rating(club_name: str, as_of: datetime | None = None,
     Never returns a blank or a zero. The refusal reasons are distinct because
     they are distinct facts:
       league_not_looked_up        we have not resolved this club yet
-      league_unresolved           the provider had no unambiguous club/league
+      league_not_indexed          no league we hold contains this club — a
+                                  statement about OUR coverage, never about
+                                  the club having no league
       league_ambiguous            more than one candidate — never guessed
       league_coverage_unmeasured  we have not measured that league's xG
       league_has_no_xg            MEASURED: the provider has no xG there
@@ -451,22 +467,30 @@ def club_rating(club_name: str, as_of: datetime | None = None,
     cl = apifootball.club_league(club_name)
     if cl is None:
         return _refusal(club_name, NO_LEAGUE_LOOKUP)
-    if cl["resolution"] in ("ambiguous_team", "ambiguous_league"):
+    if cl["resolution"] == "ambiguous_team":
         return _refusal(club_name, LEAGUE_AMBIGUOUS,
                         {"resolution": cl["resolution"]})
     if cl["resolution"] != "resolved" or not cl.get("league_id"):
-        return _refusal(club_name, LEAGUE_UNRESOLVED,
+        return _refusal(club_name, LEAGUE_NOT_INDEXED,
                         {"resolution": cl["resolution"]})
-    league = {"league_id": cl["league_id"], "season": cl["season"],
+    # The ROSTER season is not necessarily the season a rating can be fitted
+    # from — the provider's 'current' season is often barely under way while
+    # the xG history sits in the previous one. `league_ratings(season=None)`
+    # picks the season with the data (see apifootball.coverage_for), and the
+    # season reported below is that one, so the label always matches the
+    # fixtures behind the number.
+    league = {"league_id": cl["league_id"],
+              "roster_season": cl["season"],
               "league_name": cl["league_name"],
               "league_country": cl["league_country"]}
-    key = (cl["league_id"], cl["season"])
+    key = cl["league_id"]
     if _cache is not None and key in _cache:
         lr = _cache[key]
     else:
-        lr = league_ratings(cl["league_id"], cl["season"], as_of=as_of)
+        lr = league_ratings(cl["league_id"], as_of=as_of)
         if _cache is not None:
             _cache[key] = lr
+    league["season"] = lr.get("season")
     if lr.get("refused_reason") and not lr.get("ratings"):
         return _refusal(club_name, lr["refused_reason"], {"league": league,
                         "coverage": lr.get("coverage")})
@@ -514,6 +538,64 @@ def fixture_ratings(home_name: str, away_name: str,
             "structurally worthless as forecast evidence regardless."),
         "attribution": RATINGS_ATTRIBUTION,
     }
+
+
+ESPN_FRIENDLY_SCOREBOARD = ("https://site.api.espn.com/apis/site/v2/sports/"
+                            "soccer/club.friendly/scoreboard")
+
+
+def _espn_friendly_fixtures(days: int = 1) -> list[dict]:
+    """Club-friendly fixtures from ESPN, normalized to what this surface needs.
+
+    ESPN is free and unmetered, so enumerating fixtures costs no API-Football
+    quota — which is why a page load can never spend any. Deliberately minimal:
+    `src/friendlies.py` owns the full friendlies viewer (scores, books, market
+    -implied probabilities) and lives on its own branch; this reads only the
+    club names and kickoff needed to attach a rating, and re-implements none of
+    that module's parsing or caching."""
+    import requests
+    from datetime import timedelta
+    out: dict[str, dict] = {}
+    today = datetime.now(timezone.utc)
+    for i in range(max(1, min(days, 8))):
+        day = (today + timedelta(days=i)).strftime("%Y%m%d")
+        try:
+            r = requests.get(ESPN_FRIENDLY_SCOREBOARD, params={"dates": day},
+                             timeout=10)
+            r.raise_for_status()
+            payload = r.json()
+        except Exception as exc:                 # a failed day is skipped, not
+            print(f"[xg_ratings] espn {day} failed: {exc}")   # faked
+            continue
+        for e in payload.get("events") or []:
+            comp = (e.get("competitions") or [{}])[0]
+            sides: dict[str, str] = {}
+            for t in comp.get("competitors") or []:
+                tm = t.get("team") or {}
+                if t.get("homeAway") in ("home", "away"):
+                    sides[t["homeAway"]] = tm.get("displayName") or ""
+            out[e.get("id")] = {"espn_event_id": e.get("id"),
+                                "date": e.get("date"),
+                                "name": e.get("name"),
+                                "home": sides.get("home", ""),
+                                "away": sides.get("away", "")}
+    rows = list(out.values())
+    rows.sort(key=lambda f: f.get("date") or "")
+    return rows
+
+
+def friendly_fixture_ratings(days: int = 1) -> list[dict]:
+    """Every club-friendly fixture in the window with both clubs' ratings.
+
+    One league fit is shared across every club in that league via the cache, so
+    a 28-fixture slate performs a handful of fits rather than 56."""
+    cache: dict = {}
+    rows = []
+    for f in _espn_friendly_fixtures(days=days):
+        rows.append({**f,
+                     "xg": fixture_ratings(f["home"], f["away"],
+                                           _cache=cache)})
+    return rows
 
 
 def summary() -> dict:
