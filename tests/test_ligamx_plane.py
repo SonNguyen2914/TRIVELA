@@ -415,6 +415,38 @@ class TestLigamxModelIsDark:
         assert (ligamx_session.query(PredictionRun)
                 .filter_by(canonical=True).count()) == 0
 
+    def test_boot_registers_the_model_dark(self, ligamx_session,
+                                           monkeypatch):
+        """The boot's model registration must leave approved_for_shadow
+        FALSE — a boot that quietly approved would hand the F3 gate a
+        pass nobody earned. Network steps are stubbed; only the model
+        registration runs for real."""
+        monkeypatch.setattr(config, "LIGAMX_SHADOW_ENABLED", True)
+        monkeypatch.setattr(ligamx_plane, "seed_teams",
+                            lambda: {"stubbed": True})
+        monkeypatch.setattr(ligamx_plane, "ingest_season",
+                            lambda: {"stubbed": True})
+        monkeypatch.setattr(ligamx_plane, "discover_and_map",
+                            lambda: {"stubbed": True})
+        ligamx_plane.boot()
+        row = (ligamx_session.query(ModelVersion)
+               .filter_by(name="liga-mx-2026-v0").one())
+        assert row.approved_for_shadow is False
+        assert ligamx_plane.approval_status()["mode"] == "dark"
+
+    def test_boot_is_a_noop_while_the_plane_switch_is_off(
+            self, ligamx_session, monkeypatch):
+        """The default-off contract: with LIGAMX_SHADOW_ENABLED false
+        (the shipped default) boot must do NOTHING — no teams, no model
+        row, no network attempts."""
+        monkeypatch.setattr(config, "LIGAMX_SHADOW_ENABLED", False)
+        out = ligamx_plane.boot()
+        assert out == {"skipped": "LIGAMX_SHADOW_ENABLED off"}
+        assert (ligamx_session.query(ModelVersion)
+                .filter_by(name="liga-mx-2026-v0").count()) == 0
+        assert (ligamx_session.query(Team)
+                .filter_by(competition_slug="liga-mx-2026").count()) == 0
+
     def test_approval_status_reports_dark(self, ligamx_session):
         model_ligamx.ensure_model_version(approved_for_shadow=False)
         st = ligamx_plane.approval_status()
