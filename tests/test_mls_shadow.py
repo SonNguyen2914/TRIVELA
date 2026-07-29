@@ -2117,13 +2117,18 @@ class TestPredictionRuns:
                             "PLAYER_DATA_FRESH": False}})
         assert runs.t10_locks()["locked"] == 1
         assert runs.t10_locks()["locked"] == 0        # already locked
-        # The T-10 dispatch is an OPERATIONAL heartbeat now: it reports
-        # that the sweep took a lock, and carries NO model probabilities.
-        # Relaying H/D/A to the act-now channel was model-generated
-        # market content reaching the channel a consenting third party
-        # bets from, whatever the "shadow — not advice" label said.
-        assert len(sent) == 1 and "T-10 lock TAKEN" in sent[0]
-        assert "%" not in sent[0], "no model probabilities on the wire"
+        # The T-10 dispatch is an OPERATIONAL lock record carrying the
+        # locked H/D/A. Son restored the probabilities on 2026-07-29: the
+        # detail and action webhooks are DISTINCT in Railway and he is
+        # currently the channel's only reader, so this is the operator
+        # reading his own instrument rather than a signal broadcast to a
+        # bettor. If his friend is ever given channel access the call
+        # site becomes a model signal and must be refused while the money
+        # lock is on — the classification rests on the readership.
+        assert len(sent) == 1 and "PAPER · MLS T-10 lock" in sent[0]
+        # the locked H/D/A travel, formatted — all three legs present
+        assert all(leg in sent[0] for leg in ("H ", "D ", "A ")), sent[0]
+        assert sent[0].count("%") == 3, sent[0]
         lock = live_session.query(PredictionRun).filter_by(
             run_type="t10", canonical=True).one()
         assert lock.status == "complete"

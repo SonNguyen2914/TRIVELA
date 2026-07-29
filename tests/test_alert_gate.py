@@ -330,18 +330,23 @@ class TestOperationalTelemetryStillDispatches:
         assert len(wire) == 3          # action + detail + ntfy legs
         assert alerts.recent_refusals() == []
 
-    def test_the_t10_heartbeat_is_operational_and_carries_no_odds(self):
-        """The one call site that was SPLIT rather than classified whole.
-        It used to relay the locked model's H/D/A to the act-now
-        channel; the operational half (the sweep took a lock) stays, the
-        market view does not."""
+    def test_the_t10_lock_record_is_operational_and_carries_the_odds(self):
+        """The one call site whose class rests on READERSHIP, not wording.
+
+        The gate work stripped the locked model's H/D/A from this alert.
+        Son restored it on 2026-07-29 on two facts that reasoning lacked:
+        the detail and action webhooks are DISTINCT in Railway, and he is
+        currently the channel's only reader — his friend bets on what Son
+        concludes and relays, never on this feed. So this is the operator
+        reading his own instrument, and OPERATIONAL is honest for it.
+
+        If the friend is ever given channel access, this call site becomes
+        a model signal and must be refused while the money lock is on."""
         src = open(os.path.join(REPO_ROOT, "src", "live", "runs.py"),
                    encoding="utf-8").read()
-        assert "T-10 lock TAKEN" in src
+        assert "PAPER · MLS T-10 lock" in src
+        assert "raw_probability for c in o" in src
         assert "dispatch_class=OPERATIONAL" in src
-        # the behavioural assertion (nothing shaped like a probability on
-        # the wire) lives with the T-10 lock test in test_mls_shadow.py,
-        # where the whole sweep actually runs
 
 
 # ===========================================================================

@@ -371,35 +371,41 @@ def t10_locks() -> dict:
                     paper.paper_trade_lock(run.id)
                 except Exception as exc:
                     print(f"[runs] t10 paper {f.espn_event_id}: {exc}")
-                # 14. heartbeat only AFTER commit — OPERATIONAL.
+                # 14. lock record only AFTER commit — OPERATIONAL, and it
+                # carries the locked H/D/A.
                 #
-                # This used to relay the locked model's H/D/A
-                # probabilities to the act-now channel under a "shadow —
-                # not advice" label. That label is honour-system: three
-                # per-match probabilities are a market view, they reach
-                # the channel a consenting third party bets from, and a
-                # scheduled job produced them — which is exactly the
-                # class REAL_MONEY_SIGNALS_ENABLED governs.
+                # The round-4 alert-gate work stripped these numbers,
+                # reasoning that per-match probabilities on the act-now
+                # channel are a market view reaching a real-money reader.
+                # Son restored them on 2026-07-29 on two facts that
+                # reasoning lacked: the detail and action channels are
+                # configured DISTINCTLY in Railway, and he is
+                # currently the channel's ONLY reader — his friend bets on
+                # what Son concludes and relays, never on this feed. So
+                # this is the operator reading his own instrument.
                 #
-                # What is genuinely operational is that the sweep RAN
-                # and took a lock, so that is what now goes out: the
-                # fixture and the model name, no probabilities. The
-                # numbers remain on the operator surfaces
-                # (/api/mls/model, /api/admin/mls/*) and in the corpus,
-                # where reading them is a deliberate act.
+                # Note what the classification rests on: a fact about the
+                # READERSHIP, not about the wording. If the friend is ever
+                # given channel access this call site becomes a
+                # MODEL_SIGNAL and must be refused while the money lock is
+                # on. Recorded so the next reader inherits the condition
+                # rather than the conclusion.
                 try:
                     from src.alerts import OPERATIONAL, send_alert
+                    o = (s.query(PredictionContract)
+                         .filter_by(prediction_run_id=run.id).all())
+                    probs = {c.outcome_key: c.raw_probability for c in o}
                     send_alert(
-                        f"📋 MLS T-10 lock TAKEN — fixture "
-                        f"{f.espn_event_id} "
-                        f"({model_mls.MODEL_NAME}, shadow plane). "
-                        f"Model probabilities are not relayed: the "
-                        f"money lock governs model-generated content. "
-                        f"Read the lock on the operator surface.",
+                        f"📋 PAPER · MLS T-10 lock — fixture "
+                        f"{f.espn_event_id}: "
+                        f"H {probs.get('home_win', 0):.0%} / "
+                        f"D {probs.get('draw', 0):.0%} / "
+                        f"A {probs.get('away_win', 0):.0%} "
+                        f"({model_mls.MODEL_NAME}, shadow — not advice)",
                         title="MLS shadow lock",
                         dispatch_class=OPERATIONAL)
                 except Exception as exc:
-                    print(f"[runs] t10 heartbeat failed: {exc}")
+                    print(f"[runs] t10 lock record failed: {exc}")
         return {"locked": locked}
     except Exception as exc:
         s.rollback()
