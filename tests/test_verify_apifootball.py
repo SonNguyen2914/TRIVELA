@@ -456,6 +456,21 @@ class TestCheck4Leakage:
         assert r["status"] == vaf.INDETERMINATE
         assert "never as clean" in " ".join(r["reasons"])
 
+    @pytest.mark.parametrize("short", ["1H", "HT", "2H", "FT", "PST", None])
+    def test_a_future_kickoff_is_not_enough_the_status_must_be_NS(self, short):
+        """Found by mutation testing: dropping the status check left the
+        timestamp check still catching a past kickoff, so nothing proved the
+        status was consulted at all. An in-play fixture with a future
+        timestamp must not be accepted as a leakage probe."""
+        odd = json.loads(json.dumps(self.NS))
+        odd["fixture"]["status"]["short"] = short
+        odd["fixture"]["timestamp"] = NOW_TS + 3600
+        r = vaf.check4_league("mls", odd,
+                              payload("recorded_statistics_prematch_empty"),
+                              NOW_TS)
+        assert r["status"] == vaf.INDETERMINATE
+        assert "has not kicked off" in " ".join(r["reasons"])
+
     def test_a_missing_not_started_fixture_is_indeterminate_which_fails(self):
         r = vaf.check4_league("mls", None, {"response": []}, NOW_TS)
         assert r["status"] == vaf.INDETERMINATE
