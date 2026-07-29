@@ -677,52 +677,6 @@ def epl_match(event_id: str):
     if not event_id.isdigit() or len(event_id) > 12:
         raise HTTPException(404, "unknown event")
     out = epl.match_summary(event_id)
-# --- La Liga (la-liga-2026) — BEGIN additive block -------------------------
-# Read-only mirrors of the MLS data-layer routes, backed by src/laliga.
-# The model is DARK (no approval decision), so /odds serves the explicit
-# empty state and /match carries model=None — surfaces must say "no
-# prediction", never render a zero that reads as one.
-
-@app.get("/api/laliga/scoreboard")
-def laliga_scoreboard(date: str | None = Query(None, pattern=r"^\d{8}$")):
-    from src import laliga
-    return {"fixtures": laliga.scoreboard(date),
-            "generated_at": utcnow().isoformat()}
-
-
-@app.get("/api/laliga/schedule")
-def laliga_schedule(days: int = Query(7, ge=1, le=14)):
-    from src import laliga
-    return {"fixtures": laliga.schedule(days),
-            "generated_at": utcnow().isoformat()}
-
-
-@app.get("/api/laliga/standings")
-def laliga_standings():
-    """Single league table. Preseason ESPN serves 20 all-zero rows —
-    that state returns tables=[] with preseason=true (the explicit
-    empty state; an all-zero table is a fabrication, not standings)."""
-    from src import laliga
-    return {**laliga.standings(), "generated_at": utcnow().isoformat()}
-
-
-@app.get("/api/laliga/markets")
-def laliga_markets():
-    """Kalshi books + futures + the series-coverage probe. `kalshi`
-    states exactly what is verified (series existence) and what is not
-    (2026-27 coverage) — zero open books is the honest answer today."""
-    from src import laliga
-    return {"games": laliga.game_books(), "futures": laliga.futures(),
-            "kalshi": laliga.series_probe(),
-            "generated_at": utcnow().isoformat()}
-
-
-@app.get("/api/laliga/match/{event_id}")
-def laliga_match(event_id: str):
-    from src import laliga
-    if not event_id.isdigit() or len(event_id) > 12:
-        raise HTTPException(404, "unknown event")
-    out = laliga.match_summary(event_id)
     if out is None:
         raise HTTPException(502, "summary unavailable")
     book = None
@@ -828,6 +782,58 @@ def epl_approval():
         print(f"[epl] approval failed: {exc}")
         raise HTTPException(503, "approval unavailable")
 # === end EPL block =========================================================
+
+
+# --- La Liga (la-liga-2026) — BEGIN additive block -------------------------
+# Read-only mirrors of the MLS data-layer routes, backed by src/laliga.
+# The model is DARK (no approval decision), so /odds serves the explicit
+# empty state and /match carries model=None — surfaces must say "no
+# prediction", never render a zero that reads as one.
+
+@app.get("/api/laliga/scoreboard")
+def laliga_scoreboard(date: str | None = Query(None, pattern=r"^\d{8}$")):
+    from src import laliga
+    return {"fixtures": laliga.scoreboard(date),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/laliga/schedule")
+def laliga_schedule(days: int = Query(7, ge=1, le=14)):
+    from src import laliga
+    return {"fixtures": laliga.schedule(days),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/laliga/standings")
+def laliga_standings():
+    """Single league table. Preseason ESPN serves 20 all-zero rows —
+    that state returns tables=[] with preseason=true (the explicit
+    empty state; an all-zero table is a fabrication, not standings)."""
+    from src import laliga
+    return {**laliga.standings(), "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/laliga/markets")
+def laliga_markets():
+    """Kalshi books + futures + the series-coverage probe. `kalshi`
+    states exactly what is verified (series existence) and what is not
+    (2026-27 coverage) — zero open books is the honest answer today."""
+    from src import laliga
+    return {"games": laliga.game_books(), "futures": laliga.futures(),
+            "kalshi": laliga.series_probe(),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/laliga/match/{event_id}")
+def laliga_match(event_id: str):
+    from src import laliga
+    if not event_id.isdigit() or len(event_id) > 12:
+        raise HTTPException(404, "unknown event")
+    out = laliga.match_summary(event_id)
+    if out is None:
+        raise HTTPException(502, "summary unavailable")
+    book = None
+    books = []
     try:
         books = laliga.find_all_books(
             out.get("date"),
