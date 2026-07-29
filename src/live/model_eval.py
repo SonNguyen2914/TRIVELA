@@ -24,6 +24,20 @@ The ladder (evaluable rungs; M3+ await the inputs they need):
 
 Rolling-origin throughout: a fixture is predicted only from fixtures
 that kicked off before it — no leakage by construction.
+
+COMPETITION-KEYED since 2026-07-29 (backlog S-5). This module was
+MLS-only: it imported MLS's hyperparameters at module scope and read
+MLS's config constants inline, so no other league could be run up the
+ladder. Every function now takes an optional `LadderSpec` and DEFAULTS TO
+MLS, exactly as `runs.py` and `ingest.py` were generalized — so existing
+MLS call sites and their numbers are unchanged, and that identity is
+proven by a control (`tests/test_ladder_parity.py`) that runs the
+pre-refactor module out of the git object store beside this one and
+requires byte-identical reports.
+
+`src/live/model_mls.py` is deliberately NOT modified by that work: it is
+inside the MLS engine signature, so any source change there invalidates
+the live MLS approval. The MLS spec READS it.
 """
 from __future__ import annotations
 
@@ -39,6 +53,10 @@ from src.live.model_mls import HALF_LIFE_DAYS, MIN_GAMES, MODEL_NAME
 
 EVAL_VERSION = "model-eval-v1"
 APPROVAL_POLICY_VERSION = "shadow-approval-v1"
+# A ladder run over PRIOR-SEASON history is a strictly weaker instrument
+# than MLS's live-plane ladder, and gets its own policy name so no record
+# can present the two as the same decision. See `replay_approval_policy`.
+REPLAY_APPROVAL_POLICY_VERSION = "shadow-approval-replay-v1"
 MIN_SCORED_FOR_APPROVAL = 30
 GOAL_GRID = 15
 THREE = ("home_win", "draw", "away_win")
@@ -70,6 +88,229 @@ FUTURE_RUNGS = {
           "consumed once measured to help",
 }
 
+# The pairwise edges MLS reports, in MLS's order. Frozen here rather than
+# inline in evaluate_ladder so a league with fewer rungs can declare its
+# own set without perturbing this one.
+MLS_EDGE_PAIRS = (("M2", "M0"), ("M2", "M1"), ("M1", "M0"),
+                  ("M2C", "M2"), ("M2C", "M0"),
+                  ("M3", "M2C"), ("M3", "M0"))
+
+# A goals-only ladder: no xG rung, because for these leagues no
+# trustworthy team-level xG source exists in this stack (see
+# model_epl.py / model_ligamx.py docstrings). An M3 rung here would claim
+# a measurement that cannot be made.
+GOALS_ONLY_LADDER = {
+    "M0": {"use_ratings": False, "recency": False, "shrink": 0.0,
+           "desc": "league scoring + venue split"},
+    "M1": {"use_ratings": True, "recency": False, "shrink": 1.0,
+           "desc": "team ratings, equal-weighted, minimal pooling"},
+    "M2": {"use_ratings": True, "recency": True, "shrink": 24.0,
+           "desc": "+ recency + partial pooling"},
+    "M2C": {"use_ratings": True, "recency": True, "shrink": 24.0,
+            "calibrate": True,
+            "desc": "+ calibration (shrink the 3-way toward uniform)"},
+}
+GOALS_ONLY_EDGE_PAIRS = (("M2", "M0"), ("M2", "M1"), ("M1", "M0"),
+                         ("M2C", "M2"), ("M2C", "M0"))
+GOALS_ONLY_FUTURE_RUNGS = {
+    "M3": "provider xG ratings — NO trustworthy team-level xG source "
+          "exists for this league in this stack, so this rung is not "
+          "merely unbuilt, it is unavailable",
+    "M4": "availability / lineup effects — no lineup capture yet",
+    "M5": "goalkeeper effects — no GK capture yet",
+}
+
+
+class LadderSpec:
+    """What one competition needs to be run up the ladder.
+
+    Hyperparameters are READ from the league's own model module at call
+    time (never copied here) so a spec cannot silently drift from the
+    model it claims to evaluate — the MLS spec in particular must reflect
+    `model_mls` exactly, since that module may not be edited.
+    """
+
+    def __init__(self, slug: str, model_module, ladder: dict,
+                 edge_pairs, future_rungs: dict,
+                 calibration_alpha_fn=None, xg_map_fn=None,
+                 corpus_version_fn=None, model_parameters_fn=None,
+                 label: str = ""):
+        self.slug = slug
+        self.model = model_module
+        self.ladder = ladder
+        self.edge_pairs = tuple(edge_pairs)
+        self.future_rungs = future_rungs
+        self.label = label or slug
+        # config is read at call time, so an env flip needs no re-import
+        self._calibration_alpha_fn = calibration_alpha_fn
+        # None == this league has no provider xG (not "we didn't wire it")
+        self.xg_map_fn = xg_map_fn
+        self._corpus_version_fn = corpus_version_fn
+        self._model_parameters_fn = model_parameters_fn
+
+    # --- hyperparameters, read from the model module -------------------
+    @property
+    def model_name(self) -> str:
+        return self.model.MODEL_NAME
+
+    def half_life_days(self) -> float:
+        return self.model.HALF_LIFE_DAYS
+
+    def min_games(self) -> int:
+        return self.model.MIN_GAMES
+
+    def result_shrink(self) -> float:
+        return self.model.RESULT_SHRINK
+
+    def xg_shrink_default(self) -> float:
+        return float(getattr(self.model, "XG_SHRINK_GAMES", 0.0))
+
+    def calibration_alpha(self) -> float:
+        if self._calibration_alpha_fn is None:
+            return 0.0
+        return float(self._calibration_alpha_fn())
+
+    def calibrate(self, three: dict, alpha: float) -> dict:
+        return self.model.calibrate(three, alpha)
+
+    def completed(self, s, before=None):
+        return self.model._completed(s, before=before)
+
+    def xg_map(self) -> dict:
+        return self.xg_map_fn() if self.xg_map_fn else {}
+
+    def latest_corpus_version(self) -> str | None:
+        """The published corpus this league's approval can bind to. Only
+        MLS publishes one; for every other league this is honestly None
+        rather than borrowing MLS's."""
+        return (self._corpus_version_fn() if self._corpus_version_fn
+                else None)
+
+    def model_parameters(self) -> dict:
+        if self._model_parameters_fn is not None:
+            return self._model_parameters_fn()
+        return {
+            "model_version": self.model_name,
+            "engine_signature":
+                self.model.engine_signature()["signature_hash"],
+            "artifact_schema": getattr(
+                self.model, "INPUT_ARTIFACT_SCHEMA", None),
+            "parameters": {
+                "goals_shrink_games": getattr(
+                    self.model, "SHRINK_GAMES", None),
+                "half_life_days": self.half_life_days(),
+                "min_games": self.min_games(),
+                "result_shrink": self.result_shrink(),
+                "calibration_alpha": self.calibration_alpha(),
+            },
+            "parameter_provenance": (
+                "STARTING POINTS carried from MLS league play, NOT swept "
+                "on this league's own data unless the decision document "
+                "says otherwise"),
+        }
+
+
+def _mls_calibration_alpha() -> float:
+    import config
+    return config.MLS_CALIBRATION_ALPHA
+
+
+def _mls_xg_map() -> dict:
+    from src.live import mls_stats
+    return mls_stats.team_xg_map()
+
+
+def _mls_corpus_version() -> str | None:
+    from src.live import corpus as _c
+    return _c.latest_published_version()
+
+
+def _mls_model_parameters() -> dict:
+    from src.live import corpus as _c
+    return _c._model_parameters()
+
+
+def _mls_spec() -> LadderSpec:
+    from src.live import model_mls
+    return LadderSpec(
+        slug="mls-2026", model_module=model_mls, ladder=LADDER,
+        edge_pairs=MLS_EDGE_PAIRS, future_rungs=FUTURE_RUNGS,
+        calibration_alpha_fn=_mls_calibration_alpha,
+        xg_map_fn=_mls_xg_map,
+        corpus_version_fn=_mls_corpus_version,
+        model_parameters_fn=_mls_model_parameters,
+        label="MLS")
+
+
+MLS_LADDER_SPEC = _mls_spec()
+
+# The registry. A new league joins by ADDING A ROW — nothing else. That is
+# the load-bearing property for La Liga, which lives on `feat-la-liga`
+# (not yet rebased onto the EPL/Liga MX stack): when its module lands, one
+# entry here gives it the ladder, the replay and the approval path.
+#
+# (module path, config-constant prefix, alert label)
+_DARK_LEAGUE_REGISTRY = (
+    ("epl-2026", "src.live.model_epl", "EPL_CALIBRATION_ALPHA", "EPL"),
+    ("liga-mx-2026", "src.live.model_ligamx", "LIGAMX_CALIBRATION_ALPHA",
+     "LIGAMX"),
+    # La Liga: uncomment the row once src/live/model_laliga.py exists on
+    # this branch. Absent modules are skipped, not fatal, so this file
+    # stays importable on branches where a league has not landed yet.
+    ("la-liga-2026", "src.live.model_laliga", "LALIGA_CALIBRATION_ALPHA",
+     "LALIGA"),
+)
+
+
+def _config_alpha_fn(name: str):
+    def _fn() -> float:
+        import config
+        return float(getattr(config, name, 0.0) or 0.0)
+    return _fn
+
+
+def _build_specs() -> dict:
+    import importlib
+    specs = {MLS_LADDER_SPEC.slug: MLS_LADDER_SPEC}
+    for slug, module_path, alpha_const, label in _DARK_LEAGUE_REGISTRY:
+        try:
+            mod = importlib.import_module(module_path)
+        except ImportError:
+            # the league's model module is not on this branch yet — the
+            # registry row is a declaration, not a promise
+            continue
+        specs[slug] = LadderSpec(
+            slug=slug, model_module=mod, ladder=GOALS_ONLY_LADDER,
+            edge_pairs=GOALS_ONLY_EDGE_PAIRS,
+            future_rungs=GOALS_ONLY_FUTURE_RUNGS,
+            calibration_alpha_fn=_config_alpha_fn(alpha_const),
+            xg_map_fn=None, label=label)
+    return specs
+
+
+_SPECS: dict | None = None
+
+
+def ladder_specs() -> dict:
+    """{slug: LadderSpec} for every competition whose model module is
+    importable on this branch."""
+    global _SPECS
+    if _SPECS is None:
+        _SPECS = _build_specs()
+    return _SPECS
+
+
+def ladder_spec(slug: str | None = None) -> LadderSpec:
+    """Resolve a spec by slug; None means MLS (the default that keeps
+    every pre-existing call site meaning what it meant)."""
+    if slug is None:
+        return MLS_LADDER_SPEC
+    spec = ladder_specs().get(slug)
+    if spec is None:
+        raise KeyError(f"no ladder spec for competition {slug!r} "
+                       f"(known: {sorted(ladder_specs())})")
+    return spec
+
 
 def _utc(dt):
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
@@ -96,14 +337,18 @@ def analytic_3way(lam_h: float, lam_a: float) -> dict:
 
 
 def fit_variant(fixtures, as_of, cfg: dict,
-                xg_by_fixture: dict | None = None) -> dict | None:
+                xg_by_fixture: dict | None = None,
+                spec: LadderSpec | None = None) -> dict | None:
     """Ratings + league params under a ladder config. Pure function of
     its inputs; the walk-forward calls it with prior-only slices. Mirrors
-    model_mls.fit — including the xG-based rating blend (cfg['xg_alpha'])
-    so the M3 rung measures exactly the deployed feature."""
+    the league model's fit — including the xG-based rating blend
+    (cfg['xg_alpha']) so the M3 rung measures exactly the deployed
+    feature. `spec` defaults to MLS."""
     if not fixtures:
         return None
-    from src.live.model_mls import RESULT_SHRINK, XG_SHRINK_GAMES
+    spec = spec or MLS_LADDER_SPEC
+    half_life = spec.half_life_days()
+    RESULT_SHRINK = spec.result_shrink()
     # xG weight: an explicit cfg value (offline sweeps) wins; otherwise the
     # M3 rung tracks the deployed config so the ladder measures what ships
     xg_alpha = cfg.get("xg_alpha")
@@ -113,7 +358,7 @@ def fit_variant(fixtures, as_of, cfg: dict,
     xg_alpha = float(xg_alpha or 0.0)
     # xG carries its OWN, lighter prior than goals (see XG_SHRINK_GAMES);
     # a sweep may override it explicitly
-    xg_shrink = float(cfg.get("xg_shrink", XG_SHRINK_GAMES))
+    xg_shrink = float(cfg.get("xg_shrink", spec.xg_shrink_default()))
     gf, ga, wsum, games = {}, {}, {}, {}
     xgf, xga, xwsum = {}, {}, {}
     wins, draws, losses = {}, {}, {}
@@ -123,7 +368,7 @@ def fit_variant(fixtures, as_of, cfg: dict,
     for f in fixtures:
         if cfg["recency"]:
             days = (as_of - _utc(f.current_kickoff_utc)).total_seconds() / 86400
-            w = 0.5 ** (max(days, 0.0) / HALF_LIFE_DAYS)
+            w = 0.5 ** (max(days, 0.0) / half_life)
         else:
             w = 1.0
         if f.home_goals > f.away_goals:
@@ -188,14 +433,18 @@ def fit_variant(fixtures, as_of, cfg: dict,
             "calibrate": cfg.get("calibrate", False)}
 
 
-def predict_variant(model: dict, fixture) -> dict | None:
-    """Analytic 3-way for one fixture under a fitted variant."""
+def predict_variant(model: dict, fixture,
+                    spec: LadderSpec | None = None) -> dict | None:
+    """Analytic 3-way for one fixture under a fitted variant. `spec`
+    defaults to MLS."""
+    spec = spec or MLS_LADDER_SPEC
+    min_games = spec.min_games()
     lh_v, la_v = model["venue_home"], model["venue_away"]
     if model["use_ratings"]:
         h = model["ratings"].get(fixture.home_team_id)
         a = model["ratings"].get(fixture.away_team_id)
-        if h is None or a is None or h["games"] < MIN_GAMES \
-                or a["games"] < MIN_GAMES:
+        if h is None or a is None or h["games"] < min_games \
+                or a["games"] < min_games:
             return None
         lam_h = model["league"] * h["attack"] * a["defence"] * lh_v
         lam_a = model["league"] * a["attack"] * h["defence"] * la_v
@@ -205,9 +454,7 @@ def predict_variant(model: dict, fixture) -> dict | None:
         lam_a = model["league"] * la_v
     three = analytic_3way(lam_h, lam_a)
     if model.get("calibrate"):
-        import config
-        from src.live.model_mls import calibrate
-        three = calibrate(three, config.MLS_CALIBRATION_ALPHA)
+        three = spec.calibrate(three, spec.calibration_alpha())
     return three
 
 
@@ -233,21 +480,23 @@ def _score_fixture(p: dict, result: str) -> dict:
     }
 
 
-def evaluate_ladder(n_boot: int = 1000, seed: int = 12345) -> dict:
-    """Rolling-origin evaluation of every evaluable rung with analytic
-    scoring and match-cluster bootstrap CIs on the pairwise edges."""
-    if not plane_ready():
-        return {"error": "dormant"}
-    from src.live.model_mls import _completed
-    s = get_session()
-    try:
-        rows = _completed(s)
-    finally:
-        s.close()
-    # provider xG per fixture, loaded once (M3); rungs without xg_alpha
-    # ignore it. Keyed by fixture id, so slicing `rows` restricts it too.
-    from src.live import mls_stats
-    xg_map = mls_stats.team_xg_map()
+def ladder_from_fixtures(rows, spec: LadderSpec | None = None,
+                         n_boot: int = 1000, seed: int = 12345,
+                         xg_by_fixture: dict | None = None) -> dict:
+    """The ladder itself, over an ORDERED list of completed fixtures.
+
+    Extracted from `evaluate_ladder` so the same scoring, the same
+    rolling origin and the same match-cluster bootstrap serve both the
+    live-plane read and the prior-season replay — one instrument, two
+    input sources, rather than a second implementation that could drift.
+
+    `rows` must be sorted by kickoff ascending and carry
+    current_kickoff_utc / home_team_id / away_team_id / home_goals /
+    away_goals (plus `id` when an xG map is supplied).
+    """
+    spec = spec or MLS_LADDER_SPEC
+    ladder = spec.ladder
+    xg_map = xg_by_fixture or {}
     # per-fixture per-variant scores (only fixtures every variant can
     # predict, so the comparison is on identical ground)
     per_fixture: list[dict] = []
@@ -255,9 +504,10 @@ def evaluate_ladder(n_boot: int = 1000, seed: int = 12345) -> dict:
         prior, as_of = rows[:i], _utc(f.current_kickoff_utc)
         preds = {}
         ok = True
-        for name, cfg in LADDER.items():
-            m = fit_variant(prior, as_of, cfg, xg_by_fixture=xg_map)
-            p = predict_variant(m, f) if m else None
+        for name, cfg in ladder.items():
+            m = fit_variant(prior, as_of, cfg, xg_by_fixture=xg_map,
+                            spec=spec)
+            p = predict_variant(m, f, spec=spec) if m else None
             if p is None:
                 ok = False
                 break
@@ -267,7 +517,7 @@ def evaluate_ladder(n_boot: int = 1000, seed: int = 12345) -> dict:
         result = ("home_win" if f.home_goals > f.away_goals else
                   "away_win" if f.away_goals > f.home_goals else "draw")
         per_fixture.append({name: _score_fixture(preds[name], result)
-                            for name in LADDER})
+                            for name in ladder})
     n = len(per_fixture)
     if n == 0:
         return {"n_scored": 0, "note": "no fixtures scorable by all rungs"}
@@ -280,14 +530,12 @@ def evaluate_ladder(n_boot: int = 1000, seed: int = 12345) -> dict:
         name: {"log_loss": round(mean(name, "log_loss", full), 4),
                "brier": round(mean(name, "brier", full), 4),
                "rps": round(mean(name, "rps", full), 4),
-               "desc": LADDER[name]["desc"]}
-        for name in LADDER}
+               "desc": ladder[name]["desc"]}
+        for name in ladder}
 
     # match-cluster bootstrap: resample fixtures with replacement
     rng = np.random.default_rng(seed)
-    pairs = [("M2", "M0"), ("M2", "M1"), ("M1", "M0"),
-             ("M2C", "M2"), ("M2C", "M0"),
-             ("M3", "M2C"), ("M3", "M0")]
+    pairs = [tuple(p) for p in spec.edge_pairs]
     boot = {f"{a}_vs_{b}": [] for a, b in pairs}
     for _ in range(n_boot):
         idx = rng.integers(0, n, n)
@@ -312,8 +560,31 @@ def evaluate_ladder(n_boot: int = 1000, seed: int = 12345) -> dict:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "n_scored": n, "n_bootstrap": n_boot,
         "variants": variants, "edges": edges,
-        "future_rungs": FUTURE_RUNGS,
+        "future_rungs": spec.future_rungs,
     }
+
+
+def evaluate_ladder(n_boot: int = 1000, seed: int = 12345,
+                    spec: LadderSpec | None = None) -> dict:
+    """Rolling-origin evaluation of every evaluable rung with analytic
+    scoring and match-cluster bootstrap CIs on the pairwise edges, over
+    THIS competition's completed fixtures in the LIVE plane. `spec`
+    defaults to MLS, so every pre-existing call site is unchanged."""
+    if not plane_ready():
+        return {"error": "dormant"}
+    spec = spec or MLS_LADDER_SPEC
+    s = get_session()
+    try:
+        rows = spec.completed(s)
+    finally:
+        s.close()
+    # provider xG per fixture, loaded once (M3); rungs without xg_alpha
+    # ignore it. Keyed by fixture id, so slicing `rows` restricts it too.
+    # A league with no xG source supplies no map at all — which is the
+    # honest state, not a zero-filled one.
+    xg_map = spec.xg_map()
+    return ladder_from_fixtures(rows, spec=spec, n_boot=n_boot, seed=seed,
+                                xg_by_fixture=xg_map)
 
 
 def evaluate_deployed(n_sims: int | None = None, seed: int = 12345) -> dict:
