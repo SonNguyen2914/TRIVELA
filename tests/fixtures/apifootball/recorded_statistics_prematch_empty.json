@@ -1,0 +1,21 @@
+{
+ "_provenance": {
+  "kind": "RECORDED",
+  "note": "RECORDED verbatim from a live API-Football PRO response on 2026-07-29, extracted from research_archive/apifootball_verification_2026-07-29.run2.json (request label 'prematch_statistics:mls:1490361'). Real captured traffic, not a hand-written shape.",
+  "fixture": "MLS 1490361, status NS, kickoff 2026-07-31T23:30Z",
+  "proves": "CHECK 4 PASSES on an empty payload — the one check where absence is the desired result"
+ },
+ "payload": {
+  "get": "fixtures/statistics",
+  "parameters": {
+   "fixture": "1490361"
+  },
+  "errors": [],
+  "results": 0,
+  "paging": {
+   "current": 1,
+   "total": 1
+  },
+  "response": []
+ }
+}

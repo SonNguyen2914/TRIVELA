@@ -297,7 +297,7 @@ def load_key() -> tuple[str, str, list[str]]:
         return "", str(KEY_FILE.name), problems
     # .strip() on purpose: dashboard copy-paste smuggles trailing newlines
     # into secrets, and a whitespace-damaged one already failed silently once
-    # in this repo (NTFY_TOPIC, 2026-07-22).
+    # in this repo — the ntfy push-topic setting, 2026-07-22.
     key = raw.strip()
     if not key:
         problems.append(f"{KEY_FILE.name} is empty")

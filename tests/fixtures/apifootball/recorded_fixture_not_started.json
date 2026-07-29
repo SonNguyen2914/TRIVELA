@@ -1,0 +1,83 @@
+{
+ "_provenance": {
+  "kind": "RECORDED",
+  "note": "The not-started MLS fixture object as captured in the season-2026 fixtures pull, from research_archive/apifootball_verification_2026-07-29.run2.json (report.per_league.mls.not_started_fixture). Wrapped in a one-element response envelope for the tests.",
+  "proves": "the NS + future-kickoff precondition CHECK 4 requires"
+ },
+ "payload": {
+  "response": [
+   {
+    "fixture": {
+     "id": 1490361,
+     "referee": null,
+     "timezone": "UTC",
+     "date": "2026-07-31T23:30:00+00:00",
+     "timestamp": 1785540600,
+     "periods": {
+      "first": null,
+      "second": null
+     },
+     "venue": {
+      "id": null,
+      "name": "Yankee Stadium",
+      "city": "New York"
+     },
+     "status": {
+      "long": "Not Started",
+      "short": "NS",
+      "elapsed": null,
+      "extra": null
+     }
+    },
+    "league": {
+     "id": 253,
+     "name": "Major League Soccer",
+     "country": "USA",
+     "logo": "https://media.api-sports.io/football/leagues/253.png",
+     "flag": "https://media.api-sports.io/flags/us.svg",
+     "season": 2026,
+     "round": "Regular Season - 18",
+     "standings": true
+    },
+    "teams": {
+     "home": {
+      "id": 1604,
+      "name": "New York City FC",
+      "logo": "https://media.api-sports.io/football/teams/1604.png",
+      "winner": null
+     },
+     "away": {
+      "id": 1601,
+      "name": "Toronto FC",
+      "logo": "https://media.api-sports.io/football/teams/1601.png",
+      "winner": null
+     }
+    },
+    "goals": {
+     "home": null,
+     "away": null
+    },
+    "score": {
+     "halftime": {
+      "home": null,
+      "away": null
+     },
+     "fulltime": {
+      "home": null,
+      "away": null
+     },
+     "extratime": {
+      "home": null,
+      "away": null
+     },
+     "penalty": {
+      "home": null,
+      "away": null
+     }
+    }
+   }
+  ],
+  "results": 1,
+  "errors": []
+ }
+}
