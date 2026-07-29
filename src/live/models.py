@@ -21,8 +21,9 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Index,
-                        Integer, String, Text, UniqueConstraint, text)
+from sqlalchemy import (Boolean, CheckConstraint, Column, DateTime, Float,
+                        ForeignKey, Index, Integer, String, Text,
+                        UniqueConstraint, text)
 from sqlalchemy.orm import declarative_base
 
 LiveBase = declarative_base()
@@ -786,7 +787,52 @@ class HunterFinding(LiveBase):
         Index("uq_hunter_finding_open_key", "finding_key", unique=True,
               postgresql_where=text("status = 'open'"),
               sqlite_where=text("status = 'open'")),
+        # observation clocks may never regress on a row: last_seen_at is
+        # a LATER observation of the same anomaly, never an earlier one.
+        # Overlapping Railway containers commit out of order, so this is
+        # a database invariant, not a process-local one (P0-3).
+        CheckConstraint("last_seen_at IS NULL OR "
+                        "last_seen_at >= first_captured_at",
+                        name="ck_hunter_finding_clock_monotonic"),
+        # POST_CERTAINTY only: the quote must have been captured AFTER
+        # finality was observed. A pre-final price paired with a settled
+        # outcome manufactures a margin that never existed, so the
+        # ordering is enforced by the TABLE and not merely by the
+        # detector that happens to write it (P0-2).
+        CheckConstraint("espn_captured_at IS NULL OR "
+                        "first_captured_at >= espn_captured_at",
+                        name="ck_hunter_finding_quote_after_finality"),
     )
+
+
+class HunterObservationWatermark(LiveBase):
+    """The newest observation clock any process has applied to one
+    hunter finding_key — the cross-process chronological reconciliation
+    point (P0-3).
+
+    Railway deploys overlap old and new containers deliberately
+    (teardown is OFF), so an OLDER container's scan can legitimately
+    commit AFTER a newer one's. Without a watermark that straggler
+    re-opens a finding a newer clean scan already expired, and can send
+    an alert about a book that no longer exists. Advancing this row is
+    an atomic `UPDATE ... WHERE observed_through < :clock`: the DATABASE
+    decides which write is newest — exactly like the leased alert claim
+    — and a losing (stale) write is ignored rather than applied.
+
+    Keyed by finding_key rather than by finding id on purpose: the
+    watermark has to OUTLIVE the row it guards, or the straggler would
+    simply insert a fresh open row after the expiry.
+
+    Growth: one row per DISTINCT finding key ever observed (type x
+    series x event x market) — the same order as hunter_finding itself
+    and far smaller per row, written only when a key's observation
+    clock actually advances, never once per cycle."""
+    __tablename__ = "hunter_observation_watermark"
+    id = Column(Integer, primary_key=True)
+    finding_key = Column(String(384), nullable=False, unique=True)
+    # the newest per-series capture clock (OURS) applied to this key
+    observed_through = Column(DateTime(timezone=True), nullable=False)
+    updated_at = Column(DateTime(timezone=True))
 
 
 class HunterCycle(LiveBase):
@@ -816,6 +862,11 @@ class HunterCycle(LiveBase):
     markets_scanned = Column(Integer)
     findings_new = Column(Integer)
     findings_expired = Column(Integer)
+    # writes this cycle produced that a NEWER process had already
+    # superseded — ignored at the watermark rather than applied. A
+    # silent rejection would be its own kind of missing evidence, so
+    # the count rides on the heartbeat.
+    stale_writes_rejected = Column(Integer)
     request_count = Column(Integer)
     roster_size = Column(Integer)          # discovered soccer GAME series
     active_series = Column(Integer)        # series with open markets
