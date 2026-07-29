@@ -35,18 +35,29 @@ Re-implementing them here would fork those fixes. The CACHE is this
 module's own — sharing src.mls's dict would cross-serve leagues on
 identical keys ("sb:<date>", "team_colors", ...), a known trap.
 
-Fixture->book matching keeps the MLS title/date approach but AMBIGUITY
-FAILS EXPLICIT: when more than one same-day Kalshi title matches a
-fixture's names, the result is an "ambiguous" status with the candidate
-tickers, never a silently-picked book. First-match-wins on team names
-has burned this repo before, and the friendlies universe (Real Madrid
-vs Real Madrid Castilla on neighbouring days, B-teams, unbounded club
-names) is where that class of bug lives. There is no alias table by
-design: the club universe here is unbounded, so "unmapped" is the
-honest state, not a gap to paper over with guesses.
+Two fail-closed rules added in the 2026-07-29 review round (P0-1/P0-2):
+
+IDENTITY IS EXACT OR IT DOES NOT PRICE. Substring containment is banned:
+it attached an ESPN "Real Madrid Castilla" fixture to the SENIOR club's
+book with full confidence — in friendlies, B/reserve/academy sides make
+that a live hazard, not a corner case. A side matches only by
+normalized-name equality, token-set equality (generic club suffixes
+stripped), or an evidence-backed alias (each entry verified against the
+ARCHIVED Kalshi titles x ESPN buckets, both committed). A lone candidate
+that matches only loosely (token subset) is `unresolved_name`: shown,
+never priced. More than one candidate at the deciding tier is
+`ambiguous`: shown, never guessed.
+
+MISSING EVIDENCE IS NEVER RENDERED AS AUTHORITY. A registry page that
+failed (or a pager that hit its cap with a cursor left) makes absence
+claims impossible, so a no-candidate fixture is `registry_incomplete`,
+not "unmapped". A market fetch that failed is `unavailable`, never "no
+open markets". A stale cache may serve, but visibly: the book carries
+{"state": "stale", "age_seconds": n}.
 """
 from __future__ import annotations
 
+import threading
 import time
 
 import requests
@@ -74,17 +85,61 @@ FRAMING = ("Club friendlies are a market-watching surface: live scores and "
 # on identical keys ("sb:<date>", "team_colors", ...)
 _cache: dict[str, tuple[float, object]] = {}
 
+# Single-flight guards: N concurrent COLD requests for one key must
+# produce ONE provider fetch, not N (review 2026-07-29). Sync endpoints
+# run in a threadpool, so these are real races. Per-key locks; the
+# registry lock guards the lock dict itself.
+_flight_locks: dict[str, threading.Lock] = {}
+_flight_guard = threading.Lock()
+
+
+def _lock_for(key: str) -> threading.Lock:
+    with _flight_guard:
+        return _flight_locks.setdefault(key, threading.Lock())
+
 
 def _cached(key: str, ttl: float, fetch):
     now = time.monotonic()
     hit = _cache.get(key)
     if hit and now - hit[0] < ttl:
         return hit[1]
-    data = fetch()
-    if data is not None:               # never cache a failed answer
-        _cache[key] = (now, data)
-        return data
-    return hit[1] if hit else None     # stale beats nothing
+    with _lock_for(key):
+        # another flight may have landed while we waited
+        hit = _cache.get(key)
+        if hit and time.monotonic() - hit[0] < ttl:
+            return hit[1]
+        data = fetch()
+        if data is not None:               # never cache a failed answer
+            _cache[key] = (time.monotonic(), data)
+            return data
+        return hit[1] if hit else None     # stale beats nothing — but see
+                                           # _cached_state for surfaces that
+                                           # must SAY they are stale
+
+
+def _cached_state(key: str, ttl: float, fetch):
+    """Fail-closed cache read for surfaces where freshness must be
+    VISIBLE (P0-2): -> (data|None, meta) with meta one of
+      {"state": "fresh", "age_seconds": 0}
+      {"state": "stale", "age_seconds": n}   fetch failed, warm cache served
+      {"state": "missing", "age_seconds": None}  fetch failed, nothing at all
+    Single-flighted like _cached."""
+    now = time.monotonic()
+    hit = _cache.get(key)
+    if hit and now - hit[0] < ttl:
+        return hit[1], {"state": "fresh", "age_seconds": 0}
+    with _lock_for(key):
+        hit = _cache.get(key)
+        if hit and time.monotonic() - hit[0] < ttl:
+            return hit[1], {"state": "fresh", "age_seconds": 0}
+        data = fetch()
+        if data is not None:
+            _cache[key] = (time.monotonic(), data)
+            return data, {"state": "fresh", "age_seconds": 0}
+        if hit:
+            age = int(time.monotonic() - hit[0])
+            return hit[1], {"state": "stale", "age_seconds": age}
+        return None, {"state": "missing", "age_seconds": None}
 
 
 def _get_json(url: str, params: dict | None = None) -> dict | None:
@@ -174,15 +229,30 @@ def scoreline_disagreements(summary: dict) -> list[dict]:
 TRADEABLE = ("active", "open", "initialized")
 
 
-def _game_events(max_pages: int = 3) -> list[dict]:
-    """The KXCLUBFGAME event list, PAGED — one probe returned 200 events
-    with a continuation cursor, so a single call silently loses
-    fixtures. Pages until the cursor runs out or `max_pages`, 120s
-    cache. NO status filter (the MLS lesson: an in-play fixture's event
-    stops reporting "open" while its markets keep trading as "active");
-    tradability is judged per MARKET, at market-fetch time."""
-    def fetch():
+def _game_events_state(max_pages: int = 3):
+    """The KXCLUBFGAME event registry, PAGED, with its completeness on
+    the record: -> ({"events", "complete", "truncated"}, cache_meta).
+
+    complete=False when any page fetch failed — the partial list is
+    KEPT (a fixture found in it still maps) but absence claims are
+    downgraded to registry_incomplete downstream. truncated=True when
+    the pager hit max_pages with a cursor still outstanding: same
+    downstream consequence, distinguished for the census.
+
+    An INCOMPLETE registry is never cached (the next request retries);
+    a complete one caches for 120s. Cold path is single-flighted."""
+    key = "events"
+    ttl = 120.0
+    now = time.monotonic()
+    hit = _cache.get(key)
+    if hit and now - hit[0] < ttl:
+        return hit[1], {"state": "fresh", "age_seconds": 0}
+    with _lock_for(key):
+        hit = _cache.get(key)
+        if hit and time.monotonic() - hit[0] < ttl:
+            return hit[1], {"state": "fresh", "age_seconds": 0}
         events: list[dict] = []
+        complete = True
         cursor = None
         for _ in range(max_pages):
             params: dict = {"series_ticker": KALSHI_CLUBF_GAME, "limit": 200}
@@ -190,19 +260,28 @@ def _game_events(max_pages: int = 3) -> list[dict]:
                 params["cursor"] = cursor
             d = _get_json(f"{KALSHI_BASE}/events", params)
             if d is None:
-                return events or None   # partial beats nothing; None if page 1 fails
+                complete = False           # a page failed: registry partial
+                cursor = None
+                break
             events.extend(d.get("events") or [])
             cursor = d.get("cursor")
             if not cursor:
                 break
-            time.sleep(0.1)             # burst-throttle (Kalshi 429s)
-        return events
-    return _cached("events", 120, fetch) or []
+            time.sleep(0.1)                # burst-throttle (Kalshi 429s)
+        truncated = bool(cursor)           # cap hit with more behind it
+        reg = {"events": events, "complete": complete,
+               "truncated": truncated}
+        if complete:
+            _cache[key] = (time.monotonic(), reg)
+        return reg, {"state": "fresh", "age_seconds": 0}
 
 
-def event_markets(event_ticker: str) -> list[dict]:
-    """One event's tradeable markets, 15s cache — cheap enough for the
-    match page's poll to ride."""
+def event_markets_state(event_ticker: str):
+    """One event's tradeable markets WITH evidence state, 15s cache:
+    -> (rows|None, meta). rows=[] means 'fetched, nothing trades';
+    rows=None means 'could not fetch and no cache' — callers must say
+    `unavailable`, never `no_open_markets` (P0-2). A warm cache served
+    through a failed refetch comes back meta.state='stale' with age."""
     def fetch():
         md = _get_json(f"{KALSHI_BASE}/markets",
                        {"event_ticker": event_ticker, "limit": 50})
@@ -210,29 +289,55 @@ def event_markets(event_ticker: str) -> list[dict]:
             return None
         return [m for m in (md.get("markets") or [])
                 if m.get("status") in TRADEABLE]
-    return _cached(f"mkts:{event_ticker}", 15, fetch) or []
+    return _cached_state(f"mkts:{event_ticker}", 15, fetch)
+
+
+def event_markets(event_ticker: str) -> list[dict]:
+    """Markets-or-empty convenience for the family rows, where a missing
+    family is simply omitted rather than statused."""
+    rows, _meta = event_markets_state(event_ticker)
+    return rows or []
 
 
 def listed_events_summary() -> dict:
     """How much friendly market surface Kalshi lists, WITHOUT fetching
-    any order books: {count, truncated, by_date}. `count` is a lower
-    bound whenever `truncated` is true (the pager hit its cap). The full
-    per-event detector work belongs to the market hunter, not here."""
-    events = _game_events()
+    any order books: {count, truncated, complete, by_date}. `count` is
+    a floor whenever truncated or not complete — and it says which. The
+    full per-event detector work belongs to the market hunter."""
+    reg, _meta = _game_events_state()
     by_date: dict[str, int] = {}
-    for ev in events:
+    for ev in reg["events"]:
         d = _ticker_et_date(ev.get("event_ticker") or "")
         if d:
             by_date[d] = by_date.get(d, 0) + 1
-    # truncated = the last page could have had a continuation; cheapest
-    # honest signal is "a multiple of a full page" — a 600-event answer
-    # under a 3-page cap may have more behind it
-    return {"count": len(events),
-            "truncated": len(events) >= 3 * 200,
+    return {"count": len(reg["events"]),
+            "truncated": reg["truncated"],
+            "complete": reg["complete"],
             "by_date": dict(sorted(by_date.items()))}
 
 
-# --- fixture <-> Kalshi book matching (ambiguity fails explicit) -----------
+# --- fixture <-> Kalshi book matching (fail-closed identity) ---------------
+
+# Generic club-form suffixes that carry no identity: stripping them lets
+# "Sevilla" == "Sevilla FC" without letting "Real Madrid" == "Real
+# Madrid Castilla" ("castilla" is NOT in this set, deliberately — nor is
+# "b", "ii", or any reserve/academy marker).
+_GENERIC_TOKENS = {"fc", "cf", "sc", "cd", "ud", "ac", "afc", "cfc",
+                   "cp", "club"}
+
+# Kalshi title -> ESPN displayName bridges. EVIDENCE-BACKED ONLY: each
+# entry is a pair observed in the committed 2026-07-28 archives (Kalshi
+# event titles x ESPN scoreboard buckets, same fixtures):
+#   "Atletico vs Getafe"  x ESPN "Atlético Madrid vs Getafe"  (Jul 29)
+#   "Cerezo vs Dortmund"  x ESPN "Cerezo Osaka vs Borussia Dortmund"
+# Never add an entry from intuition — an unverified bridge is exactly
+# the guess the unresolved_name state exists to prevent.
+_KALSHI_ALIASES = {
+    "atletico": "atletico madrid",
+    "cerezo": "cerezo osaka",
+    "dortmund": "borussia dortmund",
+}
+
 
 def _norm_name(s: str) -> str:
     import unicodedata
@@ -241,16 +346,33 @@ def _norm_name(s: str) -> str:
     return s.lower().replace(".", "").strip()
 
 
-def _side_matches(kalshi_side: str, espn_name: str) -> bool:
-    """Substring match after accent/case normalization. NO alias table
-    by design: the friendlies club universe is unbounded, so a bridge
-    dict can never be complete and a partial one invites guesses. A
-    name substring matching cannot cross renders as an unmapped
-    fixture, which is the honest state."""
+def _identity_tokens(s: str) -> frozenset[str]:
+    return frozenset(t for t in _norm_name(s).split()
+                     if t not in _GENERIC_TOKENS)
+
+
+def _side_identity(kalshi_side: str, espn_name: str) -> str:
+    """-> "exact" | "loose" | "none". Exact = same club, safe to price:
+    normalized equality, token-set equality (generic suffixes ignored),
+    or an archived-evidence alias. Loose = related-name overlap (token
+    subset either way) — enough to SHOW as a candidate, never enough to
+    price: this is where "Real Madrid"/"Real Madrid Castilla" and
+    "Barcelona"/"Barcelona B" live. Substring containment is banned
+    outright (P0-1)."""
     k, e = _norm_name(kalshi_side), _norm_name(espn_name)
     if not k or not e:
-        return False
-    return k in e
+        return "none"
+    if k == e:
+        return "exact"
+    kt, et = _identity_tokens(kalshi_side), _identity_tokens(espn_name)
+    if kt and kt == et:
+        return "exact"
+    alias = _KALSHI_ALIASES.get(k)
+    if alias and (alias == e or _identity_tokens(alias) == et):
+        return "exact"
+    if kt and et and (kt <= et or et <= kt):
+        return "loose"
+    return "none"
 
 
 def _ticker_et_date(event_ticker: str) -> str | None:
@@ -275,27 +397,58 @@ def _fixture_et_date(iso_date: str) -> str | None:
     return et.strftime("%y%b%d").upper()
 
 
+def _book_from(cand: dict) -> tuple[dict | None, dict | None]:
+    """One candidate's parsed book + freshness (None when fresh).
+    Injected markets (tests) count as fresh; the live path reads
+    event_markets_state and propagates unavailability as (None, meta)."""
+    if cand.get("markets") is not None:
+        rows, meta = cand["markets"], {"state": "fresh", "age_seconds": 0}
+    else:
+        rows, meta = event_markets_state(cand["event_ticker"])
+        if rows is None:
+            return None, meta              # could not look — unavailable
+    book = parse_game_books(
+        [cand], {cand["event_ticker"]: rows})[0]
+    return book, (meta if meta["state"] == "stale" else None)
+
+
 def match_fixture_book(fixture_date: str, home_name: str, away_name: str,
-                       events: list[dict] | None = None) -> dict:
+                       events: list[dict] | None = None,
+                       registry_complete: bool = True) -> dict:
     """This fixture's KXCLUBFGAME book, or an explicit refusal.
 
-    -> {"status", "book", "candidates"} where status is one of
-       mapped           exactly one same-ET-date title matched both names
-       unmapped         no listed event matched (the normal state for
-                        most ESPN friendlies — and vice versa: Kalshi
-                        lists far more friendlies than ESPN's bucket)
-       ambiguous        MORE than one matched. Never resolved by taking
-                        the first: with B-teams sharing name prefixes
-                        ("Real Madrid" / "Real Madrid Castilla"), a
-                        silent pick is exactly the bug that burned the
-                        MLS layer. The candidates are returned so a
-                        human can see what collided.
-       no_open_markets  one event matched but nothing in it trades
-    """
+    -> {"status", "book", "candidates", "freshness"} where status is
+       mapped              exactly one same-ET-date title matched both
+                           names EXACTLY (equality/token-set/archived
+                           alias — never substring)
+       unmapped            nothing matched, and the registry was
+                           complete enough to say so
+       ambiguous           more than one candidate at the deciding
+                           tier; the candidates are returned, none is
+                           picked
+       unresolved_name     exactly one candidate, but it matches only
+                           loosely (token subset — the B-team /
+                           reserve-side shape). Shown, never priced.
+       no_open_markets     one exact match whose book was FETCHED and
+                           holds nothing tradeable
+       unavailable         one exact match whose book could not be
+                           fetched and has no cache — 'we couldn't
+                           look', which is not 'closed'
+       registry_incomplete no candidate found, but the event registry
+                           was partial (failed page or capped pager) —
+                           'unmapped' would assert an absence the
+                           evidence cannot support
+    freshness is None for fresh answers, or {"state": "stale",
+    "age_seconds": n} when a warm cache was served through a failed
+    refetch — visibly stale, never silently current."""
     want = _fixture_et_date(fixture_date)
     if events is None:
-        events = _game_events()
-    cands = []
+        reg, _meta = _game_events_state()
+        events = reg["events"]
+        registry_complete = reg["complete"] and not reg["truncated"]
+
+    exact: list[dict] = []
+    loose: list[dict] = []
     for ev in events:
         ticker = ev.get("event_ticker") or ""
         if _ticker_et_date(ticker) != want:
@@ -304,28 +457,42 @@ def match_fixture_book(fixture_date: str, home_name: str, away_name: str,
         if " vs " not in title:
             continue
         k_home, k_away = title.split(" vs ", 1)
-        if _side_matches(k_home, home_name) and \
-                _side_matches(k_away, away_name):
-            cands.append({"event_ticker": ticker, "title": title,
-                          "markets": ev.get("markets")})
-    if not cands:
-        return {"status": "unmapped", "book": None, "candidates": []}
-    if len(cands) > 1:
-        return {"status": "ambiguous", "book": None,
-                "candidates": [c["event_ticker"] for c in cands]}
-    only = cands[0]
-    if only.get("markets") is None:     # not injected (live path): fetch
-        book = parse_game_books(
-            [only], {only["event_ticker"]:
-                     event_markets(only["event_ticker"])})[0]
-    else:
-        book = parse_game_books(
-            [only], {only["event_ticker"]: only["markets"]})[0]
-    if not book["markets"]:
-        return {"status": "no_open_markets", "book": None,
-                "candidates": [only["event_ticker"]]}
-    return {"status": "mapped", "book": book,
-            "candidates": [only["event_ticker"]]}
+        h_id = _side_identity(k_home, home_name)
+        a_id = _side_identity(k_away, away_name)
+        if h_id == "none" or a_id == "none":
+            continue
+        cand = {"event_ticker": ticker, "title": title,
+                "markets": ev.get("markets")}
+        if h_id == "exact" and a_id == "exact":
+            exact.append(cand)
+        else:
+            loose.append(cand)
+
+    def _refuse(status, cands):
+        return {"status": status, "book": None,
+                "candidates": [c["event_ticker"] for c in cands],
+                "freshness": None}
+
+    if len(exact) > 1:
+        return _refuse("ambiguous", exact)
+    if len(exact) == 1:
+        only = exact[0]
+        book, fresh = _book_from(only)
+        if book is None:
+            return _refuse("unavailable", [only])
+        if not book["markets"]:
+            return _refuse("no_open_markets", [only])
+        return {"status": "mapped", "book": book,
+                "candidates": [only["event_ticker"]],
+                "freshness": fresh}
+    if len(loose) > 1:
+        return _refuse("ambiguous", loose)
+    if len(loose) == 1:
+        return _refuse("unresolved_name", loose)
+    if not registry_complete:
+        return _refuse("registry_incomplete", [])
+    return {"status": "unmapped", "book": None, "candidates": [],
+            "freshness": None}
 
 
 # --- per-match Kalshi families (all VERIFIED live 2026-07-28) --------------
@@ -344,17 +511,17 @@ def find_all_books(fixture_date: str, home_name: str,
                    away_name: str) -> dict:
     """Every verified Kalshi market family for one fixture, or the
     explicit non-mapped status. The GAME event is located by the
-    ambiguity-refusing matcher; the other families share its ticker
-    suffix ({YYMONDD}{HOME}{AWAY}), so that join is exact and needs no
-    name resolution. 30s bundle cache.
+    fail-closed matcher; the other families share its ticker suffix
+    ({YYMONDD}{HOME}{AWAY}), so that join is exact and needs no name
+    resolution. 30s bundle cache.
 
-    -> {"status", "candidates", "families": [{key,label,event_ticker,
-        markets:[{ticker,label,yes_ask,yes_bid,status}]}]}
+    -> {"status", "candidates", "freshness", "families": [{key,label,
+        event_ticker, markets:[{ticker,label,yes_ask,yes_bid,status}]}]}
     """
     m = match_fixture_book(fixture_date, home_name, away_name)
     if m["status"] != "mapped":
         return {"status": m["status"], "candidates": m["candidates"],
-                "families": []}
+                "freshness": m["freshness"], "families": []}
     game = m["book"]
     suffix = game["event_ticker"].split("-", 1)[1]
 
@@ -381,14 +548,15 @@ def find_all_books(fixture_date: str, home_name: str,
         return fams
     families = _cached(f"allbooks:{suffix}", 30, fetch) or []
     return {"status": "mapped", "candidates": m["candidates"],
-            "families": families}
+            "freshness": m["freshness"], "families": families}
 
 
 def daily_books(date: str | None = None) -> list[dict]:
     """The scoreboard bucket's fixtures joined to their game books —
     one row per ESPN fixture, every row carrying its explicit mapping
-    status so the UI can say "no book found" or "ambiguous" in words
-    instead of showing nothing."""
+    status AND freshness so the UI can say "couldn't look", "registry
+    incomplete", "ambiguous" or "stale, {n}s old" in words instead of
+    showing a confident nothing."""
     out = []
     for f in scoreboard(date):
         m = match_fixture_book(f.get("date") or "",
@@ -398,5 +566,6 @@ def daily_books(date: str | None = None) -> list[dict]:
                     "home": (f.get("home") or {}).get("name"),
                     "away": (f.get("away") or {}).get("name"),
                     "status": m["status"], "book": m["book"],
-                    "candidates": m["candidates"]})
+                    "candidates": m["candidates"],
+                    "freshness": m["freshness"]})
     return out

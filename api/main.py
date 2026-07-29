@@ -227,9 +227,11 @@ def friendlies_schedule(days: int = Query(7, ge=1, le=14)):
 def friendlies_markets(date: str | None = Query(None, pattern=r"^\d{8}$")):
     """The scoreboard bucket's fixtures joined to their Kalshi game
     books, each with an EXPLICIT mapping status (mapped / unmapped /
-    ambiguous / no_open_markets), plus a books-only census of how much
-    friendly surface Kalshi lists beyond ESPN's bucket. Full per-event
-    detector work lives in the market hunter, not here."""
+    ambiguous / unresolved_name / no_open_markets / unavailable /
+    registry_incomplete) and freshness, plus a books-only census of how
+    much friendly surface Kalshi lists beyond ESPN's bucket — with its
+    own completeness on the record. Full per-event detector work lives
+    in the market hunter, not here."""
     from src import friendlies
     return {"fixtures": friendlies.daily_books(date),
             "listed": friendlies.listed_events_summary(),
@@ -245,7 +247,11 @@ def friendlies_match(event_id: str):
     out = friendlies.match_summary(event_id)
     if out is None:
         raise HTTPException(502, "summary unavailable")
-    books = {"status": "unmapped", "candidates": [], "families": []}
+    # Fallback is UNAVAILABLE, not unmapped: if the book section dies we
+    # could not look, and "no book exists" is a claim a failure cannot
+    # support (P0-2).
+    books = {"status": "unavailable", "candidates": [], "freshness": None,
+             "families": []}
     try:                                # the page must not die on the book
         books = friendlies.find_all_books(
             out.get("date"),
