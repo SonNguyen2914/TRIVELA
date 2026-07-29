@@ -441,7 +441,8 @@ def hunter_job() -> None:
         from src.live import hunter
         r = hunter.scan_cycle()
         if r.get("findings_new") or r.get("findings_expired") \
-                or r.get("error"):
+                or r.get("error") or ("status" in r
+                                      and r["status"] != "complete"):
             print(f"[hunter] {r}")
     except Exception as exc:
         print(f"[hunter] cycle error: {exc}")

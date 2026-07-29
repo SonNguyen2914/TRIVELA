@@ -70,14 +70,21 @@ def send_ntfy(message: str, title: str = "WC26", priority: str = "high") -> bool
 
 
 def send_alert(message: str, title: str = "WC26",
-               kind: str = "action") -> None:
+               kind: str = "action") -> dict[str, bool]:
     """Fan-out by kind. "action": the act-now channel + phone push, and a
     copy to detail so that channel reads as a complete log. "detail": the
-    narrator's channel only — the phone stays quiet."""
+    narrator's channel only — the phone stays quiet.
+
+    Returns the per-transport acceptance map, e.g.
+    {"discord_action": True, "discord_detail": False, "ntfy": False}.
+    False covers BOTH delivery failure and non-configuration — an
+    unconfigured transport never counts as delivered, so a caller that
+    needs durability (the hunter) can see that nothing actually left the
+    process instead of treating a silent no-op as success."""
     if kind == "detail":
-        send_discord(message, channel="detail")
-        return
-    send_discord(message, channel="action")
+        return {"discord_detail": send_discord(message, channel="detail")}
+    results = {"discord_action": send_discord(message, channel="action")}
     if config.DISCORD_DETAIL_WEBHOOK_URL != config.DISCORD_ACTION_WEBHOOK_URL:
-        send_discord(message, channel="detail")
-    send_ntfy(message, title=title)
+        results["discord_detail"] = send_discord(message, channel="detail")
+    results["ntfy"] = send_ntfy(message, title=title)
+    return results

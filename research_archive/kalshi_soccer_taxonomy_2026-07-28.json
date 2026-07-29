@@ -8,7 +8,8 @@
   "notes": [
    "series carry a 'tags' array; 'Soccer' tag identifies the sport",
    "per-match series tickers end in GAME; 95 soccer GAME series exist",
-   "3 name-matched GAME series excluded as novelty/non-match: KXWCGOALEVERYGAME (goal in every game), KXWCTEAMSINGAME (teams in game), KXKXECULPGAME (malformed duplicate of KXECULPGAME)"
+   "3 name-matched GAME series excluded as novelty/non-match: KXWCGOALEVERYGAME (goal in every game), KXWCTEAMSINGAME (teams in game), KXKXECULPGAME (malformed duplicate of KXECULPGAME)",
+   "probe counts are CAPPED at limit=200 (unpaginated): a series reporting open_markets=200 means >=200 / TRUNCATED, not an exact count (label added 2026-07-28 review correction; only KXCLUBFGAME hit the cap)"
   ]
  },
  "counts": {
@@ -242,7 +243,9 @@
     "KXCLUBFGAME-26JUL31BCBAR-TIE",
     "KXCLUBFGAME-26JUL31BCBAR-BC",
     "KXCLUBFGAME-26JUL31BCBAR-BAR"
-   ]
+   ],
+   "open_markets_note": ">=200 \u2014 probe used limit=200 without pagination, so this count is TRUNCATED, not exact",
+   "truncated_at_probe_limit": true
   },
   "KXCLUBWCGAME": {
    "open_markets": 0,

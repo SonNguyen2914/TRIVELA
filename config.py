@@ -339,14 +339,48 @@ NARRATOR_INTERVAL_MINUTES = int(os.getenv("NARRATOR_INTERVAL_MINUTES", "5"))
 # Always-on scan of Kalshi's soccer GAME-series for structurally mispriced
 # books. OBSERVATIONAL ONLY: it records findings and never places, sizes,
 # or recommends an order. Money stays locked (REAL_MONEY_SIGNALS_ENABLED).
+#
+# Every numeric HUNTER_* bound must be POSITIVE and parseable, enforced at
+# import: a zero/negative cadence or threshold would silently disable a
+# guard (0-minute poll = hammering the provider; 0 thin-book size = no
+# book is ever thin), and this repo's rule is that misconfiguration fails
+# loudly at boot, never quietly at runtime.
+def _pos_int(name: str, default: str) -> int:
+    raw = os.getenv(name, default).strip() or default
+    try:
+        v = int(raw)
+    except ValueError:
+        raise ValueError(f"[config] {name}={raw!r} is not an integer")
+    if v <= 0:
+        raise ValueError(f"[config] {name}={raw!r} must be > 0")
+    return v
+
+
+def _pos_decimal_str(name: str, default: str) -> str:
+    """Positive decimal bound kept in its STRING form — the hunter's
+    exact-Decimal consumers parse it themselves (never through float)."""
+    from decimal import Decimal, InvalidOperation
+    raw = os.getenv(name, default).strip() or default
+    try:
+        v = Decimal(raw)
+    except InvalidOperation:
+        raise ValueError(f"[config] {name}={raw!r} is not a decimal")
+    if v <= 0:
+        raise ValueError(f"[config] {name}={raw!r} must be > 0")
+    return raw
+
+
 HUNTER_ENABLED = _parse_flag(os.getenv("HUNTER_ENABLED"), True,
                              "HUNTER_ENABLED")
 # Scan cadence. Kalshi rate-limits hard; keep this modest.
-HUNTER_POLL_MINUTES = int(os.getenv("HUNTER_POLL_MINUTES", "10"))
+HUNTER_POLL_MINUTES = _pos_int("HUNTER_POLL_MINUTES", "10")
 # How often the series roster is re-discovered from the provider's series
 # listing (tags=Soccer, ticker ends GAME). Between discoveries the scan
-# only touches series that recently had open markets.
-HUNTER_DISCOVERY_MINUTES = int(os.getenv("HUNTER_DISCOVERY_MINUTES", "360"))
+# only touches series that recently had open markets — a series going
+# ACTIVE between discoveries is picked up with at most this much lag
+# (≤6h at the default), which is a documented trade against hammering
+# the provider's full taxonomy every cycle.
+HUNTER_DISCOVERY_MINUTES = _pos_int("HUNTER_DISCOVERY_MINUTES", "360")
 # Optional explicit roster override: comma-separated series tickers. When
 # set, discovery is skipped and EXACTLY these series are scanned. The
 # default roster comes from live discovery, never a hardcoded guess —
@@ -362,8 +396,9 @@ HUNTER_SERIES_SKIP = [t.strip().upper() for t in os.getenv(
     if t.strip()]
 # Liquidity-context thresholds (WIDE_SPREAD / THIN_BOOK are context
 # flags, never wins and never alerts).
-HUNTER_WIDE_SPREAD_DOLLARS = os.getenv("HUNTER_WIDE_SPREAD_DOLLARS", "0.10")
-HUNTER_THIN_BOOK_SIZE = int(os.getenv("HUNTER_THIN_BOOK_SIZE", "5"))
+HUNTER_WIDE_SPREAD_DOLLARS = _pos_decimal_str(
+    "HUNTER_WIDE_SPREAD_DOLLARS", "0.10")
+HUNTER_THIN_BOOK_SIZE = _pos_int("HUNTER_THIN_BOOK_SIZE", "5")
 # IN_PLAY_OVERREACTION: minimum mid-to-mid repricing (dollars) between
 # two consecutive hunter captures of the same market, on a match dated
 # today (ET), before the move is flagged. The move must ALSO exceed the
@@ -371,19 +406,20 @@ HUNTER_THIN_BOOK_SIZE = int(os.getenv("HUNTER_THIN_BOOK_SIZE", "5"))
 # not a repricing. CONTEXT ONLY: a violent in-play move is usually
 # conditioned on a real match event the hunter cannot observe, so this
 # never claims mispricing and never alerts.
-HUNTER_OVERREACTION_MIN_MOVE_DOLLARS = os.getenv(
+HUNTER_OVERREACTION_MIN_MOVE_DOLLARS = _pos_decimal_str(
     "HUNTER_OVERREACTION_MIN_MOVE_DOLLARS", "0.15")
 # Net margin (dollars per contract, after exact fees) a structural
 # finding must clear before it may ALERT. Findings below this are still
 # recorded; they just stay quiet.
-HUNTER_ALERT_MIN_MARGIN_DOLLARS = os.getenv(
+HUNTER_ALERT_MIN_MARGIN_DOLLARS = _pos_decimal_str(
     "HUNTER_ALERT_MIN_MARGIN_DOLLARS", "0.01")
 # Alert budget: max hunter alerts per rolling hour. A scanner that spams
 # the channel gets muted by its human and then protects nothing.
-HUNTER_ALERT_MAX_PER_HOUR = int(os.getenv("HUNTER_ALERT_MAX_PER_HOUR", "4"))
+HUNTER_ALERT_MAX_PER_HOUR = _pos_int("HUNTER_ALERT_MAX_PER_HOUR", "4")
 # Minimum net edge for a MODEL_EDGE readout row (mirrors the paper
 # execution policy's min_net_edge; observational, never alerts).
-HUNTER_MODEL_EDGE_MIN = float(os.getenv("HUNTER_MODEL_EDGE_MIN", "0.03"))
+HUNTER_MODEL_EDGE_MIN = float(
+    _pos_decimal_str("HUNTER_MODEL_EDGE_MIN", "0.03"))
 
 # --- live-plane volume headroom -------------------------------------------
 # Railway's own volume alerts are Teams/Pro-only, so the platform CANNOT

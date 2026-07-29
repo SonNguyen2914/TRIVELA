@@ -721,7 +721,17 @@ class HunterFinding(LiveBase):
     exact Decimal net of the exact versioned fee policy, serialized as
     strings. Provider-controlled strings (series/event/market tickers)
     get generous widths — a 26-char fee-policy string in a 24-char
-    column once silently destroyed a night of production fills."""
+    column once silently destroyed a night of production fills.
+
+    Cross-process idempotency: finding_key is the provider-stable
+    identity (type|series|event|market) and a PARTIAL unique index
+    enforces at most ONE OPEN row per key at the database — Railway
+    keeps the old container serving while the new one boots, so two
+    hunter processes legitimately overlap and an in-Python dedup check
+    alone is a race. Alert delivery is a durable claim on the row
+    (alert_claimed_at, leased) taken BEFORE any bytes leave the process;
+    alerted_at is set only on a confirmed transport acceptance and
+    alert_results_json retains the per-transport outcome either way."""
     __tablename__ = "hunter_finding"
     id = Column(Integer, primary_key=True)
     # competition slug when the event maps to a known fixture (mls-2026);
@@ -731,6 +741,10 @@ class HunterFinding(LiveBase):
     event_ticker = Column(String(128))
     market_ticker = Column(String(128))    # market-level findings only
     finding_type = Column(String(32), nullable=False)
+    # provider-stable identity: finding_type|series|event|market. The
+    # partial unique index below makes "one open finding per key" a
+    # database invariant, not a process-local one.
+    finding_key = Column(String(384), nullable=False)
     # SUM_BELOW_ONE | CROSSED_BOOK | POST_CERTAINTY |
     # WIDE_SPREAD | THIN_BOOK | IN_PLAY_OVERREACTION | MODEL_EDGE
     # liquidity/repricing flags are CONTEXT, never wins: labelled so,
@@ -744,9 +758,16 @@ class HunterFinding(LiveBase):
     # significance) copied verbatim from the active approval decision
     model_qualifier_json = Column(Text)
     fixture_id = Column(Integer, ForeignKey("fixture.id"))
+    # the per-series Kalshi fetch-COMPLETION clock — the only timing
+    # evidence a quote gets (Kalshi publishes no quote timestamp), so it
+    # is preserved verbatim, never replaced by a later cycle-end clock
     first_captured_at = Column(DateTime(timezone=True), nullable=False)
     last_seen_at = Column(DateTime(timezone=True))
     observed_cycles = Column(Integer, default=1)
+    # the separate clocks, kept apart on purpose: when the detector
+    # evaluated, and when the row reached the persistence phase
+    detected_at = Column(DateTime(timezone=True))
+    persisted_at = Column(DateTime(timezone=True))
     # POST_CERTAINTY only: when the ESPN state was (re-)read — always at
     # detection time, never cached from a previous cycle
     espn_captured_at = Column(DateTime(timezone=True))
@@ -754,8 +775,17 @@ class HunterFinding(LiveBase):
     # open | expired
     expired_at = Column(DateTime(timezone=True))
     alerted_at = Column(DateTime(timezone=True))
+    # durable alert claim (leased) + retained per-transport outcomes
+    alert_claimed_at = Column(DateTime(timezone=True))
+    alert_results_json = Column(Text)
     __table_args__ = (
         Index("ix_hunter_finding_status_type", "status", "finding_type"),
+        # at most ONE open row per provider-stable key, enforced by the
+        # DATABASE on both dialects (same pattern as the canonical-lock
+        # partial unique index — the real cross-container guard)
+        Index("uq_hunter_finding_open_key", "finding_key", unique=True,
+              postgresql_where=text("status = 'open'"),
+              sqlite_where=text("status = 'open'")),
     )
 
 
@@ -763,14 +793,25 @@ class HunterCycle(LiveBase):
     """One hunter scan cycle — the heartbeat AND the denominator. A count
     of findings without cycles-run/markets-scanned is a defect in this
     repo, and a scanner that dies silently must be visible as dead, not
-    as a quiet market. One row per cycle, including failed ones."""
+    as a quiet market. One row per cycle, including failed ones.
+
+    Completeness is fail-closed: series_outcomes_json records the
+    per-series outcome (SUCCESS / REQUEST_FAILED / PAGINATION_CAP /
+    DETECTION_FAILED with detail), and any non-SUCCESS outcome makes the
+    cycle 'degraded' — "didn't look" is never recordable as "no
+    anomaly", and only a SUCCESS pass for a series may expire that
+    series' open findings."""
     __tablename__ = "hunter_cycle"
     id = Column(Integer, primary_key=True)
     started_at = Column(DateTime(timezone=True), nullable=False)
     completed_at = Column(DateTime(timezone=True))
     status = Column(String(16), nullable=False, default="running")
-    # running | complete | failed
+    # running | complete | degraded | failed
     series_scanned = Column(Integer)
+    # series whose scan was NOT a complete success this cycle
+    series_failed = Column(Integer)
+    # per-series outcome map: {ticker: {outcome, detail?}}
+    series_outcomes_json = Column(Text)
     events_scanned = Column(Integer)
     markets_scanned = Column(Integer)
     findings_new = Column(Integer)
@@ -778,6 +819,10 @@ class HunterCycle(LiveBase):
     request_count = Column(Integer)
     roster_size = Column(Integer)          # discovered soccer GAME series
     active_series = Column(Integer)        # series with open markets
+    # when the roster was last (re-)discovered, and whether a DUE
+    # discovery failed this cycle (stale roster scanned instead)
+    discovery_at = Column(DateTime(timezone=True))
+    discovery_error = Column(Text)
     error = Column(Text)
 
 
