@@ -62,7 +62,15 @@ from src.live.models import (Competition, CorpusExport, Fixture,
 # Both sections are scoped to the corpus's competition, exactly like
 # fixtures/runs/markets — a second league's journal must not leak into
 # an MLS corpus.
-CORPUS_SCHEMA = "corpus-v3"
+#
+# v4 (journal-P1-F): journal entries carry an explicit `superseded`
+# flag and counts_toward_aggregate honours it — a corrected row stays
+# exported (immutable audit) but is labelled as contributing no
+# effective observation; manifest counts carry raw vs effective.
+# Corrections are scope-checked at write time (same competition/
+# fixture/market/outcome), so a competition-scoped corpus cannot
+# contain a dangling corrects_bet_id.
+CORPUS_SCHEMA = "corpus-v4"
 _GIT_REV = os.getenv("RAILWAY_GIT_COMMIT_SHA", "")[:40]
 
 
@@ -186,6 +194,10 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
         journal_bet_ids = {b.id for b in journal_bets}
         journal_execs = [e for e in s.query(PersonalBetExecution).all()
                          if e.personal_bet_id in journal_bet_ids]
+        # journal-P1-F: corrected rows export as immutable audit,
+        # labelled superseded — one effective observation per chain
+        journal_superseded = {b.corrects_bet_id for b in journal_bets
+                              if b.corrects_bet_id is not None}
 
         sections = {
             "competitions.json": [_dump(x) for x in
@@ -224,7 +236,9 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             # publication_consent, then in full. Both sections scope to
             # THIS corpus's competition (journal-P1 F9).
             "personal_journal.json": [
-                public_bet_projection(x) for x in journal_bets],
+                public_bet_projection(
+                    x, superseded=x.id in journal_superseded)
+                for x in journal_bets],
             "personal_journal_executions.json": [
                 _dump(x) for x in journal_execs
                 if x.publication_consent],
@@ -296,6 +310,11 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             # difference between total and published is the number of
             # executions withheld from public bytes
             "journal_entries": len(journal_bets),
+            # journal-P1-F: raw vs effective is explicit — the
+            # difference is the number of corrected (superseded) rows
+            "journal_entries_effective": (len(journal_bets)
+                                          - len(journal_superseded)),
+            "journal_entries_superseded": len(journal_superseded),
             "journal_executions_total": len(journal_execs),
             "journal_executions_published": len(
                 sections["personal_journal_executions.json"]),

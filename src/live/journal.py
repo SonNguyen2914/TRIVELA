@@ -216,7 +216,13 @@ def record_view(fixture_id: int, market_ticker: str, *,
     - the model's probability is FROZEN now, with the run it came from,
       so a later re-run cannot change what was recorded.
     - `corrects_bet_id` names the immutable entry this row corrects
-      (journal-P0 F5); corrections are new rows, never rewrites.
+      (journal-P0 F5); corrections are new rows, never rewrites. A
+      correction restates the SAME observation, so it must share the
+      corrected entry's competition, fixture, market and outcome, and
+      chains are linear — an already-corrected entry cannot be
+      corrected again (journal-P1-F). Aggregates then count one
+      effective observation per chain; the corrected rows remain as
+      audit.
     - every new view starts `considered` (journal-P0-D): there is no
       way to record a pre-resolved entry, because considered→resolve is
       what makes the passes recordable at all.
@@ -237,10 +243,47 @@ def record_view(fixture_id: int, market_ticker: str, *,
         fx = s.get(Fixture, fixture_id)
         if fx is None:
             return {"error": "no such fixture"}
-        if corrects_bet_id is not None \
-                and s.get(PersonalBet, corrects_bet_id) is None:
-            return {"error": f"corrects_bet_id {corrects_bet_id} names "
-                             f"no existing entry"}
+        if corrects_bet_id is not None:
+            prev = s.get(PersonalBet, corrects_bet_id)
+            if prev is None:
+                return {"error": f"corrects_bet_id {corrects_bet_id} "
+                                 f"names no existing entry"}
+            # journal-P1-F: a correction RESTATES the same observation,
+            # so it must share the corrected entry's scope exactly —
+            # competition, fixture, market and outcome. A "correction"
+            # pointing across any of those is a different observation
+            # wearing supersession semantics, and in a competition-
+            # scoped corpus it would export as a dangling reference.
+            for what, prev_v, new_v in (
+                    ("competition", prev.competition_slug,
+                     fx.competition_slug),
+                    ("fixture", prev.fixture_id, fixture_id),
+                    ("market_ticker", prev.market_ticker,
+                     market_ticker),
+                    ("outcome_key", prev.outcome_key or None,
+                     outcome_key or None)):
+                if prev_v != new_v:
+                    return {"error":
+                            f"corrects_bet_id {corrects_bet_id} is out "
+                            f"of scope: entry {corrects_bet_id} has "
+                            f"{what}={prev_v!r}, this view names "
+                            f"{new_v!r} — a correction restates the "
+                            f"SAME observation (same competition, "
+                            f"fixture, market and outcome); a "
+                            f"different view is a new entry, not a "
+                            f"correction"}
+            # chains stay LINEAR (journal-P1-F): one effective
+            # observation per chain requires exactly one head, so an
+            # already-corrected entry cannot be corrected twice
+            head = (s.query(PersonalBet)
+                    .filter_by(corrects_bet_id=corrects_bet_id)
+                    .first())
+            if head is not None:
+                return {"error":
+                        f"entry {corrects_bet_id} is already corrected "
+                        f"by entry {head.id} — correction chains are "
+                        f"linear; correct the head "
+                        f"(corrects_bet_id={head.id})"}
         now = _now()
 
         # 1. price basis — falsifiable or explicitly not
@@ -323,7 +366,9 @@ def resolve_view(bet_id: int, status: str) -> dict:
         row.status = status
         row.resolved_at = _now()
         s.commit()
-        return _bet_dict(row)
+        sup = (s.query(PersonalBet)
+               .filter_by(corrects_bet_id=row.id).first() is not None)
+        return _bet_dict(row, superseded=sup)
     finally:
         s.close()
 
@@ -729,7 +774,20 @@ def _safe_gaps(s, bet, row) -> dict:
         return {"gaps_computation_error": str(exc)[:160]}
 
 
-def _bet_dict(row: PersonalBet) -> dict:
+def _superseded_ids(s, bet_ids) -> set:
+    """The ids among `bet_ids` that a later entry corrects
+    (journal-P1-F). A superseded row remains in the record — it is the
+    immutable audit trail of the mistake — but it contributes no
+    effective observation to any count; its correction does."""
+    ids = list(bet_ids)
+    if not ids:
+        return set()
+    rows = (s.query(PersonalBet.corrects_bet_id)
+            .filter(PersonalBet.corrects_bet_id.in_(ids)).all())
+    return {r[0] for r in rows}
+
+
+def _bet_dict(row: PersonalBet, *, superseded: bool = False) -> dict:
     return {
         "id": row.id, "fixture_id": row.fixture_id,
         "market_ticker": row.market_ticker,
@@ -748,8 +806,11 @@ def _bet_dict(row: PersonalBet) -> dict:
         "settled_outcome": row.settled_outcome,
         "content_hash": row.content_hash,
         "corrects_bet_id": row.corrects_bet_id,
+        # journal-P1-F: a corrected row is audit, not an observation
+        "superseded": superseded,
         "counts_toward_aggregate": (row.price_basis == "observed_quote"
-                                    and row.status != "void"),
+                                    and row.status != "void"
+                                    and not superseded),
     }
 
 
@@ -803,10 +864,19 @@ def journal_summary(fixture_id: int | None = None,
         if fixture_id is not None:
             q = q.filter_by(fixture_id=fixture_id)
         bets = q.all()
+        # journal-P1-F: one effective observation per correction chain.
+        # A corrected row stays in the record (and in total_recorded —
+        # the audit denominator) but contributes to NO aggregate; its
+        # correction does. Corrections share their target's scope by
+        # construction, so the corrector is always inside this query's
+        # scope.
+        superseded_ids = {b.corrects_bet_id for b in bets
+                          if b.corrects_bet_id is not None}
+        effective = [b for b in bets if b.id not in superseded_ids]
         counts = {k: 0 for k in STATUSES}
-        for b in bets:
+        for b in effective:
             counts[b.status] = counts.get(b.status, 0) + 1
-        countable = [b for b in bets
+        countable = [b for b in effective
                      if b.price_basis == "observed_quote"
                      and b.status != "void"]
         ids = {b.id for b in bets}
@@ -820,9 +890,14 @@ def journal_summary(fixture_id: int | None = None,
             "evidence_class": "personal_journal",
             "counts": counts,
             "total_recorded": len(bets),
+            # journal-P1-F: the counting surfaces above are EFFECTIVE
+            # (one observation per correction chain); the raw rows are
+            # all still present and total_recorded still counts them
+            "effective_recorded": len(effective),
+            "superseded": len(bets) - len(effective),
             "countable": len(countable),
             "excluded_stated_only": sum(
-                1 for b in bets if b.price_basis == "stated_only"),
+                1 for b in effective if b.price_basis == "stated_only"),
             "executions": {
                 "total": len(execs),
                 "filled": sum(1 for e in execs if e.status == "filled"),
@@ -1085,9 +1160,14 @@ def _iso(dt):
     return dt.isoformat() if dt else None
 
 
-def public_bet_projection(row: PersonalBet) -> dict:
+def public_bet_projection(row: PersonalBet, *,
+                          superseded: bool = False) -> dict:
     """The single public shape of a journal entry. Every public surface
-    (briefing, journal, corpus) serves THIS and nothing wider."""
+    (briefing, journal, corpus) serves THIS and nothing wider.
+
+    `superseded` is caller-computed (journal-P1-F): whether a later
+    entry corrects this one is a fact about the SET being served, not
+    about the row, so the surface assembling the set supplies it."""
     return {
         "id": row.id,
         "competition_slug": row.competition_slug,
@@ -1108,8 +1188,11 @@ def public_bet_projection(row: PersonalBet) -> dict:
         "settled_at": _iso(row.settled_at),
         "content_hash": row.content_hash,
         "corrects_bet_id": row.corrects_bet_id,
+        # journal-P1-F: a corrected row is audit, not an observation
+        "superseded": superseded,
         "counts_toward_aggregate": (row.price_basis == "observed_quote"
-                                    and row.status != "void"),
+                                    and row.status != "void"
+                                    and not superseded),
     }
 
 
@@ -1123,15 +1206,16 @@ def open_entries(s, fixture_id: int, redact: bool = True) -> list[dict]:
     rows = (s.query(PersonalBet).filter_by(fixture_id=fixture_id)
             .filter(PersonalBet.status != "void")
             .order_by(PersonalBet.id.desc()).all())
+    superseded = _superseded_ids(s, (b.id for b in rows))
     out = []
     for b in rows:
         execs = (s.query(PersonalBetExecution)
                  .filter_by(personal_bet_id=b.id).all())
         if redact:
-            d = public_bet_projection(b)
+            d = public_bet_projection(b, superseded=b.id in superseded)
             d["executions"] = {"count": len(execs)}
         else:
-            d = _bet_dict(b)
+            d = _bet_dict(b, superseded=b.id in superseded)
             d["executions"] = [_execution_dict(s, e) for e in execs]
         out.append(d)
     return out
@@ -1149,9 +1233,11 @@ def full_entries(fixture_id: int | None = None) -> list[dict]:
         q = s.query(PersonalBet)
         if fixture_id is not None:
             q = q.filter_by(fixture_id=fixture_id)
+        rows = q.order_by(PersonalBet.id.desc()).all()
+        superseded = _superseded_ids(s, (b.id for b in rows))
         out = []
-        for b in q.order_by(PersonalBet.id.desc()).all():
-            d = _bet_dict(b)
+        for b in rows:
+            d = _bet_dict(b, superseded=b.id in superseded)
             d["executions"] = [
                 _execution_dict(s, e) for e in
                 s.query(PersonalBetExecution)

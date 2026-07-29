@@ -1597,7 +1597,7 @@ class TestCorpusScoping:
         from src.live import corpus
         mls_bet, epl_bet = self._seed_two_competitions(live_session)
         bundle = corpus.build_corpus()
-        assert bundle["manifest"]["schema_version"] == "corpus-v3"
+        assert bundle["manifest"]["schema_version"] == "corpus-v4"
         bets = bundle["sections"]["personal_journal.json"]
         assert [b["id"] for b in bets] == [mls_bet["id"]]
         assert all(b["competition_slug"] == "mls-2026" for b in bets)
@@ -1613,6 +1613,147 @@ class TestCorpusScoping:
         assert out["executions"]["total"] == 1
         everything = journal.journal_summary(competition_slug=None)
         assert everything["total_recorded"] == 2
+
+
+class TestCorrectionScope:
+    """journal-P1-F: a correction restates the SAME observation — same
+    competition, fixture, market and outcome — and supersedes it.
+    Chains are linear, aggregates count ONE effective observation per
+    chain, and the corrected rows remain as immutable audit. Round 1
+    validated corrects_bet_id for existence only, so a 'correction'
+    could point across fixtures or competitions (a dangling reference
+    in the scoped corpus) and journal_summary counted corrected rows as
+    independent observations."""
+
+    def _taken(self, journal, ticker="KXMLSGAME-x-H", quote=1,
+               fixture=1):
+        bet = journal.record_view(fixture, ticker,
+                                  outcome_key="home_win",
+                                  stated_price="0.45",
+                                  market_quote_id=quote)
+        journal.resolve_view(bet["id"], "taken")
+        return bet
+
+    def test_a_cross_fixture_correction_is_rejected(self, live_session):
+        from src.live import journal
+        _seed(live_session)
+        _seed_other_fixture(live_session)
+        bet = self._taken(journal)
+        r = journal.record_view(2, "KXMLSGAME-y-H",
+                                outcome_key="home_win",
+                                market_quote_id=5,
+                                corrects_bet_id=bet["id"])
+        assert "error" in r and "out of scope" in r["error"]
+        assert "fixture" in r["error"]
+        assert live_session.query(PersonalBet).count() == 1
+
+    def test_a_cross_market_or_outcome_correction_is_rejected(
+            self, live_session):
+        from src.live import journal
+        _seed(live_session)
+        bet = self._taken(journal)
+        r = journal.record_view(1, "KXMLSGAME-x-H",
+                                outcome_key="away_win",
+                                corrects_bet_id=bet["id"])
+        assert "error" in r and "outcome_key" in r["error"]
+        r = journal.record_view(1, "KXMLSGAME-x-T",
+                                outcome_key="home_win",
+                                corrects_bet_id=bet["id"])
+        assert "error" in r and "market_ticker" in r["error"]
+        assert live_session.query(PersonalBet).count() == 1
+
+    def test_a_cross_competition_correction_cannot_dangle_in_the_corpus(
+            self, live_session):
+        """The scoped corpus is why the scope check exists: an MLS
+        export must never carry a corrects_bet_id its own file cannot
+        resolve."""
+        from src.live import corpus, journal
+        _seed(live_session)
+        live_session.add_all([
+            Competition(slug="epl-2026", name="EPL", season=2026),
+            Fixture(id=2, competition_slug="epl-2026",
+                    espn_event_id="e2", status="pre",
+                    current_kickoff_utc=datetime.now(UTC)
+                    + timedelta(hours=3))])
+        live_session.commit()
+        bet = self._taken(journal)
+        r = journal.record_view(2, "KXMLSGAME-x-H",
+                                outcome_key="home_win",
+                                corrects_bet_id=bet["id"])
+        assert "error" in r and "competition" in r["error"]
+        assert live_session.query(PersonalBet).count() == 1
+        bundle = corpus.build_corpus()
+        rows = bundle["sections"]["personal_journal.json"]
+        exported_ids = {b["id"] for b in rows}
+        for b in rows:
+            assert (b["corrects_bet_id"] is None
+                    or b["corrects_bet_id"] in exported_ids)
+
+    def test_a_chain_counts_once_everywhere(self, live_session):
+        """taken, corrected to passed = TWO immutable rows and ONE
+        effective pass — in the summary, the corpus and the public
+        entry list alike."""
+        from src.live import corpus, journal
+        _seed(live_session)
+        a = self._taken(journal)
+        b = journal.record_view(1, "KXMLSGAME-x-H",
+                                outcome_key="home_win",
+                                stated_price="0.45", market_quote_id=1,
+                                rationale="mis-resolved; he passed",
+                                corrects_bet_id=a["id"])
+        journal.resolve_view(b["id"], "passed")
+        # two immutable rows — the mistake is preserved, not rewritten
+        assert live_session.query(PersonalBet).count() == 2
+        assert live_session.get(PersonalBet, a["id"]).status == "taken"
+        out = journal.journal_summary()
+        assert out["total_recorded"] == 2
+        assert out["effective_recorded"] == 1
+        assert out["superseded"] == 1
+        assert out["counts"]["taken"] == 0
+        assert out["counts"]["passed"] == 1
+        assert out["countable"] == 1
+        bundle = corpus.build_corpus()
+        rows = {x["id"]: x
+                for x in bundle["sections"]["personal_journal.json"]}
+        assert len(rows) == 2
+        assert rows[a["id"]]["superseded"] is True
+        assert rows[a["id"]]["counts_toward_aggregate"] is False
+        assert rows[b["id"]]["superseded"] is False
+        assert rows[b["id"]]["counts_toward_aggregate"] is True
+        counts = bundle["manifest"]["counts"]
+        assert counts["journal_entries"] == 2
+        assert counts["journal_entries_effective"] == 1
+        assert counts["journal_entries_superseded"] == 1
+        entries = {e["id"]: e
+                   for e in journal.open_entries(live_session, 1)}
+        assert entries[a["id"]]["superseded"] is True
+        assert entries[b["id"]]["superseded"] is False
+
+    def test_chains_are_linear_correct_the_head(self, live_session):
+        from src.live import journal
+        _seed(live_session)
+        a = self._taken(journal)
+        b = journal.record_view(1, "KXMLSGAME-x-H",
+                                outcome_key="home_win",
+                                market_quote_id=1,
+                                corrects_bet_id=a["id"])
+        r = journal.record_view(1, "KXMLSGAME-x-H",
+                                outcome_key="home_win",
+                                market_quote_id=1,
+                                corrects_bet_id=a["id"])
+        assert "error" in r
+        assert "already corrected" in r["error"]
+        assert str(b["id"]) in r["error"]
+        assert live_session.query(PersonalBet).count() == 2
+        # correcting the HEAD extends the chain; still one effective
+        c = journal.record_view(1, "KXMLSGAME-x-H",
+                                outcome_key="home_win",
+                                market_quote_id=1,
+                                corrects_bet_id=b["id"])
+        assert "error" not in c
+        out = journal.journal_summary()
+        assert out["total_recorded"] == 3
+        assert out["effective_recorded"] == 1
 
 
 class TestBroadcast:

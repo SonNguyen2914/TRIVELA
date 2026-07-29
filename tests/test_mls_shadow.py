@@ -2468,7 +2468,7 @@ class TestPredictionRuns:
         runs.scheduled_runs()
         out = str(tmp_path / "corpus-v1")
         manifest = corpus.export_corpus(out, "mls-shadow-2026-test")
-        assert manifest["schema_version"] == "corpus-v3"
+        assert manifest["schema_version"] == "corpus-v4"
         # V9.3 eval F10: the corpus must carry the RESEARCH plane too, or
         # it can replay a final run while the model-development result
         # (ladder, sweeps, approval) stays unreproducible
