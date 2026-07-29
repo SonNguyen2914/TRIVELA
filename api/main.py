@@ -730,6 +730,175 @@ def epl_approval():
 # === end EPL block =========================================================
 
 
+# === Liga MX (liga-mx-2026) — additive block, 2026-07-29 ===================
+# Read-only mirrors of the /api/mls data reads, keyed by the liga-mx-2026
+# competition. The Kalshi markets are OPEN (live-verified 2026-07-29) but
+# the MODEL IS DARK: /api/ligamx/odds serves an empty board and
+# /api/ligamx/approval states the unapproved reality until an approval
+# decision is earned via the evaluation ladder — nothing here can mint
+# one. SPLIT SEASONS: standings and status responses carry the tournament
+# (Apertura/Clausura) label, derived from ESPN's own data. No
+# admin/mutation routes are added for Liga MX in this phase.
+
+@app.get("/api/ligamx/scoreboard")
+def ligamx_scoreboard(date: str | None = Query(None, pattern=r"^\d{8}$")):
+    from src import ligamx
+    return {"fixtures": ligamx.scoreboard(date),
+            "tournament": ligamx.current_tournament(),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/ligamx/schedule")
+def ligamx_schedule(days: int = Query(7, ge=1, le=14)):
+    from src import ligamx
+    return {"fixtures": ligamx.schedule(days),
+            "tournament": ligamx.current_tournament(),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/ligamx/standings")
+def ligamx_standings():
+    """One table PER TOURNAMENT (Apertura/Clausura are separate
+    competitions with separate tables — never merged), each labelled
+    with ESPN's own tournament name. A tournament that has not produced
+    a single result is EXPLICITLY ABSENT: ESPN ships complete all-zero
+    rows ranked alphabetically preseason, and rendering that would
+    fabricate an order (the EPL lesson, research_archive/epl/)."""
+    from src import ligamx
+    return {"tables": ligamx.standings(),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/ligamx/markets")
+def ligamx_markets():
+    """Open Liga MX game books — LIVE (9 open Apertura events at build
+    time); see /api/ligamx/markets/discovery for the probe. No futures
+    section: KXLIGAMXCUP does not exist (404 on 2026-07-29,
+    research_archive/ligamx_kalshi_family_series_probe_2026-07-29.json),
+    and none is invented."""
+    from src import ligamx
+    return {"games": ligamx.game_books(),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/ligamx/markets/discovery")
+def ligamx_markets_discovery():
+    """The Kalshi discovery probe: does the CONFIGURED series exist,
+    how many open events does it serve, and how many upcoming fixtures
+    remain unmapped. The honest market-readiness answer, cached 300s."""
+    from src.ligamx import _cached as _ligamx_cached
+    try:
+        from src.live import ligamx_plane
+        return _ligamx_cached("discovery", 300,
+                              ligamx_plane.discovery_status) or {}
+    except Exception as exc:
+        print(f"[ligamx] discovery status failed: {exc}")
+        raise HTTPException(503, "discovery status unavailable")
+
+
+@app.get("/api/ligamx/match/{event_id}")
+def ligamx_match(event_id: str):
+    from src import ligamx
+    if not event_id.isdigit() or len(event_id) > 12:
+        raise HTTPException(404, "unknown event")
+    out = ligamx.match_summary(event_id)
+    if out is None:
+        raise HTTPException(502, "summary unavailable")
+    book = None
+    books = []
+    try:
+        books = ligamx.find_all_books(
+            out.get("date"),
+            (out.get("home") or {}).get("name") or "",
+            (out.get("away") or {}).get("name") or "")
+        book = next((f for f in books if f.get("key") == "winner"), None)
+    except Exception as exc:            # the hub must not die on the book
+        print(f"[ligamx] book match failed for {event_id}: {exc}")
+    model = None
+    try:                                # nor on the live plane
+        from src.live import ligamx_plane
+        model = ligamx_plane.model_for_event(event_id)
+    except Exception as exc:
+        print(f"[ligamx] model section failed for {event_id}: {exc}")
+    lineup = None
+    try:                # nor on the lineup view (display context only)
+        from src.live import lineup_view
+        raw = ligamx.raw_summary(event_id)
+        if raw:
+            lineup = lineup_view.build(raw)
+    except Exception as exc:
+        print(f"[ligamx] lineup section failed for {event_id}: {exc}")
+    return {"match": out, "book": book, "books": books, "model": model,
+            "lineups": lineup, "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/ligamx/odds")
+def ligamx_odds():
+    """The Liga MX shadow odds board. EMPTY while liga-mx-2026-v0 is
+    dark (no approval decision exists; runs are structurally refused) —
+    the response says so explicitly rather than serving a zero that
+    could read as a forecast."""
+    odds = []
+    try:
+        from src.live import ligamx_plane
+        odds = ligamx_plane.latest_odds()
+    except Exception as exc:
+        print(f"[ligamx] odds board failed: {exc}")
+    return {"odds": odds, "shadow": True,
+            "model_dark": len(odds) == 0,
+            "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/ligamx/approval")
+def ligamx_approval():
+    """The liga-mx-2026-v0 approval state: DARK. Load-only (V9.5 H6 —
+    nothing on a request path may create or activate an approval)."""
+    try:
+        from src.live import ligamx_plane
+        return ligamx_plane.approval_status()
+    except Exception as exc:
+        print(f"[ligamx] approval failed: {exc}")
+        raise HTTPException(503, "approval unavailable")
+
+
+@app.get("/api/ligamx/status")
+def ligamx_status():
+    """One honest page of what this competition IS right now: the
+    tournament ESPN is serving (split-season identity), the dark model
+    contract, the goals-only/no-xG verdict, and the plane switch state.
+    Everything here is derived or configured — nothing asserted."""
+    from src import ligamx
+    tournament = None
+    try:
+        tournament = ligamx.current_tournament()
+    except Exception as exc:
+        print(f"[ligamx] tournament read failed: {exc}")
+    return {
+        "competition": "liga-mx-2026",
+        "competition_note": ("liga-mx-2026 spans the ESPN season year: "
+                             "Apertura 2026 + Clausura 2027 + both "
+                             "Liguillas; the current tournament is "
+                             "derived from provider data"),
+        "tournament": tournament,
+        "shadow_enabled": config.LIGAMX_SHADOW_ENABLED,
+        "model": {
+            "name": "liga-mx-2026-v0",
+            "mode": "dark",
+            "goals_only": True,
+            "xg_source": None,
+            "xg_note": ("no trustworthy public xG source exists for "
+                        "Liga MX (ESPN mex.1 carries no team-level "
+                        "match xG; the official ligamx.net surface has "
+                        "no public contract) — the model is goals-only "
+                        "and says so"),
+        },
+        "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
+        "generated_at": utcnow().isoformat(),
+    }
+# === end Liga MX block =====================================================
+
+
 @app.get("/api/ready")
 def ready():
     """Readiness, distinct from liveness (V7 evaluation F7): reports

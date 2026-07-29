@@ -130,6 +130,23 @@ def migrate_and_seed() -> None:
                 s.commit()
                 print("[live] seeded competition epl-2026")
             # --- end EPL seed -----------------------------------------
+            # --- Liga MX seed (additive block, 2026-07-29) ------------
+            # slug spans the ESPN season year (Apertura 2026 + Clausura
+            # 2027 + both Liguillas) — the split-season identity
+            # decision, documented in research_archive/
+            # ligamx_RESEARCH_SUMMARY_2026-07-29.json.
+            if s.get(Competition, "liga-mx-2026") is None:
+                s.add(Competition(
+                    slug="liga-mx-2026", name="Liga MX",
+                    provider_league_id=262,     # API-Football's Liga MX id
+                    season=2026, timezone="UTC",
+                    match_duration_minutes=90, supports_draw=True,
+                    regular_time_only=True, has_group_stage=False,
+                    has_knockout_stage=True,    # Liguilla, per tournament
+                    model_version="liga-mx-2026-v0"))
+                s.commit()
+                print("[live] seeded competition liga-mx-2026")
+            # --- end Liga MX seed -------------------------------------
         finally:
             s.close()
     except Exception as exc:

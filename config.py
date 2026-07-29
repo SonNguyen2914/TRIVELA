@@ -371,6 +371,49 @@ EPL_CALIBRATION_ALPHA = float(os.getenv("EPL_CALIBRATION_ALPHA", "0.0"))
 EPL_MARKETS_JOB_MINUTES = int(os.getenv("EPL_MARKETS_JOB_MINUTES", "30"))
 # === end EPL block =========================================================
 
+# === Liga MX (liga-mx-2026) — additive block, 2026-07-29 ===================
+# Mexican Liga BBVA MX machinery parity. IN SEASON (Apertura 2026) with
+# OPEN Kalshi markets — but the MODEL IS DARK: nothing here can approve
+# it, and no odds render until an approval decision is earned through
+# the evaluation ladder.
+
+# Master switch for the Liga MX shadow-plane jobs (ingest, market
+# discovery, quote capture, run sweeps). DEFAULT FALSE — unlike the MLS
+# and EPL flags — so shipping this build changes nothing at boot until
+# an operator turns the plane on deliberately. With the model dark the
+# run/lock sweeps refuse regardless of this switch.
+LIGAMX_SHADOW_ENABLED = _parse_flag(
+    os.getenv("LIGAMX_SHADOW_ENABLED"), False, "LIGAMX_SHADOW_ENABLED")
+
+# The Kalshi game series, verified LIVE 2026-07-29: KXLIGAMXGAME exists
+# with 9 open Apertura events and 221 historical events, exact KXMLSGAME
+# grammar (research_archive/ligamx_kalshi_*_2026-07-29.json). Still
+# config, and the discovery probe (/api/ligamx/markets/discovery)
+# reports its live status.
+LIGAMX_KALSHI_GAME_SERIES = os.getenv("LIGAMX_KALSHI_GAME_SERIES",
+                                      "KXLIGAMXGAME").strip()
+
+# Liga MX goal-rate dispersion. UNMEASURED — 0.0 carries the closest
+# measured precedent (MLS league play swept to 0.0 on 162 fixtures).
+# Must be re-swept on real Liga MX data before any approval evaluation;
+# until then it only affects backtests/tests (the dark model produces
+# no runs).
+LIGAMX_GOAL_DISPERSION_CV = float(
+    os.getenv("LIGAMX_GOAL_DISPERSION_CV", "0.0"))
+
+# 3-way calibration toward uniform. 0.0 = raw simulation: MLS's 0.25
+# was MEASURED on MLS data and does not transfer by assumption.
+LIGAMX_CALIBRATION_ALPHA = float(
+    os.getenv("LIGAMX_CALIBRATION_ALPHA", "0.0"))
+
+# Kalshi discovery cadence. The listings are OPEN (unlike EPL's) but the
+# plane is off by default and money is locked; 30min is plenty for
+# discovery+capture while dark, and respects the 429 history (11 family
+# sweeps per pass). Tighten deliberately if the plane is ever activated.
+LIGAMX_MARKETS_JOB_MINUTES = int(
+    os.getenv("LIGAMX_MARKETS_JOB_MINUTES", "30"))
+# === end Liga MX block =====================================================
+
 # --- live-plane volume headroom -------------------------------------------
 # Railway's own volume alerts are Teams/Pro-only, so the platform CANNOT
 # warn before the disk fills. It filled once (2026-07-25) and every
