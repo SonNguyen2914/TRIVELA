@@ -16,9 +16,14 @@ rule for a season that has not started.
 Kalshi ground truth (research_archive/epl/, 2026-07-28):
   - KXEPLGAME EXISTS and carried 387 events across 2025-26 with the
     exact KXMLSGAME grammar ({YYMONDD}{HOME}{AWAY} suffix, team-code /
-    TIE market tails, " vs " titles) — but has 0 open events for the
-    2026-27 season as of today. The series ticker is therefore config,
-    verified-as-a-series but with the new season's listings UNVERIFIED.
+    TIE market tails, " vs " titles). NO 2026-27 fixture is listed yet.
+    The series ticker is therefore config, verified-as-a-series but with
+    the new season's listings UNVERIFIED.
+  - `status=open` DOES NOT MEAN CURRENT here. The archived probe
+    (kalshi_events_KXEPLGAME_2026-07-28T1015Z.json) returned TEN events
+    under status=open, and every one is dated 26MAY24 — the final
+    matchday of 2025-26, long settled. This is why retrieval below is
+    bounded by the ticker DATE and never by provider status.
   - 10 non-game family series exist as DEFINITIONS (no KXEPLMOV). Their
     per-match listing behaviour and tail grammar for 26/27 are
     unverified; they ship as config and simply return no rows until
@@ -407,10 +412,15 @@ def _fixture_et_date(iso_date: str) -> str | None:
 
 
 # --- per-match Kalshi families ---------------------------------------------
-# Series DEFINITIONS verified to exist 2026-07-28 (no KXEPLMOV). Whether
-# each lists per-match markets for 26/27, and whether the ticker-tail
-# grammar matches MLS's, is UNVERIFIED until real listings appear —
-# until then each family simply contributes zero rows.
+# PROVIDER-UNVERIFIED (config.EPL_FAMILY_GRAMMAR_STATUS). Series
+# DEFINITIONS were probed and exist 2026-07-28 (no KXEPLMOV), and that is
+# ALL that has been observed: nothing is known about whether these
+# families list per-match markets for 2026-27, nor whether their
+# ticker-TAIL grammar matches the MLS families `model_key_for` below was
+# written against. Until real listings appear each contributes zero rows,
+# and an unparseable tail maps to None (market-only), never a guess. The
+# status is reported at /api/epl/markets/discovery so the caveat travels
+# with the data rather than living only here.
 
 MATCH_FAMILIES = [
     ("winner", KALSHI_EPL_GAME, "Winner · 3-way"),

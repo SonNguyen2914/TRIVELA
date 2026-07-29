@@ -312,43 +312,52 @@ class TestModelKeys:
 
 class TestSummaryReuse:
     def test_eng1_summary_shape_parses_with_derived_letters(self):
-        """Reduced from espn_summary_740966 (Brighton 2-0 Man United):
-        the derived W/L letter must come from the scores, and the
-        shared audit must cover eng.1 payloads unchanged."""
+        """Reduced from espn_summary_740966 — and now FAITHFUL to it.
+
+        The archived header is Brighton 0, Manchester United 3 (an away
+        win). The earlier version of this test described the match as
+        "Brighton 2-0 Man United" and built a header to match, so the
+        fixture it exercised contradicted the file it cited.
+
+        The lastFiveGames row is Brighton's REAL archived away defeat at
+        Newcastle: `score` reads "3-1" (winner-first) while
+        homeTeamScore/awayTeamScore are positional and Brighton were
+        away. Read the provider string as team-first and a 1-3 loss
+        renders as a 3-1 win — the exact drift the derived letter
+        exists to prevent."""
         d = {
             "header": {"id": "740966", "competitions": [{
                 "date": "2026-05-24T15:00Z",
                 "status": {"type": {"state": "post",
                                     "shortDetail": "FT"}},
                 "competitors": [
-                    {"homeAway": "home", "score": "2",
+                    {"homeAway": "home", "score": "0",
                      "team": {"id": "331", "displayName":
                               "Brighton & Hove Albion",
                               "abbreviation": "BHA"}},
-                    {"homeAway": "away", "score": "0",
+                    {"homeAway": "away", "score": "3",
                      "team": {"id": "360", "displayName":
                               "Manchester United",
                               "abbreviation": "MAN"}},
                 ]}]},
             "lastFiveGames": [{
-                "team": {"displayName": "Manchester United",
-                         "abbreviation": "MAN"},
+                "team": {"displayName": "Brighton & Hove Albion",
+                         "abbreviation": "BHA"},
                 "events": [{
-                    # winner-first provider string says "2-0"; the team
-                    # LOST 0-2 away. The letter must derive from the
-                    # authoritative fields, not the string.
-                    "homeTeamScore": "2", "awayTeamScore": "0",
-                    "atVs": "@", "score": "2-0", "gameResult": "L",
-                    "opponent": {"abbreviation": "BHA"},
-                    "gameDate": "2026-05-24T15:00Z"}],
+                    "homeTeamScore": "3", "awayTeamScore": "1",
+                    "atVs": "@", "score": "3-1", "gameResult": "L",
+                    "homeTeamId": "361",
+                    "opponent": {"abbreviation": "NEW"},
+                    "gameDate": "2026-05-02T14:00Z"}],
             }],
         }
-        out = epl.match_summary  # not called (network); parse directly
         from src.mls import parse_summary
         parsed = parse_summary(d)
         assert parsed["home"]["name"] == "Brighton & Hove Albion"
+        assert (parsed["home"]["score"], parsed["away"]["score"]) == \
+            ("0", "3")
         g = parsed["scouting"]["last_five"][0]["games"][0]
-        assert (g["team_score"], g["opponent_score"]) == (0, 2)
+        assert (g["team_score"], g["opponent_score"]) == (1, 3)
         assert g["result"] == "L"
         assert epl.scoreline_disagreements(d) == []
 
@@ -449,6 +458,76 @@ class TestMarketRetrievalIsBounded:
         assert prov.market_calls == ["KXEPLGAME-WEIRD"]
 
 
+# --- the archive says what we say it says ---------------------------------
+# The research record asserted things its own bytes do not show. These
+# pin the corrected claims to the committed payloads so the next drift is
+# caught by the suite, not by a reviewer.
+
+
+class TestArchivedClaimsHold:
+    def test_status_open_is_not_status_current(self):
+        """The correction that matters most: the archived status=open
+        probe returned TEN KXEPLGAME events and EVERY one is dated
+        26MAY24 — the settled final matchday of 2025-26. The record
+        said "0 open events". A status filter is therefore useless as a
+        freshness filter here, which is exactly why retrieval is bounded
+        by the ticker DATE (P0-1)."""
+        with open(os.path.join(
+                ARCHIVE,
+                "kalshi_events_KXEPLGAME_2026-07-28T1015Z.json"),
+                encoding="utf-8") as fh:
+            evs = json.load(fh)["events"]
+        assert len(evs) == 10
+        assert all(epl._ticker_et_date(e["event_ticker"]) == "26MAY24"
+                   for e in evs)
+        # and none of them survives the horizon bound
+        assert events_in_horizon_of(evs) == 0
+
+    def test_every_archived_title_carries_the_vs_join(self):
+        """The record warned that some events title "{Team}: Game
+        Winner?" INSTEAD of "A vs B". None do: all 387 carry " vs ", and
+        the 7 Game-Winner events append the suffix to the AWAY side."""
+        events = _archived_game_events()
+        assert len(events) == 387
+        assert all(" vs " in (e.get("title") or "") for e in events)
+        gw = [e for e in events if "Game Winner" in (e.get("title") or "")]
+        assert len(gw) == 7
+        for e in gw:
+            assert e["title"].split(" vs ", 1)[1].endswith(": Game Winner?")
+
+    def test_the_probe_files_are_named_what_the_record_now_says(self):
+        """The record cited "probe_KX*.json"; no such file exists."""
+        import glob
+        assert glob.glob(os.path.join(ARCHIVE, "probe_KX*.json")) == []
+        series = glob.glob(os.path.join(ARCHIVE,
+                                        "kalshi_series_KXEPL*.json"))
+        assert len(series) == 18
+        missing = 0
+        for f in series:
+            with open(f, encoding="utf-8") as fh:
+                body = json.load(fh)
+            missing += int("error" in body)
+        assert missing == 6            # MOV, WINNER, CUP, TITLE, CHAMP, LEAGUE
+
+    def test_the_archived_summary_result_is_brighton_0_3(self):
+        """The reduced summary test described event 740966 as "Brighton
+        2-0 Man United". The archive says Brighton 0, Manchester United
+        3 — Man United won away."""
+        with open(os.path.join(
+                ARCHIVE, "espn_summary_740966_2026-07-28T1015Z.json"),
+                encoding="utf-8") as fh:
+            d = json.load(fh)
+        comp = d["header"]["competitions"][0]
+        got = {c["homeAway"]: (c["team"]["displayName"], c["score"])
+               for c in comp["competitors"]}
+        assert got["home"] == ("Brighton & Hove Albion", "0")
+        assert got["away"] == ("Manchester United", "3")
+
+
+def events_in_horizon_of(evs):
+    return len(epl.events_in_horizon(evs))
+
+
 # --- API surface -----------------------------------------------------------
 
 class TestEplRoutes:
@@ -467,14 +546,87 @@ class TestEplRoutes:
 
     def test_odds_board_reports_dark_empty(self, monkeypatch):
         """With the live plane dormant the board must be an explicit
-        empty carrying the shadow + dark flags — never a zero-forecast."""
+        empty carrying the shadow + dark flags — never a zero-forecast.
+        Dormant IS an explicit unapproved answer: no plane, no approval."""
         from fastapi.testclient import TestClient
         from api.main import app
         with TestClient(app) as c:
             d = c.get("/api/epl/odds").json()
         assert d["odds"] == []
         assert d["shadow"] is True and d["model_dark"] is True
+        assert d["model_state"] == "dark"
         assert d["real_money_signals"] is False
+
+
+# --- P0-5: approval, empty data and failure are THREE states --------------
+# `model_dark = len(odds) == 0` collapsed them into the most reassuring
+# one, so an approved-but-empty board and a FAILED read both rendered as
+# a deliberate design decision.
+
+
+class TestOddsBoardStates:
+    def _get(self, monkeypatch, approval, odds):
+        from fastapi.testclient import TestClient
+        from api.main import app
+        from src.live import epl_plane
+
+        def _approval():
+            if isinstance(approval, Exception):
+                raise approval
+            return approval
+
+        def _odds():
+            if isinstance(odds, Exception):
+                raise odds
+            return odds
+        monkeypatch.setattr(epl_plane, "approval_status", _approval)
+        monkeypatch.setattr(epl_plane, "latest_odds", _odds)
+        with TestClient(app) as c:
+            return c.get("/api/epl/odds").json()
+
+    APPROVED = {"model_version": "epl-2026-v0",
+                "approved_for_shadow": True,
+                "approval_decision_missing": False,
+                "mode": "approved_decision_present"}
+    UNAPPROVED = {"model_version": "epl-2026-v0",
+                  "approved_for_shadow": False,
+                  "approval_decision_missing": True, "mode": "dark"}
+
+    def test_approved_with_no_runs_is_not_dark(self, monkeypatch):
+        """(Proven to fail: with model_dark = len(odds) == 0 this
+        reports model_dark true for an APPROVED model.)"""
+        d = self._get(monkeypatch, self.APPROVED, [])
+        assert d["model_state"] == "approved_no_runs"
+        assert d["model_dark"] is False
+
+    def test_a_failed_odds_read_is_unavailable_not_dark(self, monkeypatch):
+        d = self._get(monkeypatch, self.APPROVED,
+                      RuntimeError("live plane exploded"))
+        assert d["model_state"] == "unavailable"
+        assert d["model_dark"] is False
+        assert "odds" in d["errors"]
+
+    def test_a_failed_approval_read_is_unavailable_not_dark(
+            self, monkeypatch):
+        d = self._get(monkeypatch, RuntimeError("approval read failed"),
+                      [])
+        assert d["model_state"] == "unavailable"
+        assert d["model_dark"] is False
+        assert "approval" in d["errors"]
+
+    def test_only_an_explicit_unapproved_answer_is_dark(self, monkeypatch):
+        d = self._get(monkeypatch, self.UNAPPROVED, [])
+        assert d["model_state"] == "dark"
+        assert d["model_dark"] is True
+
+    def test_approved_with_runs_reports_approved(self, monkeypatch):
+        d = self._get(monkeypatch, self.APPROVED, [
+            {"espn_event_id": "e1", "outcomes": {"home_win": 0.5,
+                                                 "draw": 0.25,
+                                                 "away_win": 0.25}}])
+        assert d["model_state"] == "approved"
+        assert d["model_dark"] is False
+        assert len(d["odds"]) == 1
 
     def test_approval_route_reports_dark(self):
         from fastapi.testclient import TestClient

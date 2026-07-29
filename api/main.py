@@ -719,20 +719,56 @@ def epl_match(event_id: str):
 
 @app.get("/api/epl/odds")
 def epl_odds():
-    """The EPL shadow odds board. EMPTY while epl-2026-v0 is dark (no
-    approval decision exists; runs are structurally refused) — the
-    response says so explicitly rather than serving a zero that could
-    read as a forecast."""
-    odds = []
+    """The EPL shadow odds board, with the reason it is empty (P0-5).
+
+    `model_dark` used to be `len(odds) == 0`, which collapsed three
+    different states into the most reassuring one: an approved model
+    that simply has no runs yet read as "dark", and so did a FAILED
+    read. A failure that renders as a deliberate design decision is the
+    worst kind — nobody investigates it.
+
+    model_state is one of:
+      dark              the approval response EXPLICITLY says unapproved
+      approved_no_runs  approved, but no complete run exists yet
+      approved          approved, with runs
+      unavailable       the approval or odds read FAILED — we do not
+                        know, and must not claim to
+    """
+    approval = None
+    errors: dict[str, str] = {}
+    try:
+        from src.live import epl_plane
+        approval = epl_plane.approval_status()
+    except Exception as exc:
+        errors["approval"] = str(exc)[:160]
+        print(f"[epl] approval read failed: {exc}")
+    odds = None
     try:
         from src.live import epl_plane
         odds = epl_plane.latest_odds()
     except Exception as exc:
+        errors["odds"] = str(exc)[:160]
         print(f"[epl] odds board failed: {exc}")
-    return {"odds": odds, "shadow": True,
-            "model_dark": len(odds) == 0,
-            "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
-            "generated_at": utcnow().isoformat()}
+
+    if approval is None or odds is None:
+        state = "unavailable"
+    elif (approval.get("approval_decision_missing", True)
+            or not approval.get("approved_for_shadow")):
+        state = "dark"
+    elif not odds:
+        state = "approved_no_runs"
+    else:
+        state = "approved"
+    out = {"odds": odds or [], "shadow": True,
+           "model_state": state,
+           # kept for compatibility, but now it means what it says
+           "model_dark": state == "dark",
+           "model_version": (approval or {}).get("model_version"),
+           "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
+           "generated_at": utcnow().isoformat()}
+    if errors:
+        out["errors"] = errors
+    return out
 
 
 @app.get("/api/epl/approval")

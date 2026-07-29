@@ -133,6 +133,122 @@ class TestEplIngest:
                 .filter_by(competition_slug="mls-2026").count()) == 0
 
 
+class TestSeasonIsPinnedAndValidated:
+    """The provider decides which season it calls "current"; we must not
+    let it decide which season the ratings are fitted on."""
+
+    def _run(self, s, monkeypatch, events, expect_year=2026):
+        identity.seed_league_teams(
+            "epl-2026", epl_plane.ESPN_TEAMS_URL,
+            epl_plane.KALSHI_BRIDGES, espn_teams=CANNED_EPL[:1])
+        seen: list[dict] = []
+
+        class _R:
+            status_code = 200
+
+            @staticmethod
+            def raise_for_status():
+                return None
+
+            @staticmethod
+            def json():
+                return {"season": {"year": 2026,
+                                   "displayName":
+                                   "2026-27 English Premier League"},
+                        "events": events}
+
+        def fake(url, params=None, timeout=None):
+            seen.append(params or {})
+            return _R()
+        monkeypatch.setattr(ingest.requests, "get", fake)
+        out = epl_plane.ingest_season()
+        return out, seen
+
+    def _event(self, eid, year, label):
+        now = datetime.now(UTC) + timedelta(days=30)
+        return {"id": eid, "date": now.isoformat(),
+                "season": {"year": year, "displayName": label},
+                "competitions": [{"competitors": [
+                    {"homeAway": "home", "score": None,
+                     "team": {"displayName": "Arsenal"}},
+                    {"homeAway": "away", "score": None,
+                     "team": {"displayName": "Arsenal"}}],
+                    "status": {"type": {"state": "pre"}}}]}
+
+    def test_the_request_is_pinned_to_the_configured_season(
+            self, epl_session, monkeypatch):
+        out, seen = self._run(epl_session, monkeypatch, [
+            self._event("1", 2026, "2026-27 English Premier League")])
+        assert seen and all(p.get("season") == "2026" for p in seen)
+        assert out["season_pinned"] == 2026
+        assert out["season_label"] == "2026-27"
+        assert "error" not in out
+        assert out["created"] == 1
+
+    def test_a_wrong_season_event_is_refused_explicitly(
+            self, epl_session, monkeypatch):
+        """(Proven to fail: without validation the 2025-26 fixture is
+        ingested as epl-2026 history and silently becomes training
+        data.)"""
+        out, _ = self._run(epl_session, monkeypatch, [
+            self._event("1", 2026, "2026-27 English Premier League"),
+            self._event("2", 2025, "2025-26 English Premier League")])
+        assert out["created"] == 1
+        # two requests per club (played + fixture=true), so the
+        # same refused event is counted once per answer
+        assert out["season_rejected"] == {"season_2025": 2}
+        assert "provider season mismatch" in out["error"]
+        assert (epl_session.query(Fixture)
+                .filter_by(competition_slug="epl-2026",
+                           espn_event_id="2").count()) == 0
+
+    def test_an_event_with_no_season_block_is_refused_not_assumed(
+            self, epl_session, monkeypatch):
+        ev = self._event("3", 2026, "2026-27")
+        ev.pop("season")
+        out, _ = self._run(epl_session, monkeypatch, [ev])
+        assert out["created"] == 0
+        assert out["season_rejected"] == {"season_unknown": 2}
+        assert "error" in out
+
+    def test_a_mismatched_season_label_is_refused(self, epl_session,
+                                                  monkeypatch):
+        """The year alone is not the season: ESPN labels 2026-27 under
+        year 2026, so a payload whose label disagrees with the pin is a
+        provider change we must not absorb."""
+        out, _ = self._run(epl_session, monkeypatch, [
+            self._event("4", 2026, "2027-28 English Premier League")])
+        assert out["created"] == 0
+        assert out["season_rejected"] == {"season_label_mismatch": 2}
+
+    def test_mls_ingest_is_unpinned_and_unchanged(self, epl_session,
+                                                  monkeypatch):
+        """CONTROL: the pin is opt-in. The MLS call site passes no
+        expected season, so nothing about its behaviour moves."""
+        captured: list[dict] = []
+
+        class _R:
+            @staticmethod
+            def raise_for_status():
+                return None
+
+            @staticmethod
+            def json():
+                return {"events": []}
+
+        def fake(url, params=None, timeout=None):
+            captured.append(params or {})
+            return _R()
+        identity.seed_teams([{"id": 1, "displayName": "Austin FC",
+                              "shortDisplayName": "Austin",
+                              "abbreviation": "ATX"}])
+        monkeypatch.setattr(ingest.requests, "get", fake)
+        out = ingest.ingest_season_schedules()
+        assert all("season" not in p for p in captured)
+        assert out["season_pinned"] is None
+        assert "error" not in out
+
+
 def _fake_kalshi_paged(events_by_series, markets_by_event):
     """A cursor-complete _kalshi_paged double for both the events and
     markets endpoints, always reporting a clean full sweep."""
