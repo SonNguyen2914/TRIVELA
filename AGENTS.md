@@ -412,14 +412,14 @@ throwaway database — §9.
 >
 > The frontend equivalent needs its own `npm install` in the worktree.
 
-## 9. Validation (verify against the repo; these are current as of 2026-07-26)
+## 9. Validation (verify against the repo; these are current as of 2026-07-29)
 
 Backend, from `~/dev/TRIVELA/backend`:
 
 ```bash
-.venv/bin/python -m pytest tests/ -q          # expect ~530 passed, 7 skipped
+.venv/bin/python -m pytest tests/ -q          # expect ~721 passed, 7 skipped
 PG_TEST_URL=postgresql+psycopg://<user>@localhost:5432/<throwaway> \
-  .venv/bin/python -m pytest tests/ -q        # expect ~537 passed
+  .venv/bin/python -m pytest tests/ -q        # expect ~728 passed
 .venv/bin/python -m alembic -x "url=<throwaway>" upgrade head
 ```
 
@@ -434,6 +434,10 @@ npx tsc --noEmit
 npm run build
 npx playwright test        # expect ~12 passed, 1 skipped
 ```
+
+The frontend figures still date from 2026-07-26 — they were not
+re-measured when the backend ones were, so treat them as the older
+claim they are.
 
 > **`npx playwright test` talks to PRODUCTION by default.**
 > `playwright.config.ts` falls back to the production Railway URL when
