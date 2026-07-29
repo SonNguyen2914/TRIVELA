@@ -1,0 +1,165 @@
+{
+  "source": "football-data.org (v4 REST API)",
+  "probed_at_utc": "2026-07-29T22:22:08.006731Z",
+  "probe_method": "unauthenticated curl; no account created",
+  "probes": [
+    {
+      "request": "GET https://api.football-data.org/v4/competitions (no X-Auth-Token)",
+      "http_status": 200,
+      "finding": "competition catalogue is readable WITHOUT a token; 189 competitions; each carries a `plan` tier and a `currentSeason` block",
+      "plan_tier_histogram": {
+        "TIER_ONE": 12,
+        "TIER_TWO": 20,
+        "TIER_THREE": 25,
+        "TIER_FOUR": 132
+      },
+      "target_leagues": [
+        {
+          "id": 2021,
+          "name": "Premier League",
+          "code": "PL",
+          "type": "LEAGUE",
+          "plan": "TIER_ONE",
+          "numberOfAvailableSeasons": 128,
+          "lastUpdated": "2026-06-19T12:36:02Z",
+          "area": "England",
+          "currentSeason": {
+            "id": 2502,
+            "startDate": "2026-08-21",
+            "endDate": "2027-05-30",
+            "currentMatchday": 1,
+            "winner": null
+          }
+        },
+        {
+          "id": 2113,
+          "name": "Liga MX",
+          "code": "LMX",
+          "type": "LEAGUE",
+          "plan": "TIER_THREE",
+          "numberOfAvailableSeasons": 10,
+          "lastUpdated": "2026-07-17T16:32:00Z",
+          "area": "Mexico",
+          "currentSeason": {
+            "id": 2533,
+            "startDate": "2026-07-17",
+            "endDate": "2026-11-23",
+            "currentMatchday": 3,
+            "winner": null
+          }
+        },
+        {
+          "id": 2014,
+          "name": "Primera Division",
+          "code": "PD",
+          "type": "LEAGUE",
+          "plan": "TIER_ONE",
+          "numberOfAvailableSeasons": 95,
+          "lastUpdated": "2024-09-13T16:52:33Z",
+          "area": "Spain",
+          "currentSeason": {
+            "id": 2518,
+            "startDate": "2026-08-16",
+            "endDate": "2027-05-30",
+            "currentMatchday": 1,
+            "winner": null
+          }
+        },
+        {
+          "id": 2145,
+          "name": "MLS",
+          "code": "MLS",
+          "type": "LEAGUE",
+          "plan": "TIER_TWO",
+          "numberOfAvailableSeasons": 7,
+          "lastUpdated": "2026-05-14T01:17:12Z",
+          "area": "United States",
+          "currentSeason": {
+            "id": 2467,
+            "startDate": "2026-02-21",
+            "endDate": "2026-11-08",
+            "currentMatchday": 18,
+            "winner": null
+          }
+        }
+      ]
+    },
+    {
+      "request": "GET https://api.football-data.org/v4/competitions/2021/matches?matchday=1 (no token)",
+      "http_status": 403,
+      "body": "{\"message\":\"The resource you are looking for is restricted and apparently not within your permissions. Please check your subscription.\",\"errorCode\":403}"
+    },
+    {
+      "request": "GET https://api.football-data.org/v4/competitions/2145/teams (no token)",
+      "http_status": 403
+    },
+    {
+      "request": "GET https://api.football-data.org/v4/matches/537849 (no token)",
+      "http_status": 403
+    }
+  ],
+  "coverage_table_flags_from_https_www_football_data_org_coverage": {
+    "header_columns": [
+      "Odds",
+      "Stats",
+      "Tier 1 = Free",
+      "Tier 2 = 49 EUR",
+      "Tier 3 = 99 EUR",
+      "Tier 4 = 199 EUR"
+    ],
+    "England Premier League": {
+      "Odds": "YES",
+      "Stats": "YES",
+      "Tier1_free": "YES",
+      "Tier2_49eur": "YES",
+      "Tier3_99eur": "YES",
+      "Tier4_199eur": "YES"
+    },
+    "Spain Primera Division": {
+      "Odds": "YES",
+      "Stats": "YES",
+      "Tier1_free": "YES",
+      "Tier2_49eur": "YES",
+      "Tier3_99eur": "YES",
+      "Tier4_199eur": "YES"
+    },
+    "United States MLS": {
+      "Odds": "YES",
+      "Stats": "YES",
+      "Tier1_free": "NO",
+      "Tier2_49eur": "YES",
+      "Tier3_99eur": "YES",
+      "Tier4_199eur": "YES"
+    },
+    "Mexico Liga MX": {
+      "Odds": "NO",
+      "Stats": "YES",
+      "Tier1_free": "NO",
+      "Tier2_49eur": "NO",
+      "Tier3_99eur": "YES",
+      "Tier4_199eur": "YES"
+    }
+  },
+  "pricing_quoted_from_https_www_football_data_org_pricing": {
+    "Free": "EUR 0 / 12 competitions / 10 req-min",
+    "Free w Livescores": "EUR 12",
+    "ML Pack Light": "EUR 29 / 12 comps / 10 seasons history",
+    "Free + Deep Data": "EUR 29 / 12 comps / lineups, goal scorers, cards, squads",
+    "Standard": "EUR 49 / 30 comps / 60 req-min",
+    "Advanced": "EUR 99 / 50 comps / 100 req-min",
+    "Pro": "EUR 199 / 100 comps / 120 req-min",
+    "Odds Add-On": "EUR 15 / 40 competitions, pre-match odds",
+    "Statistic Add-On": "EUR 15 — \"corners, free-kicks, offsides, fouls, ball possession, saves, shots on/off goal, cards\"",
+    "note": "\"Add-Ons can only be booked on top of a regular subscription plan.\""
+  },
+  "assessment": {
+    "all_four_leagues": "YES but not on one cheap tier: EPL + La Liga are Tier 1 (free); MLS needs Tier 2 (EUR 49); Liga MX needs Tier 3 (EUR 99). Cheapest plan covering all four = Advanced EUR 99/mo.",
+    "season_visibility_2026_27": "PROVEN present in the unauthenticated catalogue: EPL 2026-08-21..2027-05-30, La Liga 2026-08-16..2027-05-30, MLS 2026 currentMatchday 18, Liga MX Apertura 2026-07-17..2026-11-23 currentMatchday 3",
+    "per_fixture_team_stats": "YES via the EUR 15 Statistic Add-On (shots on/off target, corners, possession, fouls, cards). No shot locations.",
+    "per_player_match_stats": "NO — deep data is lineups, goal scorers, cards, squads. No per-player shots/passes/minutes stat lines.",
+    "xg": "ABSENT. xG appears nowhere in the pricing page, the Statistic Add-On field list, or the coverage table.",
+    "identity": "stable integer competition/team/match ids (e.g. Premier League = 2021, Liga MX = 2113). No ESPN cross-reference field.",
+    "cost_at_this_volume": "EUR 99 Advanced + EUR 15 Statistic Add-On = EUR 114/mo = EUR 1368/yr",
+    "fails": "criterion 2 (no per-player match stats) and criterion 3 (no xG at all) — which is the whole reason for buying"
+  }
+}

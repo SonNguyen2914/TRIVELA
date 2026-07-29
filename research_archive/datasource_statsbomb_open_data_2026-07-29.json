@@ -1,0 +1,179 @@
+{
+  "source": "StatsBomb (Hudl) free open data — github.com/statsbomb/open-data",
+  "probed_at_utc": "2026-07-29T22:22:08.015633Z",
+  "probes": [
+    {
+      "request": "GET https://raw.githubusercontent.com/statsbomb/open-data/master/data/competitions.json",
+      "http_status": 200,
+      "rows": 80
+    }
+  ],
+  "competition_season_index": {
+    "Africa / African Cup of Nations": [
+      "2023"
+    ],
+    "Argentina / Liga Profesional": [
+      "1981",
+      "1997/1998"
+    ],
+    "England / FA Women's Super League": [
+      "2018/2019",
+      "2019/2020",
+      "2020/2021",
+      "2023/2024"
+    ],
+    "England / Premier League": [
+      "2003/2004",
+      "2015/2016"
+    ],
+    "Europe / Champions League": [
+      "1970/1971",
+      "1971/1972",
+      "1972/1973",
+      "1999/2000",
+      "2003/2004",
+      "2004/2005",
+      "2006/2007",
+      "2008/2009",
+      "2009/2010",
+      "2010/2011",
+      "2011/2012",
+      "2012/2013",
+      "2013/2014",
+      "2014/2015",
+      "2015/2016",
+      "2016/2017",
+      "2017/2018",
+      "2018/2019"
+    ],
+    "Europe / UEFA Euro": [
+      "2020",
+      "2024"
+    ],
+    "Europe / UEFA Europa League": [
+      "1988/1989"
+    ],
+    "Europe / UEFA Women's Euro": [
+      "2022",
+      "2025"
+    ],
+    "France / Ligue 1": [
+      "2015/2016",
+      "2021/2022",
+      "2022/2023"
+    ],
+    "Germany / 1. Bundesliga": [
+      "2015/2016",
+      "2023/2024"
+    ],
+    "Germany / Frauen Bundesliga": [
+      "2023/2024"
+    ],
+    "India / Indian Super league": [
+      "2021/2022"
+    ],
+    "International / FIFA U20 World Cup": [
+      "1979"
+    ],
+    "International / FIFA World Cup": [
+      "1958",
+      "1962",
+      "1970",
+      "1974",
+      "1986",
+      "1990",
+      "2018",
+      "2022"
+    ],
+    "International / Women's World Cup": [
+      "2019",
+      "2023"
+    ],
+    "Italy / Serie A": [
+      "1986/1987",
+      "2015/2016"
+    ],
+    "Italy / Serie A Women": [
+      "2023/2024"
+    ],
+    "North and Central America / North American League": [
+      "1977"
+    ],
+    "South America / Copa America": [
+      "2024"
+    ],
+    "Spain / Copa del Rey": [
+      "1977/1978",
+      "1982/1983",
+      "1983/1984"
+    ],
+    "Spain / La Liga": [
+      "1973/1974",
+      "2004/2005",
+      "2005/2006",
+      "2006/2007",
+      "2007/2008",
+      "2008/2009",
+      "2009/2010",
+      "2010/2011",
+      "2011/2012",
+      "2012/2013",
+      "2013/2014",
+      "2014/2015",
+      "2015/2016",
+      "2016/2017",
+      "2017/2018",
+      "2018/2019",
+      "2019/2020",
+      "2020/2021"
+    ],
+    "Spain / Liga F": [
+      "2023/2024"
+    ],
+    "United States of America / Major League Soccer": [
+      "2023"
+    ],
+    "United States of America / NWSL": [
+      "2018",
+      "2023"
+    ]
+  },
+  "target_league_availability": {
+    "England Premier League": [
+      "2003/2004",
+      "2015/2016"
+    ],
+    "Spain La Liga": [
+      "1973/1974",
+      "2004/2005",
+      "2005/2006",
+      "2006/2007",
+      "2007/2008",
+      "2008/2009",
+      "2009/2010",
+      "2010/2011",
+      "2011/2012",
+      "2012/2013",
+      "2013/2014",
+      "2014/2015",
+      "2015/2016",
+      "2016/2017",
+      "2017/2018",
+      "2018/2019",
+      "2019/2020",
+      "2020/2021"
+    ],
+    "United States Major League Soccer": [
+      "2023"
+    ],
+    "Mexico Liga MX": "ABSENT — no Mexican competition of any kind in the open-data index"
+  },
+  "terms_quoted_from_repo_README": "\"we have made certain leagues of StatsBomb Data freely available for public use for research projects and genuine interest in football analytics\" ... \"If you publish, share or distribute any research, analysis or insights based on this data, please state the data source as StatsBomb\"",
+  "assessment": {
+    "all_four_leagues": "NO — Liga MX entirely absent; EPL only 2003/04 and 2015/16; MLS only 2023; La Liga 2004/05-2020/21 (plus 1973/74)",
+    "season_visibility_2026_27": "NO — no current season for any of the four",
+    "xg": "YES and shot-level, with freeze-frames — the richest xG in this comparison, but for the wrong seasons",
+    "verdict": "not a live feed. Legitimate use here would be as a TRAINING CORPUS for fitting an in-house shot xG model, not as a data source for the platform.",
+    "fails": "criteria 1, 4 (currency), 7 (not applicable — free)"
+  }
+}

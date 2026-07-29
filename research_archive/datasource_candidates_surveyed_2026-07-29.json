@@ -1,0 +1,74 @@
+{
+  "probed_at_utc": "2026-07-29T22:24:14.836452Z",
+  "purpose": "candidates evaluated and not shortlisted, with the evidence that eliminated each. No accounts created anywhere.",
+  "candidates": [
+    {
+      "name": "Stats Perform / Opta",
+      "probe": "GET https://www.statsperform.com/opta/ -> 200",
+      "evidence": "\"3,900+ competitions and 20+ sports\", \"7.2+ PB of proprietary sports data\", xG and \"XY tracking for all 22 players\" advertised. NO pricing published anywhere on the page; the only route is \"Get in touch today\". statsperform.com/opta-api/ returns 404.",
+      "eliminated_because": "sales-gated with no published price, and enterprise event/tracking feeds for four leagues are four-figures-per-season territory. Backlog S-8 already ruled this out on value: a measured xG effect of +0.0235, not significant at n=162, cannot justify it. Included here for completeness, not as a live option."
+    },
+    {
+      "name": "StatsBomb / Hudl (commercial)",
+      "probe": "statsbomb.com/what-we-do/soccer-data/ 302 -> https://www.hudl.com/en_gb/products/statsbomb 200",
+      "evidence": "\"190+ competitions\"; delivery via \"Easy-to-use APIs\" and JSON/XML/CSV; no league list; no pricing; \"Fill out this form to get in touch with our sales team.\"",
+      "eliminated_because": "same as Opta - sales-gated, no price, value not justified by the measured effect size. The FREE open data is archived separately and is a training corpus, not a feed."
+    },
+    {
+      "name": "Wyscout (Hudl)",
+      "evidence": "same corporate parent as StatsBomb; API access is enterprise and sales-gated.",
+      "eliminated_because": "no published API pricing; scouting-platform product, not a fixture-stats feed for automated ingestion."
+    },
+    {
+      "name": "Sportradar",
+      "probe": "GET https://developer.sportradar.com/soccer/reference/soccer-overview -> 200",
+      "evidence": "developer portal is public; pricing is not. Third-party comparison reports \"starting costs at $500 to $1,000 or more per month\".",
+      "eliminated_because": "an order of magnitude more than the shortlist for data whose incremental value here is a non-significant +0.02."
+    },
+    {
+      "name": "SportsDataIO",
+      "probe": "GET https://sportsdata.io/soccer-api -> 200",
+      "evidence": "names MLS, Premier League, La Liga and Liga MX explicitly; \"Scores - Stats - Odds - Projections - News - Images\". xG is NOT mentioned anywhere on the page. No published pricing; free trial gives \"last season's data\" per third-party comparison; Discovery Lab reported at $99-$149/mo.",
+      "eliminated_because": "criterion 3 - no evidence of xG, which is the only reason to buy. Would be a fixture-stats duplicate of what ESPN already gives free."
+    },
+    {
+      "name": "SofaScore (and RapidAPI wrappers derived from it)",
+      "probe": "GET https://api.sofascore.com/api/v1/sport/football/events/live -> 403; GET https://www.sofascore.com/terms-of-use -> 403",
+      "evidence": "the internal API and the terms page both refuse non-browser clients.",
+      "eliminated_because": "undocumented internal endpoint behind bot protection, with no public terms readable to check. Identical class to the ligamx.net /ws/<base64> RPC and to Understat/FBref, all already rejected under this project's no-contract-less-scraping rule. Resellers of SofaScore-shaped data inherit the same defect."
+    },
+    {
+      "name": "TheStatsAPI (thestatsapi.com)",
+      "probe": "GET https://api.thestatsapi.com/api/health -> 200 {\"status\":\"healthy\"}; GET https://api.thestatsapi.com/api/football/competitions -> 401 UNAUTHORIZED; docs and llms.txt -> 200",
+      "evidence": "genuinely good API SHAPE for this use: documented /matches/{id}/shotmap \"every shot in a match with xG, coordinates, body part, situation ... and non-penalty xG summary\"; /matches/{id}/stats grouped \"overview, shots, attack, passes, duels, defending, goalkeeping, and xG\"; stable string ids (comp_3039, mt_838955483); and per-competition availability booleans has_team_stats, has_player_stats, xg_available, odds_available. Claims \"150 competitions by default ... up to 1,196 on request\", \"10 years of historical data\", pricing $50 / $129 / $379 per month with a 7-day trial.",
+      "eliminated_because": "THREE unresolved problems, none of them fatal on its own: (a) the docs name no leagues at all, so MLS/Liga MX coverage and xg_available for them is entirely unverified; (b) DATA PROVENANCE IS UNSTATED - the entity model (shotmap with body part and situation, player heatmaps, player ratings) is shaped exactly like SofaScore's, and a provider that will not say where its xG comes from cannot satisfy criterion 5 for a project that rejected scraping on principle; (c) $50/mo minimum is above the shortlist for less evidence. Worth a second look only if the recommendation fails its probe - ask them in writing who supplies the xG model."
+    },
+    {
+      "name": "Highlightly",
+      "evidence": "claims \"950+ leagues in 170+ countries\" naming MLS; free tier 100 req/day; $9.49-$45.99/mo. xG not mentioned.",
+      "eliminated_because": "criterion 3 - no xG claim; and Liga MX not named."
+    },
+    {
+      "name": "TheSportsDB",
+      "probe": "GET https://www.thesportsdb.com/api/v1/json/3/search_all_leagues.php?c=Mexico&s=Soccer -> 200 with real league metadata using the documented public test key",
+      "evidence": "openly reachable, returns league/season metadata; carries idAPIfootball cross-reference ids, which is a genuinely useful identity-bridging artefact.",
+      "eliminated_because": "metadata and results, not per-fixture team stats, no per-player match stats, no xG."
+    },
+    {
+      "name": "apifootball.com (APIFootball / Elenasport - a DIFFERENT vendor from api-football.com)",
+      "probe": "GET https://apiv3.apifootball.com/?action=get_countries&APIkey= -> 200 body {\"error\":404,\"message\":\"Authentification failed!\"}",
+      "evidence": "key-gated; note the API returns HTTP 200 while reporting an error 404 in the body - a provider that lies in its status line.",
+      "eliminated_because": "no xG claim found; and an API that returns 200 on auth failure is a fail-open ingestion hazard for a platform whose whole discipline is that missing evidence must never read as success."
+    },
+    {
+      "name": "Sportec Solutions (the actual source of the MLS xG this platform already uses)",
+      "evidence": "stats-api.mlssoccer.com is a public no-auth reflection of Sportec data for MLS; Sportec (a DFL subsidiary) supplies MLS and the Bundesliga.",
+      "eliminated_because": "wrong league set - no EPL, La Liga or Liga MX. Nothing to buy that would widen coverage."
+    },
+    {
+      "name": "Understat, FBref/StatsBomb-via-scrape, FotMob, ligamx.net internal RPC, apim.laliga.com",
+      "evidence": "previously settled in this repo: apim.laliga.com answers 401 subscription-required, ligamx.net serves an obfuscated /ws/<base64> RPC, and Understat/FBref are contract-less scrapes.",
+      "eliminated_because": "DECISION ALREADY MADE. Not reopened, not re-probed, and not proposed."
+    }
+  ]
+}
