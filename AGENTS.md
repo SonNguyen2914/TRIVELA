@@ -87,6 +87,22 @@ backend's migrations live in `live_migrations/`, not `alembic/`
   > dispatch carries the standing-edge qualifier (estimate, CI,
   > significance) appended server-side — so no relayed message can
   > present a number without its uncertainty.
+  >
+  > **Strengthened 2026-07-29 (round-3 review, journal-P0-G) — the
+  > mechanism above was one layer short of the boundary.** The stack
+  > check binds IN-PROCESS callers only: over HTTP the stack is
+  > uvicorn → fastapi → `api.main` and contains no scheduler or model
+  > frame, so any client holding the generic `ADMIN_TOKEN` could claim
+  > `source="session"` and dispatch to the channel Son's friend reads.
+  > Dispatch now ALSO requires a short-lived capability minted by an
+  > operator-authenticated challenge/response handshake against
+  > `JOURNAL_SESSION_SECRET` — a second factor that must differ from
+  > `ADMIN_TOKEN`, that never crosses the wire, and that the operator
+  > token alone cannot produce. Unset secret = no capability = no
+  > dispatch, which is the fail-closed state. The capability id the
+  > server VERIFIED is stored on every broadcast row, beside the
+  > `source` the caller merely claimed. This narrows the carve-out;
+  > it does not widen it.
 - **No secrets, ever** — not in commits, not printed, not in diffs.
 - **No production access by default.** No pushes, merges, deploys,
   migrations against production, approval activation, corpus publication,
