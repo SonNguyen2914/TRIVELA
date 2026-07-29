@@ -7,14 +7,16 @@ phase changes. Template-based on purpose: every number quoted comes
 straight from the cycle that triggered it, nothing is generated.
 
 The ACTION channel keeps its terse pings (signals, tracker flips); the
-narrator never posts there.
+narrator never posts there. That is now MECHANICAL rather than a
+convention: every brief dispatches as `AMBIENT_DETAIL`, and the alert
+gate refuses that class on any channel but `detail`.
 """
 from __future__ import annotations
 
 import time
 
 import config
-from src.alerts import send_alert
+from src.alerts import AMBIENT_DETAIL, send_alert
 
 # match_id -> {"ts": last brief time, "score": str, "phase": str,
 #              "reds": (h, a)} — in-memory; a restart costs one extra brief.
@@ -95,4 +97,10 @@ def narrate(match, out: dict, positions: list[dict]) -> None:
     pos = _fmt_positions(positions)
     if pos:
         body.append(pos)
-    send_alert("\n".join(body), kind="detail")
+    # AMBIENT_DETAIL: the brief carries model board numbers, so the gate
+    # pins it to the detail channel — it can never reach the act-now
+    # channel or the phone, whatever a future edit here passes for
+    # `kind`. That containment is the reason this class exists rather
+    # than the narrator simply being trusted to say kind="detail".
+    send_alert("\n".join(body), kind="detail",
+               dispatch_class=AMBIENT_DETAIL)

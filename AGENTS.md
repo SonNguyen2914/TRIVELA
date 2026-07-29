@@ -103,6 +103,52 @@ backend's migrations live in `live_migrations/`, not `alembic/`
   > server VERIFIED is stored on every broadcast row, beside the
   > `source` the caller merely claimed. This narrows the carve-out;
   > it does not widen it.
+  >
+  > **Strengthened again 2026-07-29 (round-4 review, journal-P0-J) —
+  > the carve-out described a boundary only `broadcast()` implemented.**
+  > `src/live_signals.py`, `src/positions.py` and `jobs/scheduler.py`
+  > composed "NEW VALUE BET", "RIPE", "BUY/SELL", "EASY WIN", "FINAL
+  > DECISION LOCKED" and cash-out reads and handed them straight to
+  > `send_discord`/`send_ntfy`. No transport consulted the flag, so
+  > setting it false prevented nothing; it was dormant only because
+  > `load_schedule()` still points at a finished tournament. **All
+  > dispatch now passes one gate**, `src/alerts.py send_alert()`. The
+  > transports are private to that module (`_post_discord`,
+  > `_post_ntfy`), the gate is the only exported dispatch path, and
+  > `tests/test_alert_gate.py` asserts statically that no runtime module
+  > outside the gate names a transport, a webhook setting or the ntfy
+  > topic, and that every call site declares its class.
+  >
+  > **The line, drawn by the CALL SITE, never by the message text**
+  > (a rule keyed on wording is a rule an unlucky wording defeats):
+  >
+  > ```text
+  > OPERATIONAL     telemetry about the PLATFORM — readiness, storage
+  >                 headroom, the channel probe, "the T-10 sweep took a
+  >                 lock". No model output, no market view. NOT governed
+  >                 by the money lock: silencing this class is how the
+  >                 DiskFull incident hid behind {"created": 0}.
+  > AMBIENT_DETAIL  the narrator's live briefs. Model numbers, so the
+  >                 gate pins them to the DETAIL channel — never the
+  >                 act-now channel, never the phone.
+  > SESSION_RELAY   this carve-out. Requires a live session capability,
+  >                 re-verified BY THE GATE, qualifier appended as before.
+  > MODEL_SIGNAL    computed betting content — edges, recommendations,
+  >                 BUY/SELL, ripeness, cash-out reads. Dispatches only
+  >                 when REAL_MONEY_SIGNALS_ENABLED is true, which it is
+  >                 not. Refusals are logged, counted, attributed to the
+  >                 call site, and readable at
+  >                 `GET /api/admin/alerts/refusals`.
+  > ```
+  >
+  > One call site was SPLIT rather than classified whole: the T-10 lock
+  > alert in `src/live/runs.py` used to relay the locked model's H/D/A
+  > probabilities to the act-now channel under a "shadow — not advice"
+  > label. The label is honour-system; three per-match probabilities on
+  > the channel a consenting third party bets from are a market view. It
+  > now sends an operational heartbeat naming the fixture and the model,
+  > with no probabilities, and the numbers stay on the operator surfaces
+  > and in the corpus.
 - **No secrets, ever** — not in commits, not printed, not in diffs.
 - **No production access by default.** No pushes, merges, deploys,
   migrations against production, approval activation, corpus publication,

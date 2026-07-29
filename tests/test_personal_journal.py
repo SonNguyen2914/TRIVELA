@@ -2047,17 +2047,23 @@ class TestBroadcastBoundary:
         assert r2["accepted"] == []
 
     def test_send_alert_returns_per_transport_results(self, monkeypatch):
+        """Per-transport contract only. The transports are private to the
+        gate module now, so this patches `_post_discord`/`_post_ntfy`;
+        OPERATIONAL keeps this a test of the RETURN SHAPE rather than of
+        the money lock."""
         import src.alerts as alerts
-        monkeypatch.setattr(alerts, "send_discord",
+        monkeypatch.setattr(alerts, "_post_discord",
                             lambda m, channel="action": channel == "action")
-        monkeypatch.setattr(alerts, "send_ntfy",
+        monkeypatch.setattr(alerts, "_post_ntfy",
                             lambda m, **kw: False)
         monkeypatch.setattr(config, "DISCORD_ACTION_WEBHOOK_URL", "a")
         monkeypatch.setattr(config, "DISCORD_DETAIL_WEBHOOK_URL", "d")
-        out = alerts.send_alert("x", kind="action")
+        out = alerts.send_alert("x", kind="action",
+                                dispatch_class=alerts.OPERATIONAL)
         assert out == {"discord_action": True, "discord_detail": False,
                        "ntfy": False}
-        assert alerts.send_alert("x", kind="detail") == {
+        assert alerts.send_alert("x", kind="detail",
+                                 dispatch_class=alerts.OPERATIONAL) == {
             "discord_detail": False}
 
 

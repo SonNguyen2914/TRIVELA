@@ -1530,8 +1530,16 @@ def broadcast(message: str, *, channel: str = "action",
         s.flush()
         transports: dict = {}
         try:
+            # SESSION_RELAY: the carve-out, declared at the call site.
+            # The capability travels WITH the dispatch so the gate
+            # re-verifies it against the server-side store rather than
+            # trusting that this function checked it above — the gate is
+            # the boundary, and a boundary that trusts its callers is a
+            # convention.
             result = alerts.send_alert(body, title="Trivela",
-                                       kind=channel)
+                                       kind=channel,
+                                       dispatch_class=alerts.SESSION_RELAY,
+                                       capability=cap)
             if isinstance(result, dict):
                 transports = result
         except Exception as exc:      # a failed send must not lose the record

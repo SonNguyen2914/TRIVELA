@@ -34,7 +34,7 @@ import time
 from sqlalchemy import select
 
 import config
-from src.alerts import send_alert
+from src.alerts import MODEL_SIGNAL, send_alert
 from src.cache import latest_for_match
 from src.db import LiveSignal, MatchLiveSnapshot, SessionLocal, WatchlistItem
 from src.live_auto import live_auto
@@ -105,7 +105,15 @@ def _mark_fired(market_id: str, side: str, diff: float,
 
 def _fire(match, row: dict, side: str, diff: float, kind: str,
           minute, fallback_title: str | None = None) -> None:
-    """Persist one signal and push it to Discord."""
+    """Persist one signal and OFFER it to the alert gate.
+
+    The row is written either way — the signal is evidence about what
+    the live model said, and that record is not what the money lock
+    governs. The DISPATCH is MODEL_SIGNAL by construction: a BUY/SELL or
+    EASY-WIN push is computed betting content aimed at the channel a
+    consenting third party acts on. With REAL_MONEY_SIGNALS_ENABLED
+    false the gate refuses it, touches no transport, and records the
+    refusal against this call site."""
     title = row.get("market_title") or fallback_title or row["market_id"]
     with SessionLocal() as s:
         s.add(LiveSignal(
@@ -126,7 +134,8 @@ def _fire(match, row: dict, side: str, diff: float, kind: str,
         f"**{title}**\n"
         f"Live model {row['live_model_probability']:.0%} vs "
         f"market {row['market_probability']:.0%} "
-        f"({diff:+.0%})")
+        f"({diff:+.0%})",
+        dispatch_class=MODEL_SIGNAL)
 
 
 def evaluate_live_signals(engine) -> dict:

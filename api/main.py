@@ -1873,24 +1873,37 @@ def alerts_test():
     report PER-LEG delivery, so a silent failure (bad webhook, mistyped
     ntfy topic, whitespace in an env var) is visible in the response
     instead of only in server logs. Each leg is exercised directly —
-    the fan-out copy-to-detail is send_alert's concern, not this probe's."""
-    from src.alerts import send_discord, send_ntfy
-    a = send_discord("⚡ ACTION channel test — act-now pings (signals, "
-                     "tracker flips, goals) arrive here.", channel="action")
-    d = send_discord("📊 DETAIL channel test — the narrator posts live "
-                     "briefs, goal analyses and your position table here.",
-                     channel="detail")
-    n = send_ntfy("📱 ntfy path test — if this reached your phone, the "
-                  "push loop is closed.", title="WC26 channel test")
-    return {"sent": True,
-            "action_configured": bool(config.DISCORD_ACTION_WEBHOOK_URL),
-            "detail_configured": bool(config.DISCORD_DETAIL_WEBHOOK_URL),
-            "split": (config.DISCORD_ACTION_WEBHOOK_URL
-                      != config.DISCORD_DETAIL_WEBHOOK_URL),
-            "ntfy_configured": bool(config.NTFY_TOPIC),
-            "action_delivered": a,
-            "detail_delivered": d,
-            "ntfy_delivered": n}
+    the fan-out copy-to-detail is the gate's concern, not this probe's.
+
+    The probe body lives in `src/alerts.py` because the transports are
+    PRIVATE to that module: this route asks the gate module to test
+    itself rather than reaching past it for a raw sender."""
+    from src import alerts
+    return alerts.channel_probe()
+
+
+@app.get("/api/admin/alerts/refusals")
+def alerts_refusals(request: Request, limit: int = Query(50, ge=1, le=200)):
+    """Operator-only, READ-ONLY: what the alert gate has REFUSED since
+    this process started, and how many of each class.
+
+    A gate that refuses silently is indistinguishable from a transport
+    that is down, and "nothing arrived" is exactly the shape of the two
+    incidents this project has already had (DiskFull behind
+    {"created": 0}; the VARCHAR truncation that erased every fill). The
+    ledger carries the call site and the reason — never the refused
+    message, which would put the withheld betting content back on a
+    readable surface."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src import alerts
+    return {"refusals": alerts.recent_refusals(limit),
+            "counts": alerts.refusal_counts(),
+            "real_money_signals_enabled":
+                config.REAL_MONEY_SIGNALS_ENABLED,
+            "note": ("process-local ring buffer; the printed log line is "
+                     "the durable record"),
+            "generated_at": utcnow().isoformat()}
 
 
 @app.get("/api/positions")

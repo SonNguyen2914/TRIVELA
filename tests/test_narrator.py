@@ -21,27 +21,36 @@ def _out(score="0-0", minute=30.0, phase="regulation", share=0.7):
 
 
 class TestRouting:
+    """Fan-out shape only. The transports are now PRIVATE to the gate
+    module (`_post_discord` / `_post_ntfy`) — the rename is what makes
+    the gate the single exported dispatch path, so these patch the
+    private names. An OPERATIONAL class is used deliberately: this
+    asserts ROUTING, and routing must be tested with a class the gate
+    always authorizes, or the test would silently become a test of the
+    money lock instead."""
+
     def test_action_goes_everywhere_detail_stays_home(self, monkeypatch):
         calls = []
-        monkeypatch.setattr(alerts, "send_discord",
+        monkeypatch.setattr(alerts, "_post_discord",
                             lambda m, channel="action": calls.append(channel))
-        monkeypatch.setattr(alerts, "send_ntfy", lambda m, **k: calls.append("ntfy"))
+        monkeypatch.setattr(alerts, "_post_ntfy", lambda m, **k: calls.append("ntfy"))
         monkeypatch.setattr(config, "DISCORD_ACTION_WEBHOOK_URL", "https://a")
         monkeypatch.setattr(config, "DISCORD_DETAIL_WEBHOOK_URL", "https://d")
-        alerts.send_alert("act")
+        alerts.send_alert("act", dispatch_class=alerts.OPERATIONAL)
         assert calls == ["action", "detail", "ntfy"]
         calls.clear()
-        alerts.send_alert("brief", kind="detail")
+        alerts.send_alert("brief", kind="detail",
+                          dispatch_class=alerts.OPERATIONAL)
         assert calls == ["detail"]
 
     def test_single_webhook_setup_sends_once(self, monkeypatch):
         calls = []
-        monkeypatch.setattr(alerts, "send_discord",
+        monkeypatch.setattr(alerts, "_post_discord",
                             lambda m, channel="action": calls.append(channel))
-        monkeypatch.setattr(alerts, "send_ntfy", lambda m, **k: None)
+        monkeypatch.setattr(alerts, "_post_ntfy", lambda m, **k: None)
         monkeypatch.setattr(config, "DISCORD_ACTION_WEBHOOK_URL", "https://x")
         monkeypatch.setattr(config, "DISCORD_DETAIL_WEBHOOK_URL", "https://x")
-        alerts.send_alert("act")
+        alerts.send_alert("act", dispatch_class=alerts.OPERATIONAL)
         assert calls == ["action"]          # no duplicate to the same channel
 
 
