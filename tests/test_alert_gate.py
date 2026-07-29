@@ -383,11 +383,121 @@ CONFIG_MODULE = os.path.join(REPO_ROOT, "config.py")
 
 # Naming any of these outside the gate is a route around it: the two
 # transports, and the settings that ARE the credentials they post to.
+# This is the historical list, kept whole and asserted against the two
+# lists below, so a future edit cannot quietly shorten what is forbidden.
 FORBIDDEN_OUTSIDE_THE_GATE = (
     "_post_discord", "_post_ntfy", "send_discord", "send_ntfy",
     "DISCORD_ACTION_WEBHOOK_URL", "DISCORD_DETAIL_WEBHOOK_URL",
     "DISCORD_WEBHOOK_URL", "NTFY_TOPIC", "ntfy.sh",
 )
+
+# The same list split by KIND, because the two kinds are matched
+# differently (see `_gate_reaches`): a NAME is matched where it is
+# referenced, a HOST is matched inside the string that builds the URL.
+FORBIDDEN_IDENTIFIERS = frozenset({
+    "_post_discord", "_post_ntfy", "send_discord", "send_ntfy",
+    "DISCORD_ACTION_WEBHOOK_URL", "DISCORD_DETAIL_WEBHOOK_URL",
+    "DISCORD_WEBHOOK_URL", "NTFY_TOPIC",
+})
+FORBIDDEN_ENDPOINTS = ("ntfy.sh",)
+
+
+def _documentation_strings(tree: ast.AST) -> set[int]:
+    """`id()` of every string literal that is DOCUMENTATION, not a value.
+
+    A bare string expression statement is a no-op at runtime: module,
+    class and function docstrings, and the free-standing paragraphs this
+    repo writes under constants. Nothing evaluates them, so a credential
+    named inside one is prose about the gate, not a read of it."""
+    return {id(node.value) for node in ast.walk(tree)
+            if isinstance(node, ast.Expr)
+            and isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)}
+
+
+def _settings_key_strings(tree: ast.AST) -> set[int]:
+    """`id()` of every string literal in an env-or-settings LOOKUP.
+
+    That is a call argument (`os.getenv("NTFY_TOPIC")`,
+    `getattr(config, "NTFY_TOPIC")`) or a subscript key
+    (`os.environ["NTFY_TOPIC"]`). Position is half the test; the other
+    half is in `_gate_reaches`, which requires the literal to equal the
+    setting name exactly. "set NTFY_TOPIC in Railway" is a sentence
+    about the setting, and printing a sentence reaches nothing."""
+    out: set[int] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            for arg in list(node.args) + [kw.value for kw in node.keywords]:
+                if isinstance(arg, ast.Constant) and isinstance(arg.value,
+                                                                str):
+                    out.add(id(arg))
+        elif isinstance(node, ast.Subscript):
+            if isinstance(node.slice, ast.Constant) and isinstance(
+                    node.slice.value, str):
+                out.add(id(node.slice))
+    return out
+
+
+def _gate_reaches(source: str, filename: str = "<candidate>") -> list[str]:
+    """Every reference in `source` that reaches past the alert gate.
+
+    STRUCTURAL, not textual, and that is not a relaxation of the guard —
+    it is the repair of a false-positive CLASS in how the guard was
+    measured. A substring scan cannot tell `config.NTFY_TOPIC` from a
+    comment saying only the gate may read `config.NTFY_TOPIC`, so every
+    file that documented the gate tripped it: a runbook, an incident
+    record, a docstring explaining why the gate exists. Reproduced
+    2026-07-29 on a probe module whose only mention was in a comment and
+    whose only import was `annotations`. The repair available in that
+    moment was to shorten the forbidden list — weakening a real guard to
+    quiet a bug in its scanner. Parsing removes the choice: comments
+    never enter the tree at all, docstrings are excluded explicitly, and
+    everything the textual scan legitimately caught is still caught.
+
+    Reported as a reach:
+      * a NAME or ATTRIBUTE reference — `NTFY_TOPIC`, `config.NTFY_TOPIC`,
+        `alerts._post_discord` — including an assignment that redeclares
+        one outside `config.py`
+      * an IMPORT of one, under any alias
+      * a string literal that IS a settings key, in a lookup position
+      * a string literal containing the transport HOST, which builds the
+        transport rather than naming it
+
+    Out of scope on purpose: `getattr(config, "NTFY_" + "TOPIC")` and
+    other computed spellings. This guard stops an author who does not
+    know the gate exists; it was never a defence against evasion, and
+    the textual scan it replaces could not catch those either."""
+    tree = ast.parse(source, filename=filename)
+    docs = _documentation_strings(tree)
+    keys = _settings_key_strings(tree)
+    found: list[str] = []
+
+    def hit(token: str, node: ast.AST) -> None:
+        found.append(f"{token} (line {getattr(node, 'lineno', '?')})")
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name):
+            if node.id in FORBIDDEN_IDENTIFIERS:
+                hit(node.id, node)
+        elif isinstance(node, ast.Attribute):
+            if node.attr in FORBIDDEN_IDENTIFIERS:
+                hit(node.attr, node)
+        elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            # the imported NAME is what matters, not the local alias:
+            # `from src.alerts import _post_discord as p` is a reach
+            for alias in node.names:
+                leaf = alias.name.split(".")[-1]
+                if leaf in FORBIDDEN_IDENTIFIERS:
+                    hit(leaf, node)
+        elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+            if id(node) in docs:
+                continue
+            for host in FORBIDDEN_ENDPOINTS:
+                if host in node.value:
+                    hit(host, node)
+            if node.value in FORBIDDEN_IDENTIFIERS and id(node) in keys:
+                hit(node.value, node)
+    return found
 
 
 class TestTheGateIsTheOnlyDoor:
@@ -397,11 +507,11 @@ class TestTheGateIsTheOnlyDoor:
         for path in _runtime_python_files():
             if path in (GATE_MODULE, CONFIG_MODULE):
                 continue          # the gate owns them; config declares them
-            text = open(path, encoding="utf-8").read()
-            for token in FORBIDDEN_OUTSIDE_THE_GATE:
-                if token in text:
-                    offenders.append(f"{os.path.relpath(path, REPO_ROOT)}"
-                                     f": {token}")
+            rel = os.path.relpath(path, REPO_ROOT)
+            with open(path, encoding="utf-8") as fh:
+                source = fh.read()
+            offenders += [f"{rel}: {r}"
+                          for r in _gate_reaches(source, filename=path)]
         assert offenders == [], (
             "these reach past the alert gate — the transports are private "
             "to src/alerts.py and the webhook/topic settings are read only "
@@ -445,6 +555,140 @@ class TestTheGateIsTheOnlyDoor:
         assert "send_alert" in public
         assert "send_discord" not in public
         assert "send_ntfy" not in public
+
+
+# ===========================================================================
+# Acceptance 4b — the scanner above, measured on its own.
+# ===========================================================================
+
+class TestTheScannerSeesReferencesNotText:
+    """A guard is only as good as what it measures, and the scan this
+    replaced measured raw text — so it had a false-positive CLASS, not a
+    false positive. Any file that documented the gate tripped it, which
+    put the pressure on the forbidden list rather than on the scanner.
+
+    Both directions are pinned here because only pinning both makes the
+    change safe: prose stays green, and every real reach stays red. The
+    snippets are source TEXT rather than files on disk so they cost
+    nothing and cannot drift out of sync with the scanner they test.
+    `tests/` is outside `_runtime_python_files()`, so the tokens spelled
+    out below are not themselves scanned."""
+
+    # --- real reaches: each of these must be caught ---------------------
+
+    def test_a_bare_name_reference_is_a_reach(self):
+        assert _gate_reaches("from config import NTFY_TOPIC\n"
+                             "topic = NTFY_TOPIC\n")
+
+    def test_an_attribute_read_of_the_setting_is_a_reach(self):
+        assert _gate_reaches("import config\n"
+                             "url = config.DISCORD_ACTION_WEBHOOK_URL\n")
+
+    def test_importing_a_private_transport_is_a_reach(self):
+        assert _gate_reaches("from src.alerts import _post_discord\n")
+
+    def test_an_aliased_import_is_still_a_reach(self):
+        """The local name is the author's choice; the imported one is the
+        fact."""
+        assert _gate_reaches("from src.alerts import _post_ntfy as push\n")
+
+    def test_calling_a_transport_through_the_module_is_a_reach(self):
+        assert _gate_reaches("from src import alerts\n"
+                             "alerts._post_discord('hi')\n")
+
+    def test_an_env_lookup_by_string_key_is_a_reach(self):
+        assert _gate_reaches("import os\n"
+                             "t = os.getenv('NTFY_TOPIC', '')\n")
+
+    def test_a_getattr_lookup_is_a_reach(self):
+        assert _gate_reaches("import config\n"
+                             "u = getattr(config, 'DISCORD_WEBHOOK_URL')\n")
+
+    def test_an_environ_subscript_is_a_reach(self):
+        assert _gate_reaches("import os\n"
+                             "t = os.environ['NTFY_TOPIC']\n")
+
+    def test_building_the_transport_url_is_a_reach(self):
+        """The host in a runtime string IS the transport, whatever the
+        surrounding code calls itself."""
+        assert _gate_reaches("import requests\n"
+                             "requests.post(f'https://ntfy.sh/{t}')\n")
+
+    def test_redeclaring_the_setting_elsewhere_is_a_reach(self):
+        """A second home for the credential is a second door."""
+        assert _gate_reaches("import os\n"
+                             "NTFY_TOPIC = os.environ.get('X', '')\n")
+
+    # --- prose: none of these may be caught ----------------------------
+    # This is the defect. Every one of them failed the textual scan.
+
+    def test_a_comment_naming_the_setting_is_not_a_reach(self):
+        """The reproduced bug, 2026-07-29: a comment naming the ntfy
+        topic setting failed the guard in a file that dispatched
+        nothing."""
+        assert _gate_reaches(
+            "# never read NTFY_TOPIC here — only src/alerts.py may\n"
+            "x = 1\n") == []
+
+    def test_a_docstring_naming_the_transports_is_not_a_reach(self):
+        assert _gate_reaches(
+            '"""Why the gate exists: _post_discord and _post_ntfy are\n'
+            'private, and DISCORD_ACTION_WEBHOOK_URL is a credential."""\n'
+            "x = 1\n") == []
+
+    def test_a_function_docstring_naming_a_setting_is_not_a_reach(self):
+        assert _gate_reaches(
+            "def f():\n"
+            '    """Does not read NTFY_TOPIC. See src/alerts.py."""\n'
+            "    return 1\n") == []
+
+    def test_prose_mentioning_the_setting_in_a_log_line_is_not_a_reach(self):
+        """An operator-facing sentence names the setting; it does not
+        read it. Exact-match in a lookup position is what separates the
+        two."""
+        assert _gate_reaches(
+            "print('set NTFY_TOPIC in Railway to enable push')\n") == []
+
+    def test_an_incident_record_module_is_not_a_reach(self):
+        """The shape that made this worth fixing: a module whose whole
+        purpose is explaining the gate."""
+        assert _gate_reaches(
+            '"""Incident: DISCORD_ACTION_WEBHOOK_URL leaked into logs."""\n'
+            "\n"
+            "# The fix made _post_discord log a class, never the URL.\n"
+            "REMEDIATED = True\n") == []
+
+    # --- the guard's scope may not shrink ------------------------------
+
+    def test_the_split_lists_still_cover_every_historical_token(self):
+        """Structural matching was the change. WHAT is forbidden was
+        not, and this is what stops the next author from quieting a
+        scanner bug by deleting a token."""
+        assert (set(FORBIDDEN_IDENTIFIERS) | set(FORBIDDEN_ENDPOINTS)
+                == set(FORBIDDEN_OUTSIDE_THE_GATE))
+
+    def test_every_historical_token_is_still_caught_somewhere(self):
+        """Token by token, so a gap cannot hide behind the set equality
+        above: each one, written as a real reference, is reported."""
+        probes = {
+            "_post_discord": "from src.alerts import _post_discord\n",
+            "_post_ntfy": "from src.alerts import _post_ntfy\n",
+            "send_discord": "from src.alerts import send_discord\n",
+            "send_ntfy": "from src.alerts import send_ntfy\n",
+            "DISCORD_ACTION_WEBHOOK_URL":
+                "import config\nu = config.DISCORD_ACTION_WEBHOOK_URL\n",
+            "DISCORD_DETAIL_WEBHOOK_URL":
+                "import config\nu = config.DISCORD_DETAIL_WEBHOOK_URL\n",
+            "DISCORD_WEBHOOK_URL":
+                "import config\nu = config.DISCORD_WEBHOOK_URL\n",
+            "NTFY_TOPIC": "import os\nt = os.getenv('NTFY_TOPIC')\n",
+            "ntfy.sh": "u = 'https://ntfy.sh/' + t\n",
+        }
+        assert set(probes) == set(FORBIDDEN_OUTSIDE_THE_GATE), \
+            "a forbidden token has no probe — add one"
+        missed = [tok for tok, src in probes.items()
+                  if not any(r.startswith(tok) for r in _gate_reaches(src))]
+        assert missed == [], f"forbidden but not caught: {missed}"
 
 
 # ===========================================================================

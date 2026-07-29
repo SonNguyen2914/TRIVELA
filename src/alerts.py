@@ -29,8 +29,13 @@ future author who does not know the gate exists; a private transport
 sitting beside a second public sender invites the wrong sender. Private
 transports plus exactly one exported entry point leaves no accidental
 route. `tests/test_alert_gate.py` enforces that statically: no module
-outside this file may name the transports, the webhook settings or the
-ntfy topic, and every `send_alert()` call site must declare its class.
+outside this file may REFERENCE the transports, the webhook settings or
+the ntfy topic, and every `send_alert()` call site must declare its
+class. The scan is structural — it parses each module and looks for
+actual references, imports and settings lookups — so documentation is
+free to name any of them. It has to be: explaining why this gate exists
+requires naming what it protects, and a guard that punished its own
+runbook would be edited down until it stopped guarding.
 
 CLASSIFICATION IS A PROPERTY OF THE CALL SITE
 =============================================
