@@ -253,6 +253,37 @@ def engine_signature(code_revision: str | None = None) -> dict:
     }
 
 
+def engine_matches(stored_hash: str | None,
+                   run_revision: str | None) -> tuple[bool, bool]:
+    """(matches, revision_only_drift) for a stored La Liga engine
+    signature — the same contract as model_mls/model_epl.engine_matches
+    (V9.1 eval F4).
+
+    Required by the competition registry, not optional: since the EPL
+    build, `src/live/audit.py` and `verify_replay` resolve the model
+    module through `competitions.model_module(slug)` and call this on
+    whatever they get. Registering la-liga-2026 without it would make
+    every registry-routed audit of a La Liga run raise AttributeError
+    instead of answering. (`replay_from_artifact`, the other half of
+    that contract, is already re-exported from model_mls at the foot of
+    this file — league-neutral because it reads the stored document.)
+
+    matches=True when the stored hash equals the current engine's, OR
+    when recomputing under the revision the run RECORDED reproduces it —
+    which proves only the build revision moved. revision_only_drift flags
+    that second case so the distinction stays visible. A genuine source,
+    constant or runtime change fails both arms."""
+    if not stored_hash:
+        return False, False
+    if stored_hash == engine_signature()["signature_hash"]:
+        return True, False
+    if run_revision:
+        rehashed = engine_signature(code_revision=run_revision)
+        if rehashed["signature_hash"] == stored_hash:
+            return True, True
+    return False, False
+
+
 def build_input_artifact(fixture, model: dict,
                          run_type: str) -> tuple[dict, str, str]:
     """The exact, RETRIEVABLE input document a run simulates from —
