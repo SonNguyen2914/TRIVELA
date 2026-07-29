@@ -471,6 +471,196 @@ class MarketDepthLevel(LiveBase):
                                  ForeignKey("source_observation.id"))
 
 
+class PersonalBet(LiveBase):
+    """A bet Son FORMED A VIEW ON — taken or passed. Documentation, and
+    the input side of the execution-fidelity pilot.
+
+    This is NOT research evidence and must never touch one. The paper
+    ledger is mechanical: every eligible leg, fixed policy, frozen book,
+    rejections retained. These rows are human-selected, so they carry
+    selection bias by construction and can establish execution fidelity
+    but never edge. No join to PaperSignal/PaperFill exists or may be
+    added, and nothing here reaches model_eval or an approval decision.
+
+    `status` deliberately includes `passed`. A journal holding only bets
+    that were taken has exactly the survivorship problem the paper
+    ledger's retained rejections exist to prevent — it cannot separate
+    "the model is good" from "I remember my winners". A view is recorded
+    when it FORMS (`considered`), then resolves to `taken` or `passed`.
+
+    Multi-league is schema-only (platform audit A2): `competition_slug`
+    is carried, but no second competition is wired end to end.
+    """
+    __tablename__ = "personal_bet"
+    id = Column(Integer, primary_key=True)
+    competition_slug = Column(String(32), ForeignKey("competition.slug"))
+    fixture_id = Column(Integer, ForeignKey("fixture.id"), nullable=False)
+    # the raw ticker is ALWAYS recorded; the FK may be absent for a
+    # market we have not mapped
+    market_ticker = Column(String(128), nullable=False)
+    market_contract_id = Column(Integer, ForeignKey("market_contract.id"))
+    outcome_key = Column(String(32))
+    # considered | taken | passed | void
+    status = Column(String(16), nullable=False, default="considered")
+    stated_price_dollars = Column(String(16))
+    stated_size = Column(String(24))
+    # observed_quote | stated_only — see the falsifiability rule. A
+    # stated_only entry is recorded honestly and counted nowhere.
+    price_basis = Column(String(16), nullable=False, default="stated_only")
+    market_quote_id = Column(Integer, ForeignKey("market_quote.id"))
+    quote_observed_at = Column(DateTime(timezone=True))
+    recorded_at = Column(DateTime(timezone=True), nullable=False)
+    resolved_at = Column(DateTime(timezone=True))   # taken/passed moment
+    rationale = Column(Text)
+    # the shadow model's probability FROZEN at record time, with the run
+    # it came from — a later re-run must not change what was recorded
+    model_probability = Column(Float)
+    prediction_run_id = Column(String(36),
+                               ForeignKey("prediction_run.id"))
+    settled_outcome = Column(String(32))
+    settled_at = Column(DateTime(timezone=True))
+    content_hash = Column(String(64))
+    # a resolution is IMMUTABLE once set (journal-P0 F5). A mistaken
+    # entry is corrected by a NEW row citing the old one here — the
+    # record of the mistake is part of the record, never rewritten.
+    corrects_bet_id = Column(Integer, ForeignKey("personal_bet.id"))
+    # journal-P0-H: Kalshi publishes NO quote timestamp, so our capture
+    # clock is the only evidence of when a book was observed. The age of
+    # the cited quote AT RECORD TIME, and the ceiling that was in force
+    # then, are stored so the row stays readable after the config moves —
+    # reclassifying an old row under a new ceiling would rewrite history.
+    quote_age_seconds = Column(Integer)
+    quote_max_age_seconds = Column(Integer)
+    # why a CITED quote was refused as the price basis: stale_capture |
+    # future_capture | not_found | no_capture_time. Absent when no quote
+    # was cited or the citation was accepted — the difference between
+    # "no quote offered" and "a quote refused" is never left implicit.
+    quote_rejection_reason = Column(String(24))
+
+    __table_args__ = (
+        # journal-P1-G: correction chains stay LINEAR under CONCURRENCY.
+        # The handler's read-then-insert check loses the race — two
+        # simultaneous corrections of the same entry both read "no head"
+        # and both commit, producing two heads and an ambiguous
+        # effective observation. The database is the only place this can
+        # be settled. Partial so ordinary rows (corrects_bet_id NULL)
+        # are unconstrained; explicit per-dialect WHERE text for the
+        # same reason the canonical-lock index carries it.
+        Index("uq_personal_bet_correction_head", "corrects_bet_id",
+              unique=True,
+              postgresql_where=text("corrects_bet_id IS NOT NULL"),
+              sqlite_where=text("corrects_bet_id IS NOT NULL")),
+    )
+
+
+class PersonalBetExecution(LiveBase):
+    """A REAL fill (or a real failure to fill) by a consenting third
+    party against a PersonalBet. Real money, reconcilable against the
+    exchange.
+
+    `status` includes `not_filled` for the same reason PersonalBet
+    includes `passed`: a bet the friend could not get at an acceptable
+    price is evidence about LIQUIDITY, which is half of what an
+    execution-fidelity pilot measures. Recording only successful fills
+    reproduces, one level down, the bias the pilot exists to detect.
+
+    Idempotency (journal-P0 F5): (exchange_order_id, status) is unique,
+    so a retried POST is a no-op instead of a duplicate fill.
+
+    That key alone is NOT the idempotency contract (journal-P0-I). The
+    same key carrying different economics is a CONFLICT, not a retry —
+    returning the earlier row for it silently accepts contradictory
+    evidence about a third party's money as though the earlier row had
+    confirmed the new payload. Each write path therefore stores a
+    canonical hash of the payload it accepted, and a repeat whose hash
+    differs is refused.
+    """
+    __tablename__ = "personal_bet_execution"
+    __table_args__ = (
+        UniqueConstraint("exchange_order_id", "status",
+                         name="uq_personal_bet_execution_order_status"),
+    )
+    id = Column(Integer, primary_key=True)
+    personal_bet_id = Column(Integer, ForeignKey("personal_bet.id"),
+                             nullable=False)
+    account_label = Column(String(64), nullable=False)
+    # non-null required to accept a row: this is someone else's money
+    consent_recorded_at = Column(DateTime(timezone=True), nullable=False)
+    # filled | partial | not_filled
+    status = Column(String(16), nullable=False, default="filled")
+    not_filled_reason = Column(String(32))
+    best_available_price_dollars = Column(String(16))
+    fill_price_dollars = Column(String(16))
+    filled_contracts = Column(String(24))
+    fee_paid_dollars = Column(String(16))
+    filled_at = Column(DateTime(timezone=True))
+    # the book AT FILL TIME, so slippage decomposes into market drift
+    # vs execution cost rather than staying one uninterpretable number
+    market_quote_id_at_fill = Column(Integer,
+                                     ForeignKey("market_quote.id"))
+    exchange_order_id = Column(String(64))
+    settlement_credit_dollars = Column(String(16))
+    settled_at = Column(DateTime(timezone=True))
+    reconciled = Column(Boolean, default=False)
+    reconciliation_note = Column(Text)
+    # publication gate (journal-P0 F2): the corpus is public bytes, and
+    # this row is a third party's financial record. Private fields
+    # (account label, order id, fill economics, consent provenance) are
+    # exported ONLY when this explicit consent is set. Default false —
+    # absence of consent is never publication.
+    publication_consent = Column(Boolean, default=False)
+    # journal-P0-H: the fill book's capture age relative to `filled_at`,
+    # and the ceiling in force when it was accepted. Stored so the
+    # decomposed metrics can say what evidence they rest on, and so a
+    # later config change cannot silently reclassify an accepted row.
+    fill_quote_age_seconds = Column(Integer)
+    fill_quote_max_age_seconds = Column(Integer)
+    # journal-P0-I: canonical hash of the payload each write path
+    # accepted. A retry hashing the same is a no-op; a retry hashing
+    # differently is a conflict and writes nothing.
+    execution_payload_hash = Column(String(64))
+    settlement_payload_hash = Column(String(64))
+    reconciliation_payload_hash = Column(String(64))
+
+
+class BroadcastLog(LiveBase):
+    """Every message a live session pushed to Discord/ntfy.
+
+    The session is the analyser; the alert channels are its megaphone.
+    What was said live, and when, is documentation in the same sense the
+    journal is — and it lets a session that dropped mid-match pick up
+    the thread instead of contradicting itself.
+
+    `source` separates a computed rule from an agent's judgement. A
+    measurement and an opinion must never look alike in the channel.
+    """
+    __tablename__ = "broadcast_log"
+    id = Column(Integer, primary_key=True)
+    fixture_id = Column(Integer, ForeignKey("fixture.id"))
+    channel = Column(String(16), nullable=False)      # action | detail
+    source = Column(String(16), nullable=False)       # session | computed
+    session_label = Column(String(64))
+    message = Column(Text, nullable=False)
+    # the structured values behind the prose, so a broadcast can be
+    # checked against what the API actually returned that turn
+    claims_json = Column(Text)
+    delivered = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True))
+    # journal-P0-A: the EXACT payload handed to the transports (prefix +
+    # possibly-truncated prose + qualifier), its hash, and each
+    # transport's own acceptance — so the log describes what was
+    # actually SENT, not what the caller composed. `message` above stays
+    # the operator's full prose; this is the wire record.
+    dispatched_body = Column(Text)
+    dispatched_sha256 = Column(String(64))
+    transports_json = Column(Text)
+    # journal-P0-G: the id of the interactive-session capability the
+    # server VERIFIED before dispatching. `source` records what the
+    # caller claimed; this records what the server checked. A row
+    # without it predates the capability gate.
+    dispatch_capability_id = Column(String(64))
+
+
 class PaperEvaluationContext(LiveBase):
     """The complete paper/risk state FROZEN at lock time.
 

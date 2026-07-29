@@ -194,8 +194,13 @@ def check_storage_headroom(force: bool = False) -> dict:
            f"writes SILENTLY (2026-07-25). Resize the Railway volume or "
            f"prune market_depth_level / source_observation.")
     try:
-        from src.alerts import send_alert
-        send_alert(msg, title="Trivela storage")
+        # OPERATIONAL: headroom on the platform's own volume. Governed by
+        # the cooldown above, never by the money lock — a full volume
+        # fails prediction writes silently, and the silence is the whole
+        # danger this alert exists to break.
+        from src.alerts import OPERATIONAL, send_alert
+        send_alert(msg, title="Trivela storage",
+                   dispatch_class=OPERATIONAL)
         _last_storage_alert = now
         return {**rep, "alerted": True}
     except Exception as exc:      # alerting must never break the caller

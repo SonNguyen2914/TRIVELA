@@ -74,6 +74,81 @@ backend's migrations live in `live_migrations/`, not `alembic/`
 
 - **Real money stays disabled.** `REAL_MONEY_SIGNALS_ENABLED=false`, and
   no code path may enable it. Verify the current setting; never relax it.
+
+  > **Journal-relay carve-out — SIGNED OFF by Son, 2026-07-29, by explicit directive after plain-language explanation (recorded in the co-producer session).**
+  > Operator-authenticated, session-sourced prose relayed to Son over
+  > the broadcast channel is NOT a model signal; the real-money lock
+  > governs model-generated signals. The boundary is mechanical, not
+  > honor-system: `src/live/journal.py broadcast()` refuses dispatch
+  > for any non-`session` source and for any call reached from a
+  > scheduler or model code path (verified against the call stack, not
+  > the caller's claim), a test asserts no scheduler or model module
+  > references the broadcast path at all, and every action-channel
+  > dispatch carries the standing-edge qualifier (estimate, CI,
+  > significance) appended server-side — so no relayed message can
+  > present a number without its uncertainty.
+  >
+  > **Strengthened 2026-07-29 (round-3 review, journal-P0-G) — the
+  > mechanism above was one layer short of the boundary.** The stack
+  > check binds IN-PROCESS callers only: over HTTP the stack is
+  > uvicorn → fastapi → `api.main` and contains no scheduler or model
+  > frame, so any client holding the generic `ADMIN_TOKEN` could claim
+  > `source="session"` and dispatch to the channel Son's friend reads.
+  > Dispatch now ALSO requires a short-lived capability minted by an
+  > operator-authenticated challenge/response handshake against
+  > `JOURNAL_SESSION_SECRET` — a second factor that must differ from
+  > `ADMIN_TOKEN`, that never crosses the wire, and that the operator
+  > token alone cannot produce. Unset secret = no capability = no
+  > dispatch, which is the fail-closed state. The capability id the
+  > server VERIFIED is stored on every broadcast row, beside the
+  > `source` the caller merely claimed. This narrows the carve-out;
+  > it does not widen it.
+  >
+  > **Strengthened again 2026-07-29 (round-4 review, journal-P0-J) —
+  > the carve-out described a boundary only `broadcast()` implemented.**
+  > `src/live_signals.py`, `src/positions.py` and `jobs/scheduler.py`
+  > composed "NEW VALUE BET", "RIPE", "BUY/SELL", "EASY WIN", "FINAL
+  > DECISION LOCKED" and cash-out reads and handed them straight to
+  > `send_discord`/`send_ntfy`. No transport consulted the flag, so
+  > setting it false prevented nothing; it was dormant only because
+  > `load_schedule()` still points at a finished tournament. **All
+  > dispatch now passes one gate**, `src/alerts.py send_alert()`. The
+  > transports are private to that module (`_post_discord`,
+  > `_post_ntfy`), the gate is the only exported dispatch path, and
+  > `tests/test_alert_gate.py` asserts statically that no runtime module
+  > outside the gate names a transport, a webhook setting or the ntfy
+  > topic, and that every call site declares its class.
+  >
+  > **The line, drawn by the CALL SITE, never by the message text**
+  > (a rule keyed on wording is a rule an unlucky wording defeats):
+  >
+  > ```text
+  > OPERATIONAL     telemetry about the PLATFORM — readiness, storage
+  >                 headroom, the channel probe, "the T-10 sweep took a
+  >                 lock". No model output, no market view. NOT governed
+  >                 by the money lock: silencing this class is how the
+  >                 DiskFull incident hid behind {"created": 0}.
+  > AMBIENT_DETAIL  the narrator's live briefs. Model numbers, so the
+  >                 gate pins them to the DETAIL channel — never the
+  >                 act-now channel, never the phone.
+  > SESSION_RELAY   this carve-out. Requires a live session capability,
+  >                 re-verified BY THE GATE, qualifier appended as before.
+  > MODEL_SIGNAL    computed betting content — edges, recommendations,
+  >                 BUY/SELL, ripeness, cash-out reads. Dispatches only
+  >                 when REAL_MONEY_SIGNALS_ENABLED is true, which it is
+  >                 not. Refusals are logged, counted, attributed to the
+  >                 call site, and readable at
+  >                 `GET /api/admin/alerts/refusals`.
+  > ```
+  >
+  > One call site was SPLIT rather than classified whole: the T-10 lock
+  > alert in `src/live/runs.py` used to relay the locked model's H/D/A
+  > probabilities to the act-now channel under a "shadow — not advice"
+  > label. The label is honour-system; three per-match probabilities on
+  > the channel a consenting third party bets from are a market view. It
+  > now sends an operational heartbeat naming the fixture and the model,
+  > with no probabilities, and the numbers stay on the operator surfaces
+  > and in the corpus.
 - **No secrets, ever** — not in commits, not printed, not in diffs.
 - **No production access by default.** No pushes, merges, deploys,
   migrations against production, approval activation, corpus publication,
@@ -230,7 +305,7 @@ identity match must **fail explicitly**, never silently pick a team.
 
 Never describe a point estimate as an established edge when its interval
 includes zero. The current standing result is +0.0269, n=177, CI
-[−0.0043, +0.0605] — **not significant**.
+[−0.0050, +0.0596] — **not significant**.
 
 ## 7. Roles
 

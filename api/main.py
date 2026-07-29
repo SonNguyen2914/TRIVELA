@@ -18,7 +18,7 @@ Endpoints
 from __future__ import annotations
 
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -198,6 +198,357 @@ def mls_match(event_id: str):
         print(f"[mls] lineup section failed for {event_id}: {exc}")
     return {"match": out, "book": book, "books": books, "model": model,
             "lineups": lineup, "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/mls/briefing/{event_id}")
+def mls_briefing(event_id: str):
+    """Everything needed to reason about one fixture RIGHT NOW, in one
+    call — built for a live session rather than a human.
+
+    A session opening cold mid-match would otherwise spend its first
+    turns assembling state from several endpoints while the match moves.
+    The frozen T-10 book and the current book sit side by side, each
+    labelled, because comparing the wrong one to the wrong one is how a
+    bad hold gets justified. The standing edge travels with its interval
+    and significance flag so it cannot be quoted without them.
+
+    Public read-only; exposes nothing `/api/mls/match/{id}` does not,
+    plus the journal. 20s cache."""
+    if not event_id.isdigit() or len(event_id) > 12:
+        raise HTTPException(404, "unknown event")
+    from src.mls import _cached
+    try:
+        from src.live import journal
+        return _cached(f"mls_briefing_{event_id}", 20,
+                       lambda: journal.briefing(event_id)) or {}
+    except Exception as exc:
+        print(f"[mls] briefing failed for {event_id}: {exc}")
+        raise HTTPException(503, "briefing unavailable")
+
+
+@app.get("/api/mls/journal")
+def mls_journal(fixture_id: int | None = Query(None)):
+    """The personal journal with its DENOMINATOR — considered, taken and
+    passed. A hit rate over taken bets alone is not a statistic.
+
+    Below the policy minimum this returns rows and NO summary statistic;
+    the keys are absent rather than zero, because a zero reads as a
+    measured result. Scoped to the MLS competition (journal-P1 F9).
+    Public read-only."""
+    try:
+        from src.live import journal
+        return journal.journal_summary(fixture_id,
+                                       competition_slug="mls-2026")
+    except Exception as exc:
+        print(f"[mls] journal failed: {exc}")
+        raise HTTPException(503, "journal unavailable")
+
+
+# Journal mutation payloads travel as typed JSON bodies (journal-P1 F8).
+# They used to ride the query string, which URL-decodes: a rationale
+# containing `&`, `%`, newlines or unencoded Unicode was silently
+# truncated or mangled — in the one table whose whole value is verbatim
+# provenance. JSON round-trips the text exactly.
+class JournalViewIn(BaseModel):
+    # No `status` field (journal-P0-D): every view starts `considered`.
+    # The old default was a default, not a constraint — a caller could
+    # post status="taken" and skip the considered→resolve lifecycle
+    # entirely. There is no spelling of a pre-resolved entry at any
+    # layer now; a posted `status` is ignored, never honoured.
+    fixture_id: int
+    market_ticker: str
+    outcome_key: str | None = None
+    stated_price: str | None = None
+    stated_size: str | None = None
+    market_quote_id: int | None = None
+    rationale: str | None = None
+    corrects_bet_id: int | None = None
+
+
+class JournalResolveIn(BaseModel):
+    bet_id: int
+    status: str
+
+
+class JournalExecutionIn(BaseModel):
+    bet_id: int
+    account_label: str
+    # REQUIRED and operator-supplied (journal-P0 F5): the server used to
+    # stamp utcnow() here, manufacturing the provenance of a third
+    # party's consent. The operator states when consent was recorded;
+    # the server refuses to invent it.
+    consent_recorded_at: datetime
+    status: str = "filled"
+    fill_price: str | None = None
+    filled_contracts: str | None = None
+    fee_paid: str | None = None
+    filled_at: datetime | None = None
+    market_quote_id_at_fill: int | None = None
+    not_filled_reason: str | None = None
+    best_available_price: str | None = None
+    exchange_order_id: str | None = None
+    publication_consent: bool = False
+
+
+class JournalSettlementIn(BaseModel):
+    execution_id: int
+    # the exchange's own numbers, operator-supplied — never invented
+    settlement_credit: str
+    settled_at: datetime
+    settled_outcome: str | None = None
+
+
+class JournalReconcileIn(BaseModel):
+    execution_id: int
+    note: str
+    publication_consent: bool | None = None
+
+
+class BroadcastIn(BaseModel):
+    message: str
+    channel: str = "action"
+    source: str = "session"
+    session_label: str | None = None
+    fixture_id: int | None = None
+
+
+class SessionOpenIn(BaseModel):
+    challenge_id: str
+    # HMAC-SHA256(JOURNAL_SESSION_SECRET, nonce), hex
+    response: str
+    session_label: str | None = None
+
+
+def _journal_write(result):
+    """Journal mutation responses, with a payload CONFLICT surfaced as
+    HTTP 409 (journal-P0-I).
+
+    A conflicting retry must not read as success at any layer. The
+    handler already refuses to write; returning it inside a 200 body
+    would leave a client that checks only the status code believing its
+    corrected economics had been accepted."""
+    from fastapi.responses import JSONResponse
+    if isinstance(result, dict) and result.get("conflict"):
+        return JSONResponse(status_code=409, content=result)
+    return result
+
+
+@app.post("/api/admin/mls/session/challenge")
+def mls_session_challenge(request: Request):
+    """Operator-only: step one of the interactive-session handshake
+    (journal-P0-G).
+
+    Returns a single-use nonce for the operator to sign with
+    JOURNAL_SESSION_SECRET. The secret is a SECOND factor and never
+    crosses the wire; the operator token alone cannot mint a capability,
+    which is precisely the hole this closes — the round-2 stack-frame
+    check bound in-process callers only, so over HTTP any token holder
+    could claim `source="session"` and reach the channel Son's friend
+    reads."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import session_capability
+    out = session_capability.challenge()
+    if "error" in out:
+        raise HTTPException(503, out["error"])
+    return out
+
+
+@app.post("/api/admin/mls/session/open")
+def mls_session_open(request: Request, body: SessionOpenIn):
+    """Operator-only: step two — answer the challenge, receive a
+    short-lived capability token. Present it as `X-Session-Token` on
+    /api/admin/mls/broadcast. Capabilities live in process memory, so a
+    restart revokes every live session; that errs closed."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import session_capability
+    out = session_capability.open_session(
+        body.challenge_id, body.response, body.session_label)
+    if "error" in out:
+        raise HTTPException(403, out["error"])
+    return out
+
+
+@app.post("/api/admin/mls/session/close")
+def mls_session_close(request: Request):
+    """Operator-only: end an interactive session early. An operator who
+    thinks a session token leaked must not have to wait out the TTL."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import session_capability
+    return session_capability.close_session(
+        request.headers.get("x-session-token"))
+
+
+@app.get("/api/admin/mls/broadcasts")
+def mls_admin_broadcasts(request: Request,
+                         fixture_id: int = Query(...),
+                         limit: int = Query(20, ge=1, le=200)):
+    """Operator-only: what has already been said about a fixture — the
+    full broadcast record including the wire payload and per-transport
+    acceptance (journal-P0-A/P0-C). Broadcast prose is operator
+    content (the ops loop announces fills through it), so it never
+    rides the public briefing; a session picks up its thread HERE."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import journal
+    return {"broadcasts": journal.recent_broadcasts(fixture_id, limit),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/admin/mls/journal")
+def mls_admin_journal(request: Request,
+                      fixture_id: int | None = Query(None)):
+    """Operator-only: the COMPLETE journal record — rationale, account
+    labels, order ids, fill economics, consent provenance, gaps,
+    settlement and reconciliation state. The public surfaces serve a
+    redacted projection (journal-P0 F2); this is where the full record
+    lives, behind the token."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import journal
+    return {"entries": journal.full_entries(fixture_id),
+            "evidence_class": "personal_journal",
+            "generated_at": utcnow().isoformat()}
+
+
+@app.post("/api/admin/mls/journal/view")
+def mls_journal_record_view(request: Request, body: JournalViewIn):
+    """Operator-only: record a view AT THE MOMENT IT FORMS.
+
+    Record at `considered`, then resolve to `taken` or `passed`. The
+    passes are what make the takes interpretable — a journal of only the
+    bets that were taken has the survivorship problem the paper ledger's
+    retained rejections exist to prevent.
+
+    Falsifiability is enforced server-side: citing a quote that does not
+    exist, or one captured after this moment, downgrades the entry to
+    `stated_only`, and it then counts nowhere. A quote that exists but
+    belongs to a DIFFERENT fixture, contract or outcome is refused
+    outright with the mismatch named (journal-P0 F3)."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import journal
+    return journal.record_view(
+        body.fixture_id, body.market_ticker,
+        outcome_key=body.outcome_key,
+        stated_price=body.stated_price, stated_size=body.stated_size,
+        market_quote_id=body.market_quote_id, rationale=body.rationale,
+        corrects_bet_id=body.corrects_bet_id)
+
+
+@app.post("/api/admin/mls/journal/resolve")
+def mls_journal_resolve(request: Request, body: JournalResolveIn):
+    """Operator-only: resolve a recorded view to `taken` or `passed`.
+    A resolution is immutable once set — a correction is a NEW view
+    citing `corrects_bet_id`, never a rewrite (journal-P0 F5)."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import journal
+    return journal.resolve_view(body.bet_id, body.status)
+
+
+@app.post("/api/admin/mls/journal/execution")
+def mls_journal_execution(request: Request, body: JournalExecutionIn):
+    """Operator-only: record a REAL fill, or a real failure to fill.
+
+    Consent is required and never defaulted — this is a third party's
+    money, and the provenance of that consent belongs in the row rather
+    than in anyone's memory; the operator supplies the timestamp and the
+    server refuses to invent one. A `not_filled` row is as valuable as a
+    fill: it is evidence about liquidity, half of what this pilot
+    measures."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import journal
+    return _journal_write(journal.record_execution(
+        body.bet_id, body.account_label,
+        consent_recorded_at=body.consent_recorded_at,
+        status=body.status, fill_price=body.fill_price,
+        filled_contracts=body.filled_contracts, fee_paid=body.fee_paid,
+        filled_at=body.filled_at,
+        market_quote_id_at_fill=body.market_quote_id_at_fill,
+        not_filled_reason=body.not_filled_reason,
+        best_available_price=body.best_available_price,
+        exchange_order_id=body.exchange_order_id,
+        publication_consent=body.publication_consent))
+
+
+@app.post("/api/admin/mls/journal/settlement")
+def mls_journal_settlement(request: Request, body: JournalSettlementIn):
+    """Operator-only: record the exchange's settlement of one real
+    execution (filled|partial → settled). Settlement facts are written
+    once — a retried identical call is a no-op, a conflicting one is
+    refused. The columns existed without any writer (journal-P0 F5);
+    this is the writer."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import journal
+    return _journal_write(journal.settle_execution(
+        body.execution_id, settlement_credit=body.settlement_credit,
+        settled_at=body.settled_at, settled_outcome=body.settled_outcome))
+
+
+@app.post("/api/admin/mls/journal/reconcile")
+def mls_journal_reconcile(request: Request, body: JournalReconcileIn):
+    """Operator-only: mark one settled execution as reconciled against
+    the exchange's own record (settled → reconciled, the final state).
+    Requires settlement first; repeat calls are no-ops. This is also
+    where `publication_consent` can be granted explicitly for the
+    corpus (journal-P0 F2)."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import journal
+    return _journal_write(journal.reconcile_execution(
+        body.execution_id, note=body.note,
+        publication_consent=body.publication_consent))
+
+
+@app.post("/api/admin/mls/broadcast")
+def mls_broadcast(request: Request, body: BroadcastIn):
+    """Operator-only: a live session speaks to Discord/ntfy.
+
+    The session is the analyser; this is its megaphone. Operator-gated
+    rather than a local script so it works from any session — laptop,
+    cloud, or a phone over remote control.
+
+    Every broadcast is persisted, so a session that dropped mid-match
+    can read what it already said, and so what was claimed live becomes
+    part of the record. Only `source="session"` dispatches — a computed
+    message is a model-generated signal and is refused server-side
+    (journal-P0 F1); the action channel carries the standing-edge
+    qualifier appended by the server.
+
+    `source="session"` is now a VERIFIED fact, not a claim
+    (journal-P0-G). The operator token authenticates the request; it
+    does not establish that a human session is speaking, and any
+    automated client holding it could previously dispatch to the channel
+    Son's friend reads. An `X-Session-Token` from the interactive-session
+    handshake is required, and a request without a live one is refused
+    here — no transport is called and nothing is persisted as said.
+
+    Figures should come from a briefing read in the SAME turn, never
+    from recall — a confident agent narrating a stale price is the
+    failure mode this endpoint makes possible."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import journal, session_capability
+    cap = session_capability.verify(
+        request.headers.get("x-session-token"))
+    if cap is None:
+        raise HTTPException(
+            403, "action dispatch requires a live interactive-session "
+                 "capability: POST /api/admin/mls/session/challenge, sign "
+                 "the nonce with JOURNAL_SESSION_SECRET, POST "
+                 "/api/admin/mls/session/open, then send the returned "
+                 "token as X-Session-Token. The operator token alone "
+                 "cannot mint one")
+    return journal.broadcast(body.message, channel=body.channel,
+                             source=body.source,
+                             session_label=body.session_label,
+                             fixture_id=body.fixture_id,
+                             capability=cap)
 
 
 # === Club Friendlies — VIEWER surface, additive block, 2026-07-28 ==========
@@ -1522,24 +1873,37 @@ def alerts_test():
     report PER-LEG delivery, so a silent failure (bad webhook, mistyped
     ntfy topic, whitespace in an env var) is visible in the response
     instead of only in server logs. Each leg is exercised directly —
-    the fan-out copy-to-detail is send_alert's concern, not this probe's."""
-    from src.alerts import send_discord, send_ntfy
-    a = send_discord("⚡ ACTION channel test — act-now pings (signals, "
-                     "tracker flips, goals) arrive here.", channel="action")
-    d = send_discord("📊 DETAIL channel test — the narrator posts live "
-                     "briefs, goal analyses and your position table here.",
-                     channel="detail")
-    n = send_ntfy("📱 ntfy path test — if this reached your phone, the "
-                  "push loop is closed.", title="WC26 channel test")
-    return {"sent": True,
-            "action_configured": bool(config.DISCORD_ACTION_WEBHOOK_URL),
-            "detail_configured": bool(config.DISCORD_DETAIL_WEBHOOK_URL),
-            "split": (config.DISCORD_ACTION_WEBHOOK_URL
-                      != config.DISCORD_DETAIL_WEBHOOK_URL),
-            "ntfy_configured": bool(config.NTFY_TOPIC),
-            "action_delivered": a,
-            "detail_delivered": d,
-            "ntfy_delivered": n}
+    the fan-out copy-to-detail is the gate's concern, not this probe's.
+
+    The probe body lives in `src/alerts.py` because the transports are
+    PRIVATE to that module: this route asks the gate module to test
+    itself rather than reaching past it for a raw sender."""
+    from src import alerts
+    return alerts.channel_probe()
+
+
+@app.get("/api/admin/alerts/refusals")
+def alerts_refusals(request: Request, limit: int = Query(50, ge=1, le=200)):
+    """Operator-only, READ-ONLY: what the alert gate has REFUSED since
+    this process started, and how many of each class.
+
+    A gate that refuses silently is indistinguishable from a transport
+    that is down, and "nothing arrived" is exactly the shape of the two
+    incidents this project has already had (DiskFull behind
+    {"created": 0}; the VARCHAR truncation that erased every fill). The
+    ledger carries the call site and the reason — never the refused
+    message, which would put the withheld betting content back on a
+    readable surface."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src import alerts
+    return {"refusals": alerts.recent_refusals(limit),
+            "counts": alerts.refusal_counts(),
+            "real_money_signals_enabled":
+                config.REAL_MONEY_SIGNALS_ENABLED,
+            "note": ("process-local ring buffer; the printed log line is "
+                     "the durable record"),
+            "generated_at": utcnow().isoformat()}
 
 
 @app.get("/api/positions")

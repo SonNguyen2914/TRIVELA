@@ -23,6 +23,7 @@ import os
 from datetime import datetime, timezone
 
 from src.live import audit as live_audit
+from src.live.journal import public_bet_projection
 from src.live.db import get_session, plane_ready
 from src.live.models import (Competition, CorpusExport, Fixture,
                              LineupEntry, LineupSnapshot, MarketContract,
@@ -31,6 +32,7 @@ from src.live.models import (Competition, CorpusExport, Fixture,
                              MlsTeamMatchStat, ModelApprovalDecision,
                              ModelInputArtifact, ModelVersion,
                              PaperEvaluationContext, PaperFill,
+                             PersonalBet, PersonalBetExecution,
                              PaperSignal, Player, PredictionContract,
                              PredictionRun, RegistryDiscovery,
                              SourceObservation, Team, TeamAlias)
@@ -39,7 +41,49 @@ from src.live.models import (Competition, CorpusExport, Fixture,
 # registry sweeps, official per-match team/player stats and the exact
 # selected model parameters — so the corpus can regenerate the
 # model-DEVELOPMENT result, not only replay a final run.
-CORPUS_SCHEMA = "corpus-v2"
+#
+# v3 (journal-P0 F2/F9): documents and disciplines the two journal
+# sections that entered under the v2 label without a bump:
+#
+#   personal_journal.json            Son's recorded views (taken AND
+#                                    passed) — evidence class
+#                                    `personal_journal`, execution-
+#                                    fidelity documentation, NEVER edge
+#                                    evidence, never summed with the
+#                                    paper ledger. `rationale` is
+#                                    private prose and never exports.
+#   personal_journal_executions.json The pilot's real executions.
+#                                    Private fields (account label,
+#                                    order id, fill economics, consent
+#                                    provenance, reconciliation note)
+#                                    export ONLY under the row's
+#                                    explicit publication_consent.
+#
+# Both sections are scoped to the corpus's competition, exactly like
+# fixtures/runs/markets — a second league's journal must not leak into
+# an MLS corpus.
+#
+# v4 (journal-P1-F): journal entries carry an explicit `superseded`
+# flag and counts_toward_aggregate honours it — a corrected row stays
+# exported (immutable audit) but is labelled as contributing no
+# effective observation; manifest counts carry raw vs effective.
+# Corrections are scope-checked at write time (same competition/
+# fixture/market/outcome), so a competition-scoped corpus cannot
+# contain a dangling corrects_bet_id.
+#
+# v5 (journal-P0-H + closure): the journal sections are REFERENTIALLY
+# CLOSED. `market_quotes.json` was scoped to lock-snapshot quotes only,
+# but a journal entry may cite any persisted observation — so an
+# exported entry's `market_quote_id` (and an exported execution's
+# `market_quote_id_at_fill`) could name a quote no file in the bundle
+# contained. The corpus claims to be self-contained; a reader could not
+# check the one price the entry exists to make checkable. Journal-
+# referenced quotes are now included, scoped to what actually exports:
+# entry quotes always, fill-book quotes only for executions that carry
+# publication consent. Entries additionally carry the quote's capture
+# age, the ceiling applied and any refusal reason, so a reader can
+# verify the falsifiability claim rather than take it on trust.
+CORPUS_SCHEMA = "corpus-v5"
 _GIT_REV = os.getenv("RAILWAY_GIT_COMMIT_SHA", "")[:40]
 
 
@@ -94,6 +138,16 @@ def _dump(obj) -> dict:
     return out
 
 
+# journal-P0 F2 + P0-C: the corpus is PUBLIC bytes. Journal entries
+# export through THE single public projection defined in
+# src.live.journal (one field list for briefing, journal and corpus —
+# never two drifting copies). Executions are a third party's financial
+# record: a row exports ONLY under its explicit publication_consent
+# (default false), and then in full; absent consent even its
+# occurrence/timeline stays out of public bytes — the manifest carries
+# aggregate counts so the omission is explicit, never silent.
+
+
 def _book_observations(s, depth) -> list:
     """The raw order-book observations the exported depth rows point at.
 
@@ -141,11 +195,43 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
         quote_ids = {q.id for q in quotes}
         depth = [d for d in s.query(MarketDepthLevel).all()
                  if d.market_quote_id in quote_ids]
+        # journal quote evidence — resolved below, once the journal rows
+        # are known, so the bundle closes over what it actually exports
         lineups = [ln for ln in s.query(LineupSnapshot).all()
                    if ln.fixture_id in fixture_ids]
         lineup_ids = {ln.id for ln in lineups}
         lineup_entries = [le for le in s.query(LineupEntry).all()
                           if le.lineup_snapshot_id in lineup_ids]
+        # journal-P1 F9: the journal scopes to THIS competition like
+        # everything else — a second league's entries stay out
+        journal_bets = (s.query(PersonalBet)
+                        .filter_by(competition_slug=comp).all())
+        journal_bet_ids = {b.id for b in journal_bets}
+        journal_execs = [e for e in s.query(PersonalBetExecution).all()
+                         if e.personal_bet_id in journal_bet_ids]
+        # journal-P1-F: corrected rows export as immutable audit,
+        # labelled superseded — one effective observation per chain
+        journal_superseded = {b.corrects_bet_id for b in journal_bets
+                              if b.corrects_bet_id is not None}
+        # corpus-v5: close the bundle over the quotes the journal
+        # sections REFER TO. Entry quotes always (every entry exports);
+        # fill-book quotes only for executions that actually export,
+        # i.e. those carrying publication consent — pulling in a quote
+        # referenced solely by a withheld execution would leak which
+        # book that execution used.
+        published_execs = [e for e in journal_execs
+                           if e.publication_consent]
+        journal_quote_ids = {b.market_quote_id for b in journal_bets
+                             if b.market_quote_id is not None}
+        journal_quote_ids |= {e.market_quote_id_at_fill
+                              for e in published_execs
+                              if e.market_quote_id_at_fill is not None}
+        missing_quote_ids = journal_quote_ids - quote_ids
+        if missing_quote_ids:
+            extra = (s.query(MarketQuote)
+                     .filter(MarketQuote.id.in_(missing_quote_ids)).all())
+            quotes = quotes + extra
+            quote_ids = quote_ids | {q.id for q in extra}
 
         sections = {
             "competitions.json": [_dump(x) for x in
@@ -173,6 +259,22 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             # `SourceObservation` was not exported at all.
             "source_observations.json": [
                 _dump(x) for x in _book_observations(s, depth)],
+            # The personal journal and the pilot's real executions.
+            # Exported so the execution-fidelity evidence travels with
+            # the corpus — but they are a DIFFERENT evidence class from
+            # everything above and must never be folded into the
+            # forecast or market reports. Human-selected bets cannot
+            # measure edge; they measure whether execution behaves as
+            # modelled. Entries go through THE public projection
+            # (journal-P0-C); executions export only under explicit
+            # publication_consent, then in full. Both sections scope to
+            # THIS corpus's competition (journal-P1 F9).
+            "personal_journal.json": [
+                public_bet_projection(
+                    x, superseded=x.id in journal_superseded)
+                for x in journal_bets],
+            "personal_journal_executions.json": [
+                _dump(x) for x in published_execs],
             # V9.5 eval C1: the frozen paper/risk state each lock was
             # evaluated against, so a reader can verify that a paper
             # decision was a pure function of frozen inputs
@@ -230,6 +332,10 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             "input_artifacts": len(artifact_ids),
             "lock_snapshots": len(snapshots),
             "frozen_quotes": len(quotes),
+            # corpus-v5: how many of the exported quotes are there only
+            # because a journal row cites them. Stated, so `quote_scope`
+            # cannot be read as "lock snapshots only" when it is not.
+            "journal_referenced_quotes": len(missing_quote_ids),
             "depth_rows": len(depth),
             "missed_locks": audit_summary.get("missed_locks", 0),
             "failed_snapshots": audit_summary.get("failed_snapshots", 0),
@@ -237,6 +343,18 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             "players": len(sections["players.json"]),
             "paper_signals": len(sections["paper_signals.json"]),
             "paper_fills": len(sections["paper_fills.json"]),
+            # journal-P0-C: consent-gated omissions are explicit — the
+            # difference between total and published is the number of
+            # executions withheld from public bytes
+            "journal_entries": len(journal_bets),
+            # journal-P1-F: raw vs effective is explicit — the
+            # difference is the number of corrected (superseded) rows
+            "journal_entries_effective": (len(journal_bets)
+                                          - len(journal_superseded)),
+            "journal_entries_superseded": len(journal_superseded),
+            "journal_executions_total": len(journal_execs),
+            "journal_executions_published": len(
+                sections["personal_journal_executions.json"]),
         }
         manifest = {
             "corpus_version": version,
@@ -246,7 +364,7 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             "backend_revision": _GIT_REV,
             "model_versions": [m["name"] for m in
                                sections["model_versions.json"]],
-            "quote_scope": "lock_snapshot_only",
+            "quote_scope": "lock_snapshot_plus_journal_referenced",
             "files": files,
             "counts": counts,
         }

@@ -371,9 +371,27 @@ def t10_locks() -> dict:
                     paper.paper_trade_lock(run.id)
                 except Exception as exc:
                     print(f"[runs] t10 paper {f.espn_event_id}: {exc}")
-                # 14. alert only AFTER commit, PAPER-labeled
+                # 14. lock record only AFTER commit — OPERATIONAL, and it
+                # carries the locked H/D/A.
+                #
+                # The round-4 alert-gate work stripped these numbers,
+                # reasoning that per-match probabilities on the act-now
+                # channel are a market view reaching a real-money reader.
+                # Son restored them on 2026-07-29 on two facts that
+                # reasoning lacked: the detail and action channels are
+                # configured DISTINCTLY in Railway, and he is
+                # currently the channel's ONLY reader — his friend bets on
+                # what Son concludes and relays, never on this feed. So
+                # this is the operator reading his own instrument.
+                #
+                # Note what the classification rests on: a fact about the
+                # READERSHIP, not about the wording. If the friend is ever
+                # given channel access this call site becomes a
+                # MODEL_SIGNAL and must be refused while the money lock is
+                # on. Recorded so the next reader inherits the condition
+                # rather than the conclusion.
                 try:
-                    from src.alerts import send_alert
+                    from src.alerts import OPERATIONAL, send_alert
                     o = (s.query(PredictionContract)
                          .filter_by(prediction_run_id=run.id).all())
                     probs = {c.outcome_key: c.raw_probability for c in o}
@@ -384,9 +402,10 @@ def t10_locks() -> dict:
                         f"D {probs.get('draw', 0):.0%} / "
                         f"A {probs.get('away_win', 0):.0%} "
                         f"({model_mls.MODEL_NAME}, shadow — not advice)",
-                        title="MLS shadow lock")
+                        title="MLS shadow lock",
+                        dispatch_class=OPERATIONAL)
                 except Exception as exc:
-                    print(f"[runs] t10 alert failed: {exc}")
+                    print(f"[runs] t10 lock record failed: {exc}")
         return {"locked": locked}
     except Exception as exc:
         s.rollback()
