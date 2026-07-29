@@ -20,8 +20,13 @@ Finding catalogue (each mechanically defined, net of EXACT fees):
                   winner-first composite string) while the mapped Kalshi
                   market still offers the certain outcome below
                   $1 - fee. ESPN is re-read at detection time, never
-                  cached from a previous cycle. MLS only today — the
-                  only competition with an approved fixture mapping.
+                  cached from a previous cycle. ORDER MATTERS: finality
+                  is established FIRST and the priced quote is a FRESH
+                  post-finality re-read, so kalshi_captured_at >=
+                  espn_captured_at on every emitted row (a pre-final
+                  price paired with a settled outcome manufactures a
+                  margin that never existed). MLS only today — the only
+                  competition with an approved fixture mapping.
   WIDE_SPREAD /   liquidity CONTEXT flags (config thresholds). Labelled
   THIN_BOOK       is_context=True; they are never wins and never alert.
                   A two-sided book with MISSING top-of-book size on
@@ -54,13 +59,40 @@ Finding catalogue (each mechanically defined, net of EXACT fees):
                   bounded in AGE and SIZE (_prune_pair_store) so it can
                   never grow without limit.
 
+Fee discipline (provider-aware, fail-closed): Kalshi declares a fee
+schedule per SERIES (fee_type/fee_multiplier on the series object; the
+market payload carries no fee field at all). The taxonomy is NOT
+uniform — 90 of 97 soccer GAME series declare 'quadratic', the exact
+formula this repo models, and 7 declare 'quadratic_with_maker_fees'
+whose rate the API never publishes. Each finding is priced with its own
+series' declared schedule; an unmodelled one is recorded as
+`fee_unknown` with the GROSS structure only, carries no net margin and
+can never alert. Discovery reads the schedules from the request it
+already makes, so this costs no extra provider traffic.
+
+Identity discipline (fail-closed): a market missing its event ticker or
+its own ticker has no provider-stable identity, cannot be keyed, and
+must never be swept into a synthetic event. One such row makes the
+whole series' scan an IDENTITY_FAILED outcome for that cycle: zero
+findings, zero alerts, expiry blocked, cycle degraded.
+
 Completeness discipline (fail-closed): every scanned series gets a
 recorded outcome — SUCCESS / REQUEST_FAILED / PAGINATION_CAP /
-DETECTION_FAILED — persisted on the cycle row and served by the API.
-"Didn't look" is never recordable as "no anomaly": an open finding may
-only EXPIRE after a COMPLETE, SUCCESSFUL detection pass over its series
-in the same cycle, a failed/truncated series stays scheduled for the
-next cycle, and any non-SUCCESS outcome marks the whole cycle degraded.
+DETECTION_FAILED / IDENTITY_FAILED — persisted on the cycle row and
+served by the API. "Didn't look" is never recordable as "no anomaly":
+an open finding may only EXPIRE after a COMPLETE, SUCCESSFUL detection
+pass over its series in the same cycle, a failed/truncated series stays
+scheduled for the next cycle, and any non-SUCCESS outcome marks the
+whole cycle degraded.
+
+Chronological discipline (cross-process): Railway overlaps containers
+deliberately, so an OLDER scan can commit AFTER a newer one. Every
+write — insert, last-seen bump, expiry — first advances a per-key
+observation watermark with an atomic
+`UPDATE ... WHERE observed_through < :clock`. The DATABASE rejects the
+stale writer, so a straggler can neither re-open an expired finding nor
+alert on it; the rejection count rides on the cycle heartbeat rather
+than disappearing.
 
 Capture-clock discipline: Kalshi publishes no quote timestamp, so the
 per-series fetch-COMPLETION clock is the ONLY timing evidence a quote
@@ -116,7 +148,8 @@ import requests
 
 import config
 from src.live.db import get_session, plane_ready
-from src.live.models import HunterCycle, HunterFinding
+from src.live.models import (HunterCycle, HunterFinding,
+                             HunterObservationWatermark)
 from src.live.paper import FEE_POLICY, order_fee_dollars
 
 KALSHI = "https://api.elections.kalshi.com/trade-api/v2"
@@ -132,6 +165,7 @@ SERIES_SUCCESS = "SUCCESS"
 SERIES_REQUEST_FAILED = "REQUEST_FAILED"
 SERIES_PAGINATION_CAP = "PAGINATION_CAP"
 SERIES_DETECTION_FAILED = "DETECTION_FAILED"
+SERIES_IDENTITY_FAILED = "IDENTITY_FAILED"
 
 # Findings never claim more than this framing allows. Attached to every
 # alert and to the API report.
@@ -141,6 +175,14 @@ SHADOW_FRAMING = ("shadow mode — observational record only; no order was "
 CAPTURE_CLOCK_NOTE = ("all capture timestamps are OUR clock; Kalshi "
                       "publishes no quote timestamp (updated_time is the "
                       "definition clock)")
+
+FEE_RESOLUTION_NOTE = (
+    "each finding is priced with ITS OWN series' provider-declared fee "
+    "schedule (kalshi series fee_type/fee_multiplier), never one policy "
+    "assumed across the taxonomy; a schedule this repo does not model "
+    "(e.g. quadratic_with_maker_fees, which 7 soccer series declare) is "
+    "recorded as fee_unknown — gross structure only, no net margin, "
+    "never alertable")
 
 # Hard bounds so the scan can never fan out without limit.
 MAX_SERIES_PER_CYCLE = 120
@@ -244,14 +286,116 @@ def _size(m: dict, field: str) -> Decimal | None:
         return None
 
 
-def _fee(price: Decimal) -> Decimal:
-    """Exact Kalshi general-taker fee for ONE contract at `price` —
-    the repo's Decimal fee module, never a float approximation."""
-    return order_fee_dollars(price, 1)
-
-
 def _s(d: Decimal | None) -> str | None:
     return None if d is None else str(d)
+
+
+# --- provider-declared fee schedules (P0-1) --------------------------------
+# Kalshi publishes a market's fee schedule on its SERIES object
+# (fee_type + fee_multiplier) and NOWHERE on the market payload —
+# verified 2026-07-29, archived in
+# research_archive/kalshi_fee_schedules_2026-07-29.json. The soccer
+# taxonomy is NOT uniform: of 97 soccer GAME series, 90 declare
+# 'quadratic' — the exact general-taker formula this repo models — and
+# 7 declare 'quadratic_with_maker_fees': KXWCGAME, KXUCLGAME,
+# KXEPLGAME, KXLALIGAGAME, KXBUNDESLIGAGAME, KXLIGUE1GAME,
+# KXSERIEAGAME. Assuming ONE schedule across the taxonomy is how a
+# "true structural arbitrage" gets computed with the wrong fee.
+#
+# The provider publishes the NAME of a schedule, never its rate.
+# 'quadratic' at multiplier 1 is the one we can price exactly
+# (FEE_POLICY); anything else is UNKNOWN and stays unpriced —
+# FEE_POLICY itself declares maker fees, exit fees and series overrides
+# NOT modelled, and inventing a rate for a name is precisely the error
+# this guard exists to prevent.
+FEE_TYPE_MODELED = "quadratic"
+FEE_MULTIPLIER_MODELED = 1
+FEE_UNKNOWN_PREFIX = "kalshi-fee-unknown"
+FEE_SOURCE_NOTE = ("kalshi SERIES object (fee_type/fee_multiplier); the "
+                   "market payload carries no fee field at all")
+
+
+class FeeSchedule:
+    """One series' fee schedule, as the PROVIDER declares it.
+
+    `modeled` is True ONLY for fee_type 'quadratic' at multiplier 1.
+    Every other declared type, an unexpected multiplier, and a schedule
+    that could not be read at all are fee_unknown: `fee()` returns None,
+    the finding records the gross structure with `fee_status`
+    'fee_unknown' and NO net margin, and `_alert_eligible` refuses it.
+    A structural finding priced with the wrong fee schedule is a false
+    finding, so an unpriceable book is recorded and never alerted."""
+
+    def __init__(self, series: str, fee_type=None, multiplier=None,
+                 reason: str | None = None):
+        self.series = series
+        self.fee_type = fee_type
+        self.multiplier = multiplier
+        if reason is not None:
+            self.reason = reason
+        elif fee_type is None:
+            self.reason = ("no fee schedule was read from the provider for "
+                           "this series")
+        elif fee_type != FEE_TYPE_MODELED:
+            self.reason = (
+                f"provider fee_type '{fee_type}' is not modelled; Kalshi "
+                "publishes the schedule NAME but not its rate, and "
+                f"{FEE_POLICY['not_modeled']}")
+        elif multiplier != FEE_MULTIPLIER_MODELED:
+            self.reason = (f"provider fee_multiplier {multiplier!r} is not "
+                           "modelled (only 1 is)")
+        else:
+            self.reason = None
+
+    @property
+    def modeled(self) -> bool:
+        return self.reason is None
+
+    def fee(self, price: Decimal) -> Decimal | None:
+        """Exact fee for ONE contract at `price` under THIS series'
+        declared schedule — the repo's Decimal fee module, never a float
+        approximation — or None when the schedule is unknown."""
+        if not self.modeled:
+            return None
+        return order_fee_dollars(price, 1)
+
+    @property
+    def version(self) -> str:
+        if self.modeled:
+            return FEE_POLICY["version"]
+        return f"{FEE_UNKNOWN_PREFIX}:{self.fee_type or 'unread'}"[:64]
+
+    @property
+    def status(self) -> str:
+        return "modeled" if self.modeled else "fee_unknown"
+
+    def block(self) -> dict:
+        """What lands verbatim in legs_json, so a stored finding always
+        says which schedule its arithmetic used and where it came from."""
+        out = {
+            "fee_status": self.status,
+            "fee_policy": self.version,
+            "provider_fee_type": self.fee_type,
+            "provider_fee_multiplier": self.multiplier,
+            "source": FEE_SOURCE_NOTE,
+        }
+        if not self.modeled:
+            out["reason"] = self.reason
+            out["note"] = ("fee_unknown: no net margin is asserted and this "
+                           "finding can NEVER alert — the gross structure "
+                           "is recorded as an observation only")
+        return out
+
+
+def _fee_schedule(series: str) -> FeeSchedule:
+    """The resolved schedule for one series. Absent from the roster map
+    (discovery failed, series pinned without a readable series object,
+    provider omitted the field) means UNKNOWN, never 'assume general'."""
+    sched = (_roster.get("fee") or {}).get(series)
+    if not sched:
+        return FeeSchedule(series)
+    return FeeSchedule(series, fee_type=sched.get("fee_type"),
+                       multiplier=sched.get("fee_multiplier"))
 
 
 def _leg_liquidity(sizes: dict[str, Decimal | None]
@@ -295,7 +439,26 @@ def _leg_liquidity(sizes: dict[str, Decimal | None]
 # between discoveries is seen with at most that lag (≤6h default). A
 # series NEVER leaves the schedule through failure — only a complete
 # successful scan that saw no open markets drops it (P0-1).
-_roster: dict = {"at": None, "series": [], "active": set()}
+_roster: dict = {"at": None, "series": [], "active": set(), "fee": {}}
+
+
+def _fetch_series_fee_schedule(ticker: str, counter: dict) -> dict | None:
+    """One series' declared fee schedule, for a roster PINNED via
+    config.HUNTER_SERIES (which bypasses discovery entirely and so
+    never sees the bulk listing). A failure returns None — the series
+    then has no readable schedule and its findings are fee_unknown,
+    never silently priced as general-taker."""
+    try:
+        d = _get(f"{KALSHI}/series/{ticker}")
+        counter["requests"] = counter.get("requests", 0) + 1
+    except requests.RequestException as exc:
+        print(f"[hunter] fee schedule read failed for {ticker}: {exc}")
+        return None
+    s = d.get("series") or {}
+    if not s.get("fee_type"):
+        return None
+    return {"fee_type": s.get("fee_type"),
+            "fee_multiplier": s.get("fee_multiplier")}
 
 
 def discover_roster(counter: dict) -> list[str] | None:
@@ -304,9 +467,21 @@ def discover_roster(counter: dict) -> list[str] | None:
     the config skip-list. Config HUNTER_SERIES overrides discovery
     entirely. Returns None on failure so a stale roster is kept rather
     than silently scanning nothing (the failure is recorded on the
-    cycle row as discovery_error)."""
+    cycle row as discovery_error).
+
+    Each series' FEE SCHEDULE is read here too (P0-1). The bulk listing
+    already carries fee_type/fee_multiplier per series, so the
+    discovered path costs ZERO extra provider requests; a pinned roster
+    pays one cheap series read each, once per discovery window."""
     if config.HUNTER_SERIES:
-        return list(config.HUNTER_SERIES)
+        out = list(config.HUNTER_SERIES)
+        fees = {}
+        for t in out:
+            sched = _fetch_series_fee_schedule(t, counter)
+            if sched:
+                fees[t] = sched
+        _roster["fee"] = fees
+        return out
     try:
         d = _get(f"{KALSHI}/series", {"category": "Sports"})
         counter["requests"] = counter.get("requests", 0) + 1
@@ -314,11 +489,17 @@ def discover_roster(counter: dict) -> list[str] | None:
         print(f"[hunter] roster discovery failed: {exc}")
         return None
     skip = set(config.HUNTER_SERIES_SKIP)
-    out = sorted({s.get("ticker") for s in (d.get("series") or [])
-                  if s.get("ticker")
-                  and s["ticker"].endswith(GAME_SERIES_SUFFIX)
-                  and SOCCER_TAG in (s.get("tags") or [])
-                  and s["ticker"] not in skip})
+    listing = [s for s in (d.get("series") or [])
+               if s.get("ticker")
+               and s["ticker"].endswith(GAME_SERIES_SUFFIX)
+               and SOCCER_TAG in (s.get("tags") or [])
+               and s["ticker"] not in skip]
+    out = sorted({s["ticker"] for s in listing})
+    # the same payload the roster came from declares each series' fee
+    # schedule — read it, never assume one schedule for the taxonomy
+    _roster["fee"] = {s["ticker"]: {"fee_type": s.get("fee_type"),
+                                    "fee_multiplier": s.get("fee_multiplier")}
+                      for s in listing if s.get("fee_type")}
     return out or None
 
 
@@ -328,15 +509,21 @@ def _tie_leg(ticker: str) -> bool:
 
 
 def detect_event_findings(series: str, event_ticker: str,
-                          markets: list[dict], captured_at: datetime
-                          ) -> list[dict]:
+                          markets: list[dict], captured_at: datetime,
+                          fees: FeeSchedule) -> list[dict]:
     """SUM_BELOW_ONE for one event plus the per-market detectors
     (CROSSED_BOOK and the liquidity context flags). Pure: in-memory
     market dicts in, finding dicts out. `captured_at` is the per-series
     fetch-completion clock and is preserved verbatim on every finding
-    (top-level datetime + legs isoformat) — P0-4."""
+    (top-level datetime + legs isoformat) — P0-4.
+
+    `fees` is THIS series' provider-declared schedule (P0-1). When it is
+    unknown the structural detectors still record the GROSS structure —
+    "didn't look" is never "no anomaly" — but assert no net margin and
+    can never alert."""
     found: list[dict] = []
     cap = captured_at.isoformat()
+    fee_block = fees.block()
 
     # SUM_BELOW_ONE — only on a provable full partition: exactly three
     # legs, exactly one TIE/DRAW leg, every leg with a real ask.
@@ -345,38 +532,51 @@ def detect_event_findings(series: str, event_ticker: str,
         asks = [(m, _price(m, "yes_ask")) for m in markets]
         if all(a is not None for _, a in asks):
             total_ask = sum(a for _, a in asks)
-            fees = [(m, a, _fee(a)) for m, a in asks]
-            total_fee = sum(f for _, _, f in fees)
-            margin = ONE - total_ask - total_fee
-            if margin > 0:
+            gross = ONE - total_ask
+            legs = [(m, a, fees.fee(a)) for m, a in asks]
+            total_fee = (sum(f for _, _, f in legs) if fees.modeled
+                         else None)
+            margin = None if total_fee is None else gross - total_fee
+            # modelled: the NET margin must clear zero. unknown: the
+            # gross structure alone is the observation, never a claim
+            if gross > 0 and (margin is None or margin > 0):
                 sizes = {
                     f"yes_ask_size:{m.get('ticker')}":
-                        _size(m, "yes_ask_size") for m, _, _ in fees}
+                        _size(m, "yes_ask_size") for m, _, _ in legs}
                 alertable, limiting, liq = _leg_liquidity(sizes)
                 found.append({
                     "finding_type": "SUM_BELOW_ONE",
                     "series": series, "event_ticker": event_ticker,
                     "market_ticker": None, "is_context": False,
-                    "net_margin_dollars": str(margin),
+                    "net_margin_dollars": _s(margin),
+                    "gross_margin_dollars": str(gross),
+                    "fee_status": fees.status,
+                    "fee_policy_version": fees.version,
                     "captured_at": captured_at, "detected_at": _now(),
                     "alertable_liquidity": alertable,
                     "limiting_quantity": limiting,
                     "legs": {
-                        "rule": "1 - sum(yes_ask) - sum(fee_per_leg) > 0 "
-                                "over a full 3-way partition",
+                        "rule": ("1 - sum(yes_ask) - sum(fee_per_leg) > 0 "
+                                 "over a full 3-way partition"
+                                 if fees.modeled else
+                                 "1 - sum(yes_ask) > 0 over a full 3-way "
+                                 "partition; fees UNPRICEABLE for this "
+                                 "series, so no net claim is made"),
                         "captured_at": cap,
                         "legs": [{"ticker": m.get("ticker"),
                                   "yes_ask_dollars": _s(a),
                                   "yes_ask_size": _s(
                                       _size(m, "yes_ask_size")),
                                   "fee_dollars": _s(f)}
-                                 for m, a, f in fees],
+                                 for m, a, f in legs],
                         "sum_asks_dollars": str(total_ask),
-                        "sum_fees_dollars": str(total_fee),
+                        "sum_fees_dollars": _s(total_fee),
                         "payout_dollars": "1",
-                        "net_margin_dollars": str(margin),
+                        "gross_margin_dollars": str(gross),
+                        "net_margin_dollars": _s(margin),
                         "liquidity": liq,
-                        "fee_policy": FEE_POLICY["version"],
+                        "fee_schedule": fee_block,
+                        "fee_policy": fees.version,
                     }})
 
     for m in markets:
@@ -391,10 +591,11 @@ def detect_event_findings(series: str, event_ticker: str,
         if yes_bid is not None and no_bid is not None:
             gross = yes_bid + no_bid - ONE
             if gross > 0:
-                fee_a = _fee(ONE - yes_bid)
-                fee_b = _fee(ONE - no_bid)
-                margin = gross - fee_a - fee_b
-                if margin > 0:
+                fee_a = fees.fee(ONE - yes_bid)
+                fee_b = fees.fee(ONE - no_bid)
+                margin = (None if not fees.modeled
+                          else gross - fee_a - fee_b)
+                if margin is None or margin > 0:
                     # executable sizes: the yes_bid leg consumes the
                     # yes_bid side; the no_bid leg is the MIRRORED
                     # yes_ask side (no_bid == 1 - yes_ask; Kalshi
@@ -417,22 +618,30 @@ def detect_event_findings(series: str, event_ticker: str,
                         "finding_type": "CROSSED_BOOK",
                         "series": series, "event_ticker": event_ticker,
                         "market_ticker": tick, "is_context": False,
-                        "net_margin_dollars": str(margin),
+                        "net_margin_dollars": _s(margin),
+                        "gross_margin_dollars": str(gross),
+                        "fee_status": fees.status,
+                        "fee_policy_version": fees.version,
                         "captured_at": captured_at,
                         "detected_at": _now(),
                         "alertable_liquidity": alertable,
                         "limiting_quantity": limiting,
                         "legs": {
-                            "rule": "yes_bid + no_bid - 1 - fee(1-yes_bid)"
-                                    " - fee(1-no_bid) > 0",
+                            "rule": ("yes_bid + no_bid - 1 - fee(1-yes_bid)"
+                                     " - fee(1-no_bid) > 0" if fees.modeled
+                                     else "yes_bid + no_bid - 1 > 0; fees "
+                                     "UNPRICEABLE for this series, so no "
+                                     "net claim is made"),
                             "captured_at": cap,
                             "yes_bid_dollars": _s(yes_bid),
                             "no_bid_dollars": _s(no_bid),
-                            "fee_leg_yes_dollars": str(fee_a),
-                            "fee_leg_no_dollars": str(fee_b),
-                            "net_margin_dollars": str(margin),
+                            "fee_leg_yes_dollars": _s(fee_a),
+                            "fee_leg_no_dollars": _s(fee_b),
+                            "gross_margin_dollars": str(gross),
+                            "net_margin_dollars": _s(margin),
                             "liquidity": liq,
-                            "fee_policy": FEE_POLICY["version"],
+                            "fee_schedule": fee_block,
+                            "fee_policy": fees.version,
                         }})
 
         # Liquidity CONTEXT flags — observational, never wins, never
@@ -635,6 +844,35 @@ def _fetch_espn_scoreboard(date_yyyymmdd: str) -> dict:
     return r.json()
 
 
+def _refetch_market(ticker: str) -> tuple[dict | None, datetime]:
+    """Re-read ONE market and stamp OUR fetch-completion clock (P0-2).
+
+    POST_CERTAINTY pairs a Kalshi quote with an ESPN full-time read, so
+    the quote must be captured AFTER finality was observed — a price
+    from before the final whistle plus a settled outcome manufactures a
+    margin that never existed. This is the fresh read; it happens only
+    for a market whose match ESPN has just reported final, so the extra
+    provider traffic is bounded by finished matches, not by the roster.
+    Throttled through the one shared pacing clock like every other
+    hunter request."""
+    d = _get(f"{KALSHI}/markets/{ticker}")
+    at = _now()
+    m = d.get("market")
+    return (m if isinstance(m, dict) else None), at
+
+
+def _clocks_ordered(f: dict) -> bool:
+    """The P0-2 invariant on an emitted POST_CERTAINTY row: the Kalshi
+    quote clock must not precede the ESPN finality clock. Checked here,
+    again at the composed cycle layer, and enforced a third time by a
+    CHECK constraint on the table itself."""
+    espn_at = f.get("espn_captured_at")
+    cap = f.get("captured_at")
+    if espn_at is None or cap is None:
+        return True
+    return cap >= espn_at
+
+
 def _fixture_local_date(dt: datetime) -> str:
     from zoneinfo import ZoneInfo
     d = dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
@@ -642,7 +880,8 @@ def _fixture_local_date(dt: datetime) -> str:
 
 
 def detect_post_certainty(s, markets_by_ticker: dict[str, dict],
-                          captured_at: datetime
+                          captured_at: datetime, fees: FeeSchedule,
+                          counter: dict | None = None
                           ) -> tuple[list[dict], bool]:
     """Matches ESPN says are FINISHED whose mapped Kalshi market still
     trades the certain outcome below $1 - fee.
@@ -652,14 +891,20 @@ def detect_post_certainty(s, markets_by_ticker: dict[str, dict],
     an earlier cycle — and the outcome is derived from the per-side score
     NUMBERS (ingest._event_to_fields), never a composite string.
 
-    `captured_at` is the MLS series' fetch-completion clock (the quotes'
-    only timing evidence) and is preserved on every finding; the ESPN
-    read gets its own clock, stored separately (P0-4).
+    ORDER OF OBSERVATION (P0-2): finality is established FIRST, and only
+    then is the quote captured — a FRESH per-market re-read whose clock
+    is necessarily later than the ESPN read. `captured_at` (the cycle's
+    MLS fetch-completion clock) is what made the market a candidate and
+    is retained as `pre_finality_kalshi_captured_at` evidence, but it is
+    NEVER the quote the arithmetic uses: pairing a pre-final price with
+    a settled outcome manufactures a margin that never existed. Every
+    emitted row satisfies kalshi_captured_at >= espn_captured_at.
 
     Returns (findings, complete): complete=False when ANY ESPN date-page
-    read failed — a partial pass must never be recorded as "no anomaly",
-    and the caller marks the series DETECTION_FAILED so its open
-    findings cannot expire this cycle (P0-1)."""
+    read failed, any post-finality re-quote failed, or any row failed
+    the clock ordering — a partial pass must never be recorded as "no
+    anomaly", and the caller marks the series DETECTION_FAILED so its
+    open findings cannot expire this cycle (P0-1)."""
     from src.live.ingest import _event_to_fields
     from src.live.models import Fixture, MarketContract, MarketEvent
 
@@ -721,13 +966,34 @@ def detect_post_certainty(s, markets_by_ticker: dict[str, dict],
                                         outcome_key=outcome).first())
             if mc is None or mc.ticker not in markets_by_ticker:
                 continue
-            m = markets_by_ticker[mc.ticker]
+            pre = markets_by_ticker[mc.ticker]
+            # P0-2: finality is now established — capture the quote
+            # AFTER it. The cycle's pre-final quote only made this
+            # market a candidate; it may never price the finding.
+            try:
+                m, quote_at = _refetch_market(mc.ticker)
+                if counter is not None:
+                    counter["requests"] = counter.get("requests", 0) + 1
+            except requests.RequestException as exc:
+                print(f"[hunter] post-final re-quote {mc.ticker} "
+                      f"failed: {exc}")
+                complete = False      # "didn't look" ≠ "no anomaly"
+                continue
+            if m is None:
+                complete = False
+                continue
+            if quote_at < espn_at:    # clock skew — refuse to emit
+                print(f"[hunter] post-final re-quote {mc.ticker} clock "
+                      "precedes the ESPN read; refusing the row")
+                complete = False
+                continue
             ask = _price(m, "yes_ask")
             if ask is None:
                 continue
-            fee = _fee(ask)
-            margin = ONE - ask - fee
-            if margin > 0:
+            fee = fees.fee(ask)
+            gross = ONE - ask
+            margin = None if fee is None else gross - fee
+            if gross > 0 and (margin is None or margin > 0):
                 alertable, limiting, liq = _leg_liquidity(
                     {"yes_ask_size": _size(m, "yes_ask_size")})
                 found.append({
@@ -738,26 +1004,44 @@ def detect_post_certainty(s, markets_by_ticker: dict[str, dict],
                     "market_ticker": mc.ticker,
                     "fixture_id": fx.id,
                     "is_context": False,
-                    "net_margin_dollars": str(margin),
-                    "captured_at": captured_at,
+                    "net_margin_dollars": _s(margin),
+                    "gross_margin_dollars": str(gross),
+                    "fee_status": fees.status,
+                    "fee_policy_version": fees.version,
+                    "captured_at": quote_at,
                     "detected_at": _now(),
                     "espn_captured_at": espn_at,
                     "alertable_liquidity": alertable,
                     "limiting_quantity": limiting,
                     "legs": {
-                        "rule": "ESPN state 'post' at detection-time "
-                                "re-read; certain outcome still asked "
-                                "below 1 - fee",
-                        "kalshi_captured_at": captured_at.isoformat(),
+                        "rule": ("ESPN state 'post' at detection-time "
+                                 "re-read, THEN a fresh post-finality "
+                                 "quote; certain outcome still asked "
+                                 "below 1 - fee"),
+                        "kalshi_captured_at": quote_at.isoformat(),
                         "espn_captured_at": espn_at.isoformat(),
+                        "clock_order": ("kalshi_captured_at >= "
+                                        "espn_captured_at: the quote was "
+                                        "captured AFTER finality was "
+                                        "observed"),
+                        "pre_finality_kalshi_captured_at":
+                            captured_at.isoformat(),
+                        "pre_finality_yes_ask_dollars":
+                            _s(_price(pre, "yes_ask")),
+                        "pre_finality_note": ("the cycle's earlier quote; "
+                                              "it made this market a "
+                                              "candidate and is NOT part "
+                                              "of the arithmetic"),
                         "espn_event_id": fx.espn_event_id,
                         "final_score_home": hg, "final_score_away": ag,
                         "certain_outcome": outcome,
                         "yes_ask_dollars": _s(ask),
-                        "fee_dollars": str(fee),
-                        "net_margin_dollars": str(margin),
+                        "fee_dollars": _s(fee),
+                        "gross_margin_dollars": str(gross),
+                        "net_margin_dollars": _s(margin),
                         "liquidity": liq,
-                        "fee_policy": FEE_POLICY["version"],
+                        "fee_schedule": fees.block(),
+                        "fee_policy": fees.version,
                     }})
     return found, complete
 
@@ -817,7 +1101,8 @@ def _model_state() -> tuple[dict | None, str]:
 
 
 def detect_model_edge(s, markets_by_ticker: dict[str, dict],
-                      captured_at: datetime) -> list[dict]:
+                      captured_at: datetime,
+                      fees: FeeSchedule) -> list[dict]:
     """MODEL_EDGE readouts for mapped, upcoming MLS 3-way contracts.
 
     ONLY where an ACTIVE approved model exists (P0-3): the persisted
@@ -880,7 +1165,12 @@ def detect_model_edge(s, markets_by_ticker: dict[str, dict],
                  else pc.raw_probability)
             if p is None:
                 continue
-            fee = _fee(ask)
+            fee = fees.fee(ask)
+            if fee is None:
+                # an unpriceable schedule cannot produce a net edge
+                # readout either — fail closed rather than quote a
+                # number computed with the wrong fee (P0-1)
+                continue
             net_edge = Decimal(str(p)) - ask - fee
             if net_edge < Decimal(str(config.HUNTER_MODEL_EDGE_MIN)):
                 continue
@@ -891,6 +1181,8 @@ def detect_model_edge(s, markets_by_ticker: dict[str, dict],
                 "market_ticker": mc.ticker, "fixture_id": fx.id,
                 "is_context": False,
                 "net_margin_dollars": str(net_edge),
+                "fee_status": fees.status,
+                "fee_policy_version": fees.version,
                 "captured_at": captured_at, "detected_at": _now(),
                 "model_qualifier": qualifier,
                 "legs": {
@@ -906,7 +1198,8 @@ def detect_model_edge(s, markets_by_ticker: dict[str, dict],
                     "yes_ask_dollars": _s(ask),
                     "fee_dollars": str(fee),
                     "net_edge_dollars": str(net_edge),
-                    "fee_policy": FEE_POLICY["version"],
+                    "fee_schedule": fees.block(),
+                    "fee_policy": fees.version,
                     "standing_qualifier": qualifier,
                 }})
     return found
@@ -924,13 +1217,21 @@ def _alert_budget_ok(now: datetime) -> bool:
 
 
 def _alert_eligible(f: dict) -> bool:
-    """Whether a finding MAY alert: structural type, non-context, margin
-    over the config bar, AND positive executable size proven on every
-    required leg (P1-6). Eligibility is not delivery — the durable
-    claim + confirmed-transport path below decides that."""
+    """Whether a finding MAY alert: structural type, non-context, a fee
+    schedule this repo actually models (P0-1), margin over the config
+    bar, AND positive executable size proven on every required leg
+    (P1-6). Eligibility is not delivery — the durable claim +
+    confirmed-transport path below decides that."""
     if f["finding_type"] not in ALERTABLE or f.get("is_context"):
         return False
+    # fee_unknown can never alert: a structural margin computed with the
+    # wrong fee schedule is a false finding, and an unpriced one is not
+    # a margin at all
+    if f.get("fee_status") != "modeled":
+        return False
     if f.get("net_margin_dollars") is None:
+        return False
+    if not _clocks_ordered(f):
         return False
     if Decimal(f["net_margin_dollars"]) < Decimal(
             str(config.HUNTER_ALERT_MIN_MARGIN_DOLLARS)):
@@ -955,9 +1256,10 @@ def _alert_message(f: dict) -> str:
                   f"{legs.get('final_score_away')} "
                   f"({legs.get('certain_outcome')}); still asked at "
                   f"${legs.get('yes_ask_dollars')}")
+    policy = f.get("fee_policy_version") or FEE_POLICY["version"]
     return (f"🔎 hunter observation [{f['finding_type']}] {subject}: "
             f"{detail}; net margin ${margin} per contract after exact "
-            f"fees ({FEE_POLICY['version']}); top-of-book executable up "
+            f"fees ({policy}); top-of-book executable up "
             f"to {f.get('limiting_quantity')} contracts. "
             f"({SHADOW_FRAMING}.)")
 
@@ -1052,6 +1354,40 @@ def _row_key(row: HunterFinding) -> str:
                      row.event_ticker or "", row.market_ticker or ""])
 
 
+def _advance_watermark(s, key: str, clock: datetime) -> bool:
+    """Claim `clock` as the newest observation basis for `key` (P0-3).
+
+    Railway keeps the old container serving while the new one boots, so
+    an OLDER scan legitimately commits AFTER a newer one. This is the
+    reconciliation point, and the arbiter is the DATABASE: an atomic
+    `UPDATE ... WHERE observed_through < :clock` re-evaluates its own
+    predicate under a row lock, so exactly one writer can advance past
+    any given instant. Returns False when this write is STALE — the
+    caller must then ignore it entirely: no insert, no last_seen bump,
+    no expiry, and no alert.
+
+    A first observation of a key inserts the row under a UNIQUE
+    constraint; a concurrent insert surfaces as an IntegrityError at
+    flush and is handled exactly like the finding-row race — rollback
+    and one retry pass, which then reads the winner's watermark."""
+    n = (s.query(HunterObservationWatermark)
+         .filter(HunterObservationWatermark.finding_key == key,
+                 HunterObservationWatermark.observed_through < clock)
+         .update({HunterObservationWatermark.observed_through: clock,
+                  HunterObservationWatermark.updated_at: _now()},
+                 synchronize_session=False))
+    if n == 1:
+        return True
+    seen = (s.query(HunterObservationWatermark.id)
+            .filter(HunterObservationWatermark.finding_key == key).first())
+    if seen is not None:
+        return False           # a same-or-newer observation already won
+    s.add(HunterObservationWatermark(
+        finding_key=key, observed_through=clock, updated_at=_now()))
+    s.flush()
+    return True
+
+
 def _insert_finding_row(s, f: dict, key: str,
                         now: datetime) -> HunterFinding:
     """Construct + add one open finding under the partial unique index
@@ -1074,7 +1410,9 @@ def _insert_finding_row(s, f: dict, key: str,
         is_context=bool(f.get("is_context")),
         legs_json=json.dumps(f["legs"], sort_keys=True),
         net_margin_dollars=f.get("net_margin_dollars"),
-        fee_policy_version=(FEE_POLICY["version"]
+        # the schedule THIS finding's arithmetic used, resolved from the
+        # provider's own series object — never a global assumption
+        fee_policy_version=(f.get("fee_policy_version")
                             if not f.get("is_context") else None),
         model_qualifier_json=(
             json.dumps(f["model_qualifier"], sort_keys=True)
@@ -1165,17 +1503,41 @@ def scan_cycle() -> dict:
                                f"{MAX_PAGES_PER_SERIES}x{PAGE_LIMIT} "
                                "markets; scope INCOMPLETE — unseen "
                                "markets cannot be declared anomaly-free")}
+            # P0-4: provider-stable identity is a PRECONDITION, not a
+            # nicety. A market missing its event ticker or its own
+            # ticker cannot be grouped, keyed or de-duplicated, and the
+            # old code swept those rows into a synthetic ""-event that
+            # could produce a structural finding and alert. An identity
+            # failure is a RECORDED per-series outcome that degrades the
+            # cycle and yields zero findings and zero alerts from this
+            # series — expiry blocked, series stays scheduled.
+            bad = [m for m in ms
+                   if not m.get("event_ticker") or not m.get("ticker")]
+            if bad:
+                sample = [{"ticker": m.get("ticker"),
+                           "event_ticker": m.get("event_ticker")}
+                          for m in bad[:3]]
+                series_outcomes[series] = {
+                    "outcome": SERIES_IDENTITY_FAILED,
+                    "detail": (f"{len(bad)} of {len(ms)} markets lack a "
+                               "provider-stable identity (event_ticker "
+                               "and/or ticker); NO finding may be derived "
+                               f"from this series' scan. sample={sample}"
+                               )[:300]}
+                print(f"[hunter] {series} identity failure: "
+                      f"{len(bad)}/{len(ms)} markets unidentifiable")
+                continue
+            fees = _fee_schedule(series)
             try:
                 by_event: dict[str, list[dict]] = {}
                 for m in ms:
-                    by_event.setdefault(
-                        m.get("event_ticker") or "", []).append(m)
-                    if series == MLS_SERIES and m.get("ticker"):
+                    by_event.setdefault(m["event_ticker"], []).append(m)
+                    if series == MLS_SERIES:
                         mls_markets_by_ticker[m["ticker"]] = m
                 events_seen += len(by_event)
                 for ev_ticker, ev_markets in by_event.items():
                     new_findings.extend(detect_event_findings(
-                        series, ev_ticker, ev_markets, captured_at))
+                        series, ev_ticker, ev_markets, captured_at, fees))
                     # capture-paired repricing vs the PREVIOUS cycle's
                     # book, then refresh the pair store for the next
                     for m in ev_markets:
@@ -1209,7 +1571,7 @@ def scan_cycle() -> dict:
     failed_series = _refresh_active()
 
     s = get_session()
-    created = expired = alerted = 0
+    created = expired = alerted = stale_rejected = 0
     alert_candidates: list[tuple[HunterFinding, dict]] = []
     status = "failed"
     try:
@@ -1225,20 +1587,32 @@ def scan_cycle() -> dict:
                     "outcome": SERIES_DETECTION_FAILED, "detail": detail}
                 failed_series = _refresh_active()
 
+            mls_fees = _fee_schedule(MLS_SERIES)
             try:
                 pc_found, espn_complete = detect_post_certainty(
-                    s, mls_markets_by_ticker, mls_captured)
-                new_findings.extend(pc_found)
+                    s, mls_markets_by_ticker, mls_captured, mls_fees,
+                    counter)
+                # P0-2 at the COMPOSED layer: a row whose quote clock
+                # precedes the ESPN finality read is dropped here too,
+                # and the drop degrades the pass rather than passing
+                # silently
+                ordered = [f for f in pc_found if _clocks_ordered(f)]
+                new_findings.extend(ordered)
+                if len(ordered) != len(pc_found):
+                    espn_complete = False
+                    print("[hunter] dropped POST_CERTAINTY rows whose "
+                          "quote clock preceded the ESPN finality read")
                 if not espn_complete:
-                    _degrade_mls("ESPN re-read incomplete: the "
-                                 "POST_CERTAINTY pass did not cover "
-                                 "every candidate — expiry blocked")
+                    _degrade_mls("ESPN re-read / post-finality re-quote "
+                                 "incomplete: the POST_CERTAINTY pass did "
+                                 "not cover every candidate — expiry "
+                                 "blocked")
             except Exception as exc:
                 print(f"[hunter] post-certainty error: {exc}")
                 _degrade_mls(f"post-certainty: {exc}"[:300])
             try:
                 new_findings.extend(detect_model_edge(
-                    s, mls_markets_by_ticker, mls_captured))
+                    s, mls_markets_by_ticker, mls_captured, mls_fees))
             except Exception as exc:
                 print(f"[hunter] model-edge error: {exc}")
                 _degrade_mls(f"model-edge: {exc}"[:300])
@@ -1254,8 +1628,8 @@ def scan_cycle() -> dict:
             the partial unique index rejecting the loser; the retry
             re-reads open rows, adopts the winner's, and never counts
             the race as a new finding."""
-            nonlocal created, expired
-            created = expired = 0
+            nonlocal created, expired, stale_rejected
+            created = expired = stale_rejected = 0
             alert_candidates.clear()
             now = _now()
             # P0-1: expiry ONLY after a COMPLETE successful detection
@@ -1271,14 +1645,33 @@ def scan_cycle() -> dict:
                 open_by_key[_row_key(row)] = row
                 if row.series in expirable_series \
                         and _row_key(row) not in current_keys:
+                    # P0-3: expiring is an OBSERVATION too, made at this
+                    # series' capture clock — never the persistence
+                    # clock, and never applied if a newer process has
+                    # already observed this key
+                    at = series_capture.get(row.series) or now
+                    if not _advance_watermark(s, _row_key(row), at):
+                        stale_rejected += 1
+                        continue
                     row.status = "expired"
                     row.expired_at = now
                     expired += 1
             for f in new_findings:
                 key = _finding_key(f)
+                cap = f.get("captured_at") or now
+                # P0-3: every write is gated on the observation clock.
+                # An older container's anomaly arriving after a newer
+                # clean scan loses HERE, at the database, so it can
+                # neither re-open the finding nor alert on it.
+                if not _advance_watermark(s, key, cap):
+                    stale_rejected += 1
+                    print(f"[hunter] stale observation ignored "
+                          f"(clock {cap.isoformat()} not newer than the "
+                          f"recorded basis): {key}")
+                    continue
                 existing = open_by_key.get(key)
                 if existing is not None and existing.status == "open":
-                    existing.last_seen_at = f.get("captured_at") or now
+                    existing.last_seen_at = cap
                     existing.observed_cycles = (existing.observed_cycles
                                                 or 1) + 1
                     # retryable: an open finding that never achieved a
@@ -1301,6 +1694,7 @@ def scan_cycle() -> dict:
                 events_scanned=events_seen,
                 markets_scanned=markets_seen,
                 findings_new=created, findings_expired=expired,
+                stale_writes_rejected=stale_rejected,
                 request_count=counter.get("requests", 0),
                 roster_size=len(series_all),
                 active_series=len(active_now),
@@ -1358,6 +1752,7 @@ def scan_cycle() -> dict:
             "series_failed": len(failed_series),
             "events": events_seen, "markets": markets_seen,
             "findings_new": created, "findings_expired": expired,
+            "stale_writes_rejected": stale_rejected,
             "alerted": alerted, "error": error}
 
 
@@ -1426,6 +1821,7 @@ def findings_report(competition: str | None = None,
             "framing": SHADOW_FRAMING,
             "capture_clock": CAPTURE_CLOCK_NOTE,
             "fee_policy": FEE_POLICY["version"],
+            "fee_policy_note": FEE_RESOLUTION_NOTE,
             "denominators": {
                 "cycles_run": cycles,
                 "cycles_by_status": {
@@ -1441,6 +1837,9 @@ def findings_report(competition: str | None = None,
                     "age_seconds": last_age,
                     "series_scanned": last.series_scanned,
                     "series_failed": last.series_failed,
+                    # writes a NEWER process had already superseded,
+                    # rejected at the observation watermark
+                    "stale_writes_rejected": last.stale_writes_rejected,
                     # non-SUCCESS series with reasons: what the cycle
                     # did NOT fully look at ("didn't look" is never
                     # served as "no anomaly")

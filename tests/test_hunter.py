@@ -16,10 +16,10 @@ import config
 from src.live import db as live_db
 from src.live import hunter
 from src.live.models import (Competition, Fixture, HunterCycle,
-                             HunterFinding, LiveBase, MarketContract,
-                             MarketEvent, ModelApprovalDecision,
-                             ModelVersion, PredictionContract,
-                             PredictionRun, Team)
+                             HunterFinding, HunterObservationWatermark,
+                             LiveBase, MarketContract, MarketEvent,
+                             ModelApprovalDecision, ModelVersion,
+                             PredictionContract, PredictionRun, Team)
 
 UTC = timezone.utc
 
@@ -71,12 +71,35 @@ def live_session(tmp_path, monkeypatch):
 
 @pytest.fixture(autouse=True)
 def _fresh_hunter_state(monkeypatch):
-    """Process-local hunter state must not leak between tests."""
+    """Process-local hunter state must not leak between tests, and no
+    test may reach a provider: both network entry points added for the
+    P0 fixes are stubbed to raise, so a path that forgets to cann one
+    fails LOUDLY instead of silently dialling out."""
     from collections import deque
     monkeypatch.setattr(hunter, "_pair_store", {})
     monkeypatch.setattr(hunter, "_alert_times", deque())
     monkeypatch.setattr(hunter, "_roster",
-                        {"at": None, "series": [], "active": set()})
+                        {"at": None, "series": [], "active": set(),
+                         "fee": {}})
+
+    def _no_network(*a, **kw):
+        raise AssertionError("unstubbed provider call in a canned test")
+    monkeypatch.setattr(hunter, "_fetch_series_fee_schedule", _no_network)
+    monkeypatch.setattr(hunter, "_refetch_market", _no_network)
+
+
+def _quad(series="KXUCLGAME"):
+    """The provider-declared schedule this repo models exactly:
+    fee_type 'quadratic' at multiplier 1 (90 of 97 soccer GAME series)."""
+    return hunter.FeeSchedule(series, fee_type="quadratic", multiplier=1)
+
+
+def _maker(series="KXUCLGAME"):
+    """The schedule 7 soccer GAME series really declare — including
+    KXUCLGAME itself. Kalshi publishes the NAME and not the rate, so it
+    is fee_unknown here."""
+    return hunter.FeeSchedule(series, fee_type="quadratic_with_maker_fees",
+                              multiplier=1)
 
 
 def _mkt(ticker, event=EV, bid=None, ask=None, no_bid=None, no_ask=None,
@@ -124,7 +147,7 @@ class TestSumBelowOne:
             _mkt(f"{EV}-BBB", bid="0.28", ask="0.30"),
         ]
         fs = _of_type(hunter.detect_event_findings(
-            "KXUCLGAME", EV, legs, NOW), "SUM_BELOW_ONE")
+            "KXUCLGAME", EV, legs, NOW, _quad()), "SUM_BELOW_ONE")
         assert len(fs) == 1
         f = fs[0]
         # asks 0.92; exact fees 0.0147 + 0.0153 + 0.0147 = 0.0447
@@ -137,7 +160,7 @@ class TestSumBelowOne:
 
     def test_fair_book_does_not_fire(self):
         fs = hunter.detect_event_findings(
-            "KXUCLGAME", EV, _healthy_three_way(), NOW)
+            "KXUCLGAME", EV, _healthy_three_way(), NOW, _quad())
         assert _of_type(fs, "SUM_BELOW_ONE") == []
 
     def test_fees_erase_a_gross_margin(self):
@@ -148,7 +171,8 @@ class TestSumBelowOne:
             _mkt(f"{EV}-TIE", bid="0.31", ask="0.33"),
             _mkt(f"{EV}-BBB", bid="0.31", ask="0.33"),
         ]
-        fs = hunter.detect_event_findings("KXUCLGAME", EV, legs, NOW)
+        fs = hunter.detect_event_findings(
+            "KXUCLGAME", EV, legs, NOW, _quad())
         assert _of_type(fs, "SUM_BELOW_ONE") == []
 
     def test_partition_guards(self):
@@ -157,18 +181,18 @@ class TestSumBelowOne:
                 _mkt(f"{EV}-BBB", ask="0.20"),
                 _mkt(f"{EV}-CCC", ask="0.20")]
         assert _of_type(hunter.detect_event_findings(
-            "KXUCLGAME", EV, legs, NOW), "SUM_BELOW_ONE") == []
+            "KXUCLGAME", EV, legs, NOW, _quad()), "SUM_BELOW_ONE") == []
         # two legs only
         legs = [_mkt(f"{EV}-AAA", ask="0.20"),
                 _mkt(f"{EV}-TIE", ask="0.20")]
         assert _of_type(hunter.detect_event_findings(
-            "KXUCLGAME", EV, legs, NOW), "SUM_BELOW_ONE") == []
+            "KXUCLGAME", EV, legs, NOW, _quad()), "SUM_BELOW_ONE") == []
         # a leg with no ask
         legs = [_mkt(f"{EV}-AAA", ask="0.30"),
                 _mkt(f"{EV}-TIE", ask="0.32"),
                 _mkt(f"{EV}-BBB")]
         assert _of_type(hunter.detect_event_findings(
-            "KXUCLGAME", EV, legs, NOW), "SUM_BELOW_ONE") == []
+            "KXUCLGAME", EV, legs, NOW, _quad()), "SUM_BELOW_ONE") == []
 
 
 class TestCrossedBook:
@@ -176,7 +200,7 @@ class TestCrossedBook:
         m = _mkt(f"{EV}-AAA", bid="0.60", ask="0.62",
                  no_bid="0.55", no_ask="0.40")
         fs = _of_type(hunter.detect_event_findings(
-            "KXUCLGAME", EV, [m], NOW), "CROSSED_BOOK")
+            "KXUCLGAME", EV, [m], NOW, _quad()), "CROSSED_BOOK")
         assert len(fs) == 1
         legs = fs[0]["legs"]
         # 0.60 + 0.55 - 1 = 0.15 gross; fees fee(0.40)=0.0168 +
@@ -190,14 +214,16 @@ class TestCrossedBook:
     def test_uncrossed_book_does_not_fire(self):
         m = _mkt(f"{EV}-AAA", bid="0.60", ask="0.62",
                  no_bid="0.38", no_ask="0.40")
-        fs = hunter.detect_event_findings("KXUCLGAME", EV, [m], NOW)
+        fs = hunter.detect_event_findings(
+            "KXUCLGAME", EV, [m], NOW, _quad())
         assert _of_type(fs, "CROSSED_BOOK") == []
 
     def test_fees_erase_a_thin_cross(self):
         # gross +0.02 but two taker fee legs at 0.49 cost 0.0350
         m = _mkt(f"{EV}-AAA", bid="0.51", ask="0.53",
                  no_bid="0.51", no_ask="0.53")
-        fs = hunter.detect_event_findings("KXUCLGAME", EV, [m], NOW)
+        fs = hunter.detect_event_findings(
+            "KXUCLGAME", EV, [m], NOW, _quad())
         assert _of_type(fs, "CROSSED_BOOK") == []
 
 
@@ -205,7 +231,7 @@ class TestLiquidityContext:
     def test_wide_spread_is_context_only(self):
         m = _mkt(f"{EV}-AAA", bid="0.05", ask="0.80")
         fs = _of_type(hunter.detect_event_findings(
-            "KXUCLGAME", EV, [m], NOW), "WIDE_SPREAD")
+            "KXUCLGAME", EV, [m], NOW, _quad()), "WIDE_SPREAD")
         assert len(fs) == 1
         assert fs[0]["is_context"] is True
         assert fs[0]["net_margin_dollars"] is None
@@ -213,24 +239,26 @@ class TestLiquidityContext:
 
     def test_tight_spread_does_not_fire(self):
         m = _mkt(f"{EV}-AAA", bid="0.48", ask="0.52")
-        fs = hunter.detect_event_findings("KXUCLGAME", EV, [m], NOW)
+        fs = hunter.detect_event_findings(
+            "KXUCLGAME", EV, [m], NOW, _quad())
         assert _of_type(fs, "WIDE_SPREAD") == []
 
     def test_thin_book_fires_on_small_size_and_one_sided(self):
         thin = _mkt(f"{EV}-AAA", bid="0.48", ask="0.52", ask_size="3.00")
         fs = _of_type(hunter.detect_event_findings(
-            "KXUCLGAME", EV, [thin], NOW), "THIN_BOOK")
+            "KXUCLGAME", EV, [thin], NOW, _quad()), "THIN_BOOK")
         assert len(fs) == 1 and fs[0]["is_context"] is True
         one_sided = _mkt(f"{EV}-BBB", ask="0.52")
         fs = _of_type(hunter.detect_event_findings(
-            "KXUCLGAME", EV, [one_sided], NOW), "THIN_BOOK")
+            "KXUCLGAME", EV, [one_sided], NOW, _quad()), "THIN_BOOK")
         assert len(fs) == 1
         assert "one_sided_or_empty_book" in fs[0]["legs"]["reasons"]
 
     def test_deep_two_sided_book_does_not_fire(self):
         m = _mkt(f"{EV}-AAA", bid="0.48", ask="0.52",
                  ask_size="50", bid_size="50")
-        fs = hunter.detect_event_findings("KXUCLGAME", EV, [m], NOW)
+        fs = hunter.detect_event_findings(
+            "KXUCLGAME", EV, [m], NOW, _quad())
         assert _of_type(fs, "THIN_BOOK") == []
 
 
@@ -324,6 +352,23 @@ def _espn_event(espn_id="401", state="post", home_goals="2",
     }], "status": {"type": {"state": state}}}
 
 
+def _cann_requote(monkeypatch, markets, clock=None, fail=()):
+    """Cann the P0-2 post-finality re-read. `markets` is the ticker →
+    market map returned AFTER finality; by default it is the same book,
+    i.e. a market that has not repriced."""
+    calls = []
+
+    def fake(ticker):
+        calls.append(ticker)
+        import requests as _rq
+        if ticker in fail:
+            raise _rq.RequestException("re-quote failed")
+        return markets.get(ticker), (clock() if callable(clock)
+                                     else (clock or hunter._now()))
+    monkeypatch.setattr(hunter, "_refetch_market", fake)
+    return calls
+
+
 class TestPostCertainty:
     def test_fires_on_finished_match_with_fresh_espn_read(
             self, live_session, monkeypatch):
@@ -337,8 +382,9 @@ class TestPostCertainty:
         monkeypatch.setattr(hunter, "_fetch_espn_scoreboard",
                             fake_scoreboard)
         markets = {f"{ev}-HOM": _mkt(f"{ev}-HOM", event=ev, ask="0.93")}
+        _cann_requote(monkeypatch, markets)
         fs, complete = hunter.detect_post_certainty(
-            live_session, markets, NOW)
+            live_session, markets, NOW, _quad("KXMLSGAME"))
         assert complete is True
         assert len(fs) == 1
         f = fs[0]
@@ -347,9 +393,15 @@ class TestPostCertainty:
         assert f["legs"]["certain_outcome"] == "home_win"
         assert f["legs"]["final_score_home"] == 2
         assert f["legs"]["final_score_away"] == 1
-        # BOTH capture stamps present
+        # BOTH capture stamps present, and the QUOTE clock is the
+        # post-finality re-read — never the earlier cycle capture
         assert f["espn_captured_at"] is not None
-        assert f["legs"]["kalshi_captured_at"] == NOW.isoformat()
+        assert f["captured_at"] >= f["espn_captured_at"]
+        assert f["legs"]["kalshi_captured_at"] \
+            == f["captured_at"].isoformat()
+        assert f["legs"]["kalshi_captured_at"] != NOW.isoformat()
+        assert f["legs"]["pre_finality_kalshi_captured_at"] \
+            == NOW.isoformat()
         assert f["legs"]["espn_captured_at"]
         # the ESPN page is fetched for the fixture's US-Eastern local
         # date (IANA zone, never the runner's local zone or a fixed
@@ -363,7 +415,8 @@ class TestPostCertainty:
 
         # the re-read happens EVERY detection — never cached from a
         # previous cycle
-        hunter.detect_post_certainty(live_session, markets, NOW)
+        hunter.detect_post_certainty(live_session, markets, NOW,
+                                     _quad("KXMLSGAME"))
         assert len(calls) == 2
 
     def test_in_play_match_does_not_fire(self, live_session, monkeypatch):
@@ -373,8 +426,11 @@ class TestPostCertainty:
             hunter, "_fetch_espn_scoreboard",
             lambda d: {"events": [_espn_event(state="in")]})
         markets = {f"{ev}-HOM": _mkt(f"{ev}-HOM", event=ev, ask="0.60")}
+        requotes = _cann_requote(monkeypatch, markets)
         assert hunter.detect_post_certainty(
-            live_session, markets, NOW) == ([], True)
+            live_session, markets, NOW, _quad("KXMLSGAME")) == ([], True)
+        # no finality → no post-finality quote was even requested
+        assert requotes == []
 
     def test_price_already_at_certainty_does_not_fire(
             self, live_session, monkeypatch):
@@ -384,8 +440,9 @@ class TestPostCertainty:
         monkeypatch.setattr(hunter, "_fetch_espn_scoreboard",
                             lambda d: {"events": [_espn_event()]})
         markets = {f"{ev}-HOM": _mkt(f"{ev}-HOM", event=ev, ask="0.9999")}
+        _cann_requote(monkeypatch, markets)
         assert hunter.detect_post_certainty(
-            live_session, markets, NOW) == ([], True)
+            live_session, markets, NOW, _quad("KXMLSGAME")) == ([], True)
 
     def test_draw_outcome_derived_from_score_numbers(
             self, live_session, monkeypatch):
@@ -396,8 +453,9 @@ class TestPostCertainty:
             lambda d: {"events": [_espn_event(home_goals="1",
                                               away_goals="1")]})
         markets = {f"{ev}-TIE": _mkt(f"{ev}-TIE", event=ev, ask="0.90")}
+        _cann_requote(monkeypatch, markets)
         fs, complete = hunter.detect_post_certainty(
-            live_session, markets, NOW)
+            live_session, markets, NOW, _quad("KXMLSGAME"))
         assert complete is True
         assert len(fs) == 1
         assert fs[0]["legs"]["certain_outcome"] == "draw"
@@ -463,7 +521,8 @@ class TestModelEdge:
             live_session, NOW + timedelta(hours=5))
         self._seed_run(live_session, fx, decision_id=dec_id)
         markets = {f"{ev}-HOM": _mkt(f"{ev}-HOM", event=ev, ask="0.45")}
-        fs = hunter.detect_model_edge(live_session, markets, NOW)
+        fs = hunter.detect_model_edge(live_session, markets, NOW,
+                                        _quad("KXMLSGAME"))
         assert len(fs) == 1
         f = fs[0]
         # 0.55 - 0.45 - fee(0.45)=0.0174 → 0.0826
@@ -486,7 +545,8 @@ class TestModelEdge:
             live_session, NOW + timedelta(hours=5))
         self._seed_run(live_session, fx)
         markets = {f"{ev}-HOM": _mkt(f"{ev}-HOM", event=ev, ask="0.45")}
-        assert hunter.detect_model_edge(live_session, markets, NOW) == []
+        assert hunter.detect_model_edge(live_session, markets, NOW,
+                                        _quad("KXMLSGAME")) == []
         rep = hunter.findings_report()
         assert rep["model_status"]["mls-2026"] == "no model"
 
@@ -497,7 +557,8 @@ class TestModelEdge:
         self._seed_run(live_session, fx, decision_id=dec_id)
         # 0.55 - 0.54 - fee = negative
         markets = {f"{ev}-HOM": _mkt(f"{ev}-HOM", event=ev, ask="0.54")}
-        assert hunter.detect_model_edge(live_session, markets, NOW) == []
+        assert hunter.detect_model_edge(live_session, markets, NOW,
+                                        _quad("KXMLSGAME")) == []
 
 
 class TestModelEdgeRuntimeBinding:
@@ -521,7 +582,8 @@ class TestModelEdgeRuntimeBinding:
                                 decision_id=dec_id,
                                 approved_at_run=False)
         assert hunter.detect_model_edge(
-            live_session, self._markets(ev), NOW) == []
+            live_session, self._markets(ev), NOW,
+            _quad("KXMLSGAME")) == []
         rep = hunter.findings_report()
         assert "no active model" in rep["model_status"]["mls-2026"]
 
@@ -534,7 +596,8 @@ class TestModelEdgeRuntimeBinding:
         TestModelEdge._seed_run(TestModelEdge(), live_session, fx,
                                 decision_id=dec_id)
         assert hunter.detect_model_edge(
-            live_session, self._markets(ev), NOW) == []
+            live_session, self._markets(ev), NOW,
+            _quad("KXMLSGAME")) == []
         rep = hunter.findings_report()
         assert "no active model" in rep["model_status"]["mls-2026"]
 
@@ -549,7 +612,8 @@ class TestModelEdgeRuntimeBinding:
                                 decision_id=dec_id,
                                 approved_at_run=False)
         assert hunter.detect_model_edge(
-            live_session, self._markets(ev), NOW) == []
+            live_session, self._markets(ev), NOW,
+            _quad("KXMLSGAME")) == []
 
     def test_mismatched_decision_id_yields_no_edge(self, live_session):
         # acceptance (c): the run is bound to an OLDER decision than the
@@ -563,7 +627,8 @@ class TestModelEdgeRuntimeBinding:
         TestModelEdge._seed_run(TestModelEdge(), live_session, fx,
                                 decision_id=old_id)
         assert hunter.detect_model_edge(
-            live_session, self._markets(ev), NOW) == []
+            live_session, self._markets(ev), NOW,
+            _quad("KXMLSGAME")) == []
 
 
 # ---------------------------------------------------------------------------
@@ -580,13 +645,50 @@ def _fake_paged(books):
     return fake
 
 
-def _run_cycle(monkeypatch, books, alerts=None, accept=True):
-    """One scan_cycle against canned per-series market lists. The fake
-    send_alert records (title, msg) and reports per-transport acceptance
-    per the P0-2 contract (accept=False simulates all transports
-    failing)."""
+def _run_cycle(monkeypatch, books, alerts=None, accept=True,
+               fee_types=None, requote=None, requote_fail=None):
+    """One scan_cycle against canned per-series market lists.
+
+    The fake send_alert records (title, msg) and reports per-transport
+    acceptance per the P0-2 alert contract (accept=False simulates all
+    transports failing).
+
+    `fee_types` cans each series' PROVIDER-DECLARED fee schedule the way
+    discovery would read it (default: 'quadratic', the schedule this
+    repo models); a series mapped to None has no readable schedule at
+    all. `requote` cans the POST_CERTAINTY post-finality re-read per
+    ticker — by default it returns the same book the cycle scanned, so
+    a market that has NOT repriced behaves as before; `requote_fail`
+    lists tickers whose re-read raises."""
     monkeypatch.setattr(config, "HUNTER_SERIES", list(books.keys()))
     monkeypatch.setattr(hunter, "_paged_markets", _fake_paged(books))
+
+    fee_types = {} if fee_types is None else fee_types
+
+    def fake_fee(ticker, counter):
+        counter["requests"] = counter.get("requests", 0) + 1
+        ft = fee_types.get(ticker, "quadratic")
+        if ft is None:
+            return None
+        return {"fee_type": ft, "fee_multiplier": 1}
+    monkeypatch.setattr(hunter, "_fetch_series_fee_schedule", fake_fee)
+
+    scanned = {}
+    for v in books.values():
+        ms = v[0] if isinstance(v, tuple) else v
+        if isinstance(ms, list):
+            for m in ms:
+                if m.get("ticker"):
+                    scanned[m["ticker"]] = m
+
+    def fake_requote(ticker):
+        import requests as _rq
+        if requote_fail and ticker in requote_fail:
+            raise _rq.RequestException("re-quote failed")
+        m = (requote or {}).get(ticker, scanned.get(ticker))
+        return m, hunter._now()
+    monkeypatch.setattr(hunter, "_refetch_market", fake_requote)
+
     if alerts is not None:
         import src.alerts as alerts_mod
 
@@ -896,10 +998,10 @@ class TestCompletenessFailClosed:
 
         real = hunter.detect_event_findings
 
-        def flaky(series, ev, ms, cap):
+        def flaky(series, ev, ms, cap, fees):
             if series == "KXAAAGAME":
                 raise RuntimeError("detector exploded")
-            return real(series, ev, ms, cap)
+            return real(series, ev, ms, cap, fees)
         monkeypatch.setattr(hunter, "detect_event_findings", flaky)
         books2 = {"KXAAAGAME": _arb("KXAAAGAME"),
                   "KXBBBGAME": _healthy_three_way()}
@@ -1130,16 +1232,21 @@ class TestCaptureClock:
         # SQLite hands back naive datetimes; every value stored was UTC
         def utc(dt):
             return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
-        # the MLS finding retains the EARLIER MLS fetch timestamp even
-        # though its detector ran at cycle end, after the UCL scan
-        assert utc(post.first_captured_at) < utc(ucl.first_captured_at)
-        assert utc(post.detected_at) > utc(ucl.first_captured_at)
-        # row clock == the clock inside the stored arithmetic
         legs = json.loads(post.legs_json)
+        # the MLS SERIES fetch clock is the earliest thing in the cycle
+        # and is retained verbatim as the pre-finality evidence, even
+        # though the POST_CERTAINTY detector runs at cycle end
+        assert legs["pre_finality_kalshi_captured_at"] \
+            < utc(ucl.first_captured_at).isoformat()
+        assert utc(post.detected_at) > utc(ucl.first_captured_at)
+        # but the PRICED quote is the post-finality re-read (P0-2): its
+        # clock is the row's capture clock, it matches the stored
+        # arithmetic, and it is at or after the ESPN finality read
         assert utc(post.first_captured_at).isoformat() \
             == legs["kalshi_captured_at"]
-        # the OTHER clocks exist separately and are all later
-        assert utc(post.espn_captured_at) > utc(post.first_captured_at)
+        assert utc(post.first_captured_at) >= utc(post.espn_captured_at)
+        assert legs["kalshi_captured_at"] \
+            > legs["pre_finality_kalshi_captured_at"]
         assert utc(post.persisted_at) > utc(post.detected_at)
         # same discipline for the pure detector: capture == its series'
         # fetch clock, persistence later
@@ -1213,21 +1320,29 @@ class TestCrossProcessIdempotency:
     def test_scan_cycle_retries_once_and_adopts_on_race(
             self, live_session, monkeypatch):
         # simulate the overlapping container winning the insert BETWEEN
-        # this cycle's open-rows read and its commit
-        real_insert = hunter._insert_finding_row
+        # this cycle's open-rows read and its commit. The injection
+        # point is our transaction's FIRST write — the observation
+        # watermark — which is precisely that window (SQLite allows the
+        # other connection to write only while ours still holds no
+        # write lock; PostgreSQL has no such restriction).
+        real_wm = hunter._advance_watermark
         raced = {"done": False}
 
-        def racing_insert(s, f, key, now):
-            if not raced["done"]:
+        def racing_watermark(s, key, clock):
+            if not raced["done"] and key.startswith("SUM_BELOW_ONE"):
                 raced["done"] = True
                 other = live_db.get_session()
                 try:
-                    real_insert(other, f, key, now)
+                    other.add(HunterFinding(
+                        series="KXUCLGAME", event_ticker=EV,
+                        finding_type="SUM_BELOW_ONE", finding_key=key,
+                        legs_json="{}", first_captured_at=NOW,
+                        last_seen_at=NOW, status="open"))
                     other.commit()          # the other container wins
                 finally:
                     other.close()
-            return real_insert(s, f, key, now)
-        monkeypatch.setattr(hunter, "_insert_finding_row", racing_insert)
+            return real_wm(s, key, clock)
+        monkeypatch.setattr(hunter, "_advance_watermark", racing_watermark)
         sent = []
         r = _run_cycle(monkeypatch,
                        {"KXUCLGAME": TestAlertDiscipline.ARB},
@@ -1282,7 +1397,7 @@ class TestLiquidityUnknown:
         m = _mkt(f"{EV}-AAA", bid="0.48", ask="0.52",
                  ask_size=None, bid_size=None)
         fs = _of_type(hunter.detect_event_findings(
-            "KXUCLGAME", EV, [m], NOW), "THIN_BOOK")
+            "KXUCLGAME", EV, [m], NOW, _quad()), "THIN_BOOK")
         assert len(fs) == 1
         assert fs[0]["is_context"] is True
         reasons = fs[0]["legs"]["reasons"]
@@ -1293,7 +1408,7 @@ class TestLiquidityUnknown:
     def test_missing_size_records_finding_but_never_alerts(
             self, live_session, monkeypatch):
         fs = _of_type(hunter.detect_event_findings(
-            "KXUCLGAME", EV, self._sizeless_arb(), NOW),
+            "KXUCLGAME", EV, self._sizeless_arb(), NOW, _quad()),
             "SUM_BELOW_ONE")
         assert len(fs) == 1
         assert fs[0]["alertable_liquidity"] is False
@@ -1313,7 +1428,7 @@ class TestLiquidityUnknown:
                 _mkt(f"{EV}-TIE", bid="0.30", ask="0.32"),
                 _mkt(f"{EV}-BBB", bid="0.28", ask="0.30")]
         fs = _of_type(hunter.detect_event_findings(
-            "KXUCLGAME", EV, legs, NOW), "SUM_BELOW_ONE")
+            "KXUCLGAME", EV, legs, NOW, _quad()), "SUM_BELOW_ONE")
         assert len(fs) == 1
         assert fs[0]["alertable_liquidity"] is False
         assert fs[0]["legs"]["liquidity"]["status"] == "zero_size"
@@ -1325,7 +1440,7 @@ class TestLiquidityUnknown:
                 _mkt(f"{EV}-TIE", bid="0.30", ask="0.32", ask_size="30"),
                 _mkt(f"{EV}-BBB", bid="0.28", ask="0.30", ask_size="40")]
         fs = _of_type(hunter.detect_event_findings(
-            "KXUCLGAME", EV, legs, NOW), "SUM_BELOW_ONE")
+            "KXUCLGAME", EV, legs, NOW, _quad()), "SUM_BELOW_ONE")
         assert fs[0]["alertable_liquidity"] is True
         assert fs[0]["limiting_quantity"] == "30"
         assert fs[0]["legs"]["liquidity"]["limiting_quantity"] == "30"
@@ -1340,7 +1455,7 @@ class TestLiquidityUnknown:
         m = _mkt(f"{EV}-AAA", bid="0.60", ask="0.55", no_bid="0.45",
                  ask_size="20", bid_size="10")
         fs = _of_type(hunter.detect_event_findings(
-            "KXUCLGAME", EV, [m], NOW), "CROSSED_BOOK")
+            "KXUCLGAME", EV, [m], NOW, _quad()), "CROSSED_BOOK")
         assert len(fs) == 1
         assert fs[0]["alertable_liquidity"] is True
         assert fs[0]["limiting_quantity"] == "10"
@@ -1351,7 +1466,7 @@ class TestLiquidityUnknown:
         m2 = _mkt(f"{EV}-BBB", bid="0.60", ask="0.62", no_bid="0.55",
                   ask_size="20", bid_size="10")
         fs2 = _of_type(hunter.detect_event_findings(
-            "KXUCLGAME", EV, [m2], NOW), "CROSSED_BOOK")
+            "KXUCLGAME", EV, [m2], NOW, _quad()), "CROSSED_BOOK")
         assert len(fs2) == 1
         assert fs2[0]["alertable_liquidity"] is False
         liq = fs2[0]["legs"]["liquidity"]
@@ -1366,8 +1481,9 @@ class TestLiquidityUnknown:
                             lambda d: {"events": [_espn_event()]})
         markets = {f"{ev}-HOM": _mkt(f"{ev}-HOM", event=ev, ask="0.93",
                                      ask_size=None)}
+        _cann_requote(monkeypatch, markets)
         fs, complete = hunter.detect_post_certainty(
-            live_session, markets, NOW)
+            live_session, markets, NOW, _quad("KXMLSGAME"))
         assert complete is True and len(fs) == 1
         assert fs[0]["alertable_liquidity"] is False
         assert not hunter._alert_eligible(fs[0])
@@ -1455,3 +1571,511 @@ class TestHeartbeatExtras:
         assert lc["discovery_error"] is None
         assert "global" in rep["findings_per_type_scope"]
         assert str(config.HUNTER_DISCOVERY_MINUTES) in d["roster_note"]
+
+
+# ---------------------------------------------------------------------------
+class TestProviderAwareFees:
+    """P0-1: a structural finding is priced with ITS OWN series'
+    provider-declared fee schedule (Kalshi publishes fee_type /
+    fee_multiplier on the SERIES object; the market payload carries no
+    fee field at all — verified 2026-07-29, archived in
+    research_archive/kalshi_fee_schedules_2026-07-29.json).
+
+    The soccer taxonomy is NOT uniform: 90 of 97 GAME series declare
+    'quadratic' and 7 declare 'quadratic_with_maker_fees' — including
+    KXUCLGAME, the series every fixture in this file uses. An
+    unmodelled schedule is fee_unknown: gross structure recorded, no net
+    margin asserted, never alertable."""
+
+    def test_two_schedules_price_the_same_book_differently(self):
+        legs = [_mkt(f"{EV}-AAA", bid="0.28", ask="0.30"),
+                _mkt(f"{EV}-TIE", bid="0.30", ask="0.32"),
+                _mkt(f"{EV}-BBB", bid="0.28", ask="0.30")]
+        modeled = _of_type(hunter.detect_event_findings(
+            "KXMLSGAME", EV, legs, NOW, _quad("KXMLSGAME")),
+            "SUM_BELOW_ONE")[0]
+        unknown = _of_type(hunter.detect_event_findings(
+            "KXUCLGAME", EV, legs, NOW, _maker("KXUCLGAME")),
+            "SUM_BELOW_ONE")[0]
+        # same book, same gross — the fee schedule is the only variable
+        assert modeled["gross_margin_dollars"] == "0.08"
+        assert unknown["gross_margin_dollars"] == "0.08"
+        # 'quadratic': exact per-leg Decimal fees and a NET margin
+        assert modeled["fee_status"] == "modeled"
+        assert modeled["legs"]["sum_fees_dollars"] == "0.0447"
+        assert modeled["net_margin_dollars"] == "0.0353"
+        assert modeled["fee_policy_version"] == "kalshi-fee-2026-07-general"
+        assert [leg["fee_dollars"] for leg in modeled["legs"]["legs"]] \
+            == ["0.0147", "0.0153", "0.0147"]
+        # 'quadratic_with_maker_fees': NO fee number is invented, so no
+        # net margin exists to be mistaken for an arbitrage
+        assert unknown["fee_status"] == "fee_unknown"
+        assert unknown["net_margin_dollars"] is None
+        assert unknown["legs"]["sum_fees_dollars"] is None
+        assert [leg["fee_dollars"] for leg in unknown["legs"]["legs"]] \
+            == [None, None, None]
+        assert unknown["fee_policy_version"] \
+            == "kalshi-fee-unknown:quadratic_with_maker_fees"
+        sched = unknown["legs"]["fee_schedule"]
+        assert sched["provider_fee_type"] == "quadratic_with_maker_fees"
+        assert "not modelled" in sched["reason"]
+        assert "SERIES object" in sched["source"]
+        assert "market payload carries no fee field" in sched["source"]
+        # and eligibility refuses it outright
+        assert hunter._alert_eligible(modeled) is True
+        assert hunter._alert_eligible(unknown) is False
+
+    def test_crossed_book_follows_its_series_schedule_too(self):
+        m = _mkt(f"{EV}-AAA", bid="0.60", ask="0.62",
+                 no_bid="0.55", no_ask="0.40")
+        modeled = _of_type(hunter.detect_event_findings(
+            "KXMLSGAME", EV, [m], NOW, _quad("KXMLSGAME")),
+            "CROSSED_BOOK")[0]
+        unknown = _of_type(hunter.detect_event_findings(
+            "KXUCLGAME", EV, [m], NOW, _maker("KXUCLGAME")),
+            "CROSSED_BOOK")[0]
+        assert modeled["net_margin_dollars"] == "0.1158"
+        assert modeled["legs"]["fee_leg_yes_dollars"] == "0.0168"
+        assert unknown["net_margin_dollars"] is None
+        assert unknown["legs"]["fee_leg_yes_dollars"] is None
+        assert unknown["gross_margin_dollars"] == "0.15"
+        assert hunter._alert_eligible(unknown) is False
+
+    def test_unmodelled_multiplier_is_also_unknown(self):
+        s = hunter.FeeSchedule("KXZZZGAME", fee_type="quadratic",
+                               multiplier=2)
+        assert s.modeled is False
+        assert s.fee(Decimal("0.30")) is None
+        assert "fee_multiplier" in s.reason
+        # and the one schedule we DO model
+        ok = hunter.FeeSchedule("KXZZZGAME", fee_type="quadratic",
+                                multiplier=1)
+        assert ok.modeled is True
+        assert ok.fee(Decimal("0.30")) == Decimal("0.0147")
+
+    def test_discovery_reads_schedules_with_no_extra_requests(
+            self, monkeypatch):
+        payload = {"series": [
+            {"ticker": "KXMLSGAME", "tags": ["Soccer"],
+             "fee_type": "quadratic", "fee_multiplier": 1},
+            {"ticker": "KXUCLGAME", "tags": ["Soccer"],
+             "fee_type": "quadratic_with_maker_fees", "fee_multiplier": 1},
+            {"ticker": "KXNBAGAME", "tags": ["Basketball"],
+             "fee_type": "quadratic", "fee_multiplier": 1},
+        ]}
+        monkeypatch.setattr(config, "HUNTER_SERIES", [])
+        monkeypatch.setattr(hunter, "_get",
+                            lambda url, params=None, **kw: payload)
+        counter: dict = {}
+        assert hunter.discover_roster(counter) == ["KXMLSGAME",
+                                                   "KXUCLGAME"]
+        # the schedules ride on the request discovery ALREADY makes
+        assert counter["requests"] == 1
+        assert hunter._fee_schedule("KXMLSGAME").modeled is True
+        assert hunter._fee_schedule("KXUCLGAME").modeled is False
+        # a series the listing never described is unknown, never
+        # "assume the general schedule"
+        never_seen = hunter._fee_schedule("KXEPLGAME")
+        assert never_seen.modeled is False
+        assert never_seen.version == "kalshi-fee-unknown:unread"
+
+    def test_unknown_schedule_records_a_finding_but_never_alerts(
+            self, live_session, monkeypatch):
+        # ONE cycle, two series, IDENTICAL books: only the provider's
+        # declared schedule differs. Exactly one alert may leave.
+        sent = []
+        r = _run_cycle(
+            monkeypatch,
+            {"KXUCLGAME": _arb("KXUCLGAME"),
+             "KXAAAGAME": _arb("KXAAAGAME")},
+            alerts=sent,
+            fee_types={"KXUCLGAME": "quadratic_with_maker_fees"})
+        assert r["findings_new"] == 2          # BOTH recorded
+        assert len(sent) == 1                  # only the modelled one
+        assert "KXAAAGAME" in sent[0][1]
+        ucl = (live_session.query(HunterFinding)
+               .filter_by(series="KXUCLGAME",
+                          finding_type="SUM_BELOW_ONE").one())
+        aaa = (live_session.query(HunterFinding)
+               .filter_by(series="KXAAAGAME",
+                          finding_type="SUM_BELOW_ONE").one())
+        assert ucl.status == "open" and ucl.alerted_at is None
+        assert ucl.net_margin_dollars is None
+        assert ucl.fee_policy_version \
+            == "kalshi-fee-unknown:quadratic_with_maker_fees"
+        assert json.loads(ucl.legs_json)["fee_schedule"]["fee_status"] \
+            == "fee_unknown"
+        # CONTROL: same arithmetic, modelled schedule → net margin,
+        # alert delivered
+        assert aaa.net_margin_dollars == "0.0353"
+        assert aaa.fee_policy_version == "kalshi-fee-2026-07-general"
+        assert aaa.alerted_at is not None
+        assert "kalshi-fee-2026-07-general" in sent[0][1]
+
+    def test_unreadable_schedule_is_unknown_not_assumed_general(
+            self, live_session, monkeypatch):
+        # the provider read failed for this series: fail CLOSED
+        sent = []
+        _run_cycle(monkeypatch, {"KXAAAGAME": _arb("KXAAAGAME")},
+                   alerts=sent, fee_types={"KXAAAGAME": None})
+        assert sent == []
+        row = (live_session.query(HunterFinding)
+               .filter_by(finding_type="SUM_BELOW_ONE").one())
+        assert row.net_margin_dollars is None
+        assert row.fee_policy_version == "kalshi-fee-unknown:unread"
+
+    def test_report_states_the_resolution_rule(self, live_session,
+                                               monkeypatch):
+        _run_cycle(monkeypatch, {"KXAAAGAME": _arb("KXAAAGAME")},
+                   alerts=[])
+        rep = hunter.findings_report()
+        assert "fee_unknown" in rep["fee_policy_note"]
+        assert "never one policy assumed" in rep["fee_policy_note"]
+
+
+# ---------------------------------------------------------------------------
+class TestPostCertaintyFinalityOrder:
+    """P0-2: finality is established BEFORE the priced quote is
+    captured. Pairing a pre-final price with a settled outcome
+    manufactures a margin that never existed."""
+
+    def _seeded(self, live_session, monkeypatch, state="post"):
+        fx, me, ev = _seed_mls_event(
+            live_session, NOW - timedelta(hours=3))
+        monkeypatch.setattr(
+            hunter, "_fetch_espn_scoreboard",
+            lambda d: {"events": [_espn_event(state=state)]})
+        return fx, me, ev
+
+    def test_repriced_after_finality_emits_nothing(
+            self, live_session, monkeypatch):
+        fx, me, ev = self._seeded(live_session, monkeypatch)
+        tick = f"{ev}-HOM"
+        # the cheap PRE-final quote the cycle scanned...
+        pre = {tick: _mkt(tick, event=ev, ask="0.60")}
+        # ...and the market as it stands once the whistle has gone
+        after = {tick: _mkt(tick, event=ev, ask="0.9999")}
+        _cann_requote(monkeypatch, after)
+        fs, complete = hunter.detect_post_certainty(
+            live_session, pre, NOW, _quad("KXMLSGAME"))
+        assert complete is True
+        assert fs == []                      # NO manufactured margin
+
+        # DISCRIMINATING CONTROL: the identical setup where the market
+        # really is still cheap AFTER finality does fire — so the empty
+        # result above is the ordering, not an inert test
+        _cann_requote(monkeypatch, pre)
+        fs2, _ = hunter.detect_post_certainty(
+            live_session, pre, NOW, _quad("KXMLSGAME"))
+        assert len(fs2) == 1
+        assert fs2[0]["net_margin_dollars"] == "0.3832"
+
+    def test_every_emitted_row_has_quote_at_or_after_finality(
+            self, live_session, monkeypatch):
+        fx, me, ev = self._seeded(live_session, monkeypatch)
+        tick = f"{ev}-HOM"
+        books = {"KXMLSGAME": [_mkt(tick, event=ev, ask="0.93")]}
+        _run_cycle(monkeypatch, books, alerts=[])
+        live_session.expire_all()
+        rows = (live_session.query(HunterFinding)
+                .filter_by(finding_type="POST_CERTAINTY").all())
+        assert len(rows) == 1
+        for r in rows:
+            cap = (r.first_captured_at if r.first_captured_at.tzinfo
+                   else r.first_captured_at.replace(tzinfo=UTC))
+            espn = (r.espn_captured_at if r.espn_captured_at.tzinfo
+                    else r.espn_captured_at.replace(tzinfo=UTC))
+            assert cap >= espn
+        legs = json.loads(rows[0].legs_json)
+        assert legs["pre_finality_yes_ask_dollars"] == "0.93"
+        assert "AFTER finality" in legs["clock_order"]
+
+    def test_full_cycle_with_a_repriced_market_records_nothing(
+            self, live_session, monkeypatch):
+        fx, me, ev = self._seeded(live_session, monkeypatch)
+        tick = f"{ev}-HOM"
+        sent = []
+        r = _run_cycle(
+            monkeypatch,
+            {"KXMLSGAME": [_mkt(tick, event=ev, ask="0.60")]},
+            alerts=sent,
+            requote={tick: _mkt(tick, event=ev, ask="0.9999")})
+        assert sent == []
+        assert (live_session.query(HunterFinding)
+                .filter_by(finding_type="POST_CERTAINTY").count() == 0)
+        assert r["status"] == "complete"
+
+    def test_failed_requote_blocks_expiry_rather_than_clearing(
+            self, live_session, monkeypatch):
+        fx, me, ev = self._seeded(live_session, monkeypatch)
+        tick = f"{ev}-HOM"
+        books = {"KXMLSGAME": [_mkt(tick, event=ev, ask="0.93")]}
+        _run_cycle(monkeypatch, books, alerts=[])
+        live_session.expire_all()
+        assert (live_session.query(HunterFinding)
+                .filter_by(finding_type="POST_CERTAINTY").one()
+                .status == "open")
+        # the post-finality re-read fails: we did NOT look, so the open
+        # finding must not be cleared and the cycle degrades
+        r2 = _run_cycle(monkeypatch, books, alerts=[],
+                        requote_fail={tick})
+        assert r2["status"] == "degraded"
+        live_session.expire_all()
+        assert (live_session.query(HunterFinding)
+                .filter_by(finding_type="POST_CERTAINTY").one()
+                .status == "open")
+        outcomes, _ = _last_cycle_outcomes(live_session)
+        assert outcomes["KXMLSGAME"]["outcome"] == "DETECTION_FAILED"
+
+    def test_database_refuses_a_pre_finality_quote_row(self,
+                                                       live_session):
+        """The ordering is a TABLE invariant, not merely a detector
+        habit: a row whose quote clock precedes its ESPN finality clock
+        is refused by the database on both dialects."""
+        from sqlalchemy.exc import IntegrityError
+        live_session.add(HunterFinding(
+            series="KXMLSGAME", event_ticker="KXMLSGAME-26JUL28HOMAWA",
+            market_ticker="KXMLSGAME-26JUL28HOMAWA-HOM",
+            finding_type="POST_CERTAINTY", finding_key="pc|stale",
+            legs_json="{}", status="open",
+            first_captured_at=NOW - timedelta(minutes=5),
+            espn_captured_at=NOW))
+        with pytest.raises(IntegrityError):
+            live_session.commit()
+        live_session.rollback()
+        # CONTROL: the same row with the clocks the right way round
+        live_session.add(HunterFinding(
+            series="KXMLSGAME", event_ticker="KXMLSGAME-26JUL28HOMAWA",
+            market_ticker="KXMLSGAME-26JUL28HOMAWA-HOM",
+            finding_type="POST_CERTAINTY", finding_key="pc|ok",
+            legs_json="{}", status="open",
+            first_captured_at=NOW,
+            espn_captured_at=NOW - timedelta(seconds=1)))
+        live_session.commit()
+
+
+# ---------------------------------------------------------------------------
+class TestChronologicalReconciliation:
+    """P0-3: Railway overlaps containers deliberately, so an OLDER
+    scan can commit AFTER a newer one. Observation clocks are
+    monotonic per finding key, enforced at the database."""
+
+    ARB = TestAlertDiscipline.ARB
+
+    def _at(self, monkeypatch, t):
+        monkeypatch.setattr(hunter, "_now", lambda: t)
+
+    def test_stale_anomaly_cannot_reopen_a_newer_clean_scan(
+            self, live_session, monkeypatch):
+        t1 = NOW
+        t2 = NOW + timedelta(minutes=10)
+        sent = []
+        # cycle 1 @ t1: the anomaly is real, recorded, alerted
+        self._at(monkeypatch, t1)
+        _run_cycle(monkeypatch, {"KXUCLGAME": self.ARB}, alerts=sent)
+        assert len(sent) == 1
+        # cycle 2 @ t2 (the NEW container): book is clean → expired
+        self._at(monkeypatch, t2)
+        _run_cycle(monkeypatch, {"KXUCLGAME": _healthy_three_way()},
+                   alerts=sent)
+        live_session.expire_all()
+        row = (live_session.query(HunterFinding)
+               .filter_by(finding_type="SUM_BELOW_ONE").one())
+        assert row.status == "expired"
+
+        # the OLD container finally commits its t1 observation
+        self._at(monkeypatch, t1)
+        r3 = _run_cycle(monkeypatch, {"KXUCLGAME": self.ARB},
+                        alerts=sent)
+        live_session.expire_all()
+        rows = (live_session.query(HunterFinding)
+                .filter_by(finding_type="SUM_BELOW_ONE").all())
+        # no stale OPEN finding, no stale alert, and the rejection is
+        # visible rather than silent
+        assert [r.status for r in rows] == ["expired"]
+        assert len(sent) == 1
+        assert r3["findings_new"] == 0
+        assert r3["stale_writes_rejected"] >= 1
+        # clocks never regressed
+        for r in rows:
+            def utc(dt):
+                return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
+            assert utc(r.last_seen_at) >= utc(r.first_captured_at)
+            assert utc(r.first_captured_at) <= t2
+        wm = (live_session.query(HunterObservationWatermark)
+              .filter_by(finding_key=hunter._row_key(rows[0])).one())
+        assert (wm.observed_through if wm.observed_through.tzinfo
+                else wm.observed_through.replace(tzinfo=UTC)) == t2
+
+    def test_a_genuinely_newer_observation_still_reopens(
+            self, live_session, monkeypatch):
+        """CONTROL: the guard is chronological, not a blanket refusal to
+        re-open. The same straggler cycle with a NEWER clock does record
+        a fresh finding and does alert."""
+        t1, t2 = NOW, NOW + timedelta(minutes=10)
+        t3 = NOW + timedelta(minutes=20)
+        sent = []
+        self._at(monkeypatch, t1)
+        _run_cycle(monkeypatch, {"KXUCLGAME": self.ARB}, alerts=sent)
+        self._at(monkeypatch, t2)
+        _run_cycle(monkeypatch, {"KXUCLGAME": _healthy_three_way()},
+                   alerts=sent)
+        self._at(monkeypatch, t3)
+        r3 = _run_cycle(monkeypatch, {"KXUCLGAME": self.ARB},
+                        alerts=sent)
+        live_session.expire_all()
+        statuses = sorted(r.status for r in
+                          live_session.query(HunterFinding)
+                          .filter_by(finding_type="SUM_BELOW_ONE").all())
+        assert statuses == ["expired", "open"]
+        assert r3["findings_new"] == 1
+        assert r3["stale_writes_rejected"] == 0
+        assert len(sent) == 2
+
+    def test_stale_last_seen_bump_is_refused(self, live_session,
+                                             monkeypatch):
+        """A straggler observing an anomaly that is STILL open may not
+        drag last_seen_at backwards either."""
+        t1, t2 = NOW, NOW + timedelta(minutes=10)
+        self._at(monkeypatch, t2)
+        _run_cycle(monkeypatch, {"KXUCLGAME": self.ARB}, alerts=[])
+        live_session.expire_all()
+        row = (live_session.query(HunterFinding)
+               .filter_by(finding_type="SUM_BELOW_ONE").one())
+        cycles_before = row.observed_cycles
+        self._at(monkeypatch, t1)
+        r2 = _run_cycle(monkeypatch, {"KXUCLGAME": self.ARB}, alerts=[])
+        live_session.expire_all()
+        row = (live_session.query(HunterFinding)
+               .filter_by(finding_type="SUM_BELOW_ONE").one())
+
+        def utc(dt):
+            return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
+        assert utc(row.last_seen_at) == t2       # never dragged back
+        assert row.observed_cycles == cycles_before
+        assert r2["stale_writes_rejected"] >= 1
+
+    def test_stale_expiry_cannot_close_a_newer_finding(
+            self, live_session, monkeypatch):
+        """The reverse straggler: an OLD clean scan arriving after a
+        NEW anomaly must not expire it."""
+        t1, t2 = NOW, NOW + timedelta(minutes=10)
+        self._at(monkeypatch, t2)
+        _run_cycle(monkeypatch, {"KXUCLGAME": self.ARB}, alerts=[])
+        self._at(monkeypatch, t1)
+        r2 = _run_cycle(monkeypatch, {"KXUCLGAME": _healthy_three_way()},
+                        alerts=[])
+        live_session.expire_all()
+        row = (live_session.query(HunterFinding)
+               .filter_by(finding_type="SUM_BELOW_ONE").one())
+        assert row.status == "open"
+        assert r2["findings_expired"] == 0
+        assert r2["stale_writes_rejected"] >= 1
+
+    def test_database_refuses_a_backwards_last_seen(self, live_session):
+        from sqlalchemy.exc import IntegrityError
+        live_session.add(HunterFinding(
+            series="KXUCLGAME", event_ticker=EV,
+            finding_type="SUM_BELOW_ONE", finding_key="mono|bad",
+            legs_json="{}", status="open", first_captured_at=NOW,
+            last_seen_at=NOW - timedelta(seconds=1)))
+        with pytest.raises(IntegrityError):
+            live_session.commit()
+        live_session.rollback()
+
+
+# ---------------------------------------------------------------------------
+class TestIdentityFailClosed:
+    """P0-4: a market with no provider-stable identity cannot be keyed,
+    so it may never be swept into a synthetic event and alerted on."""
+
+    def _broken(self, field):
+        ms = [dict(m) for m in _arb("KXAAAGAME")]
+        ms[0].pop(field)
+        return ms
+
+    @pytest.mark.parametrize("field", ["event_ticker", "ticker"])
+    def test_missing_identity_degrades_and_yields_nothing(
+            self, live_session, monkeypatch, field):
+        sent = []
+        r = _run_cycle(monkeypatch, {"KXAAAGAME": self._broken(field)},
+                       alerts=sent)
+        assert r["status"] == "degraded"
+        assert r["findings_new"] == 0
+        assert sent == []
+        assert live_session.query(HunterFinding).count() == 0
+        outcomes, cyc = _last_cycle_outcomes(live_session)
+        assert outcomes["KXAAAGAME"]["outcome"] == "IDENTITY_FAILED"
+        assert "provider-stable identity" in outcomes["KXAAAGAME"]["detail"]
+        assert cyc.series_failed == 1
+        # the series stays SCHEDULED and the API exposes the failure
+        assert "KXAAAGAME" in hunter._roster["active"]
+        rep = hunter.findings_report()
+        inc = rep["denominators"]["last_cycle"]["incomplete_series"]
+        assert inc["KXAAAGAME"]["outcome"] == "IDENTITY_FAILED"
+
+    def test_whole_event_without_identity_cannot_alert_synthetically(
+            self, live_session, monkeypatch):
+        """The reviewer's case exactly: when the provider omits
+        event_ticker for a WHOLE event, the pre-fix grouping swept all
+        three legs into a synthetic ""-event that formed a valid 3-way
+        partition, produced key 'SUM_BELOW_ONE|KXAAAGAME||' and was
+        ALERTABLE. Nothing may be derived from rows with no identity."""
+        ms = [dict(m) for m in _arb("KXAAAGAME")]
+        for m in ms:
+            m.pop("event_ticker")
+        sent = []
+        r = _run_cycle(monkeypatch, {"KXAAAGAME": ms}, alerts=sent)
+        assert sent == []
+        assert live_session.query(HunterFinding).count() == 0
+        assert r["status"] == "degraded"
+        outcomes, _ = _last_cycle_outcomes(live_session)
+        assert outcomes["KXAAAGAME"]["outcome"] == "IDENTITY_FAILED"
+        assert "3 of 3" in outcomes["KXAAAGAME"]["detail"]
+
+    def test_control_same_book_with_identity_records_and_alerts(
+            self, live_session, monkeypatch):
+        sent = []
+        r = _run_cycle(monkeypatch, {"KXAAAGAME": _arb("KXAAAGAME")},
+                       alerts=sent)
+        assert r["status"] == "complete"
+        assert r["findings_new"] == 1
+        assert len(sent) == 1
+
+    def test_identity_failure_blocks_expiry_for_that_series(
+            self, live_session, monkeypatch):
+        _run_cycle(monkeypatch, {"KXAAAGAME": _arb("KXAAAGAME")},
+                   alerts=[])
+        live_session.expire_all()
+        assert (live_session.query(HunterFinding)
+                .filter_by(finding_type="SUM_BELOW_ONE").one()
+                .status == "open")
+        # next cycle the provider returns an unidentifiable book: we did
+        # not get a usable look, so nothing may expire
+        clean = [dict(m) for m in _healthy_three_way()]
+        clean[0].pop("event_ticker")
+        r2 = _run_cycle(monkeypatch, {"KXAAAGAME": clean}, alerts=[])
+        assert r2["status"] == "degraded"
+        live_session.expire_all()
+        assert (live_session.query(HunterFinding)
+                .filter_by(finding_type="SUM_BELOW_ONE").one()
+                .status == "open")
+
+    def test_identity_failure_takes_the_mls_detectors_down_with_it(
+            self, live_session, monkeypatch):
+        """Fail-closed means the whole series' scan is unusable — the
+        MLS-only detectors must not run off a half-identified book."""
+        fx, me, ev = _seed_mls_event(
+            live_session, NOW - timedelta(hours=3))
+        monkeypatch.setattr(hunter, "_fetch_espn_scoreboard",
+                            lambda d: {"events": [_espn_event()]})
+        ms = [_mkt(f"{ev}-HOM", event=ev, ask="0.93"),
+              _mkt(f"{ev}-TIE", event=ev, ask="0.50")]
+        ms[1].pop("ticker")
+        sent = []
+        r = _run_cycle(monkeypatch, {"KXMLSGAME": ms}, alerts=sent)
+        assert r["status"] == "degraded"
+        assert sent == []
+        assert live_session.query(HunterFinding).count() == 0
+        outcomes, _ = _last_cycle_outcomes(live_session)
+        assert outcomes["KXMLSGAME"]["outcome"] == "IDENTITY_FAILED"

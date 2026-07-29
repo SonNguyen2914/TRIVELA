@@ -414,3 +414,169 @@ def test_hunter_concurrent_insert_and_alert_claim(pg_schema):
     # at most one alert claim won (exactly one, since none existed)
     assert sorted([results["claim0"], results["claim1"]]) \
         == [False, True]
+
+
+# 10. P0-1/P0-2: the hunter's new schema invariants exist as real
+# PostgreSQL objects. SQLite CHECK support is not evidence about the
+# server that actually holds production data.
+def test_hunter_clock_check_constraints_enforced_on_postgres(pg_schema):
+    from datetime import datetime, timedelta, timezone
+
+    from src.live.models import HunterFinding, HunterObservationWatermark
+    with pg_schema.engine.connect() as c:
+        tables = {r[0] for r in c.execute(text(
+            "SELECT tablename FROM pg_tables "
+            "WHERE schemaname = current_schema()"))}
+    assert "hunter_observation_watermark" in tables
+    now = datetime.now(timezone.utc)
+
+    def _row(key, **kw):
+        base = dict(series="KXMLSGAME",
+                    event_ticker="KXMLSGAME-26JUL28HOMAWA",
+                    market_ticker="KXMLSGAME-26JUL28HOMAWA-HOM",
+                    finding_type="POST_CERTAINTY", finding_key=key,
+                    legs_json="{}", status="open", first_captured_at=now)
+        base.update(kw)
+        return HunterFinding(**base)
+
+    # a quote captured BEFORE the ESPN finality read is refused
+    s = _session(pg_schema.engine)
+    try:
+        s.add(_row("pc|stale", espn_captured_at=now + timedelta(minutes=1)))
+        with pytest.raises(IntegrityError):
+            s.commit()
+        s.rollback()
+        # last_seen_at may not regress behind first_captured_at
+        s.add(_row("mono|bad", last_seen_at=now - timedelta(seconds=1)))
+        with pytest.raises(IntegrityError):
+            s.commit()
+        s.rollback()
+        # CONTROL: both clocks the right way round, plus a watermark row
+        s.add(_row("pc|ok", espn_captured_at=now - timedelta(seconds=1),
+                   last_seen_at=now))
+        s.add(HunterObservationWatermark(
+            finding_key="pc|ok", observed_through=now, updated_at=now))
+        s.commit()
+        assert s.query(HunterObservationWatermark).one().finding_key \
+            == "pc|ok"
+    finally:
+        s.close()
+
+
+# 11. P0-3: chronological reconciliation across OVERLAPPING containers,
+# under a real barrier on a real server. Railway keeps the old container
+# serving while the new one boots (teardown is deliberately OFF), so an
+# OLDER scan legitimately commits AFTER a newer one. The older anomaly
+# must not re-open the finding the newer clean scan expired, must not
+# drag any clock backwards, and must not alert.
+def test_hunter_stale_scan_cannot_reopen_or_alert(pg_schema):
+    import threading
+    from datetime import datetime, timedelta, timezone
+
+    from src.live import hunter
+    from src.live.models import HunterFinding, HunterObservationWatermark
+
+    t0 = datetime.now(timezone.utc)
+    t1 = t0 + timedelta(minutes=5)      # the OLD container's capture
+    t2 = t0 + timedelta(minutes=10)     # the NEW container's capture
+    f = {"finding_type": "SUM_BELOW_ONE", "series": "KXUCLGAME",
+         "event_ticker": "KXUCLGAME-26JUL28AAABBB",
+         "market_ticker": None, "is_context": False,
+         "net_margin_dollars": "0.0353", "fee_status": "modeled",
+         "fee_policy_version": "kalshi-fee-2026-07-general",
+         "captured_at": t1, "detected_at": t1,
+         "alertable_liquidity": True, "limiting_quantity": "10",
+         "legs": {"rule": "stale-scan-test"}}
+    key = hunter._finding_key(f)
+
+    # the world both containers scanned into: one OPEN finding at t0
+    seed = _session(pg_schema.engine)
+    try:
+        hunter._insert_finding_row(seed, f | {"captured_at": t0}, key, t0)
+        seed.add(HunterObservationWatermark(
+            finding_key=key, observed_through=t0, updated_at=t0))
+        seed.commit()
+    finally:
+        seed.close()
+
+    engines = [pg_schema.new_engine() for _ in range(2)]
+    read = threading.Barrier(2, timeout=20)
+    newer_committed = threading.Event()
+    results: dict = {}
+
+    def newer():
+        """The NEW container: clean scan at t2 → the finding expires."""
+        s = _session(engines[0])
+        try:
+            row = (s.query(HunterFinding)
+                   .filter_by(finding_key=key, status="open").one())
+            read.wait()                 # both have read the SAME world
+            results["newer_watermark"] = hunter._advance_watermark(
+                s, key, t2)
+            row.status = "expired"
+            row.expired_at = t2
+            s.commit()
+        except Exception as exc:
+            results["newer_error"] = repr(exc)
+        finally:
+            s.close()
+            newer_committed.set()
+
+    def older():
+        """The OLD container: it read the finding as OPEN before the
+        expiry and only now gets to commit its t1 observation."""
+        s = _session(engines[1])
+        try:
+            still_open = (s.query(HunterFinding)
+                          .filter_by(finding_key=key, status="open")
+                          .count())
+            read.wait()
+            assert newer_committed.wait(timeout=20)
+            results["older_saw_open"] = still_open
+            ok = hunter._advance_watermark(s, key, t1)
+            results["older_watermark"] = ok
+            if ok:                      # the real contract: no advance,
+                #                         no write and no alert
+                hunter._insert_finding_row(s, f, key, t1)
+            s.commit()
+            if ok:
+                rid = (s.query(HunterFinding)
+                       .filter_by(finding_key=key, status="open")
+                       .one().id)
+                results["older_alerted"] = hunter._try_claim_alert(
+                    s, rid, t1)
+            else:
+                results["older_alerted"] = False
+        except Exception as exc:
+            results["older_error"] = repr(exc)
+        finally:
+            s.close()
+
+    threads = [threading.Thread(target=newer),
+               threading.Thread(target=older)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=30)
+    for e in engines:
+        e.dispose()
+
+    assert not [k for k in results if k.endswith("error")], results
+    # the older container really was mid-cycle on the pre-expiry world
+    assert results["older_saw_open"] == 1
+    assert results["newer_watermark"] is True
+    # ...and the DATABASE refused its stale write
+    assert results["older_watermark"] is False
+    assert results["older_alerted"] is False
+
+    chk = _session(pg_schema.engine)
+    try:
+        rows = chk.query(HunterFinding).filter_by(finding_key=key).all()
+        assert len(rows) == 1                     # nothing re-opened
+        assert rows[0].status == "expired"
+        assert rows[0].first_captured_at == t0    # clocks never regressed
+        wm = (chk.query(HunterObservationWatermark)
+              .filter_by(finding_key=key).one())
+        assert wm.observed_through == t2
+    finally:
+        chk.close()
