@@ -584,10 +584,60 @@ def friendlies_markets(date: str | None = Query(None, pattern=r"^\d{8}$")):
     own completeness on the record. Full per-event detector work lives
     in the market hunter, not here."""
     from src import friendlies
-    return {"fixtures": friendlies.daily_books(date),
-            "listed": friendlies.listed_events_summary(),
-            "framing": friendlies.FRAMING,
-            "generated_at": utcnow().isoformat()}
+    payload = {"fixtures": friendlies.daily_books(date),
+               "listed": friendlies.listed_events_summary(),
+               "framing": friendlies.FRAMING,
+               "generated_at": utcnow().isoformat()}
+    # ADDITIVE, 2026-07-29: the ESPN-sourced `fixtures` list above could
+    # name 1 of the 25 tradeable Kalshi friendlies on the day this was
+    # measured. `coverage` is the API-Football-backed census that says so
+    # out loud — every count with its denominator, and every unbridged
+    # event BY NAME. Attached here rather than behind a new route because
+    # this route is the one the page already fetches and the frontend
+    # proxy already allowlists, so the data becomes reachable with no
+    # frontend change. The ESPN keys are untouched: nothing that read
+    # this response before reads anything different now.
+    try:
+        from src import friendlies_apif
+        reg = friendlies_apif.tradeable_events()
+        payload["coverage"] = friendlies_apif.coverage(reg["events"])
+        payload["coverage"]["kalshi_registry"] = {
+            "listed_total": reg["listed_total"],
+            "open_events": len(reg["events"]),
+            "complete": reg["complete"], "truncated": reg["truncated"]}
+    except Exception as exc:                 # the page must not die on it
+        print(f"[friendlies] coverage census failed: {exc}")
+        payload["coverage"] = {
+            "state": "unavailable",
+            "reason": "the coverage census could not be computed — this "
+                      "is an inability to measure, not a measurement of "
+                      "zero coverage"}
+    return payload
+
+
+@app.get("/api/friendlies/coverage")
+def friendlies_coverage(days: int | None = Query(None, ge=1, le=14)):
+    """The API-Football-backed friendlies surface, denominated.
+
+    WHY THIS EXISTS. Measured 2026-07-29 over the ET dates Kalshi was
+    trading: 25 KXCLUBFGAME events had a tradeable market, ESPN's
+    `club.friendly` scoreboard could name ONE of them, API-Football could
+    name 22. The other friendlies routes are ESPN-sourced and so speak
+    about a few percent of the market; this one is the fixture backbone
+    that does not.
+
+    Fixtures are joined to books by API-FOOTBALL TEAM ID, never by name
+    plus date (AGENTS.md §13). A side with no recorded id is reported
+    `proposed` or `unbridged` and is NEVER guessed, an ambiguous join is
+    refused with both candidates named, and no price is rendered for
+    anything that is not `bridged`.
+
+    Still deliberately modelless: no model, no shadow plane, no locks, no
+    DB writes, no scheduler jobs, and none planned. See
+    src.friendlies.FRAMING, served in the response."""
+    from src import friendlies_apif
+    out = friendlies_apif.market_rows(days)
+    return {**out, "generated_at": utcnow().isoformat()}
 
 
 @app.get("/api/friendlies/match/{event_id}")
