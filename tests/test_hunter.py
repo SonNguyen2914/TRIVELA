@@ -280,9 +280,12 @@ class TestInPlayOverreaction:
 
 
 # ---------------------------------------------------------------------------
-def _seed_mls_event(s, kickoff, espn_id="401", tickers=None):
-    home = Team(competition_slug="mls-2026", canonical_name="Home FC")
-    away = Team(competition_slug="mls-2026", canonical_name="Away FC")
+def _seed_mls_event(s, kickoff, espn_id="401", tickers=None,
+                    suffix="HOMAWA"):
+    home = Team(competition_slug="mls-2026",
+                canonical_name=f"Home FC {suffix}")
+    away = Team(competition_slug="mls-2026",
+                canonical_name=f"Away FC {suffix}")
     s.add_all([home, away])
     s.flush()
     fx = Fixture(competition_slug="mls-2026", espn_event_id=espn_id,
@@ -290,7 +293,7 @@ def _seed_mls_event(s, kickoff, espn_id="401", tickers=None):
                  current_kickoff_utc=kickoff, status="in")
     s.add(fx)
     s.flush()
-    ev_ticker = f"KXMLSGAME-{TODAY_SEG}HOMAWA"
+    ev_ticker = f"KXMLSGAME-{TODAY_SEG}{suffix}"
     me = MarketEvent(competition_slug="mls-2026",
                      kalshi_event_ticker=ev_ticker, series="KXMLSGAME",
                      title="Home FC vs Away FC", fixture_id=fx.id,
@@ -334,7 +337,9 @@ class TestPostCertainty:
         monkeypatch.setattr(hunter, "_fetch_espn_scoreboard",
                             fake_scoreboard)
         markets = {f"{ev}-HOM": _mkt(f"{ev}-HOM", event=ev, ask="0.93")}
-        fs = hunter.detect_post_certainty(live_session, markets, NOW)
+        fs, complete = hunter.detect_post_certainty(
+            live_session, markets, NOW)
+        assert complete is True
         assert len(fs) == 1
         f = fs[0]
         # 1 - 0.93 - fee(0.93)=0.0046 → 0.0654
@@ -346,7 +351,15 @@ class TestPostCertainty:
         assert f["espn_captured_at"] is not None
         assert f["legs"]["kalshi_captured_at"] == NOW.isoformat()
         assert f["legs"]["espn_captured_at"]
-        assert calls == [NOW.astimezone().strftime("%Y%m%d")] or calls
+        # the ESPN page is fetched for the fixture's US-Eastern local
+        # date (IANA zone, never the runner's local zone or a fixed
+        # offset): kickoff NOW-3h = 15:00 UTC Jul 28 = 11:00 EDT Jul 28
+        from zoneinfo import ZoneInfo
+        expected_date = ((NOW - timedelta(hours=3))
+                         .astimezone(ZoneInfo("America/New_York"))
+                         .strftime("%Y%m%d"))
+        assert expected_date == "20260728"      # pinned, not recomputed
+        assert calls == [expected_date]
 
         # the re-read happens EVERY detection — never cached from a
         # previous cycle
@@ -361,7 +374,7 @@ class TestPostCertainty:
             lambda d: {"events": [_espn_event(state="in")]})
         markets = {f"{ev}-HOM": _mkt(f"{ev}-HOM", event=ev, ask="0.60")}
         assert hunter.detect_post_certainty(
-            live_session, markets, NOW) == []
+            live_session, markets, NOW) == ([], True)
 
     def test_price_already_at_certainty_does_not_fire(
             self, live_session, monkeypatch):
@@ -372,7 +385,7 @@ class TestPostCertainty:
                             lambda d: {"events": [_espn_event()]})
         markets = {f"{ev}-HOM": _mkt(f"{ev}-HOM", event=ev, ask="0.9999")}
         assert hunter.detect_post_certainty(
-            live_session, markets, NOW) == []
+            live_session, markets, NOW) == ([], True)
 
     def test_draw_outcome_derived_from_score_numbers(
             self, live_session, monkeypatch):
@@ -383,18 +396,31 @@ class TestPostCertainty:
             lambda d: {"events": [_espn_event(home_goals="1",
                                               away_goals="1")]})
         markets = {f"{ev}-TIE": _mkt(f"{ev}-TIE", event=ev, ask="0.90")}
-        fs = hunter.detect_post_certainty(live_session, markets, NOW)
+        fs, complete = hunter.detect_post_certainty(
+            live_session, markets, NOW)
+        assert complete is True
         assert len(fs) == 1
         assert fs[0]["legs"]["certain_outcome"] == "draw"
 
 
 # ---------------------------------------------------------------------------
-def _seed_approval(s, approved=True):
-    mv = ModelVersion(name="mls-2026-v0", approved_for_shadow=approved)
-    s.add(mv)
-    s.flush()
-    if approved:
-        s.add(ModelApprovalDecision(
+def _seed_approval(s, decision=True, runtime_active=True,
+                   content_hash=None):
+    """Seed the two DISTINCT approval states P0-3 is about: the
+    persisted immutable decision (`decision`) and the RUNTIME flag boot
+    fails closed on (`runtime_active` → approved_for_shadow). Returns
+    the decision id (None when no decision seeded)."""
+    mv = (s.query(ModelVersion).filter_by(name="mls-2026-v0").first())
+    if mv is None:
+        mv = ModelVersion(name="mls-2026-v0",
+                          approved_for_shadow=runtime_active)
+        s.add(mv)
+        s.flush()
+    else:
+        mv.approved_for_shadow = runtime_active
+    dec_id = None
+    if decision:
+        row = ModelApprovalDecision(
             model_version_id=mv.id, model_version_name="mls-2026-v0",
             eval_version="model-eval-v1",
             policy_version="shadow-approval-v1",
@@ -402,15 +428,26 @@ def _seed_approval(s, approved=True):
             edge_json=json.dumps({"delta_log_loss": 0.0269,
                                   "ci95": [-0.0050, 0.0596],
                                   "significant": False}),
-            decision_document="{}", content_hash="h" * 64,
-            created_at=NOW))
+            decision_document="{}",
+            content_hash=(content_hash or "h" * 64),
+            created_at=NOW)
+        s.add(row)
+        s.flush()
+        dec_id = row.id
     s.commit()
+    return dec_id
 
 
 class TestModelEdge:
-    def _seed_run(self, s, fx, p_home=0.55):
+    def _seed_run(self, s, fx, p_home=0.55, decision_id=None,
+                  approved_at_run=True):
+        """A complete run BOUND (by default) the way runs.py binds one:
+        model_approved_at_run stamped and the authorizing decision id
+        recorded. The P0-3 tests below unbind each in turn."""
         run = PredictionRun(fixture_id=fx.id, run_type="scheduled",
-                            status="complete", created_at=NOW)
+                            status="complete", created_at=NOW,
+                            model_approved_at_run=approved_at_run,
+                            model_approval_decision_id=decision_id)
         s.add(run)
         s.flush()
         s.add(PredictionContract(prediction_run_id=run.id,
@@ -421,10 +458,10 @@ class TestModelEdge:
         return run
 
     def test_readout_carries_the_standing_qualifier(self, live_session):
-        _seed_approval(live_session)
+        dec_id = _seed_approval(live_session)
         fx, me, ev = _seed_mls_event(
             live_session, NOW + timedelta(hours=5))
-        self._seed_run(live_session, fx)
+        self._seed_run(live_session, fx, decision_id=dec_id)
         markets = {f"{ev}-HOM": _mkt(f"{ev}-HOM", event=ev, ask="0.45")}
         fs = hunter.detect_model_edge(live_session, markets, NOW)
         assert len(fs) == 1
@@ -439,6 +476,10 @@ class TestModelEdge:
         assert "never read this as an established edge" in q["note"]
         # the qualifier rides inside the stored arithmetic too
         assert f["legs"]["standing_qualifier"]["significant"] is False
+        # P0-3 acceptance (d): the emitted edge is BOUND — the published
+        # qualifier's decision id EQUALS the run's authorizing decision
+        assert q["decision_id"] == dec_id
+        assert f["legs"]["model_approval_decision_id"] == dec_id
 
     def test_no_approval_means_no_numbers(self, live_session):
         fx, me, ev = _seed_mls_event(
@@ -450,26 +491,109 @@ class TestModelEdge:
         assert rep["model_status"]["mls-2026"] == "no model"
 
     def test_edge_below_threshold_does_not_fire(self, live_session):
-        _seed_approval(live_session)
+        dec_id = _seed_approval(live_session)
         fx, me, ev = _seed_mls_event(
             live_session, NOW + timedelta(hours=5))
-        self._seed_run(live_session, fx)
+        self._seed_run(live_session, fx, decision_id=dec_id)
         # 0.55 - 0.54 - fee = negative
         markets = {f"{ev}-HOM": _mkt(f"{ev}-HOM", event=ev, ask="0.54")}
         assert hunter.detect_model_edge(live_session, markets, NOW) == []
 
 
+class TestModelEdgeRuntimeBinding:
+    """P0-3: MODEL_EDGE must be bound to the RUNTIME approval state and
+    to the run's own authorization — the reviewer reproduced an edge
+    row emitted during the exact boot fail-closed window."""
+
+    def _markets(self, ev):
+        return {f"{ev}-HOM": _mkt(f"{ev}-HOM", event=ev, ask="0.45")}
+
+    def test_failclosed_window_emits_no_edge(self, live_session):
+        # the reviewer's repro, exactly: an older persisted APPROVED
+        # decision exists, but boot has set approved_for_shadow=False
+        # and the run was minted unapproved (model_approved_at_run
+        # False). No edge may exist, and the API must say the model is
+        # not ACTIVE rather than quoting the stale decision.
+        dec_id = _seed_approval(live_session, runtime_active=False)
+        fx, me, ev = _seed_mls_event(
+            live_session, NOW + timedelta(hours=5))
+        TestModelEdge._seed_run(TestModelEdge(), live_session, fx,
+                                decision_id=dec_id,
+                                approved_at_run=False)
+        assert hunter.detect_model_edge(
+            live_session, self._markets(ev), NOW) == []
+        rep = hunter.findings_report()
+        assert "no active model" in rep["model_status"]["mls-2026"]
+
+    def test_runtime_flag_off_blocks_even_a_bound_run(self, live_session):
+        # acceptance (a): decision present + approved_for_shadow=False
+        # → NO edge, even when the run itself is fully bound
+        dec_id = _seed_approval(live_session, runtime_active=False)
+        fx, me, ev = _seed_mls_event(
+            live_session, NOW + timedelta(hours=5))
+        TestModelEdge._seed_run(TestModelEdge(), live_session, fx,
+                                decision_id=dec_id)
+        assert hunter.detect_model_edge(
+            live_session, self._markets(ev), NOW) == []
+        rep = hunter.findings_report()
+        assert "no active model" in rep["model_status"]["mls-2026"]
+
+    def test_run_without_contemporaneous_approval_yields_no_edge(
+            self, live_session):
+        # acceptance (b): runtime active, but the run was NOT approved
+        # at capture time → no edge
+        dec_id = _seed_approval(live_session)
+        fx, me, ev = _seed_mls_event(
+            live_session, NOW + timedelta(hours=5))
+        TestModelEdge._seed_run(TestModelEdge(), live_session, fx,
+                                decision_id=dec_id,
+                                approved_at_run=False)
+        assert hunter.detect_model_edge(
+            live_session, self._markets(ev), NOW) == []
+
+    def test_mismatched_decision_id_yields_no_edge(self, live_session):
+        # acceptance (c): the run is bound to an OLDER decision than the
+        # one the qualifier publishes → no edge (an edge under decision
+        # N must never ride a run authorized under decision M)
+        old_id = _seed_approval(live_session, content_hash="a" * 64)
+        new_id = _seed_approval(live_session, content_hash="b" * 64)
+        assert new_id > old_id
+        fx, me, ev = _seed_mls_event(
+            live_session, NOW + timedelta(hours=5))
+        TestModelEdge._seed_run(TestModelEdge(), live_session, fx,
+                                decision_id=old_id)
+        assert hunter.detect_model_edge(
+            live_session, self._markets(ev), NOW) == []
+
+
 # ---------------------------------------------------------------------------
-def _run_cycle(monkeypatch, books, alerts=None):
-    """One scan_cycle against canned per-series market lists."""
+def _fake_paged(books):
+    """Canned _paged_markets: a value per series that is a list (clean
+    scan), a (list, truncated) tuple, or an Exception to raise."""
+    def fake(series, counter):
+        v = books.get(series, [])
+        if isinstance(v, Exception):
+            raise v
+        if isinstance(v, tuple):
+            return v
+        return v, False
+    return fake
+
+
+def _run_cycle(monkeypatch, books, alerts=None, accept=True):
+    """One scan_cycle against canned per-series market lists. The fake
+    send_alert records (title, msg) and reports per-transport acceptance
+    per the P0-2 contract (accept=False simulates all transports
+    failing)."""
     monkeypatch.setattr(config, "HUNTER_SERIES", list(books.keys()))
-    monkeypatch.setattr(hunter, "_paged_markets",
-                        lambda series, counter: books.get(series, []))
+    monkeypatch.setattr(hunter, "_paged_markets", _fake_paged(books))
     if alerts is not None:
         import src.alerts as alerts_mod
-        monkeypatch.setattr(alerts_mod, "send_alert",
-                            lambda msg, title="x", **kw:
-                            alerts.append((title, msg)))
+
+        def fake_send(msg, title="x", **kw):
+            alerts.append((title, msg))
+            return {"discord_action": bool(accept), "ntfy": False}
+        monkeypatch.setattr(alerts_mod, "send_alert", fake_send)
     return hunter.scan_cycle()
 
 
@@ -554,7 +678,17 @@ class TestAlertDiscipline:
         assert len(sent) == 1
         row = (live_session.query(HunterFinding)
                .filter_by(finding_type="SUM_BELOW_ONE").one())
+        # CONTROL for the P0-2 path: confirmed delivery marked the row,
+        # kept the durable claim, retained the per-transport results,
+        # and consumed exactly one budget slot
         assert row.alerted_at is not None
+        assert row.alert_claimed_at is not None
+        res = json.loads(row.alert_results_json)
+        assert res["attempts"] == 1
+        assert res["last"]["accepted"] is True
+        assert res["last"]["results"] == {"discord_action": True,
+                                          "ntfy": False}
+        assert len(hunter._alert_times) == 1
 
     def test_context_findings_never_alert(self, live_session, monkeypatch):
         sent = []
@@ -646,18 +780,21 @@ class TestSchemaParityGuard:
         PostgreSQL would (StringDataRightTruncation class)."""
         live_session.add(HunterFinding(
             series="X" * 65, finding_type="SUM_BELOW_ONE",
-            legs_json="{}", first_captured_at=NOW))
+            finding_key="k1", legs_json="{}", first_captured_at=NOW))
         with pytest.raises(ValueError, match="value too long"):
             live_session.commit()
         live_session.rollback()
 
     def test_generous_ticker_widths_accept_real_tickers(self, live_session):
+        tick = "KXCONMEBOLLIBGAME-26JUL30CARSFE-CAR"
         live_session.add(HunterFinding(
             series="KXCONMEBOLLIBGAME",
             event_ticker="KXCONMEBOLLIBGAME-26JUL30CARSFE",
-            market_ticker="KXCONMEBOLLIBGAME-26JUL30CARSFE-CAR",
-            finding_type="SUM_BELOW_ONE", legs_json="{}",
-            first_captured_at=NOW,
+            market_ticker=tick,
+            finding_type="SUM_BELOW_ONE",
+            finding_key=f"SUM_BELOW_ONE|KXCONMEBOLLIBGAME|"
+                        f"KXCONMEBOLLIBGAME-26JUL30CARSFE|{tick}",
+            legs_json="{}", first_captured_at=NOW,
             fee_policy_version="kalshi-fee-2026-07-general"))
         live_session.commit()
 
@@ -688,3 +825,633 @@ class TestSchedulerRegistration:
         assert trigger == "interval"
         assert kw["minutes"] == config.HUNTER_POLL_MINUTES
         assert kw["coalesce"] is True and kw["max_instances"] == 1
+
+
+# ---------------------------------------------------------------------------
+def _arb(series):
+    """A SUM_BELOW_ONE book under the given series' own event ticker."""
+    ev = f"{series}-{TODAY_SEG}AAABBB"
+    return [_mkt(f"{ev}-AAA", event=ev, bid="0.28", ask="0.30"),
+            _mkt(f"{ev}-TIE", event=ev, bid="0.30", ask="0.32"),
+            _mkt(f"{ev}-BBB", event=ev, bid="0.28", ask="0.30")]
+
+
+def _last_cycle_outcomes(session):
+    import src.live.models as _m
+    row = (session.query(_m.HunterCycle)
+           .order_by(_m.HunterCycle.id.desc()).first())
+    return json.loads(row.series_outcomes_json or "{}"), row
+
+
+class TestCompletenessFailClosed:
+    """P0-1: "didn't look" must never be recordable as "no anomaly".
+    Expiry requires a COMPLETE SUCCESS pass over the finding's series;
+    failures are per-series recorded outcomes; failed series stay
+    scheduled; the cycle degrades; the API exposes the incompleteness."""
+
+    def test_transient_series_failure_degrades_and_keeps_scheduled(
+            self, live_session, monkeypatch):
+        import requests as _rq
+        books1 = {"KXAAAGAME": _arb("KXAAAGAME"),
+                  "KXBBBGAME": _arb("KXBBBGAME")}
+        r1 = _run_cycle(monkeypatch, books1, alerts=[])
+        assert r1["status"] == "complete" and r1["findings_new"] >= 2
+
+        # cycle 2: series A fails transiently, B scans clean (its
+        # anomaly gone)
+        books2 = {"KXAAAGAME": _rq.RequestException("connection reset"),
+                  "KXBBBGAME": _healthy_three_way()}
+        r2 = _run_cycle(monkeypatch, books2, alerts=[])
+        assert r2["status"] == "degraded"
+        assert r2["series_failed"] == 1
+        live_session.expire_all()
+        a_row = (live_session.query(HunterFinding)
+                 .filter_by(series="KXAAAGAME",
+                            finding_type="SUM_BELOW_ONE").one())
+        b_row = (live_session.query(HunterFinding)
+                 .filter_by(series="KXBBBGAME",
+                            finding_type="SUM_BELOW_ONE").one())
+        # the failed series' finding CANNOT expire; the clean series'
+        # finding does (control: expiry itself still works)
+        assert a_row.status == "open"
+        assert b_row.status == "expired"
+        outcomes, cyc = _last_cycle_outcomes(live_session)
+        assert outcomes["KXAAAGAME"]["outcome"] == "REQUEST_FAILED"
+        assert "connection reset" in outcomes["KXAAAGAME"]["detail"]
+        assert outcomes["KXBBBGAME"]["outcome"] == "SUCCESS"
+        assert cyc.status == "degraded" and cyc.series_failed == 1
+        # the failed series stays SCHEDULED (previously it silently
+        # dropped from the active set until the 6h discovery)
+        assert "KXAAAGAME" in hunter._roster["active"]
+        # and the API exposes the incompleteness with its reason
+        rep = hunter.findings_report()
+        inc = rep["denominators"]["last_cycle"]["incomplete_series"]
+        assert inc["KXAAAGAME"]["outcome"] == "REQUEST_FAILED"
+
+    def test_detector_failure_poisons_only_that_series(
+            self, live_session, monkeypatch):
+        books1 = {"KXAAAGAME": _arb("KXAAAGAME"),
+                  "KXBBBGAME": _arb("KXBBBGAME")}
+        _run_cycle(monkeypatch, books1, alerts=[])
+
+        real = hunter.detect_event_findings
+
+        def flaky(series, ev, ms, cap):
+            if series == "KXAAAGAME":
+                raise RuntimeError("detector exploded")
+            return real(series, ev, ms, cap)
+        monkeypatch.setattr(hunter, "detect_event_findings", flaky)
+        books2 = {"KXAAAGAME": _arb("KXAAAGAME"),
+                  "KXBBBGAME": _healthy_three_way()}
+        r2 = _run_cycle(monkeypatch, books2, alerts=[])
+        assert r2["status"] == "degraded"
+        live_session.expire_all()
+        # A's finding survived the partial pass; B was still scanned
+        # (the failure did NOT kill the loop) and expired cleanly
+        assert (live_session.query(HunterFinding)
+                .filter_by(series="KXAAAGAME",
+                           finding_type="SUM_BELOW_ONE").one()
+                .status == "open")
+        assert (live_session.query(HunterFinding)
+                .filter_by(series="KXBBBGAME",
+                           finding_type="SUM_BELOW_ONE").one()
+                .status == "expired")
+        outcomes, _ = _last_cycle_outcomes(live_session)
+        assert outcomes["KXAAAGAME"]["outcome"] == "DETECTION_FAILED"
+        assert outcomes["KXBBBGAME"]["outcome"] == "SUCCESS"
+
+    def test_pagination_cap_is_incomplete_scope_not_no_anomaly(
+            self, live_session, monkeypatch):
+        _run_cycle(monkeypatch, {"KXAAAGAME": _arb("KXAAAGAME")},
+                   alerts=[])
+        # cycle 2: the page cap hit with a SURVIVING cursor — the books
+        # we did see look clean, but the scope is incomplete
+        r2 = _run_cycle(monkeypatch,
+                        {"KXAAAGAME": (_healthy_three_way(), True)},
+                        alerts=[])
+        assert r2["status"] == "degraded"
+        live_session.expire_all()
+        assert (live_session.query(HunterFinding)
+                .filter_by(series="KXAAAGAME",
+                           finding_type="SUM_BELOW_ONE").one()
+                .status == "open")
+        outcomes, _ = _last_cycle_outcomes(live_session)
+        assert outcomes["KXAAAGAME"]["outcome"] == "PAGINATION_CAP"
+        assert "INCOMPLETE" in outcomes["KXAAAGAME"]["detail"]
+        rep = hunter.findings_report()
+        inc = rep["denominators"]["last_cycle"]["incomplete_series"]
+        assert inc["KXAAAGAME"]["outcome"] == "PAGINATION_CAP"
+
+    def test_espn_failure_blocks_post_certainty_expiry(
+            self, live_session, monkeypatch):
+        import requests as _rq
+        fx, me, ev = _seed_mls_event(
+            live_session, NOW - timedelta(hours=3))
+        monkeypatch.setattr(hunter, "_fetch_espn_scoreboard",
+                            lambda d: {"events": [_espn_event()]})
+        books = {"KXMLSGAME": [_mkt(f"{ev}-HOM", event=ev, ask="0.93")]}
+        r1 = _run_cycle(monkeypatch, books, alerts=[])
+        assert r1["findings_new"] >= 1
+        live_session.expire_all()
+        row = (live_session.query(HunterFinding)
+               .filter_by(finding_type="POST_CERTAINTY").one())
+        assert row.status == "open"
+
+        # cycle 2: the ESPN re-read fails — the pass over MLS is
+        # INCOMPLETE, so the POST_CERTAINTY finding must NOT expire
+        def boom(date_str):
+            raise _rq.RequestException("espn 503")
+        monkeypatch.setattr(hunter, "_fetch_espn_scoreboard", boom)
+        r2 = _run_cycle(monkeypatch, books, alerts=[])
+        assert r2["status"] == "degraded"
+        live_session.expire_all()
+        row = (live_session.query(HunterFinding)
+               .filter_by(finding_type="POST_CERTAINTY").one())
+        assert row.status == "open"
+        outcomes, _ = _last_cycle_outcomes(live_session)
+        assert outcomes["KXMLSGAME"]["outcome"] == "DETECTION_FAILED"
+        assert "ESPN" in outcomes["KXMLSGAME"]["detail"]
+
+
+class TestAlertDurability:
+    """P0-2: alerted_at means a CONFIRMED transport acceptance after a
+    durable claim — never a fire-and-forget guess, never before the
+    finding itself is committed."""
+    ARB = TestAlertDiscipline.ARB
+
+    def test_all_transports_failing_leaves_finding_retryable(
+            self, live_session, monkeypatch):
+        sent = []
+        _run_cycle(monkeypatch, {"KXUCLGAME": self.ARB},
+                   alerts=sent, accept=False)
+        assert len(sent) == 1                 # an attempt WAS made
+        live_session.expire_all()
+        row = (live_session.query(HunterFinding)
+               .filter_by(finding_type="SUM_BELOW_ONE").one())
+        assert row.alerted_at is None         # NOT marked alerted
+        assert row.alert_claimed_at is None   # claim released → retryable
+        res = json.loads(row.alert_results_json)
+        assert res["attempts"] == 1
+        assert res["last"]["accepted"] is False
+        assert res["last"]["results"] == {"discord_action": False,
+                                          "ntfy": False}
+        assert len(hunter._alert_times) == 0  # budget NOT consumed
+
+        # next cycle retries the still-open finding...
+        _run_cycle(monkeypatch, {"KXUCLGAME": self.ARB},
+                   alerts=sent, accept=False)
+        assert len(sent) == 2
+        live_session.expire_all()
+        row = (live_session.query(HunterFinding)
+               .filter_by(finding_type="SUM_BELOW_ONE").one())
+        assert json.loads(row.alert_results_json)["attempts"] == 2
+        assert row.alerted_at is None
+
+        # ...until a transport finally accepts
+        _run_cycle(monkeypatch, {"KXUCLGAME": self.ARB},
+                   alerts=sent, accept=True)
+        assert len(sent) == 3
+        live_session.expire_all()
+        row = (live_session.query(HunterFinding)
+               .filter_by(finding_type="SUM_BELOW_ONE").one())
+        assert row.alerted_at is not None
+        assert len(hunter._alert_times) == 1
+
+    def test_unconfigured_transports_never_mark_alerted(
+            self, live_session, monkeypatch):
+        # REAL send_alert with nothing configured: the old code took
+        # "no exception" as success and permanently muted the finding
+        import src.alerts as alerts_mod
+        monkeypatch.setattr(config, "DISCORD_ACTION_WEBHOOK_URL", "")
+        monkeypatch.setattr(config, "DISCORD_DETAIL_WEBHOOK_URL", "")
+        monkeypatch.setattr(config, "NTFY_TOPIC", "")
+
+        def no_network(*a, **kw):             # nothing may leave at all
+            raise AssertionError("network call with nothing configured")
+        monkeypatch.setattr(alerts_mod.requests, "post", no_network)
+        _run_cycle(monkeypatch, {"KXUCLGAME": self.ARB})
+        live_session.expire_all()
+        row = (live_session.query(HunterFinding)
+               .filter_by(finding_type="SUM_BELOW_ONE").one())
+        assert row.alerted_at is None
+        assert row.alert_claimed_at is None
+        assert json.loads(
+            row.alert_results_json)["last"]["accepted"] is False
+        assert len(hunter._alert_times) == 0
+
+    def test_db_failure_cannot_leak_an_alert(
+            self, live_session, monkeypatch):
+        # forced first-commit failure: nothing may reach a transport
+        # before a durable claim exists
+        real_get = hunter.get_session
+        state = {"n": 0}
+
+        def flaky_session():
+            s = real_get()
+            real_commit = s.commit
+
+            def commit():
+                state["n"] += 1
+                if state["n"] == 1:
+                    raise RuntimeError("forced commit failure")
+                real_commit()
+            s.commit = commit
+            return s
+        monkeypatch.setattr(hunter, "get_session", flaky_session)
+        sent = []
+        r = _run_cycle(monkeypatch, {"KXUCLGAME": self.ARB}, alerts=sent)
+        assert sent == []                     # NO external alert leaked
+        assert r["status"] == "failed"
+        live_session.expire_all()
+        assert live_session.query(HunterFinding).count() == 0
+        # the failure is still a visible heartbeat, not silence
+        cyc = (live_session.query(HunterCycle)
+               .order_by(HunterCycle.id.desc()).first())
+        assert cyc.status == "failed"
+        assert cyc.error.startswith("persist:")
+
+    def test_send_alert_returns_per_transport_results(self, monkeypatch):
+        # CONTROL for the new src.alerts contract (the old one returned
+        # None): per-transport booleans, unconfigured == False
+        import src.alerts as alerts_mod
+        monkeypatch.setattr(config, "DISCORD_ACTION_WEBHOOK_URL",
+                            "https://a.example")
+        monkeypatch.setattr(config, "DISCORD_DETAIL_WEBHOOK_URL",
+                            "https://d.example")
+        monkeypatch.setattr(
+            alerts_mod, "send_discord",
+            lambda msg, channel="action": channel == "action")
+        monkeypatch.setattr(alerts_mod, "send_ntfy",
+                            lambda msg, title="x", **kw: False)
+        assert alerts_mod.send_alert("m") == {"discord_action": True,
+                                              "discord_detail": False,
+                                              "ntfy": False}
+        assert alerts_mod.send_alert("m", kind="detail") == {
+            "discord_detail": False}
+
+
+class TestCaptureClock:
+    """P0-4: the per-series fetch-completion clock is the quotes' ONLY
+    timing evidence and must survive to the row, even for detectors
+    that run at cycle end on a later wall clock."""
+
+    def test_mls_findings_keep_the_mls_fetch_clock(
+            self, live_session, monkeypatch):
+        # fake clock advancing 40s per call — the reviewer's measured
+        # drift in a controlled scan
+        state = {"t": NOW}
+
+        def fake_now():
+            state["t"] += timedelta(seconds=40)
+            return state["t"]
+        monkeypatch.setattr(hunter, "_now", fake_now)
+        fx, me, ev = _seed_mls_event(
+            live_session, NOW - timedelta(hours=3))
+        monkeypatch.setattr(hunter, "_fetch_espn_scoreboard",
+                            lambda d: {"events": [_espn_event()]})
+        ucl_ev = f"KXUCLGAME-{TODAY_SEG}CCCDDD"
+        books = {
+            # MLS scanned FIRST: its fetch clock is the earliest
+            "KXMLSGAME": [_mkt(f"{ev}-HOM", event=ev, ask="0.93")],
+            "KXUCLGAME": [
+                _mkt(f"{ucl_ev}-CCC", event=ucl_ev, bid="0.28",
+                     ask="0.30"),
+                _mkt(f"{ucl_ev}-TIE", event=ucl_ev, bid="0.30",
+                     ask="0.32"),
+                _mkt(f"{ucl_ev}-DDD", event=ucl_ev, bid="0.28",
+                     ask="0.30")],
+        }
+        _run_cycle(monkeypatch, books, alerts=[])
+        live_session.expire_all()
+        post = (live_session.query(HunterFinding)
+                .filter_by(finding_type="POST_CERTAINTY").one())
+        ucl = (live_session.query(HunterFinding)
+               .filter_by(finding_type="SUM_BELOW_ONE").one())
+        # SQLite hands back naive datetimes; every value stored was UTC
+        def utc(dt):
+            return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
+        # the MLS finding retains the EARLIER MLS fetch timestamp even
+        # though its detector ran at cycle end, after the UCL scan
+        assert utc(post.first_captured_at) < utc(ucl.first_captured_at)
+        assert utc(post.detected_at) > utc(ucl.first_captured_at)
+        # row clock == the clock inside the stored arithmetic
+        legs = json.loads(post.legs_json)
+        assert utc(post.first_captured_at).isoformat() \
+            == legs["kalshi_captured_at"]
+        # the OTHER clocks exist separately and are all later
+        assert utc(post.espn_captured_at) > utc(post.first_captured_at)
+        assert utc(post.persisted_at) > utc(post.detected_at)
+        # same discipline for the pure detector: capture == its series'
+        # fetch clock, persistence later
+        ucl_legs = json.loads(ucl.legs_json)
+        assert utc(ucl.first_captured_at).isoformat() \
+            == ucl_legs["captured_at"]
+        assert utc(ucl.persisted_at) > utc(ucl.first_captured_at)
+
+
+class TestCrossProcessIdempotency:
+    """P1-5 (dialect-portable part): the partial unique index, the
+    insert-on-conflict adoption path, and the atomic leased alert claim.
+    The barriered two-thread PG race lives in
+    tests/test_postgres_integration.py."""
+
+    def _fdict(self, margin="0.05"):
+        return {"finding_type": "SUM_BELOW_ONE", "series": "KXUCLGAME",
+                "event_ticker": EV, "market_ticker": None,
+                "is_context": False, "net_margin_dollars": margin,
+                "captured_at": NOW, "detected_at": NOW,
+                "alertable_liquidity": True, "limiting_quantity": "10",
+                "legs": {"rule": "test"}}
+
+    def test_partial_unique_index_one_open_row_per_key(
+            self, live_session):
+        from sqlalchemy.exc import IntegrityError
+        f = self._fdict()
+        key = hunter._finding_key(f)
+        assert hunter._insert_finding_row(
+            live_session, f, key, NOW) is not None
+        live_session.commit()
+        # a second OPEN row with the same key is refused BY THE DATABASE
+        live_session.add(HunterFinding(
+            series="KXUCLGAME", event_ticker=EV,
+            finding_type="SUM_BELOW_ONE", finding_key=key,
+            legs_json="{}", first_captured_at=NOW, status="open"))
+        with pytest.raises(IntegrityError):
+            live_session.commit()
+        live_session.rollback()
+        # an EXPIRED row with the same key is fine — append-only history
+        live_session.add(HunterFinding(
+            series="KXUCLGAME", event_ticker=EV,
+            finding_type="SUM_BELOW_ONE", finding_key=key,
+            legs_json="{}", first_captured_at=NOW, status="expired"))
+        live_session.commit()
+
+    def test_insert_race_surfaces_at_commit_loser_adopts(
+            self, live_session):
+        from sqlalchemy.exc import IntegrityError
+        f = self._fdict()
+        key = hunter._finding_key(f)
+        hunter._insert_finding_row(live_session, f, key, NOW)
+        live_session.commit()
+        # a second session (≈ the overlapping container) inserting the
+        # same open key is rejected BY THE DATABASE at commit; after
+        # rollback it adopts the winner's row
+        s2 = live_db.get_session()
+        try:
+            hunter._insert_finding_row(s2, f, key, NOW)
+            with pytest.raises(IntegrityError):
+                s2.commit()
+            s2.rollback()
+            assert (s2.query(HunterFinding)
+                    .filter_by(finding_key=key, status="open")
+                    .one()) is not None
+        finally:
+            s2.close()
+        assert (live_session.query(HunterFinding)
+                .filter_by(finding_key=key, status="open").count() == 1)
+
+    def test_scan_cycle_retries_once_and_adopts_on_race(
+            self, live_session, monkeypatch):
+        # simulate the overlapping container winning the insert BETWEEN
+        # this cycle's open-rows read and its commit
+        real_insert = hunter._insert_finding_row
+        raced = {"done": False}
+
+        def racing_insert(s, f, key, now):
+            if not raced["done"]:
+                raced["done"] = True
+                other = live_db.get_session()
+                try:
+                    real_insert(other, f, key, now)
+                    other.commit()          # the other container wins
+                finally:
+                    other.close()
+            return real_insert(s, f, key, now)
+        monkeypatch.setattr(hunter, "_insert_finding_row", racing_insert)
+        sent = []
+        r = _run_cycle(monkeypatch,
+                       {"KXUCLGAME": TestAlertDiscipline.ARB},
+                       alerts=sent)
+        live_session.expire_all()
+        # ONE open row despite the race; the retry pass ADOPTED the
+        # winner's row rather than counting a new finding
+        assert (live_session.query(HunterFinding)
+                .filter_by(finding_type="SUM_BELOW_ONE",
+                           status="open").count() == 1)
+        assert r["findings_new"] == 0
+        # and the alert went out exactly once (via the claim)
+        assert len(sent) == 1
+        assert r["alerted"] == 1
+
+    def test_alert_claim_single_winner_lease_and_finality(
+            self, live_session):
+        f = self._fdict()
+        key = hunter._finding_key(f)
+        row = hunter._insert_finding_row(live_session, f, key, NOW)
+        live_session.commit()
+        rid = row.id
+        # exactly one claim wins
+        assert hunter._try_claim_alert(live_session, rid, NOW) is True
+        assert hunter._try_claim_alert(live_session, rid, NOW) is False
+        # a dead claimant's lease expires rather than muting the finding
+        later = NOW + timedelta(
+            minutes=hunter.ALERT_CLAIM_LEASE_MINUTES + 1)
+        assert hunter._try_claim_alert(live_session, rid, later) is True
+        # confirmed delivery closes the claim permanently
+        live_session.query(HunterFinding).filter_by(id=rid).update(
+            {"alerted_at": later})
+        live_session.commit()
+        assert hunter._try_claim_alert(
+            live_session, rid, later + timedelta(hours=2)) is False
+
+
+class TestLiquidityUnknown:
+    """P1-6: missing top-of-book size is UNKNOWN liquidity, never
+    assumed depth; structural findings alert only with positive
+    executable size proven on every required leg."""
+
+    def _sizeless_arb(self):
+        return [_mkt(f"{EV}-AAA", bid="0.28", ask="0.30",
+                     ask_size=None, bid_size=None),
+                _mkt(f"{EV}-TIE", bid="0.30", ask="0.32",
+                     ask_size=None, bid_size=None),
+                _mkt(f"{EV}-BBB", bid="0.28", ask="0.30",
+                     ask_size=None, bid_size=None)]
+
+    def test_sizeless_two_sided_book_is_liquidity_unknown(self):
+        m = _mkt(f"{EV}-AAA", bid="0.48", ask="0.52",
+                 ask_size=None, bid_size=None)
+        fs = _of_type(hunter.detect_event_findings(
+            "KXUCLGAME", EV, [m], NOW), "THIN_BOOK")
+        assert len(fs) == 1
+        assert fs[0]["is_context"] is True
+        reasons = fs[0]["legs"]["reasons"]
+        assert any("liquidity_unknown" in r for r in reasons)
+        assert "yes_ask_size_missing:liquidity_unknown" in reasons
+        assert "yes_bid_size_missing:liquidity_unknown" in reasons
+
+    def test_missing_size_records_finding_but_never_alerts(
+            self, live_session, monkeypatch):
+        fs = _of_type(hunter.detect_event_findings(
+            "KXUCLGAME", EV, self._sizeless_arb(), NOW),
+            "SUM_BELOW_ONE")
+        assert len(fs) == 1
+        assert fs[0]["alertable_liquidity"] is False
+        assert fs[0]["limiting_quantity"] is None
+        assert fs[0]["legs"]["liquidity"]["status"] == "liquidity_unknown"
+        # full-cycle: recorded, above the margin bar, but NO alert
+        sent = []
+        _run_cycle(monkeypatch, {"KXUCLGAME": self._sizeless_arb()},
+                   alerts=sent)
+        assert sent == []
+        row = (live_session.query(HunterFinding)
+               .filter_by(finding_type="SUM_BELOW_ONE").one())
+        assert row.status == "open" and row.alerted_at is None
+
+    def test_zero_size_not_alertable(self):
+        legs = [_mkt(f"{EV}-AAA", bid="0.28", ask="0.30", ask_size="0"),
+                _mkt(f"{EV}-TIE", bid="0.30", ask="0.32"),
+                _mkt(f"{EV}-BBB", bid="0.28", ask="0.30")]
+        fs = _of_type(hunter.detect_event_findings(
+            "KXUCLGAME", EV, legs, NOW), "SUM_BELOW_ONE")
+        assert len(fs) == 1
+        assert fs[0]["alertable_liquidity"] is False
+        assert fs[0]["legs"]["liquidity"]["status"] == "zero_size"
+
+    def test_positive_sizes_carry_limiting_quantity(
+            self, live_session, monkeypatch):
+        # CONTROL: sized on every leg → alertable, limited by the min
+        legs = [_mkt(f"{EV}-AAA", bid="0.28", ask="0.30", ask_size="50"),
+                _mkt(f"{EV}-TIE", bid="0.30", ask="0.32", ask_size="30"),
+                _mkt(f"{EV}-BBB", bid="0.28", ask="0.30", ask_size="40")]
+        fs = _of_type(hunter.detect_event_findings(
+            "KXUCLGAME", EV, legs, NOW), "SUM_BELOW_ONE")
+        assert fs[0]["alertable_liquidity"] is True
+        assert fs[0]["limiting_quantity"] == "30"
+        assert fs[0]["legs"]["liquidity"]["limiting_quantity"] == "30"
+        sent = []
+        _run_cycle(monkeypatch, {"KXUCLGAME": legs}, alerts=sent)
+        assert len(sent) == 1
+        assert "up to 30 contracts" in sent[0][1]
+
+    def test_crossed_book_no_side_size_only_via_verified_mirror(self):
+        # mirror holds (no_bid == 1 - yes_ask): the no-side executable
+        # size is readable from the yes_ask side
+        m = _mkt(f"{EV}-AAA", bid="0.60", ask="0.55", no_bid="0.45",
+                 ask_size="20", bid_size="10")
+        fs = _of_type(hunter.detect_event_findings(
+            "KXUCLGAME", EV, [m], NOW), "CROSSED_BOOK")
+        assert len(fs) == 1
+        assert fs[0]["alertable_liquidity"] is True
+        assert fs[0]["limiting_quantity"] == "10"
+        assert fs[0]["legs"]["liquidity"][
+            "no_bid_size_basis"].startswith("mirrored")
+        # mirror broken: the no-side size is UNKNOWN → not alertable,
+        # regardless of the yes-side sizes
+        m2 = _mkt(f"{EV}-BBB", bid="0.60", ask="0.62", no_bid="0.55",
+                  ask_size="20", bid_size="10")
+        fs2 = _of_type(hunter.detect_event_findings(
+            "KXUCLGAME", EV, [m2], NOW), "CROSSED_BOOK")
+        assert len(fs2) == 1
+        assert fs2[0]["alertable_liquidity"] is False
+        liq = fs2[0]["legs"]["liquidity"]
+        assert liq["status"] == "liquidity_unknown"
+        assert liq["no_bid_size_basis"].startswith("UNKNOWN")
+
+    def test_post_certainty_requires_positive_ask_size(
+            self, live_session, monkeypatch):
+        fx, me, ev = _seed_mls_event(
+            live_session, NOW - timedelta(hours=3))
+        monkeypatch.setattr(hunter, "_fetch_espn_scoreboard",
+                            lambda d: {"events": [_espn_event()]})
+        markets = {f"{ev}-HOM": _mkt(f"{ev}-HOM", event=ev, ask="0.93",
+                                     ask_size=None)}
+        fs, complete = hunter.detect_post_certainty(
+            live_session, markets, NOW)
+        assert complete is True and len(fs) == 1
+        assert fs[0]["alertable_liquidity"] is False
+        assert not hunter._alert_eligible(fs[0])
+
+
+class TestConfigBounds:
+    def test_hunter_env_bounds_fail_fast(self, monkeypatch):
+        """P2: every numeric HUNTER_* knob is positive-bound validated
+        at import — misconfiguration fails loudly at boot."""
+        import importlib
+        try:
+            monkeypatch.setenv("HUNTER_POLL_MINUTES", "0")
+            with pytest.raises(ValueError, match="HUNTER_POLL_MINUTES"):
+                importlib.reload(config)
+            monkeypatch.setenv("HUNTER_POLL_MINUTES", "10")
+            monkeypatch.setenv("HUNTER_WIDE_SPREAD_DOLLARS", "-0.10")
+            with pytest.raises(ValueError,
+                               match="HUNTER_WIDE_SPREAD_DOLLARS"):
+                importlib.reload(config)
+            monkeypatch.setenv("HUNTER_WIDE_SPREAD_DOLLARS", "junk")
+            with pytest.raises(ValueError,
+                               match="HUNTER_WIDE_SPREAD_DOLLARS"):
+                importlib.reload(config)
+            monkeypatch.setenv("HUNTER_WIDE_SPREAD_DOLLARS", "0.10")
+            monkeypatch.setenv("HUNTER_ALERT_MAX_PER_HOUR", "-1")
+            with pytest.raises(ValueError,
+                               match="HUNTER_ALERT_MAX_PER_HOUR"):
+                importlib.reload(config)
+        finally:
+            # ALWAYS leave the module fully re-initialized from a clean
+            # environment, even when an assertion above fails
+            for var in ("HUNTER_POLL_MINUTES",
+                        "HUNTER_WIDE_SPREAD_DOLLARS",
+                        "HUNTER_ALERT_MAX_PER_HOUR"):
+                monkeypatch.delenv(var, raising=False)
+            importlib.reload(config)
+        assert config.HUNTER_POLL_MINUTES == 10
+        assert config.HUNTER_WIDE_SPREAD_DOLLARS == "0.10"
+
+
+class TestPairStoreBounds:
+    def test_pair_store_bounded_in_age_and_size(self, monkeypatch):
+        """P2: the process-local pair store is bounded — aged entries
+        drop, and above the cap the oldest are evicted first."""
+        monkeypatch.setattr(hunter, "_PAIR_STORE_MAX_ENTRIES", 3)
+
+        def entry(minutes_ago):
+            return {"yes_bid": "0.10", "yes_ask": "0.20",
+                    "captured_at": (NOW - timedelta(
+                        minutes=minutes_ago)).isoformat()}
+        store = {
+            "AGED": entry(hunter._PAIR_STORE_MAX_AGE_S // 60 + 1),
+            "T50": entry(50), "T40": entry(40),
+            "T30": entry(30), "T20": entry(20),
+            "MALFORMED": {"yes_bid": "0.10", "yes_ask": "0.20"},
+        }
+        monkeypatch.setattr(hunter, "_pair_store", store)
+        hunter._prune_pair_store(NOW)
+        assert "AGED" not in store and "MALFORMED" not in store
+        assert set(store) == {"T40", "T30", "T20"}   # oldest evicted
+
+
+class TestHeartbeatExtras:
+    def test_cycle_status_split_discovery_and_scope_labels(
+            self, live_session, monkeypatch):
+        """P2: per-status cycle counts, last-discovery visibility,
+        global-scope labelling, and the documented roster lag."""
+        import requests as _rq
+        _run_cycle(monkeypatch, {"KXUCLGAME": _healthy_three_way()},
+                   alerts=[])
+        _run_cycle(monkeypatch,
+                   {"KXUCLGAME": _rq.RequestException("boom")},
+                   alerts=[])
+        rep = hunter.findings_report()
+        d = rep["denominators"]
+        assert d["cycles_run"] == 2
+        assert d["cycles_by_status"] == {"complete": 1, "degraded": 1,
+                                         "failed": 0}
+        lc = d["last_cycle"]
+        assert lc["status"] == "degraded"
+        assert lc["series_failed"] == 1
+        assert lc["incomplete_series"]["KXUCLGAME"]["outcome"] \
+            == "REQUEST_FAILED"
+        assert lc["discovery_at"] is not None
+        assert lc["discovery_error"] is None
+        assert "global" in rep["findings_per_type_scope"]
+        assert str(config.HUNTER_DISCOVERY_MINUTES) in d["roster_note"]

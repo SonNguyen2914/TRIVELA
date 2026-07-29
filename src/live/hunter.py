@@ -1053,15 +1053,16 @@ def _row_key(row: HunterFinding) -> str:
 
 
 def _insert_finding_row(s, f: dict, key: str,
-                        now: datetime) -> HunterFinding | None:
-    """INSERT one open finding under the partial unique index (one open
-    row per finding_key — enforced by the DATABASE on both dialects).
-    A concurrent process inserting the same key loses exactly one of
-    the two transactions: the loser lands in the IntegrityError branch,
-    returns None, and the caller adopts the winner's row — it never
-    counts the race as a new finding and never claims its alert
-    (P1-5)."""
-    from sqlalchemy.exc import IntegrityError
+                        now: datetime) -> HunterFinding:
+    """Construct + add one open finding under the partial unique index
+    (one open row per finding_key — enforced by the DATABASE on both
+    dialects). Conflict handling deliberately lives at COMMIT time in
+    scan_cycle rather than in a per-row SAVEPOINT: stock pysqlite
+    implicitly commits around SAVEPOINT statements (verified here —
+    savepoint contents survived an outer rollback), so a savepoint-based
+    path would be untestable on the SQLite suite and violate the test-DB
+    parity rule. A plain add + one commit-retry behaves identically on
+    both engines (P1-5)."""
     captured = f.get("captured_at") or now
     row = HunterFinding(
         competition_slug=f.get("competition_slug"),
@@ -1086,12 +1087,7 @@ def _insert_finding_row(s, f: dict, key: str,
         observed_cycles=1,
         espn_captured_at=f.get("espn_captured_at"),
         status="open")
-    try:
-        with s.begin_nested():
-            s.add(row)
-            s.flush()
-    except IntegrityError:
-        return None
+    s.add(row)
     return row
 
 
@@ -1247,63 +1243,85 @@ def scan_cycle() -> dict:
                 print(f"[hunter] model-edge error: {exc}")
                 _degrade_mls(f"model-edge: {exc}"[:300])
 
-        now = _now()
-        # P0-1: expiry ONLY after a COMPLETE successful detection pass
-        # for the finding's series in THIS cycle. "Didn't look" is never
-        # recorded as "no anomaly".
-        expirable_series = {t for t, o in series_outcomes.items()
-                            if o["outcome"] == SERIES_SUCCESS}
-        current_keys = {_finding_key(f) for f in new_findings}
-        open_rows = (s.query(HunterFinding)
-                     .filter_by(status="open").all())
-        open_by_key = {}
-        for row in open_rows:
-            open_by_key[_row_key(row)] = row
-            if row.series in expirable_series \
-                    and _row_key(row) not in current_keys:
-                row.status = "expired"
-                row.expired_at = now
-                expired += 1
-        for f in new_findings:
-            key = _finding_key(f)
-            existing = open_by_key.get(key)
-            if existing is not None and existing.status == "open":
-                existing.last_seen_at = f.get("captured_at") or now
-                existing.observed_cycles = (existing.observed_cycles
-                                            or 1) + 1
-                # retryable: an open finding that never achieved a
-                # confirmed delivery may try again (P0-2)
-                if existing.alerted_at is None and _alert_eligible(f):
-                    alert_candidates.append((existing, f))
-                continue
-            row = _insert_finding_row(s, f, key, now)
-            if row is None:
-                # lost a cross-process insert race (P1-5): the winner's
-                # transaction owns the finding AND its alert
-                continue
-            created += 1
-            open_by_key[key] = row
-            if _alert_eligible(f):
-                alert_candidates.append((row, f))
-
         status = ("failed" if error
                   else "degraded" if failed_series or discovery_error
                   else "complete")
-        s.add(HunterCycle(
-            started_at=started, completed_at=_now(), status=status,
-            series_scanned=len(series_capture),
-            series_failed=len(failed_series),
-            series_outcomes_json=json.dumps(series_outcomes,
-                                            sort_keys=True),
-            events_scanned=events_seen, markets_scanned=markets_seen,
-            findings_new=created, findings_expired=expired,
-            request_count=counter.get("requests", 0),
-            roster_size=len(series_all), active_series=len(active_now),
-            discovery_at=_roster["at"], discovery_error=discovery_error,
-            error=error))
-        # durable BEFORE any alert leaves the process (P0-2): a failure
-        # here means nothing was sent and nothing claims to have been
-        s.commit()
+
+        def _persist_once():
+            """One transactional persistence pass: expiry + upsert +
+            cycle row, committed together. Runs at most twice — a
+            cross-process duplicate insert (P1-5) surfaces at COMMIT as
+            the partial unique index rejecting the loser; the retry
+            re-reads open rows, adopts the winner's, and never counts
+            the race as a new finding."""
+            nonlocal created, expired
+            created = expired = 0
+            alert_candidates.clear()
+            now = _now()
+            # P0-1: expiry ONLY after a COMPLETE successful detection
+            # pass for the finding's series in THIS cycle. "Didn't
+            # look" is never recorded as "no anomaly".
+            expirable_series = {t for t, o in series_outcomes.items()
+                                if o["outcome"] == SERIES_SUCCESS}
+            current_keys = {_finding_key(f) for f in new_findings}
+            open_rows = (s.query(HunterFinding)
+                         .filter_by(status="open").all())
+            open_by_key = {}
+            for row in open_rows:
+                open_by_key[_row_key(row)] = row
+                if row.series in expirable_series \
+                        and _row_key(row) not in current_keys:
+                    row.status = "expired"
+                    row.expired_at = now
+                    expired += 1
+            for f in new_findings:
+                key = _finding_key(f)
+                existing = open_by_key.get(key)
+                if existing is not None and existing.status == "open":
+                    existing.last_seen_at = f.get("captured_at") or now
+                    existing.observed_cycles = (existing.observed_cycles
+                                                or 1) + 1
+                    # retryable: an open finding that never achieved a
+                    # confirmed delivery may try again (P0-2)
+                    if existing.alerted_at is None \
+                            and _alert_eligible(f):
+                        alert_candidates.append((existing, f))
+                    continue
+                row = _insert_finding_row(s, f, key, now)
+                created += 1
+                open_by_key[key] = row
+                if _alert_eligible(f):
+                    alert_candidates.append((row, f))
+            s.add(HunterCycle(
+                started_at=started, completed_at=_now(), status=status,
+                series_scanned=len(series_capture),
+                series_failed=len(failed_series),
+                series_outcomes_json=json.dumps(series_outcomes,
+                                                sort_keys=True),
+                events_scanned=events_seen,
+                markets_scanned=markets_seen,
+                findings_new=created, findings_expired=expired,
+                request_count=counter.get("requests", 0),
+                roster_size=len(series_all),
+                active_series=len(active_now),
+                discovery_at=_roster["at"],
+                discovery_error=discovery_error,
+                error=error))
+            # durable BEFORE any alert leaves the process (P0-2): a
+            # failure here means nothing was sent and nothing claims
+            # to have been
+            s.commit()
+
+        from sqlalchemy.exc import IntegrityError
+        try:
+            _persist_once()
+        except IntegrityError as exc:
+            # the overlapping container won an insert between our read
+            # and our commit — adopt its rows on a single retry
+            print(f"[hunter] persist conflict (cross-process race), "
+                  f"retrying once: {exc}")
+            s.rollback()
+            _persist_once()
     except Exception as exc:
         s.rollback()
         print(f"[hunter] persist failed: {exc}")

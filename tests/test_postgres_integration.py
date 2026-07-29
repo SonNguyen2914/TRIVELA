@@ -324,14 +324,93 @@ def test_hunter_tables_round_trip_on_postgres(pg_schema):
             event_ticker="KXCONMEBOLLIBGAME-26JUL30CARSFE",
             market_ticker="KXCONMEBOLLIBGAME-26JUL30CARSFE-CAR",
             finding_type="SUM_BELOW_ONE", is_context=False,
+            finding_key="SUM_BELOW_ONE|KXCONMEBOLLIBGAME|"
+                        "KXCONMEBOLLIBGAME-26JUL30CARSFE|"
+                        "KXCONMEBOLLIBGAME-26JUL30CARSFE-CAR",
             legs_json="{}", net_margin_dollars="0.0353",
             fee_policy_version=FEE_POLICY["version"],
             first_captured_at=now, last_seen_at=now, status="open"))
         s.add(HunterCycle(started_at=now, completed_at=now,
-                          status="complete", markets_scanned=3))
+                          status="complete", markets_scanned=3,
+                          series_scanned=1, series_failed=0,
+                          series_outcomes_json='{"KXCONMEBOLLIBGAME": '
+                                               '{"outcome": "SUCCESS"}}'))
         s.commit()
         row = s.query(HunterFinding).one()
         assert row.fee_policy_version == FEE_POLICY["version"]
         assert row.net_margin_dollars == "0.0353"
     finally:
         s.close()
+
+
+# 9. P1-5: cross-process idempotency under a REAL race. Railway keeps
+# the old container serving while the new one boots, so two hunter
+# processes legitimately overlap. Barriered double-insert of the same
+# open finding_key must yield ONE open row (partial unique index), and
+# the barriered alert claim must have at most ONE winner (atomic
+# UPDATE ... WHERE on the row).
+def test_hunter_concurrent_insert_and_alert_claim(pg_schema):
+    import threading
+    from datetime import datetime, timezone
+
+    from src.live import hunter
+    from src.live.models import HunterFinding
+
+    now = datetime.now(timezone.utc)
+    f = {"finding_type": "SUM_BELOW_ONE", "series": "KXUCLGAME",
+         "event_ticker": "KXUCLGAME-26JUL28AAABBB",
+         "market_ticker": None, "is_context": False,
+         "net_margin_dollars": "0.0353", "captured_at": now,
+         "detected_at": now, "legs": {"rule": "race-test"}}
+    key = hunter._finding_key(f)
+
+    engines = [pg_schema.new_engine() for _ in range(2)]
+    barrier = threading.Barrier(2, timeout=20)
+    results: dict = {}
+
+    def worker(i):
+        from sqlalchemy.exc import IntegrityError
+        s = _session(engines[i])
+        try:
+            barrier.wait()
+            try:
+                hunter._insert_finding_row(s, f, key, now)
+                s.commit()      # loser BLOCKS here until the winner
+                #                 commits, then gets the unique violation
+                results[f"insert{i}"] = True
+            except IntegrityError:
+                s.rollback()    # the retry-pass contract: adopt, don't
+                #                 create
+                results[f"insert{i}"] = False
+            barrier.wait()
+            rid = (s.query(HunterFinding)
+                   .filter_by(finding_key=key, status="open")
+                   .one().id)
+            barrier.wait()
+            results[f"claim{i}"] = hunter._try_claim_alert(s, rid, now)
+        except Exception as exc:            # surface, never hang
+            results[f"error{i}"] = repr(exc)
+        finally:
+            s.close()
+
+    threads = [threading.Thread(target=worker, args=(i,))
+               for i in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=30)
+    for e in engines:
+        e.dispose()
+    assert not [k for k in results if k.startswith("error")], results
+    # exactly one insert won; exactly one open row exists
+    assert sorted([results["insert0"], results["insert1"]]) \
+        == [False, True]
+    chk = _session(pg_schema.engine)
+    try:
+        assert (chk.query(HunterFinding)
+                .filter_by(finding_key=key, status="open").count() == 1)
+    finally:
+        chk.close()
+    # at most one alert claim won (exactly one, since none existed)
+    assert sorted([results["claim0"], results["claim1"]]) \
+        == [False, True]
