@@ -524,6 +524,33 @@ class PersonalBet(LiveBase):
     # entry is corrected by a NEW row citing the old one here — the
     # record of the mistake is part of the record, never rewritten.
     corrects_bet_id = Column(Integer, ForeignKey("personal_bet.id"))
+    # journal-P0-H: Kalshi publishes NO quote timestamp, so our capture
+    # clock is the only evidence of when a book was observed. The age of
+    # the cited quote AT RECORD TIME, and the ceiling that was in force
+    # then, are stored so the row stays readable after the config moves —
+    # reclassifying an old row under a new ceiling would rewrite history.
+    quote_age_seconds = Column(Integer)
+    quote_max_age_seconds = Column(Integer)
+    # why a CITED quote was refused as the price basis: stale_capture |
+    # future_capture | not_found | no_capture_time. Absent when no quote
+    # was cited or the citation was accepted — the difference between
+    # "no quote offered" and "a quote refused" is never left implicit.
+    quote_rejection_reason = Column(String(24))
+
+    __table_args__ = (
+        # journal-P1-G: correction chains stay LINEAR under CONCURRENCY.
+        # The handler's read-then-insert check loses the race — two
+        # simultaneous corrections of the same entry both read "no head"
+        # and both commit, producing two heads and an ambiguous
+        # effective observation. The database is the only place this can
+        # be settled. Partial so ordinary rows (corrects_bet_id NULL)
+        # are unconstrained; explicit per-dialect WHERE text for the
+        # same reason the canonical-lock index carries it.
+        Index("uq_personal_bet_correction_head", "corrects_bet_id",
+              unique=True,
+              postgresql_where=text("corrects_bet_id IS NOT NULL"),
+              sqlite_where=text("corrects_bet_id IS NOT NULL")),
+    )
 
 
 class PersonalBetExecution(LiveBase):
@@ -539,6 +566,14 @@ class PersonalBetExecution(LiveBase):
 
     Idempotency (journal-P0 F5): (exchange_order_id, status) is unique,
     so a retried POST is a no-op instead of a duplicate fill.
+
+    That key alone is NOT the idempotency contract (journal-P0-I). The
+    same key carrying different economics is a CONFLICT, not a retry —
+    returning the earlier row for it silently accepts contradictory
+    evidence about a third party's money as though the earlier row had
+    confirmed the new payload. Each write path therefore stores a
+    canonical hash of the payload it accepted, and a repeat whose hash
+    differs is refused.
     """
     __tablename__ = "personal_bet_execution"
     __table_args__ = (
@@ -574,6 +609,18 @@ class PersonalBetExecution(LiveBase):
     # exported ONLY when this explicit consent is set. Default false —
     # absence of consent is never publication.
     publication_consent = Column(Boolean, default=False)
+    # journal-P0-H: the fill book's capture age relative to `filled_at`,
+    # and the ceiling in force when it was accepted. Stored so the
+    # decomposed metrics can say what evidence they rest on, and so a
+    # later config change cannot silently reclassify an accepted row.
+    fill_quote_age_seconds = Column(Integer)
+    fill_quote_max_age_seconds = Column(Integer)
+    # journal-P0-I: canonical hash of the payload each write path
+    # accepted. A retry hashing the same is a no-op; a retry hashing
+    # differently is a conflict and writes nothing.
+    execution_payload_hash = Column(String(64))
+    settlement_payload_hash = Column(String(64))
+    reconciliation_payload_hash = Column(String(64))
 
 
 class BroadcastLog(LiveBase):
@@ -607,6 +654,11 @@ class BroadcastLog(LiveBase):
     dispatched_body = Column(Text)
     dispatched_sha256 = Column(String(64))
     transports_json = Column(Text)
+    # journal-P0-G: the id of the interactive-session capability the
+    # server VERIFIED before dispatching. `source` records what the
+    # caller claimed; this records what the server checked. A row
+    # without it predates the capability gate.
+    dispatch_capability_id = Column(String(64))
 
 
 class PaperEvaluationContext(LiveBase):
