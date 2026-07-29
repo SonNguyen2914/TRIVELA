@@ -149,6 +149,16 @@ CRITERIA = {
             "unique_containment",
         ],
         "generic_tokens_dropped": ["fc", "afc", "cf", "sc", "club"],
+        "initialism_rule": (
+            "POST-REGISTRATION AMENDMENT A1, 2026-07-29, recorded in "
+            "docs/APIFOOTBALL-TRIAL.md §7: a run of consecutive "
+            "single-character tokens collapses into one token, so 'D.C. "
+            "United' -> 'dc united' and 'U.N.A.M. - Pumas' -> 'unam pumas'. "
+            "This fixes a defect in OUR normaliser, not a threshold. It does "
+            "not change the 100%/75% lines or the zero-ambiguity rule, and it "
+            "does not turn the 2026-07-29 pre-registered FAIL into a PASS "
+            "retroactively"
+        ),
         "ambiguity_rule": (
             "any API-Football team resolving to more than one ESPN name, or two "
             "API-Football teams claiming the same ESPN name, FAILS EXPLICITLY "
@@ -211,7 +221,21 @@ CRITERIA = {
     },
 }
 
-CRITERIA_FINGERPRINT = "493393bac7efd620c4b8d169288e39f6aa36902b00ea8655b5ccf1f2a82a3086"
+CRITERIA_FINGERPRINT = "7b7106b0342d2c5d951aa98196432ddb054d2a9c1492fa7277468b537eb79ba8"
+
+# The frozen ESPN reference roster is the OTHER half of the instrument, and it
+# lives in a separate file that CRITERIA_FINGERPRINT does not cover. That gap
+# was exploited within an hour of the harness first running: two aliases were
+# added to the roster — precisely and only the two team names that had just
+# failed CHECK 3 — which turned a pre-registered DROP into a KEEP under an
+# UNCHANGED criteria fingerprint, and the pre-registered archive was
+# overwritten in place. See
+# research_archive/apifootball_tuning_incident_2026-07-29.json.
+#
+# So the roster now carries the same tamper-evidence the thresholds do: its
+# sha256 is asserted against this literal, and editing the roster halts the
+# harness until the literal is updated too — which puts the edit in the diff.
+ROSTER_FINGERPRINT = "1c0f01745bcb72ff8621abdb9cf6420b0180f8400bff631817dbb15b26ab8a3c"
 
 FINISHED_STATUSES = {"FT", "AET", "PEN"}
 NOT_STARTED_STATUS = "NS"
@@ -228,6 +252,11 @@ def criteria_fingerprint(criteria: dict | None = None) -> str:
     blob = json.dumps(criteria if criteria is not None else CRITERIA,
                       sort_keys=True, separators=(",", ":"), ensure_ascii=True)
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
+def roster_fingerprint(path: Path | None = None) -> str:
+    """sha256 of the frozen ESPN reference file, exactly as committed."""
+    return hashlib.sha256((path or ROSTER_PATH).read_bytes()).hexdigest()
 
 
 # --------------------------------------------------------------------------
@@ -509,11 +538,31 @@ def check2_league(league_key: str, season: object, payload: object) -> dict:
 # CHECK 3 — identity stability
 # --------------------------------------------------------------------------
 
+def _collapse_initialisms(toks: list[str]) -> list[str]:
+    """'D.C. United' arrives here as ['d','c','united']; join the run of
+    single characters back into 'dc'. Amendment A1 — see CRITERIA
+    ["check3_identity"]["initialism_rule"] and docs/APIFOOTBALL-TRIAL.md §7."""
+    out: list[str] = []
+    run: list[str] = []
+    for t in toks:
+        if len(t) == 1:
+            run.append(t)
+            continue
+        if run:
+            out.append("".join(run))
+            run = []
+        out.append(t)
+    if run:
+        out.append("".join(run))
+    return out
+
+
 def norm_team(name: object) -> str:
     s = unicodedata.normalize("NFKD", str(name or ""))
     s = "".join(c for c in s if not unicodedata.combining(c))
     s = "".join(c if (c.isalnum() or c.isspace()) else " " for c in s.lower())
-    toks = [t for t in s.split() if t and t not in GENERIC_TOKENS]
+    toks = _collapse_initialisms(s.split())
+    toks = [t for t in toks if t and t not in GENERIC_TOKENS]
     if not toks:                       # never normalise a name away entirely
         toks = s.split()
     return " ".join(toks)
@@ -1384,8 +1433,23 @@ def print_verdict(report: dict, say) -> tuple[str, int]:
     return v, code
 
 
-def archive_path(now: datetime) -> Path:
-    return ARCHIVE_DIR / f"apifootball_verification_{now.strftime('%Y-%m-%d')}.json"
+def archive_path(now: datetime, exists=None) -> Path:
+    """The dated archive, never clobbering an earlier run's evidence.
+
+    A second run on the same UTC date would otherwise overwrite the first —
+    which is how a pre-registered result quietly disappears the moment
+    somebody re-runs after a fix. Later runs get .run2, .run3 and so on.
+    """
+    exists = Path.exists if exists is None else exists
+    base = ARCHIVE_DIR / f"apifootball_verification_{now.strftime('%Y-%m-%d')}.json"
+    if not exists(base):
+        return base
+    for n in range(2, 100):
+        cand = base.with_suffix(f".run{n}.json")
+        if not exists(cand):
+            return cand
+    raise RuntimeError(f"refusing to overwrite: 99 archives already exist for "
+                       f"{now.strftime('%Y-%m-%d')}")
 
 
 def write_archive(path: Path, doc: dict, key: str) -> None:
@@ -1417,6 +1481,22 @@ def main(argv=None) -> int:
         print(f"  computed {fp}")
         print("This guard exists so a threshold cannot be retuned to fit the "
               "data without the change appearing in the diff.")
+        return 2
+
+    rfp = roster_fingerprint()
+    if rfp != ROSTER_FINGERPRINT:
+        print("REFUSING TO RUN: the frozen ESPN reference roster has been "
+              "edited without updating ROSTER_FINGERPRINT.")
+        print(f"  expected {ROSTER_FINGERPRINT}")
+        print(f"  computed {rfp}")
+        print(f"  file     {ROSTER_PATH}")
+        print("The roster is half the instrument. Editing it to contain a name "
+              "that just failed CHECK 3 turns a DROP into a KEEP without "
+              "touching a single threshold — which is what happened on "
+              "2026-07-29 (research_archive/"
+              "apifootball_tuning_incident_2026-07-29.json). If the change is "
+              "intended, record it as a post-registration amendment in "
+              "docs/APIFOOTBALL-TRIAL.md §7 and update the literal.")
         return 2
 
     if not key:
@@ -1455,7 +1535,7 @@ def main(argv=None) -> int:
     say(f"criteria v{CRITERIA['version']}  fingerprint {fp[:16]}  "
         f"registered {CRITERIA['registered_utc']}, before any key existed")
     say(f"ESPN reference frozen {roster['_registered_utc']} "
-        f"({ROSTER_PATH.name})")
+        f"({ROSTER_PATH.name}) sha {rfp[:16]} — matches committed literal")
     say(f"key source: {key_source} (value never printed or archived)")
     say("GOVERNING RULE: " + CRITERIA["governing_rule"])
     say("=" * 78)
@@ -1500,8 +1580,8 @@ def main(argv=None) -> int:
         "espn_reference": {
             "path": str(ROSTER_PATH.relative_to(REPO_ROOT)),
             "registered_utc": roster["_registered_utc"],
-            "sha256": hashlib.sha256(
-                ROSTER_PATH.read_bytes()).hexdigest(),
+            "sha256": rfp,
+            "asserted_against_committed_literal": ROSTER_FINGERPRINT,
         },
         "harness_sha256": hashlib.sha256(
             Path(__file__).resolve().read_bytes()).hexdigest(),

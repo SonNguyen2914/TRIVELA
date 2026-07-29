@@ -151,7 +151,6 @@
         "Guadalajara Chivas": "Guadalajara",
         "Chivas Guadalajara": "Guadalajara",
         "UNAM Pumas": "Pumas UNAM",
-        "U.N.A.M. - Pumas": "Pumas UNAM",
         "Pumas": "Pumas UNAM",
         "Tigres": "Tigres UANL",
         "Santos Laguna": "Santos",
@@ -210,7 +209,6 @@
         "Vancouver Whitecaps"
       ],
       "aliases": {
-        "DC United": "D.C. United",
         "Los Angeles Galaxy": "LA Galaxy",
         "Los Angeles FC": "LAFC",
         "New York Red Bulls": "Red Bull New York",

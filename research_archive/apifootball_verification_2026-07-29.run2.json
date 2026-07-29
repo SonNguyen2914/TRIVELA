@@ -2,10 +2,10 @@
  "_what": "Evidence for the pre-registered API-Football trial decision.",
  "_governing_rule": "Assert a non-zero COUNT, never a status code. An HTTP 200 carrying an empty or zeroed payload is a FAILURE.",
  "_how_to_read_this": "Every check below was fixed in scripts/verify_apifootball.py before an API key existed. criteria_fingerprint is the sha256 of the criteria block: if it does not match the value committed in that script, the criteria were edited and this run is not a pre-registered result.",
- "run_utc": "2026-07-29T23:08:01.090351+00:00",
- "verdict": "DROP",
- "exit_code": 1,
- "criteria_fingerprint": "493393bac7efd620c4b8d169288e39f6aa36902b00ea8655b5ccf1f2a82a3086",
+ "run_utc": "2026-07-29T23:18:04.925104+00:00",
+ "verdict": "KEEP",
+ "exit_code": 0,
+ "criteria_fingerprint": "7b7106b0342d2c5d951aa98196432ddb054d2a9c1492fa7277468b537eb79ba8",
  "criteria": {
   "version": "1.0",
   "registered_utc": "2026-07-29",
@@ -67,6 +67,7 @@
     "sc",
     "club"
    ],
+   "initialism_rule": "POST-REGISTRATION AMENDMENT A1, 2026-07-29, recorded in docs/APIFOOTBALL-TRIAL.md §7: a run of consecutive single-character tokens collapses into one token, so 'D.C. United' -> 'dc united' and 'U.N.A.M. - Pumas' -> 'unam pumas'. This fixes a defect in OUR normaliser, not a threshold. It does not change the 100%/75% lines or the zero-ambiguity rule, and it does not turn the 2026-07-29 pre-registered FAIL into a PASS retroactively",
    "ambiguity_rule": "any API-Football team resolving to more than one ESPN name, or two API-Football teams claiming the same ESPN name, FAILS EXPLICITLY and is named. An ambiguous identity match must never silently pick a team",
    "min_resolution_rate": {
     "mls": 1.0,
@@ -100,9 +101,10 @@
  "espn_reference": {
   "path": "scripts/apifootball_espn_roster.json",
   "registered_utc": "2026-07-29",
-  "sha256": "1c0f01745bcb72ff8621abdb9cf6420b0180f8400bff631817dbb15b26ab8a3c"
+  "sha256": "1c0f01745bcb72ff8621abdb9cf6420b0180f8400bff631817dbb15b26ab8a3c",
+  "asserted_against_committed_literal": "1c0f01745bcb72ff8621abdb9cf6420b0180f8400bff631817dbb15b26ab8a3c"
  },
- "harness_sha256": "756b9b80e188101f60f1dbdfcfcfb57d1cdd324cb8ca5e3f712fc3943d3be925",
+ "harness_sha256": "445939dcbb48d0dbe8da8fed4c83fca3bb9d0e16fe8b5dfbab84fa0331a1a8bd",
  "aborted": null,
  "report": {
   "per_league": {
@@ -1234,68 +1236,52 @@
       "measurements": {
        "apifootball_teams": 18,
        "espn_reference_teams": 18,
-       "resolved": 17,
-       "rate": 0.9444444444444444,
+       "resolved": 18,
+       "rate": 1.0,
        "tiers": {
         "exact": 14,
-        "alias": 3,
+        "alias": 4,
         "token_set": 0,
         "containment": 0,
-        "unresolved": 1,
+        "unresolved": 0,
         "ambiguous": 0
        },
-       "unresolved_apifootball_names": [
-        "U.N.A.M. - Pumas"
-       ],
+       "unresolved_apifootball_names": [],
        "ambiguous": [],
        "espn_name_collisions": {},
-       "espn_names_without_counterpart": [
-        "Pumas UNAM"
-       ],
+       "espn_names_without_counterpart": [],
        "alias_key_collisions": [],
        "aliases_pointing_outside_the_reference": [],
        "threshold": 0.75
       },
       "reasons": [],
-      "notes": [
-       "UNRESOLVED (API-Football side): U.N.A.M. - Pumas",
-       "NO COUNTERPART (ESPN side — may be our own stale reference, see scripts/apifootball_espn_roster.json): Pumas UNAM"
-      ]
+      "notes": []
      },
      "mls": {
-      "status": "FAIL",
+      "status": "PASS",
       "measurements": {
        "apifootball_teams": 30,
        "espn_reference_teams": 30,
-       "resolved": 29,
-       "rate": 0.9666666666666667,
+       "resolved": 30,
+       "rate": 1.0,
        "tiers": {
-        "exact": 26,
+        "exact": 27,
         "alias": 3,
         "token_set": 0,
         "containment": 0,
-        "unresolved": 1,
+        "unresolved": 0,
         "ambiguous": 0
        },
-       "unresolved_apifootball_names": [
-        "DC United"
-       ],
+       "unresolved_apifootball_names": [],
        "ambiguous": [],
        "espn_name_collisions": {},
-       "espn_names_without_counterpart": [
-        "D.C. United"
-       ],
+       "espn_names_without_counterpart": [],
        "alias_key_collisions": [],
        "aliases_pointing_outside_the_reference": [],
        "threshold": 1.0
       },
-      "reasons": [
-       "resolution rate 96.7% is below the pre-registered 100% for mls"
-      ],
-      "notes": [
-       "UNRESOLVED (API-Football side): DC United",
-       "NO COUNTERPART (ESPN side — may be our own stale reference, see scripts/apifootball_espn_roster.json): D.C. United"
-      ]
+      "reasons": [],
+      "notes": []
      }
     }
    },
@@ -1308,7 +1294,7 @@
       "status": "NS",
       "kickoff_timestamp": 1787338800,
       "kickoff_utc": "2026-08-21T19:00:00+00:00",
-      "seconds_until_kickoff": 1972318,
+      "seconds_until_kickoff": 1971715,
       "team_entries": 0,
       "xg_statistic_type_seen": false,
       "teams": [],
@@ -1327,7 +1313,7 @@
       "status": "NS",
       "kickoff_timestamp": 1786815000,
       "kickoff_utc": "2026-08-15T17:30:00+00:00",
-      "seconds_until_kickoff": 1448518,
+      "seconds_until_kickoff": 1447915,
       "team_entries": 0,
       "xg_statistic_type_seen": false,
       "teams": [],
@@ -1346,7 +1332,7 @@
       "status": "NS",
       "kickoff_timestamp": 1785546000,
       "kickoff_utc": "2026-08-01T01:00:00+00:00",
-      "seconds_until_kickoff": 179518,
+      "seconds_until_kickoff": 178915,
       "team_entries": 0,
       "xg_statistic_type_seen": false,
       "teams": [],
@@ -1365,7 +1351,7 @@
       "status": "NS",
       "kickoff_timestamp": 1785540600,
       "kickoff_utc": "2026-07-31T23:30:00+00:00",
-      "seconds_until_kickoff": 174118,
+      "seconds_until_kickoff": 173515,
       "team_entries": 0,
       "xg_statistic_type_seen": false,
       "teams": [],
@@ -1385,7 +1371,7 @@
     "active": true
    },
    "requests": {
-    "current": 52,
+    "current": 141,
     "limit_day": 7500
    },
    "_account_block_dropped": true
@@ -1397,13 +1383,13 @@
     "path": "status",
     "params": {},
     "http_status": 200,
-    "elapsed_ms": 303,
+    "elapsed_ms": 248,
     "attempt": 1,
     "response_array_length": 0,
     "provider_results_field": 0,
     "provider_errors": [],
     "rate_limit_remaining_minute": "299",
-    "rate_limit_remaining_day": "7448",
+    "rate_limit_remaining_day": "7359",
     "body": {
      "get": "status",
      "parameters": [],
@@ -1421,7 +1407,7 @@
        "active": true
       },
       "requests": {
-       "current": 52,
+       "current": 141,
        "limit_day": 7500
       }
      }
@@ -1434,13 +1420,13 @@
      "id": 39
     },
     "http_status": 200,
-    "elapsed_ms": 205,
+    "elapsed_ms": 192,
     "attempt": 1,
     "response_array_length": 1,
     "provider_results_field": 1,
     "provider_errors": [],
     "rate_limit_remaining_minute": "298",
-    "rate_limit_remaining_day": "7446",
+    "rate_limit_remaining_day": "7357",
     "body": {
      "get": "leagues",
      "parameters": {
@@ -1853,13 +1839,13 @@
      "season": 2026
     },
     "http_status": 200,
-    "elapsed_ms": 223,
+    "elapsed_ms": 212,
     "attempt": 1,
     "response_array_length": 380,
     "provider_results_field": 380,
     "provider_errors": [],
     "rate_limit_remaining_minute": "297",
-    "rate_limit_remaining_day": "7445",
+    "rate_limit_remaining_day": "7356",
     "body": {
      "get": "fixtures",
      "parameters": {
@@ -28484,13 +28470,13 @@
      "season": 2025
     },
     "http_status": 200,
-    "elapsed_ms": 224,
+    "elapsed_ms": 217,
     "attempt": 1,
     "response_array_length": 380,
     "provider_results_field": 380,
     "provider_errors": [],
     "rate_limit_remaining_minute": "296",
-    "rate_limit_remaining_day": "7444",
+    "rate_limit_remaining_day": "7355",
     "body": {
      "get": "fixtures",
      "parameters": {
@@ -55114,13 +55100,13 @@
      "id": 140
     },
     "http_status": 200,
-    "elapsed_ms": 195,
+    "elapsed_ms": 223,
     "attempt": 1,
     "response_array_length": 1,
     "provider_results_field": 1,
     "provider_errors": [],
     "rate_limit_remaining_minute": "295",
-    "rate_limit_remaining_day": "7443",
+    "rate_limit_remaining_day": "7354",
     "body": {
      "get": "leagues",
      "parameters": {
@@ -55533,13 +55519,13 @@
      "season": 2026
     },
     "http_status": 200,
-    "elapsed_ms": 218,
+    "elapsed_ms": 215,
     "attempt": 1,
     "response_array_length": 380,
     "provider_results_field": 380,
     "provider_errors": [],
     "rate_limit_remaining_minute": "294",
-    "rate_limit_remaining_day": "7442",
+    "rate_limit_remaining_day": "7353",
     "body": {
      "get": "fixtures",
      "parameters": {
@@ -82164,13 +82150,13 @@
      "season": 2025
     },
     "http_status": 200,
-    "elapsed_ms": 232,
+    "elapsed_ms": 236,
     "attempt": 1,
     "response_array_length": 380,
     "provider_results_field": 380,
     "provider_errors": [],
     "rate_limit_remaining_minute": "293",
-    "rate_limit_remaining_day": "7441",
+    "rate_limit_remaining_day": "7352",
     "body": {
      "get": "fixtures",
      "parameters": {
@@ -108794,13 +108780,13 @@
      "id": 262
     },
     "http_status": 200,
-    "elapsed_ms": 202,
+    "elapsed_ms": 193,
     "attempt": 1,
     "response_array_length": 1,
     "provider_results_field": 1,
     "provider_errors": [],
     "rate_limit_remaining_minute": "292",
-    "rate_limit_remaining_day": "7440",
+    "rate_limit_remaining_day": "7351",
     "body": {
      "get": "leagues",
      "parameters": {
@@ -109081,13 +109067,13 @@
      "season": 2026
     },
     "http_status": 200,
-    "elapsed_ms": 215,
+    "elapsed_ms": 203,
     "attempt": 1,
     "response_array_length": 153,
     "provider_results_field": 153,
     "provider_errors": [],
     "rate_limit_remaining_minute": "291",
-    "rate_limit_remaining_day": "7439",
+    "rate_limit_remaining_day": "7350",
     "body": {
      "get": "fixtures",
      "parameters": {
@@ -119821,13 +119807,13 @@
      "id": 253
     },
     "http_status": 200,
-    "elapsed_ms": 198,
+    "elapsed_ms": 192,
     "attempt": 1,
     "response_array_length": 1,
     "provider_results_field": 1,
     "provider_errors": [],
     "rate_limit_remaining_minute": "290",
-    "rate_limit_remaining_day": "7438",
+    "rate_limit_remaining_day": "7349",
     "body": {
      "get": "leagues",
      "parameters": {
@@ -120196,13 +120182,13 @@
      "season": 2026
     },
     "http_status": 200,
-    "elapsed_ms": 234,
+    "elapsed_ms": 223,
     "attempt": 1,
     "response_array_length": 510,
     "provider_results_field": 510,
     "provider_errors": [],
     "rate_limit_remaining_minute": "289",
-    "rate_limit_remaining_day": "7437",
+    "rate_limit_remaining_day": "7348",
     "body": {
      "get": "fixtures",
      "parameters": {
@@ -155926,13 +155912,13 @@
      "fixture": 1379342
     },
     "http_status": 200,
-    "elapsed_ms": 206,
+    "elapsed_ms": 196,
     "attempt": 1,
     "response_array_length": 2,
     "provider_results_field": 2,
     "provider_errors": [],
     "rate_limit_remaining_minute": "288",
-    "rate_limit_remaining_day": "7436",
+    "rate_limit_remaining_day": "7347",
     "body": {
      "get": "fixtures/statistics",
      "parameters": {
@@ -156117,13 +156103,13 @@
      "fixture": 1391198
     },
     "http_status": 200,
-    "elapsed_ms": 199,
+    "elapsed_ms": 202,
     "attempt": 1,
     "response_array_length": 2,
     "provider_results_field": 2,
     "provider_errors": [],
     "rate_limit_remaining_minute": "287",
-    "rate_limit_remaining_day": "7435",
+    "rate_limit_remaining_day": "7346",
     "body": {
      "get": "fixtures/statistics",
      "parameters": {
@@ -156308,13 +156294,13 @@
      "fixture": 1550911
     },
     "http_status": 200,
-    "elapsed_ms": 199,
+    "elapsed_ms": 196,
     "attempt": 1,
     "response_array_length": 2,
     "provider_results_field": 2,
     "provider_errors": [],
     "rate_limit_remaining_minute": "286",
-    "rate_limit_remaining_day": "7434",
+    "rate_limit_remaining_day": "7345",
     "body": {
      "get": "fixtures/statistics",
      "parameters": {
@@ -156505,7 +156491,7 @@
     "provider_results_field": 2,
     "provider_errors": [],
     "rate_limit_remaining_minute": "285",
-    "rate_limit_remaining_day": "7433",
+    "rate_limit_remaining_day": "7344",
     "body": {
      "get": "fixtures/statistics",
      "parameters": {
@@ -156690,13 +156676,13 @@
      "id": 1490359
     },
     "http_status": 200,
-    "elapsed_ms": 202,
+    "elapsed_ms": 198,
     "attempt": 1,
     "response_array_length": 1,
     "provider_results_field": 1,
     "provider_errors": [],
     "rate_limit_remaining_minute": "284",
-    "rate_limit_remaining_day": "7432",
+    "rate_limit_remaining_day": "7343",
     "body": {
      "get": "fixtures",
      "parameters": {
@@ -160163,13 +160149,13 @@
      "id": 1490344
     },
     "http_status": 200,
-    "elapsed_ms": 199,
+    "elapsed_ms": 201,
     "attempt": 1,
     "response_array_length": 1,
     "provider_results_field": 1,
     "provider_errors": [],
     "rate_limit_remaining_minute": "283",
-    "rate_limit_remaining_day": "7431",
+    "rate_limit_remaining_day": "7342",
     "body": {
      "get": "fixtures",
      "parameters": {
@@ -163870,13 +163856,13 @@
      "fixture": 1490359
     },
     "http_status": 200,
-    "elapsed_ms": 202,
+    "elapsed_ms": 188,
     "attempt": 1,
     "response_array_length": 2,
     "provider_results_field": 2,
     "provider_errors": [],
     "rate_limit_remaining_minute": "282",
-    "rate_limit_remaining_day": "7430",
+    "rate_limit_remaining_day": "7341",
     "body": {
      "get": "fixtures/players",
      "parameters": {
@@ -166351,13 +166337,13 @@
      "fixture": 1490344
     },
     "http_status": 200,
-    "elapsed_ms": 202,
+    "elapsed_ms": 190,
     "attempt": 1,
     "response_array_length": 2,
     "provider_results_field": 2,
     "provider_errors": [],
     "rate_limit_remaining_minute": "281",
-    "rate_limit_remaining_day": "7429",
+    "rate_limit_remaining_day": "7340",
     "body": {
      "get": "fixtures/players",
      "parameters": {
@@ -168961,13 +168947,13 @@
      "season": 2026
     },
     "http_status": 200,
-    "elapsed_ms": 201,
+    "elapsed_ms": 192,
     "attempt": 1,
     "response_array_length": 20,
     "provider_results_field": 20,
     "provider_errors": [],
     "rate_limit_remaining_minute": "280",
-    "rate_limit_remaining_day": "7428",
+    "rate_limit_remaining_day": "7339",
     "body": {
      "get": "teams",
      "parameters": {
@@ -169392,13 +169378,13 @@
      "season": 2026
     },
     "http_status": 200,
-    "elapsed_ms": 221,
+    "elapsed_ms": 193,
     "attempt": 1,
     "response_array_length": 20,
     "provider_results_field": 20,
     "provider_errors": [],
     "rate_limit_remaining_minute": "279",
-    "rate_limit_remaining_day": "7427",
+    "rate_limit_remaining_day": "7338",
     "body": {
      "get": "teams",
      "parameters": {
@@ -169823,13 +169809,13 @@
      "season": 2026
     },
     "http_status": 200,
-    "elapsed_ms": 205,
+    "elapsed_ms": 210,
     "attempt": 1,
     "response_array_length": 18,
     "provider_results_field": 18,
     "provider_errors": [],
     "rate_limit_remaining_minute": "278",
-    "rate_limit_remaining_day": "7426",
+    "rate_limit_remaining_day": "7337",
     "body": {
      "get": "teams",
      "parameters": {
@@ -170214,13 +170200,13 @@
      "season": 2026
     },
     "http_status": 200,
-    "elapsed_ms": 210,
+    "elapsed_ms": 572,
     "attempt": 1,
     "response_array_length": 30,
     "provider_results_field": 30,
     "provider_errors": [],
     "rate_limit_remaining_minute": "277",
-    "rate_limit_remaining_day": "7425",
+    "rate_limit_remaining_day": "7336",
     "body": {
      "get": "teams",
      "parameters": {
@@ -170844,13 +170830,13 @@
      "fixture": 1557367
     },
     "http_status": 200,
-    "elapsed_ms": 201,
+    "elapsed_ms": 219,
     "attempt": 1,
     "response_array_length": 0,
     "provider_results_field": 0,
     "provider_errors": [],
     "rate_limit_remaining_minute": "276",
-    "rate_limit_remaining_day": "7424",
+    "rate_limit_remaining_day": "7335",
     "body": {
      "get": "fixtures/statistics",
      "parameters": {
@@ -170872,13 +170858,13 @@
      "fixture": 1570333
     },
     "http_status": 200,
-    "elapsed_ms": 218,
+    "elapsed_ms": 197,
     "attempt": 1,
     "response_array_length": 0,
     "provider_results_field": 0,
     "provider_errors": [],
-    "rate_limit_remaining_minute": "275",
-    "rate_limit_remaining_day": "7423",
+    "rate_limit_remaining_minute": "274",
+    "rate_limit_remaining_day": "7333",
     "body": {
      "get": "fixtures/statistics",
      "parameters": {
@@ -170900,13 +170886,13 @@
      "fixture": 1550912
     },
     "http_status": 200,
-    "elapsed_ms": 204,
+    "elapsed_ms": 586,
     "attempt": 1,
     "response_array_length": 0,
     "provider_results_field": 0,
     "provider_errors": [],
-    "rate_limit_remaining_minute": "274",
-    "rate_limit_remaining_day": "7422",
+    "rate_limit_remaining_minute": "272",
+    "rate_limit_remaining_day": "7331",
     "body": {
      "get": "fixtures/statistics",
      "parameters": {
@@ -170928,13 +170914,13 @@
      "fixture": 1490361
     },
     "http_status": 200,
-    "elapsed_ms": 203,
+    "elapsed_ms": 193,
     "attempt": 1,
     "response_array_length": 0,
     "provider_results_field": 0,
     "provider_errors": [],
-    "rate_limit_remaining_minute": "273",
-    "rate_limit_remaining_day": "7421",
+    "rate_limit_remaining_minute": "271",
+    "rate_limit_remaining_day": "7330",
     "body": {
      "get": "fixtures/statistics",
      "parameters": {
@@ -170953,14 +170939,14 @@
  },
  "stdout": [
   "==============================================================================",
-  "API-FOOTBALL PRE-REGISTERED VERIFICATION — 2026-07-29T23:08:01.090351+00:00",
-  "criteria v1.0  fingerprint 493393bac7efd620  registered 2026-07-29, before any key existed",
-  "ESPN reference frozen 2026-07-29 (apifootball_espn_roster.json)",
+  "API-FOOTBALL PRE-REGISTERED VERIFICATION — 2026-07-29T23:18:04.925104+00:00",
+  "criteria v1.0  fingerprint 7b7106b0342d2c5d  registered 2026-07-29, before any key existed",
+  "ESPN reference frozen 2026-07-29 (apifootball_espn_roster.json) sha 1c0f01745bcb72ff — matches committed literal",
   "key source: .apifootball_key (value never printed or archived)",
   "GOVERNING RULE: Assert a non-zero COUNT, never a status code. An HTTP 200 carrying an empty or zeroed payload is a FAILURE.",
   "==============================================================================",
   "Reading plan status ...",
-  "  plan='Pro' active=True quota={'current': 52, 'limit_day': 7500}",
+  "  plan='Pro' active=True quota={'current': 141, 'limit_day': 7500}",
   "\n[epl] league id 39 (English Premier League)",
   "  seasons visible: [2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]",
   "  provider 'current' season: 2026  |  calendar-derived season: 2026",
@@ -170995,13 +170981,8 @@
   "  roster resolution against the FROZEN ESPN reference",
   "    epl      season 2026  20/20 = 100.0% (threshold 75%)  tiers {'exact': 14, 'alias': 6, 'token_set': 0, 'containment': 0, 'unresolved': 0, 'ambiguous': 0}  -> PASS",
   "    laliga   season 2026  20/20 = 100.0% (threshold 75%)  tiers {'exact': 20, 'alias': 0, 'token_set': 0, 'containment': 0, 'unresolved': 0, 'ambiguous': 0}  -> PASS",
-  "    ligamx   season 2026  17/18 = 94.4% (threshold 75%)  tiers {'exact': 14, 'alias': 3, 'token_set': 0, 'containment': 0, 'unresolved': 1, 'ambiguous': 0}  -> PASS",
-  "             UNRESOLVED (API-Football side): U.N.A.M. - Pumas",
-  "             NO COUNTERPART (ESPN side — may be our own stale reference, see scripts/apifootball_espn_roster.json): Pumas UNAM",
-  "    mls      season 2026  29/30 = 96.7% (threshold 100%)  tiers {'exact': 26, 'alias': 3, 'token_set': 0, 'containment': 0, 'unresolved': 1, 'ambiguous': 0}  -> FAIL",
-  "             resolution rate 96.7% is below the pre-registered 100% for mls",
-  "             UNRESOLVED (API-Football side): DC United",
-  "             NO COUNTERPART (ESPN side — may be our own stale reference, see scripts/apifootball_espn_roster.json): D.C. United",
+  "    ligamx   season 2026  18/18 = 100.0% (threshold 75%)  tiers {'exact': 14, 'alias': 4, 'token_set': 0, 'containment': 0, 'unresolved': 0, 'ambiguous': 0}  -> PASS",
+  "    mls      season 2026  30/30 = 100.0% (threshold 100%)  tiers {'exact': 27, 'alias': 3, 'token_set': 0, 'containment': 0, 'unresolved': 0, 'ambiguous': 0}  -> PASS",
   "\nCHECK 4 — no pre-match xG (leakage)",
   "  epl      fixture 1557367 NS kickoff 2026-08-21T19:00:00+00:00 -> PASS",
   "           statistics response is empty for a not-started fixture — here that IS the desired result, and it is the one place in this harness where an empty payload is not a failure",
@@ -171024,18 +171005,13 @@
   "    laliga   season 2026  fixtures counted 380  (provider results field 380)  PASS",
   "    ligamx   season 2026  fixtures counted 153  (provider results field 153)  PASS",
   "    mls      season 2026  fixtures counted 510  (provider results field 510)  PASS",
-  "CHECK 3  identity stability ............................... FAIL",
+  "CHECK 3  identity stability ............................... PASS",
   "    team id    'San Jose Earthquakes'  fixture 1490359 -> 1596  |  fixture 1490344 -> 1596   PASS",
   "    player id  shared by name 18  example {'name': 'Angus Gunn', 'id_a': 18933, 'id_b': 18933}   PASS",
   "    roster epl      20/20 = 100.0%  threshold 75%  tiers {'exact': 14, 'alias': 6, 'token_set': 0, 'containment': 0, 'unresolved': 0, 'ambiguous': 0}  PASS",
   "    roster laliga   20/20 = 100.0%  threshold 75%  tiers {'exact': 20, 'alias': 0, 'token_set': 0, 'containment': 0, 'unresolved': 0, 'ambiguous': 0}  PASS",
-  "    roster ligamx   17/18 = 94.4%  threshold 75%  tiers {'exact': 14, 'alias': 3, 'token_set': 0, 'containment': 0, 'unresolved': 1, 'ambiguous': 0}  PASS",
-  "             UNRESOLVED (API-Football side): U.N.A.M. - Pumas",
-  "             NO COUNTERPART (ESPN side — may be our own stale reference, see scripts/apifootball_espn_roster.json): Pumas UNAM",
-  "    roster mls      29/30 = 96.7%  threshold 100%  tiers {'exact': 26, 'alias': 3, 'token_set': 0, 'containment': 0, 'unresolved': 1, 'ambiguous': 0}  FAIL",
-  "             resolution rate 96.7% is below the pre-registered 100% for mls",
-  "             UNRESOLVED (API-Football side): DC United",
-  "             NO COUNTERPART (ESPN side — may be our own stale reference, see scripts/apifootball_espn_roster.json): D.C. United",
+  "    roster ligamx   18/18 = 100.0%  threshold 75%  tiers {'exact': 14, 'alias': 4, 'token_set': 0, 'containment': 0, 'unresolved': 0, 'ambiguous': 0}  PASS",
+  "    roster mls      30/30 = 100.0%  threshold 100%  tiers {'exact': 27, 'alias': 3, 'token_set': 0, 'containment': 0, 'unresolved': 0, 'ambiguous': 0}  PASS",
   "CHECK 4  no pre-match xG (leakage) ........................ PASS",
   "    epl      fixture 1557367 status 'NS' kickoff 2026-08-21T19:00:00+00:00  PASS",
   "             statistics response is empty for a not-started fixture — here that IS the desired result, and it is the one place in this harness where an empty payload is not a failure",
@@ -171046,7 +171022,7 @@
   "    mls      fixture 1490361 status 'NS' kickoff 2026-07-31T23:30:00+00:00  PASS",
   "             statistics response is empty for a not-started fixture — here that IS the desired result, and it is the one place in this harness where an empty payload is not a failure",
   "------------------------------------------------------------------------------",
-  "VERDICT: DROP — CHECK 3 (identity stability) failed for: roster:mls",
+  "VERDICT: KEEP — all four pre-registered checks passed.",
   "requests used: 27 of 40 cap  (plan limits 300 requests/minute, 7500/day (PRO))",
   "=============================================================================="
  ]
