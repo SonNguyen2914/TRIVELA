@@ -1180,16 +1180,26 @@ class TestAlertDurability:
                             "https://a.example")
         monkeypatch.setattr(config, "DISCORD_DETAIL_WEBHOOK_URL",
                             "https://d.example")
+        # the transports are private to the gate now (main's round-4 money
+        # -lock work); patching a private here exercises the gate rather
+        # than routing around it, which its own docstring permits
         monkeypatch.setattr(
-            alerts_mod, "send_discord",
+            alerts_mod, "_post_discord",
             lambda msg, channel="action": channel == "action")
-        monkeypatch.setattr(alerts_mod, "send_ntfy",
+        monkeypatch.setattr(alerts_mod, "_post_ntfy",
                             lambda msg, title="x", **kw: False)
-        assert alerts_mod.send_alert("m") == {"discord_action": True,
-                                              "discord_detail": False,
-                                              "ntfy": False}
-        assert alerts_mod.send_alert("m", kind="detail") == {
-            "discord_detail": False}
+        # dispatch_class is required and has no default; OPERATIONAL is the
+        # one class the gate passes while the money lock is on, so it is
+        # what exercises the transport contract this test is about
+        assert alerts_mod.send_alert(
+            "m", dispatch_class=alerts_mod.OPERATIONAL) == {
+                "discord_action": True,
+                "discord_detail": False,
+                "ntfy": False}
+        assert alerts_mod.send_alert(
+            "m", kind="detail",
+            dispatch_class=alerts_mod.OPERATIONAL) == {
+                "discord_detail": False}
 
 
 class TestCaptureClock:
