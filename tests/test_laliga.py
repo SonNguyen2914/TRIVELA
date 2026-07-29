@@ -610,6 +610,44 @@ class TestEndpoints:
                 assert set(r.methods) == {"GET"}
         assert "/api/admin/laliga/sweep" in paths
 
+    def test_match_routes_are_not_spliced_into_each_other(self, monkeypatch):
+        """REGRESSION (this rebase): the EPL and La Liga route blocks were
+        interleaved rather than concatenated, and the seam fell INSIDE
+        both match handlers — epl_match lost its return and answered
+        `null`, laliga_match inherited EPL's body and asked the EPL plane
+        for a La Liga event. Nothing failed: route registration does not
+        need a body, so a production endpoint returning null stayed
+        green. This exercises both handlers past the seam.
+
+        Each league's handler must reach ITS OWN league's return shape:
+        La Liga's carries `lineups: None` and no `book_match` (no Sportec
+        equivalent exists for esp.1), EPL's carries `book_match`."""
+        from fastapi.testclient import TestClient
+
+        from api.main import app
+        from src import epl
+        summary = {"date": "2026-08-15T19:30Z",
+                   "home": {"name": "Athletic Club"},
+                   "away": {"name": "Barcelona"}}
+        monkeypatch.setattr(laliga, "match_summary", lambda eid: summary)
+        monkeypatch.setattr(epl, "match_summary", lambda eid: summary)
+        c = TestClient(app)
+
+        la = c.get("/api/laliga/match/401882926")
+        assert la.status_code == 200
+        la_body = la.json()
+        assert la_body is not None            # the truncation symptom
+        assert la_body["match"] == summary
+        assert la_body["lineups"] is None
+        assert "book_match" not in la_body    # EPL's key, not La Liga's
+
+        ep = c.get("/api/epl/match/401882926")
+        assert ep.status_code == 200
+        ep_body = ep.json()
+        assert ep_body is not None            # the truncation symptom
+        assert ep_body["match"] == summary
+        assert "book_match" in ep_body
+
     def test_standings_route_serves_the_explicit_empty_state(
             self, monkeypatch):
         from fastapi.testclient import TestClient
