@@ -1,0 +1,873 @@
+{
+ "captured_at": "2026-07-29T07:59:32.094495+00:00",
+ "purpose": "Live end-to-end mapping evidence for the Liga MX data layer: the REAL ESPN fixture 401877027 (Guadalajara at Puebla, 2026-08-01T01:00Z) served by a locally running api.main (feat-liga-mx worktree) joined to its REAL open Kalshi book KXLIGAMXGAME-26JUL31PUECDG by src.ligamx.find_book/find_all_books, with every open family suffix-joined and its tails parsed to model keys. model=None because liga-mx-2026-v0 is DARK. The /api/ligamx/markets board matched all 9 open events.",
+ "board_games": [
+  {
+   "event_ticker": "KXLIGAMXGAME-26AUG02TOLNCX",
+   "title": "Toluca vs Necaxa",
+   "n_markets": 3
+  },
+  {
+   "event_ticker": "KXLIGAMXGAME-26AUG02AMESLA",
+   "title": "America vs Santos Laguna",
+   "n_markets": 3
+  },
+  {
+   "event_ticker": "KXLIGAMXGAME-26AUG01CRAALA",
+   "title": "Cruz Azul vs Atlante",
+   "n_markets": 3
+  },
+  {
+   "event_ticker": "KXLIGAMXGAME-26AUG01LEOPAC",
+   "title": "Leon vs Pachuca",
+   "n_markets": 3
+  },
+  {
+   "event_ticker": "KXLIGAMXGAME-26AUG01ATLMON",
+   "title": "Atlas vs Monterrey",
+   "n_markets": 3
+  },
+  {
+   "event_ticker": "KXLIGAMXGAME-26AUG01QUETIG",
+   "title": "Queretaro vs Tigres",
+   "n_markets": 3
+  },
+  {
+   "event_ticker": "KXLIGAMXGAME-26JUL31JUAPUM",
+   "title": "Juarez vs Pumas UNAM",
+   "n_markets": 3
+  },
+  {
+   "event_ticker": "KXLIGAMXGAME-26JUL31ASLTIJ",
+   "title": "San Luis vs Tijuana de Caliente",
+   "n_markets": 3
+  },
+  {
+   "event_ticker": "KXLIGAMXGAME-26JUL31PUECDG",
+   "title": "Puebla vs Guadalajara",
+   "n_markets": 3
+  }
+ ],
+ "match_401877027": {
+  "match": {
+   "id": "401877027",
+   "date": "2026-08-01T01:00Z",
+   "state": "pre",
+   "detail": "7/31 - 9:00 PM EDT",
+   "minute": null,
+   "venue": "Estadio Cuauhtémoc",
+   "home": {
+    "name": "Puebla",
+    "abbrev": "PUE",
+    "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/231.png",
+    "score": null,
+    "color": "ffffff",
+    "alt_color": "0032a8"
+   },
+   "away": {
+    "name": "Guadalajara",
+    "abbrev": "GDL",
+    "logo": "https://a.espncdn.com/i/teamlogos/soccer/500/219.png",
+    "score": null,
+    "color": "EF0107",
+    "alt_color": "104e8a"
+   },
+   "stats": [],
+   "events": [],
+   "scouting": {
+    "last_five": [
+     {
+      "team": "Puebla",
+      "abbrev": "PUE",
+      "form": "L L L W L",
+      "games": [
+       {
+        "result": "L",
+        "provider_result": "L",
+        "team_score": 0,
+        "opponent_score": 5,
+        "score": "5-0",
+        "at_vs": "@",
+        "opponent": "GDL",
+        "date": "2026-04-19T01:07Z"
+       },
+       {
+        "result": "L",
+        "provider_result": "L",
+        "team_score": 1,
+        "opponent_score": 2,
+        "score": "2-1",
+        "at_vs": "@",
+        "opponent": "MTY",
+        "date": "2026-04-22T03:05Z"
+       },
+       {
+        "result": "L",
+        "provider_result": "L",
+        "team_score": 1,
+        "opponent_score": 2,
+        "score": "2-1",
+        "at_vs": "vs",
+        "opponent": "QRO",
+        "date": "2026-04-25T03:00Z"
+       },
+       {
+        "result": "W",
+        "provider_result": "W",
+        "team_score": 1,
+        "opponent_score": 0,
+        "score": "1-0",
+        "at_vs": "@",
+        "opponent": "JUA",
+        "date": "2026-07-18T03:00Z"
+       },
+       {
+        "result": "L",
+        "provider_result": "L",
+        "team_score": 1,
+        "opponent_score": 2,
+        "score": "2-1",
+        "at_vs": "@",
+        "opponent": "CAZ",
+        "date": "2026-07-22T01:00Z"
+       }
+      ]
+     },
+     {
+      "team": "Guadalajara",
+      "abbrev": "GDL",
+      "form": "W D L L W",
+      "games": [
+       {
+        "result": "W",
+        "provider_result": "W",
+        "team_score": 2,
+        "opponent_score": 0,
+        "score": "2-0",
+        "at_vs": "vs",
+        "opponent": "UANL",
+        "date": "2026-05-10T01:07Z"
+       },
+       {
+        "result": "D",
+        "provider_result": "D",
+        "team_score": 2,
+        "opponent_score": 2,
+        "score": "2-2",
+        "at_vs": "@",
+        "opponent": "CAZ",
+        "date": "2026-05-14T02:00Z"
+       },
+       {
+        "result": "L",
+        "provider_result": "L",
+        "team_score": 1,
+        "opponent_score": 2,
+        "score": "2-1",
+        "at_vs": "vs",
+        "opponent": "CAZ",
+        "date": "2026-05-17T01:07Z"
+       },
+       {
+        "result": "L",
+        "provider_result": "L",
+        "team_score": 0,
+        "opponent_score": 2,
+        "score": "2-0",
+        "at_vs": "vs",
+        "opponent": "TOL",
+        "date": "2026-07-19T01:07Z"
+       },
+       {
+        "result": "W",
+        "provider_result": "W",
+        "team_score": 1,
+        "opponent_score": 0,
+        "score": "1-0",
+        "at_vs": "vs",
+        "opponent": "JUA",
+        "date": "2026-07-25T23:07Z"
+       }
+      ]
+     }
+    ],
+    "head_to_head": [
+     {
+      "perspective": "GDL",
+      "result": "W",
+      "home_score": "5",
+      "away_score": "0",
+      "at_vs": "vs",
+      "opponent": "PUE",
+      "date": "2026-04-19T01:07:00Z"
+     },
+     {
+      "perspective": "GDL",
+      "result": "W",
+      "home_score": "0",
+      "away_score": "2",
+      "at_vs": "@",
+      "opponent": "PUE",
+      "date": "2025-09-27T23:00:00Z"
+     },
+     {
+      "perspective": "GDL",
+      "result": "W",
+      "home_score": "1",
+      "away_score": "0",
+      "at_vs": "vs",
+      "opponent": "PUE",
+      "date": "2025-04-16T01:05:00Z"
+     },
+     {
+      "perspective": "GDL",
+      "result": "L",
+      "home_score": "1",
+      "away_score": "0",
+      "at_vs": "@",
+      "opponent": "PUE",
+      "date": "2024-10-26T03:00:00Z"
+     },
+     {
+      "perspective": "GDL",
+      "result": "W",
+      "home_score": "3",
+      "away_score": "2",
+      "at_vs": "vs",
+      "opponent": "PUE",
+      "date": "2024-04-07T01:05:00Z"
+     }
+    ]
+   }
+  },
+  "book": {
+   "key": "winner",
+   "label": "Winner · 3-way",
+   "event_ticker": "KXLIGAMXGAME-26JUL31PUECDG",
+   "markets": [
+    {
+     "ticker": "KXLIGAMXGAME-26JUL31PUECDG-CDG",
+     "label": "Guadalajara",
+     "yes_ask": "0.5900",
+     "yes_bid": "0.5800",
+     "status": "active",
+     "model_key": null
+    },
+    {
+     "ticker": "KXLIGAMXGAME-26JUL31PUECDG-PUE",
+     "label": "Puebla",
+     "yes_ask": "0.2200",
+     "yes_bid": "0.2000",
+     "status": "active",
+     "model_key": null
+    },
+    {
+     "ticker": "KXLIGAMXGAME-26JUL31PUECDG-TIE",
+     "label": "Tie",
+     "yes_ask": "0.2100",
+     "yes_bid": "0.2000",
+     "status": "active",
+     "model_key": null
+    }
+   ]
+  },
+  "books": [
+   {
+    "key": "winner",
+    "label": "Winner · 3-way",
+    "event_ticker": "KXLIGAMXGAME-26JUL31PUECDG",
+    "markets": [
+     {
+      "ticker": "KXLIGAMXGAME-26JUL31PUECDG-CDG",
+      "label": "Guadalajara",
+      "yes_ask": "0.5900",
+      "yes_bid": "0.5800",
+      "status": "active",
+      "model_key": null
+     },
+     {
+      "ticker": "KXLIGAMXGAME-26JUL31PUECDG-PUE",
+      "label": "Puebla",
+      "yes_ask": "0.2200",
+      "yes_bid": "0.2000",
+      "status": "active",
+      "model_key": null
+     },
+     {
+      "ticker": "KXLIGAMXGAME-26JUL31PUECDG-TIE",
+      "label": "Tie",
+      "yes_ask": "0.2100",
+      "yes_bid": "0.2000",
+      "status": "active",
+      "model_key": null
+     }
+    ]
+   },
+   {
+    "key": "total",
+    "label": "Total goals",
+    "event_ticker": "KXLIGAMXTOTAL-26JUL31PUECDG",
+    "markets": [
+     {
+      "ticker": "KXLIGAMXTOTAL-26JUL31PUECDG-2",
+      "label": "Over 1.5 goals scored",
+      "yes_ask": "0.8000",
+      "yes_bid": "0.7800",
+      "status": "active",
+      "model_key": "over_1_5"
+     },
+     {
+      "ticker": "KXLIGAMXTOTAL-26JUL31PUECDG-3",
+      "label": "Over 2.5 goals scored",
+      "yes_ask": "0.5700",
+      "yes_bid": "0.5400",
+      "status": "active",
+      "model_key": "over_2_5"
+     },
+     {
+      "ticker": "KXLIGAMXTOTAL-26JUL31PUECDG-4",
+      "label": "Over 3.5 goals scored",
+      "yes_ask": "0.3300",
+      "yes_bid": "0.3200",
+      "status": "active",
+      "model_key": "over_3_5"
+     },
+     {
+      "ticker": "KXLIGAMXTOTAL-26JUL31PUECDG-5",
+      "label": "Over 4.5 goals scored",
+      "yes_ask": "0.1700",
+      "yes_bid": "0.1600",
+      "status": "active",
+      "model_key": "over_4_5"
+     },
+     {
+      "ticker": "KXLIGAMXTOTAL-26JUL31PUECDG-1",
+      "label": "Over 0.5 goals scored",
+      "yes_ask": "0.9600",
+      "yes_bid": "0.9100",
+      "status": "active",
+      "model_key": "over_0_5"
+     },
+     {
+      "ticker": "KXLIGAMXTOTAL-26JUL31PUECDG-6",
+      "label": "Over 5.5 goals scored",
+      "yes_ask": "0.1000",
+      "yes_bid": "0.0500",
+      "status": "active",
+      "model_key": "over_5_5"
+     }
+    ]
+   },
+   {
+    "key": "btts",
+    "label": "Both teams to score",
+    "event_ticker": "KXLIGAMXBTTS-26JUL31PUECDG",
+    "markets": [
+     {
+      "ticker": "KXLIGAMXBTTS-26JUL31PUECDG-BTTS",
+      "label": "Both Teams To Score",
+      "yes_ask": "0.5500",
+      "yes_bid": "0.5300",
+      "status": "active",
+      "model_key": "btts"
+     }
+    ]
+   },
+   {
+    "key": "spread",
+    "label": "Spread",
+    "event_ticker": "KXLIGAMXSPREAD-26JUL31PUECDG",
+    "markets": [
+     {
+      "ticker": "KXLIGAMXSPREAD-26JUL31PUECDG-PUE3",
+      "label": "Puebla wins by more than 2.5 goals",
+      "yes_ask": "0.0500",
+      "yes_bid": "0.0200",
+      "status": "active",
+      "model_key": "home_margin_3"
+     },
+     {
+      "ticker": "KXLIGAMXSPREAD-26JUL31PUECDG-CDG2",
+      "label": "Guadalajara wins by more than 1.5 goals",
+      "yes_ask": "0.3400",
+      "yes_bid": "0.3200",
+      "status": "active",
+      "model_key": "away_margin_2"
+     },
+     {
+      "ticker": "KXLIGAMXSPREAD-26JUL31PUECDG-CDG3",
+      "label": "Guadalajara wins by more than 2.5 goals",
+      "yes_ask": "0.1800",
+      "yes_bid": "0.1500",
+      "status": "active",
+      "model_key": "away_margin_3"
+     },
+     {
+      "ticker": "KXLIGAMXSPREAD-26JUL31PUECDG-PUE2",
+      "label": "Puebla wins by more than 1.5 goals",
+      "yes_ask": "0.1400",
+      "yes_bid": "0.0600",
+      "status": "active",
+      "model_key": "home_margin_2"
+     }
+    ]
+   },
+   {
+    "key": "team_total",
+    "label": "Team totals",
+    "event_ticker": "KXLIGAMXTEAMTOTAL-26JUL31PUECDG",
+    "markets": [
+     {
+      "ticker": "KXLIGAMXTEAMTOTAL-26JUL31PUECDG-PUE2",
+      "label": "Puebla over 1.5 goals",
+      "yes_ask": "0.2900",
+      "yes_bid": "0.2400",
+      "status": "active",
+      "model_key": "home_team_over_1_5"
+     },
+     {
+      "ticker": "KXLIGAMXTEAMTOTAL-26JUL31PUECDG-PUE1",
+      "label": "Puebla over 0.5 goals",
+      "yes_ask": "0.6600",
+      "yes_bid": "0.6200",
+      "status": "active",
+      "model_key": "home_team_over_0_5"
+     },
+     {
+      "ticker": "KXLIGAMXTEAMTOTAL-26JUL31PUECDG-CDG2",
+      "label": "Guadalajara over 1.5 goals",
+      "yes_ask": "0.5900",
+      "yes_bid": "0.5300",
+      "status": "active",
+      "model_key": "away_team_over_1_5"
+     },
+     {
+      "ticker": "KXLIGAMXTEAMTOTAL-26JUL31PUECDG-CDG1",
+      "label": "Guadalajara over 0.5 goals",
+      "yes_ask": "0.8700",
+      "yes_bid": "0.8300",
+      "status": "active",
+      "model_key": "away_team_over_0_5"
+     },
+     {
+      "ticker": "KXLIGAMXTEAMTOTAL-26JUL31PUECDG-CDG3",
+      "label": "Guadalajara over 2.5 goals",
+      "yes_ask": "0.3100",
+      "yes_bid": "0.2500",
+      "status": "active",
+      "model_key": "away_team_over_2_5"
+     },
+     {
+      "ticker": "KXLIGAMXTEAMTOTAL-26JUL31PUECDG-PUE3",
+      "label": "Puebla over 2.5 goals",
+      "yes_ask": "0.1000",
+      "yes_bid": "0.0600",
+      "status": "active",
+      "model_key": "home_team_over_2_5"
+     }
+    ]
+   },
+   {
+    "key": "score",
+    "label": "Correct score",
+    "event_ticker": "KXLIGAMXSCORE-26JUL31PUECDG",
+    "markets": [
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE5CDG2",
+      "label": "Club Puebla wins 5-2",
+      "yes_ask": "0.4100",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_5_2"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE2CDG5",
+      "label": "CD Guadalajara wins 5-2",
+      "yes_ask": "0.4100",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_2_5"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE1CDG3",
+      "label": "CD Guadalajara wins 3-1",
+      "yes_ask": "0.0600",
+      "yes_bid": "0.0200",
+      "status": "active",
+      "model_key": "score_1_3"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE4CDG0",
+      "label": "Club Puebla wins 4-0",
+      "yes_ask": "0.4100",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_4_0"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE0CDG5",
+      "label": "CD Guadalajara wins 5-0",
+      "yes_ask": "0.4100",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_0_5"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE2CDG4",
+      "label": "CD Guadalajara wins 4-2",
+      "yes_ask": "0.3600",
+      "yes_bid": "0.0100",
+      "status": "active",
+      "model_key": "score_2_4"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE0CDG0",
+      "label": "Draw 0-0",
+      "yes_ask": "0.0700",
+      "yes_bid": "0.0400",
+      "status": "active",
+      "model_key": "score_0_0"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE5CDG0",
+      "label": "Club Puebla wins 5-0",
+      "yes_ask": "0.4100",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_5_0"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE3CDG2",
+      "label": "Club Puebla wins 3-2",
+      "yes_ask": "0.4100",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_3_2"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE1CDG0",
+      "label": "Club Puebla wins 1-0",
+      "yes_ask": "0.0600",
+      "yes_bid": "0.0100",
+      "status": "active",
+      "model_key": "score_1_0"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE3CDG0",
+      "label": "Club Puebla wins 3-0",
+      "yes_ask": "0.4100",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_3_0"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE4CDG3",
+      "label": "Club Puebla wins 4-3",
+      "yes_ask": "0.4000",
+      "yes_bid": "0.0100",
+      "status": "active",
+      "model_key": "score_4_3"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE4CDG2",
+      "label": "Club Puebla wins 4-2",
+      "yes_ask": "0.4000",
+      "yes_bid": "0.0100",
+      "status": "active",
+      "model_key": "score_4_2"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE1CDG5",
+      "label": "CD Guadalajara wins 5-1",
+      "yes_ask": "0.4100",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_1_5"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE1CDG2",
+      "label": "CD Guadalajara wins 2-1",
+      "yes_ask": "0.1200",
+      "yes_bid": "0.0800",
+      "status": "active",
+      "model_key": "score_1_2"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE4CDG1",
+      "label": "Club Puebla wins 4-1",
+      "yes_ask": "0.4000",
+      "yes_bid": "0.0100",
+      "status": "active",
+      "model_key": "score_4_1"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE3CDG1",
+      "label": "Club Puebla wins 3-1",
+      "yes_ask": "0.4100",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_3_1"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE1CDG4",
+      "label": "CD Guadalajara wins 4-1",
+      "yes_ask": "0.0400",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_1_4"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE0CDG4",
+      "label": "CD Guadalajara wins 4-0",
+      "yes_ask": "0.0400",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_0_4"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE3CDG3",
+      "label": "Draw 3-3",
+      "yes_ask": "0.0500",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_3_3"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE0CDG3",
+      "label": "CD Guadalajara wins 3-0",
+      "yes_ask": "0.0600",
+      "yes_bid": "0.0200",
+      "status": "active",
+      "model_key": "score_0_3"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE0CDG1",
+      "label": "CD Guadalajara wins 1-0",
+      "yes_ask": "0.1400",
+      "yes_bid": "0.1100",
+      "status": "active",
+      "model_key": "score_0_1"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE1CDG1",
+      "label": "Draw 1-1",
+      "yes_ask": "0.1300",
+      "yes_bid": "0.0300",
+      "status": "active",
+      "model_key": "score_1_1"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE0CDG2",
+      "label": "CD Guadalajara wins 2-0",
+      "yes_ask": "0.1300",
+      "yes_bid": "0.0300",
+      "status": "active",
+      "model_key": "score_0_2"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE2CDG3",
+      "label": "CD Guadalajara wins 3-2",
+      "yes_ask": "0.0400",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_2_3"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE2CDG1",
+      "label": "Club Puebla wins 2-1",
+      "yes_ask": "0.0700",
+      "yes_bid": "0.0100",
+      "status": "active",
+      "model_key": "score_2_1"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE2CDG0",
+      "label": "Club Puebla wins 2-0",
+      "yes_ask": "0.0400",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_2_0"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE2CDG2",
+      "label": "Draw 2-2",
+      "yes_ask": "0.0800",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_2_2"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE3CDG4",
+      "label": "CD Guadalajara wins 4-3",
+      "yes_ask": "0.4100",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_3_4"
+     },
+     {
+      "ticker": "KXLIGAMXSCORE-26JUL31PUECDG-PUE5CDG1",
+      "label": "Club Puebla wins 5-1",
+      "yes_ask": "0.4100",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "score_5_1"
+     }
+    ]
+   },
+   {
+    "key": "ftts",
+    "label": "First team to score",
+    "event_ticker": "KXLIGAMXFTTS-26JUL31PUECDG",
+    "markets": [
+     {
+      "ticker": "KXLIGAMXFTTS-26JUL31PUECDG-PUE",
+      "label": "Club Puebla",
+      "yes_ask": "0.3500",
+      "yes_bid": "0.2900",
+      "status": "active",
+      "model_key": "home_first_goal"
+     },
+     {
+      "ticker": "KXLIGAMXFTTS-26JUL31PUECDG-NONE",
+      "label": "No Goal",
+      "yes_ask": "0.7500",
+      "yes_bid": "0.0000",
+      "status": "active",
+      "model_key": "no_goal"
+     },
+     {
+      "ticker": "KXLIGAMXFTTS-26JUL31PUECDG-CDG",
+      "label": "CD Guadalajara",
+      "yes_ask": "0.6700",
+      "yes_bid": "0.5600",
+      "status": "active",
+      "model_key": "away_first_goal"
+     }
+    ]
+   },
+   {
+    "key": "h1",
+    "label": "1st half · winner",
+    "event_ticker": "KXLIGAMX1H-26JUL31PUECDG",
+    "markets": [
+     {
+      "ticker": "KXLIGAMX1H-26JUL31PUECDG-TIE",
+      "label": "Tie 1st Half",
+      "yes_ask": "0.3900",
+      "yes_bid": "0.3600",
+      "status": "active",
+      "model_key": null
+     },
+     {
+      "ticker": "KXLIGAMX1H-26JUL31PUECDG-PUE",
+      "label": "Puebla wins 1st Half",
+      "yes_ask": "0.1800",
+      "yes_bid": "0.1500",
+      "status": "active",
+      "model_key": null
+     },
+     {
+      "ticker": "KXLIGAMX1H-26JUL31PUECDG-CDG",
+      "label": "Guadalajara wins 1st Half",
+      "yes_ask": "0.4300",
+      "yes_bid": "0.4100",
+      "status": "active",
+      "model_key": null
+     }
+    ]
+   },
+   {
+    "key": "h1_total",
+    "label": "1st half · total",
+    "event_ticker": "KXLIGAMX1HTOTAL-26JUL31PUECDG",
+    "markets": [
+     {
+      "ticker": "KXLIGAMX1HTOTAL-26JUL31PUECDG-2",
+      "label": "Over 1.5 1H goals scored",
+      "yes_ask": "0.4000",
+      "yes_bid": "0.3300",
+      "status": "active",
+      "model_key": null
+     },
+     {
+      "ticker": "KXLIGAMX1HTOTAL-26JUL31PUECDG-3",
+      "label": "Over 2.5 1H goals scored",
+      "yes_ask": "0.1900",
+      "yes_bid": "0.0600",
+      "status": "active",
+      "model_key": null
+     },
+     {
+      "ticker": "KXLIGAMX1HTOTAL-26JUL31PUECDG-1",
+      "label": "Over 0.5 1H goals scored",
+      "yes_ask": "0.7500",
+      "yes_bid": "0.6700",
+      "status": "active",
+      "model_key": null
+     }
+    ]
+   },
+   {
+    "key": "h1_spread",
+    "label": "1st half · spread",
+    "event_ticker": "KXLIGAMX1HSPREAD-26JUL31PUECDG",
+    "markets": [
+     {
+      "ticker": "KXLIGAMX1HSPREAD-26JUL31PUECDG-PUE2",
+      "label": "Puebla wins the 1H by more than 1.5 goals",
+      "yes_ask": "0.0700",
+      "yes_bid": "0.0100",
+      "status": "active",
+      "model_key": null
+     },
+     {
+      "ticker": "KXLIGAMX1HSPREAD-26JUL31PUECDG-CDG2",
+      "label": "Guadalajara wins the 1H by more than 1.5 goals",
+      "yes_ask": "0.1900",
+      "yes_bid": "0.1200",
+      "status": "active",
+      "model_key": null
+     }
+    ]
+   },
+   {
+    "key": "h1_btts",
+    "label": "1st half · BTTS",
+    "event_ticker": "KXLIGAMX1HBTTS-26JUL31PUECDG",
+    "markets": [
+     {
+      "ticker": "KXLIGAMX1HBTTS-26JUL31PUECDG-BTTS",
+      "label": "1st Half: Both Teams To Score",
+      "yes_ask": "0.2400",
+      "yes_bid": "0.1900",
+      "status": "active",
+      "model_key": null
+     }
+    ]
+   }
+  ],
+  "model": null,
+  "lineups": {
+   "home": {
+    "formation": null,
+    "confirmed": false,
+    "released": false,
+    "starters": [],
+    "bench": [],
+    "goalkeeper": null,
+    "key_absences": []
+   },
+   "away": {
+    "formation": null,
+    "confirmed": false,
+    "released": false,
+    "starters": [],
+    "bench": [],
+    "goalkeeper": null,
+    "key_absences": []
+   },
+   "strength_available": false
+  },
+  "generated_at": "2026-07-29T07:59:17.684095+00:00"
+ }
+}
