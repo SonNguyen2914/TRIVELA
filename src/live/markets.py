@@ -350,18 +350,27 @@ def _try_map(s, row: MarketEvent, tdate: str | None,
                             competition_slug=spec.slug)
     if not (home and away):
         return False
-    for f in (s.query(Fixture)
-              .filter_by(competition_slug=spec.slug,
-                         home_team_id=home.id,
-                         away_team_id=away.id).all()):
-        if (f.current_kickoff_utc and _fixture_et_date(
+    hits = [f for f in (s.query(Fixture)
+                        .filter_by(competition_slug=spec.slug,
+                                   home_team_id=home.id,
+                                   away_team_id=away.id).all())
+            if (f.current_kickoff_utc and _fixture_et_date(
                 f.current_kickoff_utc.replace(
                     tzinfo=f.current_kickoff_utc.tzinfo
-                    or timezone.utc)) == tdate):
-            row.fixture_id = f.id
-            row.mapped_via = "alias"
-            row.mapping_approved = True
-            return True
+                    or timezone.utc)) == tdate)]
+    if len(hits) > 1:
+        # P0-4: (teams, date) is not a unique key by construction. Taking
+        # the first hit is exactly the silent pick AGENTS.md §6 forbids;
+        # an ambiguous identity match must fail loudly and stay unmapped.
+        print(f"[markets] AMBIGUOUS fixture match for {row.title!r} on "
+              f"{tdate}: fixtures {[f.espn_event_id for f in hits]} — "
+              f"refusing to attach")
+        return False
+    if hits:
+        row.fixture_id = hits[0].id
+        row.mapped_via = "alias"
+        row.mapping_approved = True
+        return True
     return False
 
 

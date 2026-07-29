@@ -306,19 +306,41 @@ def scoreline_disagreements(summary: dict) -> list[dict]:
     return _audit(summary)
 
 
-# --- fixture <-> Kalshi book matching --------------------------------------
+# --- fixture <-> Kalshi book matching (fail-closed identity, P0-4) --------
+#
+# Identity is EXACT or it does not decide, and a date+name coincidence
+# never picks the first candidate it finds. Substring containment is
+# banned outright: it is not a bridge but a guess that happened to be
+# right, and it is the defect class that let a reserve side attach to its
+# parent club elsewhere in this codebase — "Leeds" contains-matches
+# "Leeds United" and would equally match a future "Leeds United U21".
+# A related-name overlap is SURFACED as a candidate and never priced.
 
-# Kalshi title -> ESPN displayName bridges that substring matching cannot
-# cross. VERIFIED against all 387 KXEPLGAME event titles of 2025-26
-# (research_archive/epl/): "Man Utd" is the only such name among current
-# clubs. Every other 25/26 title side is either exact ("Arsenal",
-# "Leeds United") or a substring of the ESPN name ("Brighton",
-# "Tottenham", "Nottingham", "Newcastle", "Bournemouth"). The three
-# promoted clubs (Coventry City, Hull City, Ipswich Town) have NO Kalshi
-# history — their names are unknowable until 26/27 events list, and any
-# mismatch surfaces as an unmapped fixture, never a guess.
+# Generic club-form suffixes that carry no identity. "AFC" is here so
+# Kalshi's "Bournemouth" equals ESPN's "AFC Bournemouth" by token set.
+# "United", "City", "Forest", "Hotspur", "Albion" are deliberately NOT —
+# they are the whole difference between "Leeds" and "Leeds United".
+_GENERIC_TOKENS = {"fc", "afc", "cf", "sc", "club"}
+
+# Kalshi title -> ESPN displayName bridges. EVIDENCE-BACKED ONLY: every
+# entry is a pair observed across all 387 KXEPLGAME event titles of
+# 2025-26 (research_archive/epl/kalshi_events_KXEPLGAME_full_*.json) set
+# against the archived ESPN eng.1 team list for 2026-27
+# (espn_teams_2026-07-28T1015Z.json). Never add one from intuition.
+#
+# All but "Man Utd" were previously handled by substring containment.
+# The three promoted clubs (Coventry City, Hull City, Ipswich Town) have
+# NO Kalshi history, so their Kalshi names are unknowable until 26/27
+# lists and they stay honestly unmapped. Relegated 25/26 sides (Burnley,
+# West Ham, Wolverhampton) are absent from the 26/27 ESPN team list, so
+# no evidenced ESPN displayName exists for them and none is invented.
 _KALSHI_ALIASES = {
     "man utd": "manchester united",
+    "bournemouth": "afc bournemouth",
+    "brighton": "brighton & hove albion",
+    "newcastle": "newcastle united",
+    "nottingham": "nottingham forest",
+    "tottenham": "tottenham hotspur",
 }
 
 
@@ -329,11 +351,37 @@ def _norm_name(s: str) -> str:
     return s.lower().replace(".", "").strip()
 
 
-def _side_matches(kalshi_side: str, espn_name: str) -> bool:
+def _identity_tokens(s: str) -> frozenset:
+    return frozenset(t for t in _norm_name(s).split()
+                     if t not in _GENERIC_TOKENS)
+
+
+def side_identity(kalshi_side: str, espn_name: str) -> str:
+    """-> "exact" | "loose" | "none".
+
+    exact  same club, safe to price: normalized equality, token-set
+           equality (generic club suffixes ignored), or an
+           archive-evidenced alias.
+    loose  related-name overlap (token subset either way) — enough to
+           SHOW as a candidate, never enough to decide. "Leeds" vs
+           "Leeds United" lives here, and so would any reserve or
+           academy side a provider ever lists.
+    none   unrelated.
+    """
     k, e = _norm_name(kalshi_side), _norm_name(espn_name)
     if not k or not e:
-        return False
-    return k in e or _KALSHI_ALIASES.get(k, "\x00") in e
+        return "none"
+    if k == e:
+        return "exact"
+    kt, et = _identity_tokens(kalshi_side), _identity_tokens(espn_name)
+    if kt and kt == et:
+        return "exact"
+    alias = _KALSHI_ALIASES.get(k)
+    if alias and (alias == e or _identity_tokens(alias) == et):
+        return "exact"
+    if kt and et and (kt <= et or et <= kt):
+        return "loose"
+    return "none"
 
 
 def _ticker_et_date(event_ticker: str) -> str | None:
@@ -423,8 +471,9 @@ def model_key_for(series: str, ticker: str, suffix_codes: str) -> str | None:
 def find_all_books(fixture_date: str, home_name: str,
                    away_name: str) -> list[dict]:
     """Every Kalshi market family for one fixture, suffix-joined from
-    the game event. 30s bundle cache."""
-    game = find_book(fixture_date, home_name, away_name)
+    the game event. 30s bundle cache. Empty unless the game event mapped
+    UNAMBIGUOUSLY — see match_book."""
+    game = match_book(fixture_date, home_name, away_name)["book"]
     if game is None:
         return []
     suffix = game["event_ticker"].split("-", 1)[1]
@@ -457,10 +506,28 @@ def find_all_books(fixture_date: str, home_name: str,
     return _cached(f"allbooks:{suffix}", 30, fetch) or []
 
 
-def find_book(fixture_date: str, home_name: str, away_name: str,
-              books: list[dict] | None = None) -> dict | None:
-    """This fixture's game-series book: date segment must match the
-    ticker, then both title sides must match the ESPN names."""
+def match_book(fixture_date: str, home_name: str, away_name: str,
+               books: list[dict] | None = None) -> dict:
+    """This fixture's game-series book, or an EXPLICIT refusal (P0-4).
+
+    -> {"status", "book", "candidates", "loose_candidates"} where status is
+       mapped           exactly ONE same-ET-date event matched both names
+                        EXACTLY (equality / token-set / archived alias)
+       unmapped         nothing matched
+       ambiguous        more than one candidate at the deciding tier —
+                        the candidates are returned and NONE is picked
+       unresolved_name  exactly one candidate, matching only loosely
+                        (token subset). Shown, never priced.
+       no_open_markets  one exact match whose book holds nothing tradeable
+
+    The previous implementation returned the FIRST event whose ticker
+    date matched and whose title sides CONTAINED the ESPN names. Two
+    same-date candidates therefore resolved silently to whichever the
+    provider happened to list first, and containment made "Leeds" a match
+    for "Leeds United". Nothing here consults the ticker's team
+    ABBREVIATIONS either: they are a 3-letter code with no registry
+    behind them, so they can propose but must never decide.
+    """
     want = _fixture_et_date(fixture_date)
     if books is not None:               # injected (tests)
         pool = books
@@ -468,20 +535,56 @@ def find_book(fixture_date: str, home_name: str, away_name: str,
         pool = [{"event_ticker": ev.get("event_ticker"),
                  "title": ev.get("title"), "markets": None}
                 for ev in _game_events()]
+    exact: list[dict] = []
+    loose: list[dict] = []
     for b in pool:
         if _ticker_et_date(b.get("event_ticker", "")) != want:
             continue
         title = b.get("title") or ""
         if " vs " not in title:
-            # observed 25/26: some events title "{Team}: Game Winner?"
-            # — no side split, so no name-verified match; skip honestly
+            # defensive: no side split, so no name-verified identity is
+            # possible. (Every archived 25/26 title DOES carry " vs " —
+            # see the note on the ": Game Winner?" shape in the tests.)
             continue
         k_home, k_away = title.split(" vs ", 1)
-        if _side_matches(k_home, home_name) and \
-                _side_matches(k_away, away_name):
-            if b["markets"] is None:
-                b = parse_game_books(
-                    [b], {b["event_ticker"]:
-                          event_markets(b["event_ticker"])})[0]
-            return b if b["markets"] else None
-    return None
+        h = side_identity(k_home, home_name)
+        a = side_identity(k_away, away_name)
+        if h == "none" or a == "none":
+            continue
+        (exact if (h == "exact" and a == "exact") else loose).append(b)
+
+    def _refuse(status, cands, loose_cands=()):
+        return {"status": status, "book": None,
+                "candidates": [c.get("event_ticker") for c in cands],
+                "loose_candidates": [c.get("event_ticker")
+                                     for c in loose_cands]}
+
+    loose_tickers = [c.get("event_ticker") for c in loose]
+    if len(exact) > 1:
+        print(f"[epl] AMBIGUOUS book match for {home_name!r} vs "
+              f"{away_name!r} on {want}: "
+              f"{[c.get('event_ticker') for c in exact]} — refusing")
+        return _refuse("ambiguous", exact, loose)
+    if len(exact) == 1:
+        b = exact[0]
+        if b.get("markets") is None:
+            b = parse_game_books(
+                [b], {b["event_ticker"]:
+                      event_markets(b["event_ticker"])})[0]
+        if not b["markets"]:
+            return _refuse("no_open_markets", exact, loose)
+        return {"status": "mapped", "book": b,
+                "candidates": [b["event_ticker"]],
+                "loose_candidates": loose_tickers}
+    if len(loose) > 1:
+        return _refuse("ambiguous", loose)
+    if len(loose) == 1:
+        return _refuse("unresolved_name", [], loose)
+    return _refuse("unmapped", [])
+
+
+def find_book(fixture_date: str, home_name: str, away_name: str,
+              books: list[dict] | None = None) -> dict | None:
+    """The book when — and only when — match_book says `mapped`."""
+    return match_book(fixture_date, home_name, away_name,
+                      books=books)["book"]

@@ -681,13 +681,22 @@ def epl_match(event_id: str):
         raise HTTPException(502, "summary unavailable")
     book = None
     books = []
+    # P0-4: WHY there is no book is part of the answer. An ambiguous or
+    # only-loosely-named candidate is a refusal to decide, not an absence
+    # of markets, and the two must never render identically.
+    book_match = {"status": "unknown"}
     try:
-        books = epl.find_all_books(
-            out.get("date"),
-            (out.get("home") or {}).get("name") or "",
-            (out.get("away") or {}).get("name") or "")
-        book = next((f for f in books if f.get("key") == "winner"), None)
+        home_name = (out.get("home") or {}).get("name") or ""
+        away_name = (out.get("away") or {}).get("name") or ""
+        matched = epl.match_book(out.get("date"), home_name, away_name)
+        book_match = {k: v for k, v in matched.items() if k != "book"}
+        if matched["book"] is not None:
+            books = epl.find_all_books(out.get("date"), home_name,
+                                       away_name)
+            book = next((f for f in books if f.get("key") == "winner"),
+                        None)
     except Exception as exc:            # the hub must not die on the book
+        book_match = {"status": "unavailable", "error": str(exc)[:120]}
         print(f"[epl] book match failed for {event_id}: {exc}")
     model = None
     try:                                # nor on the live plane
@@ -703,7 +712,8 @@ def epl_match(event_id: str):
             lineup = lineup_view.build(raw)
     except Exception as exc:
         print(f"[epl] lineup section failed for {event_id}: {exc}")
-    return {"match": out, "book": book, "books": books, "model": model,
+    return {"match": out, "book": book, "books": books,
+            "book_match": book_match, "model": model,
             "lineups": lineup, "generated_at": utcnow().isoformat()}
 
 

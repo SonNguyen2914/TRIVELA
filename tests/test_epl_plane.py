@@ -239,6 +239,41 @@ class TestEplDiscovery:
         assert (epl_session.query(MarketEvent).one()
                 .kalshi_event_ticker) == cur
 
+    def test_two_same_date_fixtures_refuse_to_attach(self, epl_session,
+                                                     monkeypatch):
+        """P0-4, the persistence half: (teams, date) is not a unique key
+        by construction, and the mapping loop took the FIRST hit. Two
+        fixtures for the same clubs on the same ET date must leave the
+        event unmapped. (Proven to fail: the first-hit loop attaches to
+        whichever fixture the query returned first.)"""
+        identity.seed_league_teams(
+            "epl-2026", epl_plane.ESPN_TEAMS_URL,
+            epl_plane.KALSHI_BRIDGES, espn_teams=CANNED_EPL)
+        ars = identity.resolve_espn_name("Arsenal",
+                                         competition_slug="epl-2026")
+        mun = identity.resolve_espn_name("Manchester United",
+                                         competition_slug="epl-2026")
+        from datetime import date as _date
+        day = _date.today()
+        for n, hour in (("dup1", 12), ("dup2", 17)):
+            ko = datetime(day.year, day.month, day.day, hour, tzinfo=UTC)
+            epl_session.add(Fixture(
+                competition_slug="epl-2026", espn_event_id=n,
+                home_team_id=ars.id, away_team_id=mun.id,
+                current_kickoff_utc=ko, original_kickoff_utc=ko,
+                status="pre"))
+        epl_session.commit()
+        from tests.test_epl import _ticker_for
+        et = _ticker_for(day, "ARSMUN")
+        monkeypatch.setattr(markets, "_kalshi_paged", _fake_kalshi_paged(
+            {"KXEPLGAME": [{"event_ticker": et,
+                            "title": "Arsenal vs Man Utd"}]}, {et: []}))
+        out = epl_plane.discover_and_map()
+        assert out["newly_mapped"] == 0 and out["unmapped"] == 1
+        ev = (epl_session.query(MarketEvent)
+              .filter_by(kalshi_event_ticker=et).one())
+        assert ev.fixture_id is None and not ev.mapping_approved
+
     def test_unbridged_promoted_club_stays_unmapped(
             self, epl_session, monkeypatch):
         """A 26/27 Kalshi title for a promoted club (no verified bridge)

@@ -124,16 +124,25 @@ def _book(ticker, title, markets=None):
 
 class TestFindBook:
     def test_verified_grammar_matches(self):
-        books = [_book("KXEPLGAME-26MAY24WHULEE",
-                       "West Ham vs Leeds United")]
-        got = epl.find_book("2026-05-24T14:00Z", "West Ham United",
-                            "Leeds United", books=books)
+        """Both sides carry ARCHIVED evidence: the Kalshi title is event
+        KXEPLGAME-26MAY24NFOBOU verbatim, and both ESPN displayNames are
+        in the archived 2026-27 eng.1 team list.
+
+        (The earlier version of this test used "West Ham vs Leeds United"
+        against ESPN "West Ham United". The Kalshi title is archived, but
+        West Ham was RELEGATED out of 25/26 and is absent from the
+        archived 26/27 ESPN team list, so that ESPN displayName was
+        asserted, not evidenced.)"""
+        books = [_book("KXEPLGAME-26MAY24NFOBOU",
+                       "Nottingham vs Bournemouth")]
+        got = epl.find_book("2026-05-24T14:00Z", "Nottingham Forest",
+                            "AFC Bournemouth", books=books)
         assert got is not None
-        assert got["event_ticker"] == "KXEPLGAME-26MAY24WHULEE"
+        assert got["event_ticker"] == "KXEPLGAME-26MAY24NFOBOU"
 
     def test_man_utd_alias_bridges(self):
-        """'Man Utd' is the one 25/26 title side substring matching
-        cannot cross (research_archive/epl/). (Proven to fail: with
+        """'Man Utd' is a 25/26 title side no rule but an evidenced
+        alias can cross (research_archive/epl/). (Proven to fail: with
         _KALSHI_ALIASES emptied this returns None.)"""
         books = [_book("KXEPLGAME-26AUG22MUNCHE",
                        "Man Utd vs Chelsea")]
@@ -142,21 +151,31 @@ class TestFindBook:
         assert got is not None
 
     def test_date_disambiguates(self):
-        books = [_book("KXEPLGAME-26AUG22ARSCOV", "Arsenal vs Coventry"),
-                 _book("KXEPLGAME-26DEC26ARSCOV", "Arsenal vs Coventry")]
+        books = [_book("KXEPLGAME-26AUG22ARSMUN", "Arsenal vs Man Utd"),
+                 _book("KXEPLGAME-26DEC26ARSMUN", "Arsenal vs Man Utd")]
         got = epl.find_book("2026-12-26T15:00Z", "Arsenal",
-                            "Coventry City", books=books)
+                            "Manchester United", books=books)
         assert got is not None
-        assert got["event_ticker"] == "KXEPLGAME-26DEC26ARSCOV"
+        assert got["event_ticker"] == "KXEPLGAME-26DEC26ARSMUN"
 
-    def test_game_winner_titles_are_skipped_not_guessed(self):
-        """Some 25/26 events title '{Team}: Game Winner?' — no ' vs '
-        split, so no name-verified match is possible. They must be
-        skipped, never fuzzy-attached."""
-        books = [_book("KXEPLGAME-26AUG22ARSCOV",
-                       "Arsenal: Game Winner?")]
-        assert epl.find_book("2026-08-22T14:00Z", "Arsenal",
-                             "Coventry City", books=books) is None
+    def test_game_winner_titles_are_not_fuzzy_attached(self):
+        """The ': Game Winner?' shape, as it ACTUALLY appears.
+
+        The archive has 7 of them and EVERY one still carries ' vs ' —
+        the suffix hangs off the AWAY side ("Manchester City vs
+        Bournemouth: Game Winner?"). An earlier version of this test
+        claimed they have no ' vs ' split and used a title
+        ("Arsenal: Game Winner?") that appears nowhere in the archive, so
+        it exercised a branch the real payloads never reach. What
+        actually protects us is the identity tier: "Bournemouth: Game
+        Winner?" is not the club "AFC Bournemouth" by any evidenced rule,
+        so the event stays unmapped instead of being guessed at."""
+        books = [_book("KXEPLGAME-25MAY20MCIBOU",
+                       "Manchester City vs Bournemouth: Game Winner?")]
+        got = epl.match_book("2025-05-20T14:00Z", "Manchester City",
+                             "AFC Bournemouth", books=books)
+        assert got["book"] is None
+        assert got["status"] == "unmapped"
 
     def test_no_match_returns_none(self):
         books = [_book("KXEPLGAME-26AUG22ARSCOV", "Arsenal vs Coventry")]
@@ -167,6 +186,77 @@ class TestFindBook:
         books = [_book("KXEPLGAME-26AUG22ARSCOV", "Arsenal vs Coventry")]
         assert epl.find_book("2026-08-22T14:00Z", "Coventry City",
                              "Arsenal", books=books) is None
+
+
+# --- P0-4: identity is exact, unique, or it refuses -----------------------
+
+
+class TestStableUniqueIdentity:
+    def test_two_same_date_candidates_refuse_and_say_so(self):
+        """THE acceptance: two events matching the same fixture on the
+        same date must produce NO mapping and an observable ambiguity.
+        (Proven to fail: the first-match loop returned the first
+        candidate silently.)"""
+        books = [_book("KXEPLGAME-26AUG22ARSMUN", "Arsenal vs Man Utd"),
+                 _book("KXEPLGAME-26AUG22ARSMUNB", "Arsenal vs Man Utd")]
+        got = epl.match_book("2026-08-22T14:00Z", "Arsenal",
+                             "Manchester United", books=books)
+        assert got["book"] is None
+        assert got["status"] == "ambiguous"
+        assert set(got["candidates"]) == {"KXEPLGAME-26AUG22ARSMUN",
+                                          "KXEPLGAME-26AUG22ARSMUNB"}
+        assert epl.find_book("2026-08-22T14:00Z", "Arsenal",
+                             "Manchester United", books=books) is None
+
+    def test_one_stable_linked_candidate_maps(self):
+        books = [_book("KXEPLGAME-26AUG22ARSMUN", "Arsenal vs Man Utd")]
+        got = epl.match_book("2026-08-22T14:00Z", "Arsenal",
+                             "Manchester United", books=books)
+        assert got["status"] == "mapped"
+        assert got["book"]["event_ticker"] == "KXEPLGAME-26AUG22ARSMUN"
+
+    def test_a_related_name_surfaces_but_never_decides(self):
+        """"Leeds" is a token SUBSET of "Leeds United", not the same
+        club by any evidenced rule. Substring containment used to price
+        it. It is now shown as a candidate and refused."""
+        books = [_book("KXEPLGAME-26AUG22LEEEVE", "Leeds vs Everton")]
+        got = epl.match_book("2026-08-22T14:00Z", "Leeds United",
+                             "Everton", books=books)
+        assert got["book"] is None
+        assert got["status"] == "unresolved_name"
+        assert got["loose_candidates"] == ["KXEPLGAME-26AUG22LEEEVE"]
+
+    def test_no_ticker_abbreviation_fallback_decides(self):
+        """CONTROL (passes both ways — the old code did not consult the
+        codes either; this pins that it stays that way).
+
+        The ticker tail carries 3-letter club codes (ARSMUN). They
+        have no registry behind them, so they must never rescue a title
+        whose NAMES do not identify: a title that says nothing usable
+        stays unmapped even though the codes look right."""
+        books = [_book("KXEPLGAME-26AUG22ARSMUN", "TBD vs TBD")]
+        got = epl.match_book("2026-08-22T14:00Z", "Arsenal",
+                             "Manchester United", books=books)
+        assert got["book"] is None
+        assert got["status"] == "unmapped"
+
+    def test_side_identity_tiers(self):
+        """The tier function itself, unit-level (a CONTROL for the
+        behavioural tests above rather than a guard of its own)."""
+        si = epl.side_identity
+        # equality / generic-suffix token equality / archived alias
+        assert si("Arsenal", "Arsenal") == "exact"
+        assert si("Bournemouth", "AFC Bournemouth") == "exact"
+        assert si("Man Utd", "Manchester United") == "exact"
+        assert si("Brighton", "Brighton & Hove Albion") == "exact"
+        # related but NOT the same club
+        assert si("Leeds", "Leeds United") == "loose"
+        assert si("Manchester", "Manchester City") == "loose"
+        # unrelated
+        assert si("Everton", "Liverpool") == "none"
+        assert si("", "Arsenal") == "none"
+        # the two Manchester clubs must never cross
+        assert si("Manchester City", "Manchester United") == "none"
 
 
 # --- ticker-tail -> model key (grammar carried from MLS; EPL-unverified,
