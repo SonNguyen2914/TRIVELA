@@ -66,6 +66,16 @@ _EXPENSIVE_PREFIXES = (
     "/api/mls/corpus",         # full-corpus assembly / download
     "/api/mls/audit",          # per-lock replay + hash recomputation
 )
+# Same cost class as /api/mls/model-eval (rolling-origin ladder +
+# bootstrap over 300-510 fixtures), but the competition is a PATH
+# PARAMETER, so a startswith prefix cannot cover them without repeating
+# the league registry here. These are matched as substrings instead, which
+# rate-limits every competition's replay routes from one entry.
+_EXPENSIVE_CONTAINS = (
+    "/replay-ladder",
+    "/replay-approval",
+    "/split-season",
+)
 
 
 def _admin_ok(request) -> bool:
@@ -110,8 +120,9 @@ async def _public_guard(request, call_next):
                            "mutations require operator credentials"},
                 status_code=403)
     if config.RATE_LIMIT_SECONDS > 0:      # <=0 disables (tests, dev)
-        for prefix in _EXPENSIVE_PREFIXES:
-            if path.startswith(prefix):
+        buckets = [p for p in _EXPENSIVE_PREFIXES if path.startswith(p)]
+        buckets += [m for m in _EXPENSIVE_CONTAINS if m in path]
+        for prefix in buckets:
                 now = _t.monotonic()
                 last = _rate_last.get(prefix)
                 if last is not None and now - last < config.RATE_LIMIT_SECONDS:
@@ -572,6 +583,112 @@ def mls_admin_bind_corpus(request: Request,
                                               n_boot=n_boot, force=True)
     return {**res, "bound_corpus_version": target,
             "generated_at": utcnow().isoformat()}
+
+
+# --- prior-season REPLAY ladders (backlog S-5) -----------------------------
+# One generalized surface per competition, replacing what would otherwise
+# be three copies of the MLS approval routes. The read paths are public and
+# compute nothing durable; the ONE write path is operator-gated and is the
+# only way a replay approval can ever be created.
+#
+# Fail-closed by construction: ladder_replay.ensure_replay_approval
+# defaults allow_create=False, and this route is the sole caller that
+# passes True. Nothing on a boot path, a scheduler path or a public read
+# path can mint an approval.
+
+@app.get("/api/{competition}/replay-ladder")
+def competition_replay_ladder(competition: str,
+                              n_boot: int = Query(1000),
+                              segment_mode: str = Query("per_segment")):
+    """This competition's PRIOR-SEASON REPLAY ladder — REPLAYED evidence,
+    never MEASURED, and not comparable to any prospective result. Public
+    read-only; computes from archived bytes and persists nothing."""
+    from src.live import ladder_replay
+    if competition not in ladder_replay.REPLAY_SOURCES:
+        raise HTTPException(404, "no replay source for this competition")
+    if segment_mode not in ("per_segment", "span"):
+        raise HTTPException(422, "segment_mode must be per_segment or span")
+    try:
+        return ladder_replay.run_replay(
+            competition, n_boot=max(1, min(n_boot, 5000)),
+            segment_mode=segment_mode)
+    except KeyError:
+        # registered league whose model module is not on this branch (La
+        # Liga). Say so plainly rather than reporting a generic outage —
+        # "the history is archived and gated, the model is not here yet"
+        # is a different fact from "this endpoint is broken".
+        raise HTTPException(
+            409, f"{competition} has archived prior-season history but no "
+                 f"model module on this deployment — the ladder cannot run "
+                 f"until it lands")
+    except Exception as exc:
+        print(f"[replay] ladder failed for {competition}: {exc}")
+        raise HTTPException(503, "replay ladder unavailable")
+
+
+@app.get("/api/{competition}/replay-approval/preview")
+def competition_replay_approval_preview(competition: str,
+                                        n_boot: int = Query(1000)):
+    """What the REPLAY approval policy WOULD decide, persisting nothing —
+    so the decision is inspectable before any operator acts on it."""
+    from src.live import ladder_replay
+    if competition not in ladder_replay.REPLAY_SOURCES:
+        raise HTTPException(404, "no replay source for this competition")
+    try:
+        return ladder_replay.approval_preview(
+            competition, n_boot=max(1, min(n_boot, 5000)))
+    except Exception as exc:
+        print(f"[replay] preview failed for {competition}: {exc}")
+        raise HTTPException(503, "replay approval preview unavailable")
+
+
+@app.post("/api/admin/{competition}/replay-approval/activate")
+def competition_activate_replay_approval(competition: str, request: Request,
+                                         n_boot: int = Query(1000)):
+    """Operator-only: EXPLICITLY activate a shadow approval for this
+    competition from its prior-season REPLAY ladder.
+
+    The same governance as MLS's activation route (V9.5 eval H6): boot
+    never creates an approval, this is the only path that does, and the
+    decision it writes records its own weakness — policy_version
+    `shadow-approval-replay-v1` (a stricter bar than the live policy),
+    evidence class REPLAYED, and the archive path + sha256 the ladder
+    actually read, all covered by the decision's content hash.
+
+    Refuses MLS: that model's approval is earned on its own live plane,
+    and a replay must never mint a second decision under the same model
+    name."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import ladder_replay
+    if competition not in ladder_replay.REPLAY_SOURCES:
+        raise HTTPException(404, "no replay source for this competition")
+    if competition in ladder_replay.APPROVAL_FORBIDDEN:
+        raise HTTPException(
+            409, ladder_replay.APPROVAL_FORBIDDEN[competition])
+    res = ladder_replay.ensure_replay_approval(
+        competition, n_boot=max(1, min(n_boot, 5000)),
+        allow_create=True, force=True)
+    return {**res, "activated_by": "operator",
+            "evidence_class": ladder_replay.EVIDENCE_CLASS,
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/{competition}/split-season")
+def competition_split_season(competition: str, n_boot: int = Query(1000)):
+    """The split-season verdict for a league whose season divides into two
+    tournaments (Liga MX). Reports the confounded raw comparison, the
+    no-team-information M0 control, and the difference-in-differences the
+    verdict actually rests on."""
+    from src.live import ladder_replay
+    if competition not in ladder_replay.REPLAY_SOURCES:
+        raise HTTPException(404, "no replay source for this competition")
+    try:
+        return ladder_replay.split_season_verdict(
+            competition, n_boot=max(1, min(n_boot, 5000)))
+    except Exception as exc:
+        print(f"[replay] split-season failed for {competition}: {exc}")
+        raise HTTPException(503, "split-season verdict unavailable")
 
 
 @app.get("/api/mls/replay/{run_id}")

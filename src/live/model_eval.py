@@ -800,7 +800,8 @@ def deployed_variant(spec: LadderSpec | None = None) -> str:
 
 def approval_record(report: dict, corpus_version: str | None = None,
                     spec: LadderSpec | None = None,
-                    evidence: dict | None = None) -> dict:
+                    evidence: dict | None = None,
+                    rung: str | None = None) -> dict:
     """The model-approval decision record (V8.1 eval Phase 6). Shadow
     approval means 'safe to collect prospective evidence', explicitly
     NOT 'edge established' — and this record never grants a higher mode.
@@ -813,7 +814,10 @@ def approval_record(report: dict, corpus_version: str | None = None,
     nobody reads next to it.
     """
     spec = spec or MLS_LADDER_SPEC
-    dv = deployed_variant(spec)
+    # `rung` overrides the deployed variant. The replay path pins it to M2
+    # because the prior-season archive carries no provider xG, so an M3
+    # label there would claim a measurement that was never made.
+    dv = rung or deployed_variant(spec)
     m2 = (report.get("variants") or {}).get(dv, {})
     e = (report.get("edges") or {}).get(f"{dv}_vs_M0", {})
     limitations = [
@@ -966,7 +970,8 @@ def ensure_approval_decision(corpus_version: str | None = None,
                              evidence: dict | None = None,
                              evaluation_source: str | None = None,
                              evaluation_source_note: str | None = None,
-                             activation_route: str | None = None) -> dict:
+                             activation_route: str | None = None,
+                             rung: str | None = None) -> dict:
     """LOAD the active approval decision, or (only when none exists, or
     force=True) run the CI evaluator and persist a new IMMUTABLE one, then
     set approved_for_shadow FROM it (V9 eval F1/F10; V9.1 eval F8). Boot
@@ -1060,7 +1065,7 @@ def ensure_approval_decision(corpus_version: str | None = None,
     approved, reason = policy(report) if policy is shadow_approval_policy \
         else policy(report, spec)
     rec = approval_record(report, corpus_version=corpus_version, spec=spec,
-                          evidence=evidence)
+                          evidence=evidence, rung=rung)
     rec["policy_version"] = policy_version
     rec["approved"] = approved
     rec["decision_reason"] = reason

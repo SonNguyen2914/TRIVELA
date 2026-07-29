@@ -57,6 +57,29 @@ from src.live import model_eval
 # The replay is REPLAYED evidence. This constant exists so the string is
 # impossible to get wrong or to omit.
 EVIDENCE_CLASS = "REPLAYED"
+
+# The rung a replay decision is computed on, ALWAYS.
+#
+# It is not `model_eval.deployed_variant()`. For MLS that helper returns
+# M3 because MLS_XG_RATING_ALPHA > 0 — but the prior-season ARCHIVE
+# carries no provider xG at all (ESPN's scoreboard has no xG fields), so
+# the replay's M3 rung is numerically identical to M2C and calling it M3
+# would claim the xG feature had been evaluated when it was not. And for
+# EPL and Liga MX no team-level xG source exists in this stack in the
+# first place. So every replay decision is an M2 decision, named as such.
+REPLAY_DECISION_RUNG = "M2"
+
+# MLS is a METHODOLOGICAL CONTROL here, never an approval target. Its
+# shadow approval is earned on its own LIVE plane; a prior-season replay
+# must never be able to mint a second, competing MLS decision — that
+# would put a REPLAYED record beside a live one under the same model
+# name, which is exactly the blurring the evidence hierarchy forbids.
+APPROVAL_FORBIDDEN = {
+    "mls-2026": ("MLS holds a LIVE-PLANE shadow approval. A prior-season "
+                 "replay is weaker evidence and must never create a "
+                 "second decision under the same model name; this "
+                 "competition is a methodological control only."),
+}
 EVIDENCE_NOTE = (
     "prior-season replay: the ladder was fitted and scored on the "
     "league's PREVIOUS completed season, retrieved after the fact from "
@@ -519,6 +542,99 @@ def _difference_in_differences(span_rows: list, reset_rows: list,
     }
 
 
+def sweep(competition: str, half_lives=(30.0, 60.0, 90.0, 180.0, 365.0),
+          shrinks=(6.0, 12.0, 24.0, 48.0), n_boot: int = 0,
+          seed: int = 12345) -> dict:
+    """Re-sweep the two carried MLS constants on THIS league's own history.
+
+    The shrinkage and recency half-life in every dark league's model
+    module are STARTING POINTS copied from MLS (their own docstrings say
+    so). This measures what they are worth here.
+
+    DIAGNOSTIC ONLY — read the caveat. A constant chosen on this sample
+    and then evaluated on this same sample produces an optimistic number,
+    exactly the V9.3 F8 problem MLS's own approval discloses. So the
+    approval decisions are NOT computed with swept values: they use the
+    carried constants, which is also what the deployed model would
+    actually run. The sweep says what a re-sweep would buy and whether
+    the carried value is defensible, nothing more.
+    """
+    source = REPLAY_SOURCES.get(competition)
+    if source is None:
+        return {"error": f"no replay source for {competition!r}"}
+    spec = model_eval.ladder_spec(competition)
+    doc, sha = load_archive(source)
+    gate = completeness(doc, source)
+    if gate["gate"] != "PASS":
+        return {"competition": competition, "refused": True,
+                "stage1_completeness": gate}
+    split = segments(doc, source)
+    carried = {"half_life_days": spec.half_life_days(),
+               "shrink_games": spec.ladder["M2"]["shrink"]}
+    grid = []
+    for hl in half_lives:
+        for sh in shrinks:
+            # a spec clone whose M2/M2C rungs carry the swept shrink; the
+            # half-life is patched on the spec, never on the model module
+            # (model_mls.py in particular may not be edited)
+            ladder = {k: dict(v) for k, v in spec.ladder.items()}
+            for rung in ("M2", "M2C", "M3"):
+                if rung in ladder:
+                    ladder[rung]["shrink"] = sh
+            probe = model_eval.LadderSpec(
+                slug=spec.slug, model_module=spec.model, ladder=ladder,
+                edge_pairs=spec.edge_pairs,
+                future_rungs=spec.future_rungs,
+                calibration_alpha_fn=spec.calibration_alpha,
+                xg_map_fn=spec.xg_map_fn, label=spec.label)
+            probe.half_life_days = lambda _hl=hl: _hl
+            per_segment = {}
+            for slug in source.regular_slugs:
+                rows = _rows(split["segments"].get(slug, []))
+                if not rows:
+                    continue
+                rep = model_eval.ladder_from_fixtures(
+                    rows, spec=probe, n_boot=max(n_boot, 1), seed=seed)
+                e = (rep.get("edges") or {}).get("M2_vs_M0") or {}
+                per_segment[slug] = {
+                    "n_scored": rep.get("n_scored"),
+                    "m2_log_loss": (rep.get("variants") or {}).get(
+                        "M2", {}).get("log_loss"),
+                    "m2_vs_m0": e.get("delta_log_loss"),
+                }
+            grid.append({"half_life_days": hl, "shrink_games": sh,
+                         "per_segment": per_segment,
+                         "mean_m2_vs_m0": round(sum(
+                             v["m2_vs_m0"] or 0.0
+                             for v in per_segment.values())
+                             / max(len(per_segment), 1), 4)})
+    best = max(grid, key=lambda g: g["mean_m2_vs_m0"])
+    carried_row = next(
+        (g for g in grid
+         if g["half_life_days"] == carried["half_life_days"]
+         and g["shrink_games"] == carried["shrink_games"]), None)
+    return {
+        "competition": competition,
+        "evidence_class": EVIDENCE_CLASS,
+        "archive": {"path": source.archive_path, "sha256": sha},
+        "carried_from_mls": carried,
+        "carried_result": carried_row,
+        "best_on_this_history": best,
+        "gain_over_carried": (
+            round(best["mean_m2_vs_m0"]
+                  - (carried_row or {}).get("mean_m2_vs_m0", 0.0), 4)
+            if carried_row else None),
+        "grid": grid,
+        "caveat": (
+            "DIAGNOSTIC ONLY. Selecting a constant on this sample and "
+            "evaluating it on the same sample is optimistic (V9.3 F8). The "
+            "approval decisions use the CARRIED constants, not these, so "
+            "no approval is inflated by a selection made on its own "
+            "evidence. Treat `best_on_this_history` as an upper bound on "
+            "what a re-sweep could buy, not as a measured improvement."),
+    }
+
+
 def replay_evidence_block(competition: str, report: dict) -> dict:
     """The evidence block a replay approval decision carries inside its
     content hash — the class, the note, the archive bytes, and the ladder
@@ -560,6 +676,137 @@ def _replay_cutoff(competition: str) -> str | None:
               for e in split["segments"].get(slug, [])
               if e.get("kickoff_utc")]
     return max(stamps) if stamps else None
+
+
+def approval_ladder(competition: str, n_boot: int = 1000,
+                    seed: int = 12345) -> tuple[dict, dict]:
+    """The ONE ladder an approval decision is computed from, plus its
+    evidence block.
+
+    Uses `segment_mode="span"`, i.e. a single ladder over all of the
+    league's regular-season history — because that is what the league's
+    `fit()` actually does, and an approval must evaluate the model that
+    would really run. For a single-tournament league that is just the
+    season. For Liga MX it spans the Apertura->Clausura boundary, which
+    the split-season verdict examined directly and could not distinguish
+    from resetting (so the simpler spanning fit stands).
+
+    Returns `({}, evidence)` with the report empty when the stage-1 gate
+    refused, so a caller cannot accidentally approve on a killed replay.
+    """
+    report = run_replay(competition, n_boot=n_boot, seed=seed,
+                        segment_mode="span")
+    if report.get("refused") or report.get("error"):
+        return {}, {"refused": True, "report": report}
+    ladders = report.get("ladders") or {}
+    flat = ladders.get("ALL_SEGMENTS_SPANNING") or {}
+    evidence = replay_evidence_block(competition, report)
+    return flat, evidence
+
+
+def ensure_replay_approval(competition: str, n_boot: int = 1000,
+                           seed: int = 12345,
+                           allow_create: bool = False,
+                           force: bool = True) -> dict:
+    """Create (or load) a shadow-approval decision for `competition` from
+    its PRIOR-SEASON REPLAY ladder, through MLS's decision machinery.
+
+    `allow_create` defaults to FALSE. That default is the fail-closed
+    posture: nothing that merely imports or boots this module can mint an
+    approval, and the only caller that passes True is the operator-gated
+    admin route. This mirrors the V9.5 H6 rule that boot LOADS an approval
+    and refuses, and that creating one is an explicit operator action.
+
+    The decision it writes is deliberately marked:
+      policy_version   shadow-approval-replay-v1  (the STRICTER bar)
+      evidence         REPLAYED + the archive path and sha256 it read
+      evaluation_source  replay_archive:<path>@<sha256>
+
+    so no reader can mistake it for a live-plane decision, and no reader
+    can mistake REPLAYED prior-season evidence for a prospective result.
+    """
+    if competition in APPROVAL_FORBIDDEN:
+        return {"approved": False, "forbidden": True,
+                "competition": competition,
+                "reason": APPROVAL_FORBIDDEN[competition]}
+    try:
+        spec = model_eval.ladder_spec(competition)
+    except KeyError as exc:
+        return {"error": str(exc)}
+    flat, evidence = approval_ladder(competition, n_boot=n_boot, seed=seed)
+    if evidence.get("refused"):
+        return {"approved": False, "refused": True,
+                "reason": ("stage-1 history completeness FAILED — no "
+                           "approval may be computed from a killed replay"),
+                "stage1": (evidence.get("report") or {}).get(
+                    "stage1_completeness")}
+    if not flat:
+        return {"approved": False,
+                "reason": "replay produced no scorable ladder"}
+    source_ref = (f"replay_archive:{evidence.get('archive_path')}"
+                  f"@{(evidence.get('archive_sha256') or '')[:16]}")
+    return model_eval.ensure_approval_decision(
+        spec=spec, report=flat,
+        policy=model_eval.replay_approval_policy,
+        policy_version=model_eval.REPLAY_APPROVAL_POLICY_VERSION,
+        evidence=evidence,
+        evaluation_source=source_ref,
+        evaluation_source_note=(
+            "the ladder read ARCHIVED PRIOR-SEASON bytes (path + sha256 "
+            "recorded above and covered by this decision's content hash), "
+            "NOT this competition's live plane and NOT a published corpus. "
+            "This is REPLAYED evidence about a DIFFERENT season from the "
+            "one the approval licenses."),
+        activation_route=(
+            f"POST /api/admin/{competition}/replay-approval/activate"),
+        rung=REPLAY_DECISION_RUNG,
+        allow_create=allow_create, force=force,
+        corpus_version=None, n_boot=n_boot)
+
+
+def approval_preview(competition: str, n_boot: int = 1000,
+                     seed: int = 12345) -> dict:
+    """What the replay policy WOULD decide, computing and persisting
+    nothing. Read-only: this is what the public endpoint serves, so the
+    decision can be inspected before any operator acts on it."""
+    try:
+        spec = model_eval.ladder_spec(competition)
+    except KeyError as exc:
+        return {"error": str(exc)}
+    flat, evidence = approval_ladder(competition, n_boot=n_boot, seed=seed)
+    if evidence.get("refused") or not flat:
+        return {"competition": competition, "would_approve": False,
+                "reason": "stage-1 refused or no scorable ladder",
+                "evidence_class": EVIDENCE_CLASS}
+    approved, reason = model_eval.replay_approval_policy(flat, spec)
+    return {
+        "competition": competition,
+        "model_version": spec.model_name,
+        "approval_forbidden": APPROVAL_FORBIDDEN.get(competition),
+        "evidence_class": EVIDENCE_CLASS,
+        "evidence_note": EVIDENCE_NOTE,
+        "policy_version": model_eval.REPLAY_APPROVAL_POLICY_VERSION,
+        "policy_note": (
+            "STRICTER than the MLS live-plane policy: a replay reads a "
+            "different season, so M2 must BEAT its own M0 on a point "
+            "estimate, not merely fail to lose significantly"),
+        "evaluated_rung": REPLAY_DECISION_RUNG,
+        "evaluated_rung_note": (
+            "always M2. The archive carries NO provider xG (ESPN's "
+            "scoreboard has no xG fields), so a replay cannot evaluate an "
+            "xG rung — for MLS an M3 label would falsely imply it had, and "
+            "for EPL/Liga MX no team-level xG source exists at all."),
+        "n_scored": flat.get("n_scored"),
+        "variants": flat.get("variants"),
+        "edges": flat.get("edges"),
+        "archive": {"path": evidence.get("archive_path"),
+                    "sha256": evidence.get("archive_sha256")},
+        "would_approve": approved,
+        "reason": reason,
+        "persisted": False,
+        "activation_route": (
+            f"POST /api/admin/{competition}/replay-approval/activate"),
+    }
 
 
 def aggregate_report(n_boot: int = 1000, seed: int = 12345) -> dict:
