@@ -711,6 +711,10 @@ def market_implied(book: dict | None, freshness: dict | None = None,
                                            the legs are not provably a
                                            mutually-exclusive partition
                          missing_ask       at least one leg has no ask
+                         normalization_failed  unreachable by
+                                           construction; refuses to
+                                           publish a set that does not
+                                           sum to 1 rather than assert
                        In every incomplete state `implied_probability` is
                        None on every leg. A 2-way is NEVER renormalized
                        into a 3-way: that invents a draw price.
@@ -784,7 +788,13 @@ def market_implied(book: dict | None, freshness: dict | None = None,
         # smallest relative distortion available
         i = max(range(len(known_asks)), key=lambda k: known_asks[k])
         probs[i] = probs[i] + residue
-    assert sum(probs) == Decimal(1)            # the published set IS a set
+    if sum(probs) != Decimal(1) or any(p < 0 for p in probs):
+        # Unreachable by construction, and fail-closed anyway rather
+        # than asserted: a bare assert would 500 the whole markets route
+        # for every fixture, and a set that does not sum to 1 (or that
+        # went negative absorbing the residue) is not a probability set
+        # — refusing to publish it is the only honest option.
+        return {**out, "reason": "normalization_failed"}
     for leg, p in zip(legs, probs):
         leg["implied_probability"] = str(p)
     return {**out, "state": "priced", "reason": None,
