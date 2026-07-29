@@ -9,6 +9,7 @@ production requires the operator approval path that does not exist for
 EPL; no code path in this build can do it."""
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -392,6 +393,247 @@ class TestCompetitionIsolation:
         from src.live import model_mls
         assert (model_epl.seed_for(fx, "t10")
                 != model_mls.seed_for(fx, "t10"))
+
+
+# --- P0-3: the COMPOSED EPL T-10 lock path --------------------------------
+# The dark contract stops EPL locks today, so the future path was never
+# exercised end to end. These tests grant EPL an approval decision (the
+# one thing production cannot do) and then walk the whole chain, asserting
+# that every frozen artefact is EPL's and no MLS state is consulted.
+
+_ENG1_SUMMARY = {
+    # reduced from research_archive/epl/espn_summary_740966_*.json —
+    # eng.1 summaries carry `rosters` with the same shape usa.1 does
+    "rosters": [
+        {"homeAway": "home", "formation": "4-3-3", "roster": [
+            {"starter": i == 0, "jersey": str(i + 1),
+             "position": {"abbreviation": "G" if i == 0 else "M"},
+             "athlete": {"id": f"e{i}", "displayName": f"EPL Home {i}"}}
+            for i in range(11)]},
+        {"homeAway": "away", "formation": "4-2-3-1", "roster": [
+            {"starter": i == 0, "jersey": str(i + 1),
+             "position": {"abbreviation": "G" if i == 0 else "M"},
+             "athlete": {"id": f"a{i}", "displayName": f"EPL Away {i}"}}
+            for i in range(11)]},
+    ],
+}
+
+
+def _epl_approval_decision(s):
+    """The immutable EPL approval decision. Production has NO path that
+    can create one — this is the test granting what the dark contract
+    withholds, so the future T-10 path can be exercised at all."""
+    import hashlib as _h
+
+    from src.live.models import ModelApprovalDecision, ModelVersion
+    mv = s.query(ModelVersion).filter_by(
+        name=model_epl.MODEL_NAME).one()
+    doc = ('{"model":"epl-2026-v0","mode":"shadow",'
+           '"note":"test-only approval"}')
+    dec = ModelApprovalDecision(
+        model_version_id=mv.id, model_version_name=model_epl.MODEL_NAME,
+        approved_mode="shadow", approved=True, decision_document=doc,
+        content_hash=_h.sha256(doc.encode()).hexdigest(),
+        created_at=datetime.now(UTC) - timedelta(hours=1))
+    s.add(dec)
+    s.commit()
+    return dec
+
+
+def _mls_decoy(s):
+    """MLS state that a competition-blind path would reach for: an
+    approved MLS model version and its own approval decision."""
+    import hashlib as _h
+
+    from src.live.models import ModelApprovalDecision, ModelVersion
+    from src.live import model_mls
+    mv = ModelVersion(name=model_mls.MODEL_NAME, description="decoy",
+                      approved_for_shadow=True,
+                      created_at=datetime.now(UTC))
+    s.add(mv)
+    s.flush()
+    doc = '{"model":"mls-2026-v0","mode":"shadow","note":"decoy"}'
+    dec = ModelApprovalDecision(
+        model_version_id=mv.id, model_version_name=model_mls.MODEL_NAME,
+        approved_mode="shadow", approved=True, decision_document=doc,
+        content_hash=_h.sha256(doc.encode()).hexdigest(),
+        created_at=datetime.now(UTC) - timedelta(hours=2))
+    s.add(dec)
+    s.commit()
+    return mv, dec
+
+
+class TestEplT10LockIsFullyEplKeyed:
+    TICKER = "KXEPLGAME-26AUG21ARSMUN"
+    LEGS = (("-ARS", "home_win"), ("-TIE", "draw"), ("-MUN", "away_win"))
+
+    def _arm(self, s, monkeypatch):
+        from src.live.models import (MarketContract, MarketEvent,
+                                     RegistryDiscovery)
+        monkeypatch.setattr(config, "N_SIMULATIONS", 400)
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        up = _seed_epl_history(s, upcoming_in_hours=0.15)
+        model_epl.ensure_model_version(approved_for_shadow=True)
+        _epl_approval_decision(s)
+        _mls_decoy(s)
+        ev = MarketEvent(competition_slug="epl-2026",
+                         kalshi_event_ticker=self.TICKER,
+                         series="KXEPLGAME", fixture_id=up.id,
+                         mapping_approved=True, mapped_via="alias",
+                         title="Arsenal vs Man Utd")
+        s.add(ev)
+        s.flush()
+        for tail, okey in self.LEGS:
+            s.add(MarketContract(market_event_id=ev.id,
+                                 ticker=f"{self.TICKER}{tail}",
+                                 outcome_key=okey))
+        s.add(RegistryDiscovery(competition_slug="epl-2026",
+                                provider="kalshi", complete=True,
+                                events_seen=1,
+                                completed_at=datetime.now(UTC)))
+        s.commit()
+
+        def fake_get(url, **kw):
+            if "orderbook" in url:
+                return {"orderbook": {"yes": [[24, 500], [25, 900]],
+                                      "no": [[70, 400], [74, 800]]}}
+            return {"markets": [
+                {"ticker": f"{self.TICKER}{tail}", "yes_bid": 25,
+                 "yes_ask": 26, "no_bid": 74, "no_ask": 75,
+                 "yes_bid_size": 500, "yes_ask_size": 500,
+                 "status": "active"}
+                for tail, _k in self.LEGS]}
+        monkeypatch.setattr(markets, "_kalshi_get", fake_get)
+
+        seen_urls: list[str] = []
+
+        class _R:
+            status_code = 200
+
+            @staticmethod
+            def raise_for_status():
+                return None
+
+            @staticmethod
+            def json():
+                return _ENG1_SUMMARY
+
+        def fake_espn(url, **kw):
+            seen_urls.append(url)
+            return _R()
+        from src.live import lineups
+        monkeypatch.setattr(lineups.requests, "get", fake_espn)
+        from src import alerts
+        monkeypatch.setattr(alerts, "send_alert", lambda *a, **kw: None)
+        return up, seen_urls
+
+    def test_the_lock_freezes_epl_approval_engine_lineup_and_paper(
+            self, epl_session, monkeypatch):
+        """(Proven to fail: with the MLS league restored in lineups.py
+        the lineup is fetched from usa.1; with the MLS engine restored in
+        paper.capture_evaluation_context the frozen context carries the
+        MLS signature.)"""
+        from src.live.models import (LineupSnapshot, ModelApprovalDecision,
+                                     PaperEvaluationContext, PredictionRun)
+        up, seen_urls = self._arm(epl_session, monkeypatch)
+        assert epl_plane.t10_locks() == {"locked": 1}
+
+        lock = (epl_session.query(PredictionRun)
+                .filter_by(fixture_id=up.id, run_type="t10",
+                           canonical=True, status="complete").one())
+        # 1. the EPL approval decision, not the MLS decoy
+        epl_dec = (epl_session.query(ModelApprovalDecision)
+                   .filter_by(model_version_name="epl-2026-v0").one())
+        assert lock.model_approval_decision_id == epl_dec.id
+        # 2. the EPL engine signature, frozen in the input artifact
+        from src.live.models import ModelInputArtifact
+        art = epl_session.get(ModelInputArtifact,
+                              lock.model_input_artifact_id)
+        doc = json.loads(art.document_json)
+        assert doc["model"] == "epl-2026-v0"
+        assert doc["schema_version"] == model_epl.INPUT_ARTIFACT_SCHEMA
+        assert (doc["engine"]["signature_hash"]
+                == model_epl.engine_signature()["signature_hash"])
+        from src.live import model_mls
+        assert (doc["engine"]["signature_hash"]
+                != model_mls.engine_signature()["signature_hash"])
+        # 3. the EPL lineup source — eng.1, and recorded as such
+        assert seen_urls and all("eng.1" in u for u in seen_urls)
+        assert not any("usa.1" in u for u in seen_urls)
+        snap = epl_session.get(LineupSnapshot, lock.lineup_snapshot_id)
+        assert snap is not None
+        from src.live.models import SourceObservation
+        obs = epl_session.get(SourceObservation, snap.source_observation_id)
+        assert "league=eng.1" in obs.endpoint
+        # 4. the EPL paper context
+        ctx = (epl_session.query(PaperEvaluationContext)
+               .filter_by(prediction_run_id=lock.id).one())
+        assert (ctx.engine_signature_hash
+                == model_epl.engine_signature()["signature_hash"])
+        assert ctx.model_approval_decision_id == epl_dec.id
+        assert json.loads(ctx.exec_policy_json)["version"]
+
+    def test_epl_replay_and_audit_pass_under_the_epl_engine(
+            self, epl_session, monkeypatch):
+        from src.live import audit as live_audit
+        self._arm(epl_session, monkeypatch)
+        assert epl_plane.t10_locks() == {"locked": 1}
+        from src.live.models import PredictionRun
+        lock = (epl_session.query(PredictionRun)
+                .filter_by(run_type="t10", canonical=True).one())
+
+        rep = live_audit.verify_replay(lock.id)
+        assert rep["competition_slug"] == "epl-2026"
+        assert rep["model_version"] == "epl-2026-v0"
+        assert rep["engine_match"] is True
+        assert rep["replayable"] is True, rep
+
+        aud = live_audit.lock_audit(competition_slug="epl-2026")
+        assert aud["competition_slug"] == "epl-2026"
+        assert aud["model_version"] == "epl-2026-v0"
+        assert aud["summary"]["canonical_locks"] == 1
+        failures = {k: v for k, v
+                    in aud["locks"][0]["checks"].items() if not v}
+        assert failures == {}, failures
+        assert aud["summary"]["clean"] is True
+        # the MLS audit must not see the EPL lock at all
+        mls = live_audit.lock_audit(competition_slug="mls-2026")
+        assert mls["summary"]["canonical_locks"] == 0
+
+    def test_a_reboot_preserves_the_valid_approval(self, epl_session,
+                                                   monkeypatch):
+        """A restart must not destroy the immutable decision. It DOES
+        reset ModelVersion.approved_for_shadow — the fail-closed boot
+        rule (AGENTS.md §4), deliberate and asserted here so the
+        distinction between the durable DECISION and the runtime FLAG
+        stays explicit."""
+        import hashlib as _h
+
+        from src.live.models import ModelApprovalDecision
+        self._arm(epl_session, monkeypatch)
+        before = (epl_session.query(ModelApprovalDecision)
+                  .filter_by(model_version_name="epl-2026-v0").one())
+        before_id, before_hash = before.id, before.content_hash
+
+        monkeypatch.setattr(epl_plane, "seed_teams", lambda: {"ok": True})
+        monkeypatch.setattr(epl_plane, "ingest_season",
+                            lambda: {"ok": True})
+        monkeypatch.setattr(epl_plane, "discover_and_map",
+                            lambda: {"ok": True})
+        epl_plane.boot()
+        epl_session.expire_all()
+
+        after = (epl_session.query(ModelApprovalDecision)
+                 .filter_by(model_version_name="epl-2026-v0").one())
+        assert after.id == before_id
+        assert after.content_hash == before_hash
+        assert (_h.sha256(after.decision_document.encode()).hexdigest()
+                == after.content_hash)
+        st = epl_plane.approval_status()
+        assert st["approval_decision_missing"] is False
+        assert st["decision_id"] == before_id
+        # the FLAG is fail-closed on boot, by design
+        assert st["approved_for_shadow"] is False
 
 
 # --- P0-2: corpus / observability / audit are competition-scoped ----------
