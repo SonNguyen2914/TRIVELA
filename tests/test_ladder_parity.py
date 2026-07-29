@@ -194,6 +194,59 @@ class TestMlsLadderByteIdentity:
             "the parity harness cannot detect a changed hyperparameter"
 
 
+class TestMlsDecisionHashUnchanged:
+    """The refactor must not move an existing MLS decision's content hash.
+
+    Those rows are immutable and deduped BY that hash; changing the
+    canonical bytes would orphan every decision on record — including the
+    one the live shadow approval rests on. The replay work needed to add
+    `evidence` and `evaluated_rung` to the hashed core, so they are added
+    ONLY when present rather than as nulls, and this is the check on that.
+    """
+
+    def _mls_rec(self):
+        return {
+            "model_version": "mls-2026-v0",
+            "eval_version": "model-eval-v1",
+            "policy_version": "shadow-approval-v1",
+            "corpus_version": None, "approved_mode": "shadow",
+            "approved": True, "metrics": {"log_loss": 1.07},
+            "edge_vs_baseline": {"delta_log_loss": 0.0078,
+                                 "ci95": [-0.0126, 0.0282],
+                                 "significant": False},
+            "decision_reason": "edge within/above noise vs baseline",
+            "engine_signature": "d18f8bf0", "model_parameters": {"k": 24},
+            "data_cutoff": "2026-07-25T00:00:00+00:00",
+            "corpus_manifest_hash": None,
+            "evaluation_source": "live_database",
+        }
+
+    def test_a_live_decision_hashes_identically_before_and_after(
+            self, tmp_path):
+        from src.live import model_eval as new_mod
+        base_mod = _load_base_module(tmp_path)
+        rec = self._mls_rec()
+        assert (base_mod._decision_canonical(rec)
+                == new_mod._decision_canonical(rec))
+        assert (base_mod._decision_content_hash(rec)
+                == new_mod._decision_content_hash(rec))
+
+    def test_a_replay_decision_hash_DOES_cover_its_evidence(self):
+        """The other half: when the evidence block IS present it must be
+        inside the hash, or a decision could have its evidence class
+        rewritten without detection."""
+        from src.live import model_eval as new_mod
+        rec = self._mls_rec()
+        replay = {**rec, "evidence": {"evidence_class": "REPLAYED"},
+                  "evaluated_rung": "M2"}
+        tampered = {**replay,
+                    "evidence": {"evidence_class": "MEASURED"}}
+        assert (new_mod._decision_content_hash(rec)
+                != new_mod._decision_content_hash(replay))
+        assert (new_mod._decision_content_hash(replay)
+                != new_mod._decision_content_hash(tampered))
+
+
 class TestSpecRegistry:
     def test_mls_spec_reports_model_mls_constants_unmodified(self):
         """The MLS spec must READ model_mls, never restate it: a copied
