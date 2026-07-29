@@ -126,3 +126,78 @@ def metrics() -> dict:
         }
     finally:
         s.close()
+
+
+# --- volume headroom ------------------------------------------------------
+# Railway's volume alerts are Teams/Pro-only, so nothing on the platform
+# will warn before the disk fills. It filled on 2026-07-25 and every
+# prediction write failed silently behind {"created": 0} — the failure
+# mode this watches for.
+
+_last_storage_alert: datetime | None = None
+
+
+def storage_headroom() -> dict:
+    """Live-plane volume usage against configured capacity.
+
+    Postgres reports its own database size; it cannot see the size of the
+    volume underneath it, so capacity comes from config
+    (LIVE_VOLUME_BYTES) and must be kept in step with Railway if the
+    volume is resized. `capacity_is_configured` says so plainly rather
+    than letting a stale constant read as a measurement.
+    """
+    import config
+    from sqlalchemy import text
+
+    from src.live.db import get_engine
+    eng = get_engine()
+    if eng is None:
+        return {"dormant": True}
+    with eng.connect() as c:
+        used = int(c.execute(text(
+            "SELECT pg_database_size(current_database())")).scalar() or 0)
+    cap = int(config.LIVE_VOLUME_BYTES)
+    pct = round(100.0 * used / cap, 2) if cap > 0 else None
+    return {
+        "database_bytes": used,
+        "volume_bytes": cap,
+        "used_pct": pct,
+        "free_bytes": max(cap - used, 0),
+        "threshold_pct": config.STORAGE_ALERT_PCT,
+        "over_threshold": bool(pct is not None
+                               and pct >= config.STORAGE_ALERT_PCT),
+        "capacity_is_configured": True,
+        "capacity_note": ("volume size is config, not a measurement — "
+                          "Railway cannot expose it to the container"),
+    }
+
+
+def check_storage_headroom(force: bool = False) -> dict:
+    """Alert when the live volume crosses its threshold. Cooldown-limited
+    so a slowly filling disk does not page hourly. Returns what it saw so
+    the caller can log it even when no alert fires."""
+    global _last_storage_alert
+    import config
+    rep = storage_headroom()
+    if rep.get("dormant") or not rep.get("over_threshold"):
+        return {**rep, "alerted": False}
+    now = _now()
+    if not force and _last_storage_alert is not None:
+        mins = (now - _last_storage_alert).total_seconds() / 60.0
+        if mins < config.STORAGE_ALERT_COOLDOWN_MINUTES:
+            return {**rep, "alerted": False, "suppressed": "cooldown"}
+    gb = 1024.0 ** 3
+    msg = (f"⚠️ LIVE VOLUME {rep['used_pct']}% "
+           f"({rep['database_bytes'] / gb:.2f} GB of "
+           f"{rep['volume_bytes'] / gb:.2f} GB) — threshold "
+           f"{rep['threshold_pct']}%. A full volume fails prediction "
+           f"writes SILENTLY (2026-07-25). Resize the Railway volume or "
+           f"prune market_depth_level / source_observation.")
+    try:
+        from src.alerts import send_alert
+        send_alert(msg, title="Trivela storage")
+        _last_storage_alert = now
+        return {**rep, "alerted": True}
+    except Exception as exc:      # alerting must never break the caller
+        print(f"[storage] alert failed: {exc}")
+        return {**rep, "alerted": False, "error": str(exc)}

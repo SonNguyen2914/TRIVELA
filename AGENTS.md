@@ -475,6 +475,21 @@ findings wastes a review; resolving them unilaterally is worse.
   the setting is dashboard-side. "A non-default branch push is only a
   preview" is therefore an *assumption*. Confirm before the first
   frontend branch push.
+- **Multi-league abstraction is schema-only** (audit A2, 2026-07-27).
+  `Competition.has_group_stage` / `has_knockout_stage` exist in the
+  schema, migration and seed but have **zero runtime consumers**, while
+  `model_mls.py` hardcodes `stage="group"` and `competition_slug=
+  "mls-2026"` appears 30 times across `src/live/`. The honest description
+  is *generic schema, MLS-specific implementation* — do not describe this
+  platform as multi-league-ready.
+
+  Not fixed deliberately. The fix touches `model_mls.py`, which is inside
+  the engine signature, so it invalidates the approval and halts shadow
+  collection until an operator reactivates. It also changes what the
+  simulator does with stage semantics, which is a modelling change owed
+  an evaluation, not a refactor. Sequence it: land it between slates,
+  reactivate approval, and measure.
+
 - **Frontend `CLAUDE.md` cannot import this file.** It lives in another
   repository, and a cloud agent may hold only one checkout. The frontend
   copy points here in prose instead. If that proves too weak, the

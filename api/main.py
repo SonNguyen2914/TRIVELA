@@ -463,6 +463,70 @@ def mls_broadcast(request: Request, body: BroadcastIn):
                              fixture_id=body.fixture_id)
 
 
+# === Club Friendlies — VIEWER surface, additive block, 2026-07-28 ==========
+# Read-only proxy + cache over ESPN club.friendly and Kalshi KXCLUBFGAME
+# (+ verified TOTAL/BTTS/SPREAD families). Deliberately modelless: no
+# model, no shadow plane, no locks, no DB writes, no scheduler jobs —
+# and none planned (see src.friendlies.FRAMING). There is NO standings
+# route: standings do not exist for friendlies and no table is invented.
+
+@app.get("/api/friendlies/scoreboard")
+def friendlies_scoreboard(date: str | None = Query(None, pattern=r"^\d{8}$")):
+    from src import friendlies
+    return {"fixtures": friendlies.scoreboard(date),
+            "framing": friendlies.FRAMING,
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/friendlies/schedule")
+def friendlies_schedule(days: int = Query(7, ge=1, le=14)):
+    from src import friendlies
+    return {"fixtures": friendlies.schedule(days),
+            "framing": friendlies.FRAMING,
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/friendlies/markets")
+def friendlies_markets(date: str | None = Query(None, pattern=r"^\d{8}$")):
+    """The scoreboard bucket's fixtures joined to their Kalshi game
+    books, each with an EXPLICIT mapping status (mapped / unmapped /
+    ambiguous / unresolved_name / no_open_markets / unavailable /
+    registry_incomplete) and freshness, plus a books-only census of how
+    much friendly surface Kalshi lists beyond ESPN's bucket — with its
+    own completeness on the record. Full per-event detector work lives
+    in the market hunter, not here."""
+    from src import friendlies
+    return {"fixtures": friendlies.daily_books(date),
+            "listed": friendlies.listed_events_summary(),
+            "framing": friendlies.FRAMING,
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/friendlies/match/{event_id}")
+def friendlies_match(event_id: str):
+    from src import friendlies
+    if not event_id.isdigit() or len(event_id) > 12:
+        raise HTTPException(404, "unknown event")
+    out = friendlies.match_summary(event_id)
+    if out is None:
+        raise HTTPException(502, "summary unavailable")
+    # Fallback is UNAVAILABLE, not unmapped: if the book section dies we
+    # could not look, and "no book exists" is a claim a failure cannot
+    # support (P0-2).
+    books = {"status": "unavailable", "candidates": [], "freshness": None,
+             "families": []}
+    try:                                # the page must not die on the book
+        books = friendlies.find_all_books(
+            out.get("date"),
+            (out.get("home") or {}).get("name") or "",
+            (out.get("away") or {}).get("name") or "")
+    except Exception as exc:
+        print(f"[friendlies] book match failed for {event_id}: {exc}")
+    return {"match": out, "books": books,
+            "framing": friendlies.FRAMING,
+            "generated_at": utcnow().isoformat()}
+
+
 @app.post("/api/admin/mls/sweep")
 def mls_admin_sweep(request: Request, force: bool = Query(False)):
     """Operator-only: run the shadow sweeps NOW and return their result
@@ -517,6 +581,14 @@ def mls_admin_storage(request: Request):
     if eng is None:
         return {"dormant": True}
     out: dict = {}
+    # headroom first: the diagnostic added after the DiskFull incident
+    # reported what was consuming the volume but never how close to full
+    # it was, so it could not answer the only question that mattered
+    try:
+        from src.live import observability
+        out["headroom"] = observability.storage_headroom()
+    except Exception as exc:
+        out["headroom"] = {"error": str(exc)}
     with eng.connect() as c:
         try:
             out["database_bytes"] = c.execute(text(

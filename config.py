@@ -342,3 +342,22 @@ DISCORD_DETAIL_WEBHOOK_URL = os.getenv(
     "DISCORD_DETAIL_WEBHOOK_URL", os.getenv("DISCORD_WEBHOOK_URL", "")).strip()
 # Minutes between periodic in-play live briefs on the detail channel.
 NARRATOR_INTERVAL_MINUTES = int(os.getenv("NARRATOR_INTERVAL_MINUTES", "5"))
+
+# --- live-plane volume headroom -------------------------------------------
+# Railway's own volume alerts are Teams/Pro-only, so the platform CANNOT
+# warn before the disk fills. It filled once (2026-07-25) and every
+# prediction write failed silently behind {"created": 0}. The app has to
+# watch its own headroom instead.
+#
+# Capacity is not discoverable from inside the container — Postgres knows
+# its database size, not the size of the volume it sits on — so it is
+# configured. Keep this in step with the Railway volume if it is resized.
+LIVE_VOLUME_BYTES = int(os.getenv("LIVE_VOLUME_BYTES", str(5 * 1024**3)))
+# Percent of the volume at which to start alerting. Postgres needs room
+# above the database size for WAL, temp files and index rebuilds, so this
+# deliberately fires well below full.
+STORAGE_ALERT_PCT = float(os.getenv("STORAGE_ALERT_PCT", "70"))
+# Re-alert cadence while still over threshold (minutes). A disk filling
+# is not urgent-by-the-minute, and an hourly repeat is noise.
+STORAGE_ALERT_COOLDOWN_MINUTES = int(
+    os.getenv("STORAGE_ALERT_COOLDOWN_MINUTES", "360"))
