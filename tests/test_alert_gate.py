@@ -21,7 +21,9 @@ They are stated as controls, never offered as evidence.
 from __future__ import annotations
 
 import ast
+import io
 import os
+from contextlib import redirect_stdout
 
 import pytest
 
@@ -432,3 +434,98 @@ class TestTheGateIsTheOnlyDoor:
         assert "send_alert" in public
         assert "send_discord" not in public
         assert "send_ntfy" not in public
+
+
+# ===========================================================================
+# Fix 2 — transport failure logging must never print a credential.
+# ===========================================================================
+
+class TestTransportLoggingNeverPrintsCredentials:
+    """A Discord webhook URL and an ntfy topic ARE credentials: anyone
+    holding either can post into Son's channel. `requests` exceptions
+    embed the request URL, so `print(exc)` publishes the credential into
+    the logs. Dummy credentials only, below."""
+
+    SECRET_BODY = "SENTINEL-PROSE-that-must-not-reach-the-logs"
+
+    def _raiser(self, url_in_exception: str):
+        import requests as _rq
+
+        def boom(*a, **kw):
+            raise _rq.ConnectionError(
+                f"HTTPSConnectionPool: Max retries exceeded with url: "
+                f"{url_in_exception} (Caused by NewConnectionError)")
+        return boom
+
+    def test_discord_failure_logs_the_class_not_the_webhook(
+            self, monkeypatch):
+        monkeypatch.setattr(config, "DISCORD_ACTION_WEBHOOK_URL",
+                            FAKE_WEBHOOK)
+        monkeypatch.setattr(alerts.requests, "post",
+                            self._raiser(FAKE_WEBHOOK))
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            assert alerts._post_discord(self.SECRET_BODY) is False
+        out = buf.getvalue()
+        assert "discord" in out                      # the transport NAME
+        assert "ConnectionError" in out              # the error CLASS
+        assert FAKE_WEBHOOK not in out
+        assert "FAKE-WEBHOOK-TOKEN-DO-NOT-LOG" not in out
+        assert "discord.com" not in out
+        assert "/api/webhooks/" not in out
+        assert self.SECRET_BODY not in out
+
+    def test_ntfy_failure_logs_the_class_not_the_topic(self, monkeypatch):
+        monkeypatch.setattr(config, "NTFY_TOPIC", FAKE_TOPIC)
+        monkeypatch.setattr(alerts.requests, "post",
+                            self._raiser(f"https://ntfy.sh/{FAKE_TOPIC}"))
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            assert alerts._post_ntfy(self.SECRET_BODY) is False
+        out = buf.getvalue()
+        assert "ntfy" in out
+        assert "ConnectionError" in out
+        assert FAKE_TOPIC not in out
+        assert "ntfy.sh/" not in out
+        assert self.SECRET_BODY not in out
+
+    def test_an_http_status_is_kept_because_it_is_diagnostic(self,
+                                                             monkeypatch):
+        """The sanitizer strips the URL, not the usefulness."""
+        import requests as _rq
+
+        class _Err:
+            status_code = 404
+
+        def boom(*a, **kw):
+            exc = _rq.HTTPError("404 Client Error for url: " + FAKE_WEBHOOK)
+            exc.response = _Err()
+            raise exc
+
+        monkeypatch.setattr(config, "DISCORD_ACTION_WEBHOOK_URL",
+                            FAKE_WEBHOOK)
+        monkeypatch.setattr(alerts.requests, "post", boom)
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            alerts._post_discord("x")
+        out = buf.getvalue()
+        # credential assertion FIRST — it is the security property; the
+        # status assertion after it is the usability one
+        assert FAKE_WEBHOOK not in out
+        assert "discord.com" not in out
+        assert "HTTP 404" in out
+
+    def test_the_unconfigured_branch_never_prints_the_message(self,
+                                                              monkeypatch):
+        """The no-webhook path used to print the first 80 characters of
+        the message. On the relay channel that is the prose itself."""
+        monkeypatch.setattr(config, "DISCORD_ACTION_WEBHOOK_URL", "")
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            assert alerts._post_discord(self.SECRET_BODY) is False
+        out = buf.getvalue()
+        # the leak assertion FIRST, so a baseline run fails on the leak
+        # rather than on a changed log prefix
+        assert self.SECRET_BODY not in out
+        assert "SENTINEL" not in out
+        assert "discord/action" in out

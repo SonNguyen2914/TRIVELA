@@ -72,6 +72,16 @@ process-local on purpose — same assumption as the session-capability
 store and the rate limiter — and a restart losing it is acceptable
 because the printed line is the durable record.
 
+CREDENTIAL HYGIENE
+==================
+A Discord webhook URL and an ntfy topic ARE credentials: anyone holding
+either can post into Son's channel. `requests` exceptions routinely
+embed the request URL, so printing one verbatim publishes the credential
+into the logs (and the previous no-webhook branch additionally printed
+the first 80 characters of the message body). Transport failures
+therefore log the transport NAME and a sanitized error class — plus an
+HTTP status when the exception carries a response — and never the URL,
+the topic, the webhook path, or any part of the message.
 """
 from __future__ import annotations
 
@@ -161,6 +171,21 @@ def refusal_counts() -> dict:
 
 # --- the transports (PRIVATE to this module) -------------------------------
 
+def _transport_failure(transport: str, exc: BaseException) -> str:
+    """A log line naming the transport and the error CLASS only.
+
+    Never `str(exc)`: a `requests` exception embeds the request URL, and
+    for these two transports the URL *is* the credential — the Discord
+    webhook path and the ntfy topic both grant write access to Son's
+    channel to anyone who holds them. An HTTP status is included when
+    the exception carries a response, because a status is diagnostic and
+    is not a secret."""
+    status = getattr(getattr(exc, "response", None), "status_code", None)
+    tail = f" (HTTP {status})" if isinstance(status, int) else ""
+    return (f"[alert] {transport} transport failed: "
+            f"{type(exc).__name__}{tail}")
+
+
 def _post_discord(message: str, channel: str = "action") -> bool:
     """PRIVATE transport. Post to one of the two Discord channels:
     "action" (terse, act-now) or "detail" (the narrator's full briefs).
@@ -170,7 +195,10 @@ def _post_discord(message: str, channel: str = "action") -> bool:
     url = (config.DISCORD_DETAIL_WEBHOOK_URL if channel == "detail"
            else config.DISCORD_ACTION_WEBHOOK_URL)
     if not url:
-        print(f"[alert skipped - no webhook/{channel}] {message[:80]}")
+        # no message body: this used to print message[:80], which put
+        # relayed prose into the logs of a system whose whole point is
+        # controlling where that prose goes
+        print(f"[alert] discord/{channel} not configured — nothing sent")
         return False
     try:
         resp = requests.post(
@@ -178,7 +206,7 @@ def _post_discord(message: str, channel: str = "action") -> bool:
             timeout=8)
         return resp.status_code in (200, 204)
     except requests.RequestException as exc:
-        print(f"[alert failed] {exc}")
+        print(_transport_failure(f"discord/{channel}", exc))
         return False
 
 
@@ -198,7 +226,7 @@ def _post_ntfy(message: str, title: str = "WC26",
             timeout=8)
         return resp.status_code == 200
     except requests.RequestException as exc:
-        print(f"[ntfy failed] {exc}")
+        print(_transport_failure("ntfy", exc))
         return False
 
 
