@@ -2347,8 +2347,10 @@ class TestQuoteTemporalProvenance:
 
     def test_a_fresh_quote_is_accepted_with_its_age_reported(
             self, live_session):
-        """CONTROL — passes before and after. The ceiling must refuse
-        stale evidence without refusing the ordinary case."""
+        """The ordinary case must still pass: a ceiling that refuses
+        real evidence is not a fix. NOT a both-ways control — it also
+        asserts the newly reported age, so it fails against pre-fix
+        sources on the missing field rather than on the behaviour."""
         from src.live import journal
         _seed(live_session)                      # quote 1: ~60s old
         bet = journal.record_view(1, "KXMLSGAME-x-H",
@@ -2398,7 +2400,10 @@ class TestQuoteTemporalProvenance:
 
     def test_a_contemporaneous_fill_book_is_accepted_with_its_age(
             self, live_session):
-        """CONTROL — passes before and after."""
+        """A contemporaneous book still earns the full decomposition.
+        NOT a both-ways control — it also asserts the newly reported
+        fill-book age, so against pre-fix sources it fails on the
+        missing field, not on the behaviour."""
         from src.live import journal
         _seed(live_session)
         bet = journal.record_view(1, "KXMLSGAME-x-H",
