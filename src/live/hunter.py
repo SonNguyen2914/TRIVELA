@@ -1308,27 +1308,35 @@ def _dispatch_alert(s, row: HunterFinding, f: dict) -> bool:
     if not _try_claim_alert(s, row.id, now):
         return False      # another process owns it, or it already alerted
     try:
-        # MODEL_SIGNAL, deliberately — and the consequence is that while
-        # REAL_MONEY_SIGNALS_ENABLED is false the gate REFUSES these, so
-        # findings are recorded and served but never pushed to Discord.
+        # AMBIENT_DETAIL on the DETAIL channel only — Son's decision,
+        # 2026-07-29, and the narrowest step that answers what he asked
+        # for. He wants to hear when something structural appears in the
+        # 25-odd tradeable friendlies; the gate had been refusing these
+        # entirely, so the scanner recorded everything and said nothing.
         #
-        # A structural finding is not a forecast: "these three asks sum to
-        # 96.8c net of fees" is arithmetic on observed prices, closer to
-        # the friendlies implied-probability work than to a model view. By
-        # that reading it deserves a class of its own — mechanically
-        # verifiable market fact, permitted while the lock is on.
+        # Why this class rather than a new permissive one: AMBIENT_DETAIL
+        # already means "may ride the quiet channel, never the act-now
+        # channel and never the phone", and the gate ENFORCES that by
+        # refusing any kind != "detail". So a structural finding reaches
+        # the channel Son reads deliberately, and cannot reach the one
+        # that interrupts him. Inventing a fourth class permitted on the
+        # action channel would have been a real widening of the money
+        # boundary; this is not that.
         #
-        # It does not get one here. The gate's own line is that a
-        # statement about a MARKET is a model signal, and inventing a
-        # fourth class to exempt the scanner would be me widening the
-        # money boundary to fit a feature I built. That is Son's call, not
-        # mine: if he wants structural findings to alert under the lock,
-        # the gate needs an explicit class and this comment is the
-        # argument for it. Until then the scanner is fail-closed and the
-        # findings live at GET /api/hunter/findings.
-        from src.alerts import MODEL_SIGNAL, send_alert
+        # What is deliberately NOT settled here: whether a mechanically
+        # verifiable market fact — "these three asks sum to 96.8c net of
+        # exact fees" — deserves its own class that the lock permits
+        # outright. It is arithmetic on observed prices, not a forecast,
+        # and the argument for it is real. Son deferred that question and
+        # it stays deferred; see strategy/BACKLOG.md. If it is ever
+        # granted, this call site is where it lands.
+        #
+        # The kind is pinned to "detail" here rather than passed in, so a
+        # future caller cannot promote a finding to the phone by argument.
+        from src.alerts import AMBIENT_DETAIL, send_alert
         results = send_alert(_alert_message(f), title="Trivela hunter",
-                             dispatch_class=MODEL_SIGNAL)
+                             kind="detail",
+                             dispatch_class=AMBIENT_DETAIL)
         if not isinstance(results, dict):
             results = {"unknown_transport_contract": False}
     except Exception as exc:              # alerting must never break a scan

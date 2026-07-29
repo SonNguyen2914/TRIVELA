@@ -800,6 +800,43 @@ class TestAlertDiscipline:
         rows = live_session.query(HunterFinding).all()
         assert rows and all(r.is_context for r in rows)
 
+    def test_findings_ride_the_detail_channel_and_cannot_reach_the_phone(
+            self, live_session, monkeypatch):
+        """Son's decision, 2026-07-29: structural findings alert, but on the
+        QUIET channel only.
+
+        The money-lock gate had been refusing these outright as market
+        statements, so the scanner recorded 25-odd tradeable friendlies and
+        said nothing. AMBIENT_DETAIL is the narrowest class that answers
+        that: the gate ENFORCES kind == "detail", so a finding reaches the
+        channel Son reads deliberately and can never reach the act-now
+        channel or the phone push.
+
+        Both halves matter and both are asserted here. The second is the
+        one that keeps the concession narrow — if a later change promotes
+        findings to the phone, this test is what fails."""
+        import src.alerts as alerts_mod
+        seen = []
+        monkeypatch.setattr(
+            alerts_mod, "_post_discord",
+            lambda msg, channel="action": seen.append(("discord", channel))
+            or True)
+        monkeypatch.setattr(
+            alerts_mod, "_post_ntfy",
+            lambda msg, title="x", **kw: seen.append(("ntfy", "phone"))
+            or True)
+        _run_cycle(monkeypatch, {"KXUCLGAME": self.ARB})
+        channels = [c for kind, c in seen if kind == "discord"]
+        assert channels, f"the finding never dispatched at all: {seen}"
+        assert channels == ["detail"], (
+            f"a structural finding reached {channels} — AMBIENT_DETAIL is "
+            f"supposed to be refused on any channel but detail")
+        assert not [k for k, _ in seen if k == "ntfy"], (
+            "a structural finding reached the phone push; the concession "
+            "was the quiet channel only")
+        assert alerts_mod.recent_refusals() == [], (
+            "the gate refused a dispatch it should now permit")
+
     def test_margin_below_threshold_records_but_stays_quiet(
             self, live_session, monkeypatch):
         monkeypatch.setattr(config, "HUNTER_ALERT_MIN_MARGIN_DOLLARS",
