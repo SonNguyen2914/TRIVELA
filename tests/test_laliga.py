@@ -14,7 +14,8 @@ import pytest
 import config
 from src import laliga, mls
 from src.live import db as live_db
-from src.live import identity, laliga_live, markets, model_laliga, runs
+from src.live import (competitions, identity, laliga_live, markets,
+                      model_laliga, runs)
 from src.live.models import (Competition, Fixture, LiveBase, ModelVersion,
                              Team, TeamAlias)
 
@@ -279,10 +280,16 @@ CANNED_LALIGA_TEAMS = [
 
 
 def _seed_laliga(with_kalshi=True):
-    return identity.seed_teams(
-        espn_teams=CANNED_LALIGA_TEAMS,
-        competition_slug="la-liga-2026",
-        kalshi_bridges=(laliga_live.KALSHI_BRIDGES if with_kalshi else {}))
+    """Seeds through the SHARED competition-keyed entry point. Since the
+    EPL build that is `seed_league_teams(slug, teams_url, bridges)` —
+    `seed_teams()` is now the MLS-only alias that delegates to it — so
+    this passes the same three inputs positionally. `teams_url` is
+    unused while `espn_teams` is supplied: still no network."""
+    return identity.seed_league_teams(
+        "la-liga-2026",
+        laliga_live.ESPN_TEAMS_URL,
+        (laliga_live.KALSHI_BRIDGES if with_kalshi else {}),
+        espn_teams=CANNED_LALIGA_TEAMS)
 
 
 class TestIdentityParameterization:
@@ -347,20 +354,39 @@ class TestIdentityParameterization:
 
 
 class TestMarketConfig:
+    """Where the competition's market grammar comes from. The lookup this
+    class was written against (`markets.market_config_for(slug) -> dict`,
+    raising ValueError on an unknown slug) was dropped in favour of EPL's
+    parameterization, which splits the same job in two: the registry in
+    `src/live/competitions.py` owns "is this slug known" and raises
+    KeyError if not, and each league module builds its own
+    `CompetitionMarketSpec`. The behaviours asserted below are the ones
+    this class always asserted; only where they are read from moved."""
+
     def test_unknown_competition_fails_explicitly(self):
-        with pytest.raises(ValueError):
-            markets.market_config_for("epl-2026")
+        # The stand-in unknown slug used to be "epl-2026" — EPL is now a
+        # REGISTERED competition, so it can no longer play that role, and
+        # the assertion below pins that it doesn't (a regression that
+        # unregistered EPL would otherwise hide inside this test).
+        assert competitions.spec("epl-2026")["label"] == "EPL"
+        with pytest.raises(KeyError):
+            competitions.spec("ligue-1-2026")
 
     def test_laliga_config_derives_from_league_module(self):
-        cfg = markets.market_config_for("la-liga-2026")
-        assert cfg["game_series"] == "KXLALIGAGAME"
-        assert len(cfg["family_series"]) == 12
-        assert cfg["key_resolver"] is laliga.model_key_for
+        # la-liga-2026 must be REGISTERED — an unregistered slug raises
+        # here rather than silently resolving to MLS
+        assert competitions.spec("la-liga-2026")["model_module"] == \
+            "src.live.model_laliga"
+        assert competitions.espn_league("la-liga-2026") == "esp.1"
+        cfg = laliga_live.MARKET_SPEC
+        assert cfg.game_series == "KXLALIGAGAME"
+        assert len(cfg.family_series) == 12
+        assert cfg.model_key_fn is laliga.model_key_for
 
     def test_mls_config_unchanged(self):
-        cfg = markets.market_config_for("mls-2026")
-        assert cfg["game_series"] == "KXMLSGAME"
-        assert cfg["family_series"] == markets.FAMILY_SERIES
+        cfg = markets.MLS_SPEC
+        assert cfg.game_series == "KXMLSGAME"
+        assert cfg.family_series == markets.FAMILY_SERIES
 
     def test_discover_maps_laliga_event_via_bridge(self, dual_session,
                                                    monkeypatch):
@@ -398,7 +424,7 @@ class TestMarketConfig:
                     {"ticker": "KXLALIGAGAME-26AUG15ATHBAR-TIE",
                      "yes_sub_title": "Tie"}]
         monkeypatch.setattr(markets, "_kalshi_paged", fake_paged)
-        out = markets.discover_and_map(competition_slug="la-liga-2026")
+        out = markets.discover_and_map(spec=laliga_live.MARKET_SPEC)
         assert out["newly_mapped"] == 1
         assert out["discovery_complete"] is True
         from src.live.models import MarketContract, MarketEvent
@@ -547,9 +573,12 @@ class TestShadowCountScoping:
         mls_counts = runs.shadow_counts()                  # default = MLS
         assert mls_counts["complete_runs"] == 0
         assert mls_counts["fixtures"] == 0
-        la = runs.shadow_counts(competition_slug="la-liga-2026",
-                                model_mod=model_laliga,
-                                expected_teams=laliga_live.EXPECTED_TEAMS)
+        # the La Liga spec carries the slug, the model module and the
+        # expected-teams count that used to be three separate kwargs
+        assert laliga_live.RUNS_SPEC.model is model_laliga
+        assert laliga_live.RUNS_SPEC.expected_teams == \
+            laliga_live.EXPECTED_TEAMS
+        la = runs.shadow_counts(spec=laliga_live.RUNS_SPEC)
         assert la["complete_runs"] == 1
         assert la["fixtures"] == 13
         assert "teams 3/20" in la["blockers"]

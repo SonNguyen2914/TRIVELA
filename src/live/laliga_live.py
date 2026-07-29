@@ -7,6 +7,15 @@ scaffold. No table is duplicated — the live schema was already keyed
 by competition — and no MLS behavior changes: every shared function
 defaults to its previous MLS values.
 
+The binding shape is EPL's (see src/live/epl_plane.py): the shared
+modules take one `CompetitionMarketSpec` / `CompetitionRunsSpec`
+object rather than a scatter of per-call keyword arguments. La Liga was
+built against the earlier keyword form and was rebased onto this one;
+the parameterization is a different spelling of the same thing, and
+every La Liga behavior below — slug, ESPN esp.1, the KXLALIGA* config,
+the 17 evidence-backed Kalshi bridges, the dark model, the flag
+defaulting false — is unchanged by the move.
+
 Operating posture (2026-07-28):
   - LALIGA_SHADOW_ENABLED defaults FALSE. Even when flipped on, the
     model is DARK (no approval decision for laliga-2026-v0), so runs
@@ -96,67 +105,97 @@ def ensure_competition() -> dict:
         s.close()
 
 
+def _market_spec() -> markets.CompetitionMarketSpec:
+    """La Liga's Kalshi grammar as the shared machinery's spec object.
+
+    The series all derive from `config.LALIGA_KALSHI_SERIES_PREFIX` —
+    the prefix is verified to exist, 2026-27 coverage is not, so nothing
+    here is hardcoded as fact. GAME goes first because it anchors the
+    fixture mapping through approved aliases and every other family
+    suffix-joins to it in the same sweep."""
+    from src import laliga as laliga_data
+    game = laliga_data.KALSHI_GAME
+    prefix = config.LALIGA_KALSHI_SERIES_PREFIX
+    return markets.CompetitionMarketSpec(
+        slug=SLUG,
+        game_series=game,
+        family_series=tuple(dict.fromkeys(
+            [game] + [series for _k, series, _l
+                      in laliga_data.MATCH_FAMILIES if series != game])),
+        ticker_prefix=prefix,
+        first_half_prefix=f"{prefix}1H",
+        model_key_fn=laliga_data.model_key_for,
+        # the same predicate as mls-lock-v2 (capture-clock freshness,
+        # game 3-way required) under its own name, so a La Liga snapshot
+        # can never claim an MLS policy string. No La Liga snapshot can
+        # carry it yet: the model is dark, so no lock is reachable.
+        lock_policy_version="laliga-lock-v1")
+
+
+MARKET_SPEC = _market_spec()
+
+RUNS_SPEC = runs.CompetitionRunsSpec(
+    slug=SLUG, model_module=model_laliga,
+    market_spec=MARKET_SPEC, label=LEAGUE_LABEL,
+    expected_teams=EXPECTED_TEAMS,
+    # a lambda, not the value: the flag is read at CALL time, so an env
+    # flip (or a test's monkeypatch) needs no re-import
+    enabled_fn=lambda: config.LALIGA_SHADOW_ENABLED)
+
+
+# --- thin entry points (scheduler + API) -----------------------------------
+
 def seed_teams() -> dict:
-    return identity.seed_teams(competition_slug=SLUG,
-                               teams_url=ESPN_TEAMS_URL,
-                               kalshi_bridges=KALSHI_BRIDGES)
+    return identity.seed_league_teams(SLUG, ESPN_TEAMS_URL, KALSHI_BRIDGES)
 
 
 def ingest_season() -> dict:
+    """Deliberately NOT season-pinned, unlike EPL: no LALIGA_SEASON_YEAR
+    exists and adding one would change what this ingests."""
     return ingest.ingest_season_schedules(competition_slug=SLUG,
-                                          league_path=LEAGUE_PATH)
+                                          espn_league=LEAGUE_PATH)
 
 
 def refresh_window() -> dict:
     return ingest.refresh_window(competition_slug=SLUG,
-                                 league_path=LEAGUE_PATH)
+                                 espn_league=LEAGUE_PATH)
 
 
 def discover_and_map() -> dict:
-    return markets.discover_and_map(competition_slug=SLUG)
+    return markets.discover_and_map(spec=MARKET_SPEC)
 
 
 def capture_quotes(fixture_id: int | None = None,
                    horizon_hours: float = 48.0) -> dict:
     return markets.capture_quotes(fixture_id=fixture_id,
                                   horizon_hours=horizon_hours,
-                                  competition_slug=SLUG)
+                                  spec=MARKET_SPEC)
 
 
 def scheduled_runs(freshness_hours: float = 4.0) -> dict:
     """Refused at the per-model approval gate until a La Liga ladder
     earns a decision — the dark-model posture, enforced not asserted."""
     return runs.scheduled_runs(freshness_hours=freshness_hours,
-                               competition_slug=SLUG,
-                               model_mod=model_laliga,
-                               enabled=config.LALIGA_SHADOW_ENABLED)
+                               spec=RUNS_SPEC)
 
 
 def t10_locks() -> dict:
-    return runs.t10_locks(competition_slug=SLUG,
-                          model_mod=model_laliga,
-                          enabled=config.LALIGA_SHADOW_ENABLED,
-                          league_label=LEAGUE_LABEL)
+    return runs.t10_locks(spec=RUNS_SPEC)
 
 
 def model_for_event(espn_event_id: str) -> dict | None:
-    return runs.model_for_event(espn_event_id,
-                                competition_slug=SLUG,
-                                model_mod=model_laliga)
+    return runs.model_for_event(espn_event_id, spec=RUNS_SPEC)
 
 
 def latest_odds() -> list[dict]:
-    return runs.latest_odds(competition_slug=SLUG,
-                            model_mod=model_laliga)
+    return runs.latest_odds(spec=RUNS_SPEC)
 
 
 def shadow_status() -> dict:
     """The public posture read: pipeline counts + blockers (including
     the unmapped_upcoming metric) + the Kalshi coverage probe + the
     explicit statements a reader needs to not over-trust this surface."""
-    counts = runs.shadow_counts(competition_slug=SLUG,
-                                model_mod=model_laliga,
-                                expected_teams=EXPECTED_TEAMS) or {}
+    counts = runs.shadow_counts(spec=RUNS_SPEC) or {}
     from src import laliga as laliga_data
     return {
         "competition": SLUG,
