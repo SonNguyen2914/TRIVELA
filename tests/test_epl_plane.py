@@ -392,3 +392,220 @@ class TestCompetitionIsolation:
         from src.live import model_mls
         assert (model_epl.seed_for(fx, "t10")
                 != model_mls.seed_for(fx, "t10"))
+
+
+# --- P0-2: corpus / observability / audit are competition-scoped ----------
+# Nine corpus sections were whole-table dumps, and every metric was a
+# whole-table count. With two competitions in one database that means EPL
+# state inside MLS outputs — and a changing MLS manifest hash.
+
+def _seed_league(s, slug, *, team_name, alias, model_name, espn_id,
+                 ticker, hashseed):
+    """One competition's minimum end-to-end row set, disjoint from any
+    other league's: team + approved alias, fixture, model version +
+    approval decision, market event, lock snapshot, registry sweep,
+    prediction run, paper context + signal + fill, and a player."""
+    from src.live.models import (MarketEvent, MarketSnapshot,
+                                 ModelApprovalDecision, ModelVersion,
+                                 PaperEvaluationContext, PaperFill,
+                                 PaperSignal, Player, PredictionRun,
+                                 RegistryDiscovery, TeamAlias)
+    now = datetime.now(UTC)
+    team = Team(competition_slug=slug, canonical_name=team_name,
+                abbrev=team_name[:3].upper(), espn_id=espn_id)
+    s.add(team)
+    s.flush()
+    s.add(TeamAlias(team_id=team.id, alias=alias, source="kalshi",
+                    approved=True))
+    fx = Fixture(competition_slug=slug, espn_event_id=f"{espn_id}001",
+                 home_team_id=team.id, away_team_id=team.id,
+                 current_kickoff_utc=now - timedelta(hours=2),
+                 original_kickoff_utc=now - timedelta(hours=2),
+                 status="post", home_goals=1, away_goals=0)
+    s.add(fx)
+    mv = ModelVersion(name=model_name, description=slug, created_at=now)
+    s.add(mv)
+    s.add(Player(competition_slug=slug, espn_id=f"p{espn_id}",
+                 name=f"{team_name} Keeper", position="G"))
+    s.flush()
+    dec = ModelApprovalDecision(
+        model_version_id=mv.id, model_version_name=model_name,
+        approved_mode="shadow", approved=True,
+        decision_document=f"decision for {slug}",
+        content_hash=f"{hashseed}" * 8, created_at=now)
+    s.add(dec)
+    s.add(MarketEvent(competition_slug=slug, kalshi_event_ticker=ticker,
+                      series=ticker.split("-")[0], title=f"{team_name} vs X",
+                      mapping_approved=True, fixture_id=fx.id))
+    s.add(RegistryDiscovery(competition_slug=slug, provider="kalshi",
+                            complete=True, events_seen=1,
+                            completed_at=now))
+    s.flush()
+    snap = MarketSnapshot(fixture_id=fx.id, captured_at=now,
+                          status="failed", policy_version=f"{slug}-lock",
+                          failure_reason=f"{slug} snapshot failure")
+    s.add(snap)
+    run = PredictionRun(fixture_id=fx.id, run_type="t10", canonical=True,
+                        status="complete", captured_at=now,
+                        created_at=now, model_version_id=mv.id,
+                        model_approval_decision_id=dec.id,
+                        seconds_before_kickoff=600)
+    s.add(run)
+    s.flush()
+    ctx = PaperEvaluationContext(prediction_run_id=run.id, captured_at=now,
+                                 model_approved=True,
+                                 engine_signature_hash=f"{hashseed}" * 8,
+                                 content_hash=f"{hashseed}" * 8)
+    s.add(ctx)
+    s.flush()
+    sig = PaperSignal(prediction_run_id=run.id, fixture_id=fx.id,
+                      outcome_key="home_win", policy_version=f"{slug}-exec",
+                      decision="fill", created_at=now,
+                      paper_evaluation_context_id=ctx.id)
+    s.add(sig)
+    s.flush()
+    s.add(PaperFill(paper_signal_id=sig.id, requested_contracts=100,
+                    filled_contracts=100, status="settled", pnl_c=11,
+                    cost_dollars="1.00", pnl_dollars="0.11",
+                    execution_class="bounded_depth", created_at=now))
+    s.commit()
+    return {"team": team, "fixture": fx, "run": run, "model": mv}
+
+
+class TestCompetitionScopedOutputs:
+    """P0-2 acceptance. Disjoint MLS and EPL state; the MLS corpus must
+    contain no EPL identifier, stay referentially closed, keep its
+    manifest hash when EPL-only rows land, and keep its metrics."""
+
+    EPL_MARKERS = ("epl-2026", "Everton FC EPL", "Everton EPL",
+                   "KXEPLGAME-26AUG21EVEARS", "epl-2026-v0",
+                   "epl-2026-lock", "epl-2026-exec")
+
+    def _both(self, s):
+        _seed_league(s, "mls-2026", team_name="Austin FC MLS",
+                     alias="Austin MLS", model_name="mls-2026-v0",
+                     espn_id="9001", ticker="KXMLSGAME-26AUG21AUSPOR",
+                     hashseed="a")
+        _seed_league(s, "epl-2026", team_name="Everton FC EPL",
+                     alias="Everton EPL", model_name="epl-2026-v0",
+                     espn_id="9002", ticker="KXEPLGAME-26AUG21EVEARS",
+                     hashseed="b")
+
+    def test_mls_corpus_holds_no_epl_identifier_and_stays_closed(
+            self, epl_session):
+        """(Proven to fail: with the whole-table dumps restored, the MLS
+        corpus carries the EPL alias, model version, approval decision,
+        registry sweep, player, paper context, signal and fill.)"""
+        import json as _json
+
+        from src.live import corpus
+        self._both(epl_session)
+        bundle = corpus.build_corpus("scope-test",
+                                     competition_slug="mls-2026")
+        body = _json.dumps(bundle["sections"], sort_keys=True,
+                           default=str)
+        for marker in self.EPL_MARKERS:
+            assert marker not in body, marker
+        assert bundle["manifest"]["competition_slug"] == "mls-2026"
+        assert bundle["manifest"]["model_versions"] == ["mls-2026-v0"]
+
+        sec = bundle["sections"]
+        ids = {name: {r["id"] for r in rows}
+               for name, rows in sec.items()
+               if isinstance(rows, list) and rows and "id" in rows[0]}
+
+        def resolves(section, rows, field, target):
+            for r in rows:
+                if r.get(field) is not None:
+                    assert r[field] in ids.get(target, set()), \
+                        f"{section}.{field}={r[field]} dangles"
+
+        resolves("team_aliases.json", sec["team_aliases.json"],
+                 "team_id", "teams.json")
+        resolves("fixtures.json", sec["fixtures.json"],
+                 "home_team_id", "teams.json")
+        resolves("prediction_runs.json", sec["prediction_runs.json"],
+                 "model_version_id", "model_versions.json")
+        resolves("prediction_runs.json", sec["prediction_runs.json"],
+                 "model_approval_decision_id",
+                 "model_approval_decisions.json")
+        resolves("paper_signals.json", sec["paper_signals.json"],
+                 "paper_evaluation_context_id",
+                 "paper_evaluation_contexts.json")
+        resolves("paper_fills.json", sec["paper_fills.json"],
+                 "paper_signal_id", "paper_signals.json")
+        # the audit's retained failure evidence must be MLS's, not both
+        reasons = [f["failure_reason"] for f in
+                   sec["audit.json"]["failed_snapshots"]]
+        assert reasons == ["mls-2026 snapshot failure"]
+
+    def test_an_epl_only_row_leaves_the_mls_manifest_hash_unchanged(
+            self, epl_session):
+        from src.live import corpus
+        from src.live.models import RegistryDiscovery, TeamAlias
+        self._both(epl_session)
+        before = corpus.build_corpus(
+            "scope-test", competition_slug="mls-2026")["manifest"]
+        epl_team = (epl_session.query(Team)
+                    .filter_by(competition_slug="epl-2026").one())
+        epl_session.add(TeamAlias(team_id=epl_team.id,
+                                  alias="Everton EPL 2", source="kalshi",
+                                  approved=True))
+        epl_session.add(RegistryDiscovery(
+            competition_slug="epl-2026", provider="kalshi", complete=True,
+            events_seen=7, completed_at=datetime.now(UTC)))
+        epl_session.commit()
+        after = corpus.build_corpus(
+            "scope-test", competition_slug="mls-2026")["manifest"]
+        assert after["manifest_hash"] == before["manifest_hash"]
+        # CONTROL: an MLS-only row DOES move it — the hash is not inert
+        mls_team = (epl_session.query(Team)
+                    .filter_by(competition_slug="mls-2026").one())
+        epl_session.add(TeamAlias(team_id=mls_team.id, alias="Austin MLS 2",
+                                  source="kalshi", approved=True))
+        epl_session.commit()
+        moved = corpus.build_corpus(
+            "scope-test", competition_slug="mls-2026")["manifest"]
+        assert moved["manifest_hash"] != before["manifest_hash"]
+
+    def test_mls_metrics_are_unchanged_by_epl_state(self, epl_session):
+        from src.live import observability
+        _seed_league(epl_session, "mls-2026", team_name="Austin FC MLS",
+                     alias="Austin MLS", model_name="mls-2026-v0",
+                     espn_id="9001", ticker="KXMLSGAME-26AUG21AUSPOR",
+                     hashseed="a")
+        before = observability.metrics(competition_slug="mls-2026")
+        _seed_league(epl_session, "epl-2026", team_name="Everton FC EPL",
+                     alias="Everton EPL", model_name="epl-2026-v0",
+                     espn_id="9002", ticker="KXEPLGAME-26AUG21EVEARS",
+                     hashseed="b")
+        after = observability.metrics(competition_slug="mls-2026")
+        for key in ("data", "locks", "runs", "paper"):
+            assert after[key] == before[key], key
+        # and the EPL surface reports its own, non-zero state
+        epl = observability.metrics(competition_slug="epl-2026")
+        assert epl["data"]["mapped_market_events"] == 1
+        assert epl["paper"]["signals"] == 1
+        assert epl["locks"]["failed_snapshots"] == 1
+
+    def test_the_manifest_hash_is_stable_for_an_unchanged_database(
+            self, epl_session):
+        """corpus.py promises "the same database state exports to the
+        same manifest_hash". It did not: the embedded lock audit carried
+        its own wall-clock `generated_at`, so two back-to-back builds of
+        an UNCHANGED database hashed differently. Found while proving
+        P0-2 — the EPL-isolation assertion could not distinguish
+        contamination from clock drift. (Proven to fail: restore
+        generated_at inside the exported audit section.)"""
+        from src.live import corpus
+        self._both(epl_session)
+        a = corpus.build_corpus("scope-test",
+                                competition_slug="mls-2026")["manifest"]
+        b = corpus.build_corpus("scope-test",
+                                competition_slug="mls-2026")["manifest"]
+        assert a["manifest_hash"] == b["manifest_hash"]
+
+    def test_an_unknown_competition_fails_explicitly(self):
+        from src.live import competitions
+        with pytest.raises(KeyError):
+            competitions.spec("serie-a-2026")

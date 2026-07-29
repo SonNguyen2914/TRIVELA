@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from src.live import competitions
 from src.live.db import get_session, plane_ready
 from src.live.models import (Fixture, MarketEvent, MarketSnapshot,
                              PaperFill, PaperSignal, PredictionRun)
@@ -30,13 +31,13 @@ def _age_s(dt):
     return int((_now() - _utc(dt)).total_seconds())
 
 
-def _coverage() -> dict:
+def _coverage(competition_slug: str | None = None) -> dict:
     """Paper-ledger completeness, flattened for the metrics surface.
     Isolated so a coverage failure can never take the whole metrics
     endpoint down with it."""
     try:
         from src.live import paper
-        cov = paper.paper_coverage()
+        cov = paper.paper_coverage(competition_slug=competition_slug)
         return {k: cov.get(k) for k in
                 ("locks_eligible", "locks_covered", "locks_uncovered",
                  "legs_eligible", "legs_signalled", "legs_missing",
@@ -45,31 +46,52 @@ def _coverage() -> dict:
         return {"error": str(exc)[:120]}
 
 
-def metrics() -> dict:
+def metrics(competition_slug: str | None = None) -> dict:
+    """Operational metrics for ONE competition.
+
+    Every count here used to be a whole-table count (mapped events, runs,
+    snapshots, paper signals and fills), so the moment a second
+    competition existed the MLS metrics surface absorbed its state — a
+    dark EPL plane could inflate MLS's mapped-event count and, worse, an
+    EPL failed snapshot would read as an MLS lock failure (EPL P0-2)."""
     if not plane_ready():
         return {"skipped": "dormant"}
+    slug = competition_slug or competitions.DEFAULT_SLUG
+    competitions.spec(slug)                # unknown slug -> raise
     s = get_session()
     try:
         # fixture freshness — how long since the newest observation
         newest_fx = (s.query(Fixture)
-                     .filter_by(competition_slug="mls-2026")
+                     .filter_by(competition_slug=slug)
                      .order_by(Fixture.observed_at.desc()).first())
+        comp_fixtures = s.query(Fixture).filter_by(
+            competition_slug=slug).all()
+        fixture_ids = {f.id for f in comp_fixtures}
+        comp_runs = [r for r in s.query(PredictionRun).all()
+                     if r.fixture_id in fixture_ids]
         # locks: kicked-off shadow-touched fixtures should each have one
-        touched = {r[0] for r in s.query(
-            PredictionRun.fixture_id).distinct().all()}
-        kicked = [f for f in s.query(Fixture)
-                  .filter_by(competition_slug="mls-2026").all()
+        touched = {r.fixture_id for r in comp_runs}
+        kicked = [f for f in comp_fixtures
                   if f.id in touched and f.current_kickoff_utc
                   and _utc(f.current_kickoff_utc) < _now()]
         locked = [f for f in kicked
                   if s.query(PredictionRun)
                   .filter_by(fixture_id=f.id, run_type="t10",
                              canonical=True, status="complete").first()]
+        comp_snaps = [sn for sn in s.query(MarketSnapshot).all()
+                      if sn.fixture_id in fixture_ids]
         # snapshot freshness (the freshest lock book's quote age)
-        latest_snap = (s.query(MarketSnapshot).filter_by(status="complete")
-                       .order_by(MarketSnapshot.captured_at.desc()).first())
+        complete_snaps = [sn for sn in comp_snaps if sn.status == "complete"
+                          and sn.captured_at is not None]
+        latest_snap = (max(complete_snaps, key=lambda sn: _utc(sn.captured_at))
+                       if complete_snaps else None)
         # paper economics
-        fills = s.query(PaperFill).all()
+        comp_run_ids = {r.id for r in comp_runs}
+        comp_signals = [g for g in s.query(PaperSignal).all()
+                        if g.prediction_run_id in comp_run_ids]
+        sig_ids = {g.id for g in comp_signals}
+        fills = [f for f in s.query(PaperFill).all()
+                 if f.paper_signal_id in sig_ids]
         settled = [f for f in fills if f.status == "settled"]
         pnl = sum(f.pnl_c or 0 for f in settled)
         # settlement lag: open fills whose fixture is already post
@@ -81,10 +103,13 @@ def metrics() -> dict:
                               .join(Fixture,
                                     PaperSignal.fixture_id == Fixture.id)
                               .filter(PaperFill.status == "open",
-                                      Fixture.status == "post").all()):
+                                      Fixture.status == "post",
+                                      Fixture.competition_slug == slug)
+                              .all()):
             stale_settle += 1
         return {
             "generated_at": _now().isoformat(),
+            "competition_slug": slug,
             "data": {
                 "fixture_obs_age_s": _age_s(
                     newest_fx.observed_at if newest_fx else None),
@@ -94,7 +119,8 @@ def metrics() -> dict:
                     latest_snap.oldest_quote_age_seconds
                     if latest_snap else None),
                 "mapped_market_events": s.query(MarketEvent)
-                .filter_by(mapping_approved=True).count(),
+                .filter_by(competition_slug=slug,
+                           mapping_approved=True).count(),
             },
             "locks": {
                 "kicked_off_shadow_fixtures": len(kicked),
@@ -102,21 +128,20 @@ def metrics() -> dict:
                 "missed_locks": len(kicked) - len(locked),
                 "lock_success_rate": (round(len(locked) / len(kicked), 3)
                                       if kicked else None),
-                "failed_snapshots": s.query(MarketSnapshot)
-                .filter_by(status="failed").count(),
+                "failed_snapshots": sum(1 for sn in comp_snaps
+                                        if sn.status == "failed"),
             },
             "runs": {
-                "complete": s.query(PredictionRun)
-                .filter_by(status="complete").count(),
-                "failed": s.query(PredictionRun)
-                .filter_by(status="failed").count(),
+                "complete": sum(1 for r in comp_runs
+                                if r.status == "complete"),
+                "failed": sum(1 for r in comp_runs if r.status == "failed"),
             },
             "paper": {
-                "signals": s.query(PaperSignal).count(),
+                "signals": len(comp_signals),
                 # a signal count WITHOUT this is unreadable: the 2026-07-25
                 # slate reported 27 against 45 eligible legs and nothing
                 # anywhere said so
-                "coverage": _coverage(),
+                "coverage": _coverage(slug),
                 "fills": len(fills),
                 "open": sum(1 for f in fills if f.status == "open"),
                 "settled": len(settled),

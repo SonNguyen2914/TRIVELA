@@ -16,11 +16,16 @@ import hashlib
 import json
 from datetime import datetime, timezone
 
+from src.live import competitions
 from src.live.db import get_session, plane_ready
 from src.live.models import (Fixture, MarketSnapshot,
                              ModelApprovalDecision, ModelInputArtifact,
                              PredictionContract, PredictionRun)
 
+# Names the audit SCHEMA, not the competition — the invariant table is
+# identical for every league. Which competition an audit covers is the
+# `competition_slug` field on the body (EPL P0-2); before that existed a
+# two-league database produced one audit that silently mixed them.
 AUDIT_VERSION = "mls-lock-audit-v1"
 THREE_WAY = ("home_win", "draw", "away_win")
 
@@ -35,22 +40,22 @@ def _utc(dt):
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
-def _current_engine_hash() -> str | None:
+def _current_engine_hash(competition_slug: str | None = None) -> str | None:
     try:
-        from src.live import model_mls
-        return model_mls.engine_signature()["signature_hash"]
+        return competitions.model_module(
+            competition_slug).engine_signature()["signature_hash"]
     except Exception:
         return None
 
 
-def _paper_coverage_summary() -> dict:
+def _paper_coverage_summary(competition_slug: str | None = None) -> dict:
     """How much of the paper evidence the locks were ELIGIBLE for
     actually exists. Reported at summary level (see the call site) and
     kept small so it stays inside the audit's content hash without
     dominating it."""
     try:
         from src.live import paper
-        cov = paper.paper_coverage()
+        cov = paper.paper_coverage(competition_slug=competition_slug)
         return {k: cov.get(k) for k in
                 ("locks_eligible", "locks_uncovered", "legs_eligible",
                  "legs_signalled", "legs_missing", "coverage_pct",
@@ -59,7 +64,8 @@ def _paper_coverage_summary() -> dict:
         return {"error": str(exc)[:120]}
 
 
-def _lock_checks(s, f, lock, n_locks, current_engine=None) -> dict:
+def _lock_checks(s, f, lock, n_locks, current_engine=None,
+                 competition_slug: str | None = None) -> dict:
     """Every invariant from the evaluation's acceptance table, as a flat
     dict of booleans. all_pass is their AND."""
     ko = _utc(f.current_kickoff_utc)
@@ -95,16 +101,16 @@ def _lock_checks(s, f, lock, n_locks, current_engine=None) -> dict:
         approval and approval.decision_document and approval.content_hash
         and hashlib.sha256(approval.decision_document.encode()).hexdigest()
         == approval.content_hash)
-    from src.live import model_mls
+    model_mod = competitions.model_module(competition_slug)
     if current_engine is None:
-        current_engine = model_mls.engine_signature()["signature_hash"]
+        current_engine = model_mod.engine_signature()["signature_hash"]
     # The signature includes the git revision, so any deploy — a docs
     # commit, a migration — flips it. Accept a stored signature that
     # reproduces exactly when recomputed under the revision the run
     # RECORDED: that proves only the revision moved. A real engine change
     # still fails. Without this, every lock goes red on the next deploy
     # and a permanently-red audit is one nobody reads.
-    engine_matches_current, engine_rev_drift = model_mls.engine_matches(
+    engine_matches_current, engine_rev_drift = model_mod.engine_matches(
         engine_sig, lock.git_revision)
     # a later COMPLETE run must not exist for this fixture (F9)
     later = (s.query(PredictionRun)
@@ -238,10 +244,14 @@ def verify_replay(run_id: str, tol: float = 1e-6) -> dict:
     run FROM ITS STORED INPUT ARTIFACT ALONE and confirm the outcomes
     match the stored contracts. This is the proof behind the
     'independently model-reproducible' claim, so it reads only the
-    artifact bytes — never the live ratings — to reconstruct."""
+    artifact bytes — never the live ratings — to reconstruct.
+
+    The engine is the RUN'S OWN competition's engine (EPL P0-3). Replay
+    used to import model_mls unconditionally, so an EPL run was compared
+    against the MLS signature and refused for "engine mismatch" — a
+    verdict about the wrong engine, which is worse than no verdict."""
     import json as _json
 
-    from src.live import model_mls
     if not plane_ready():
         return {"skipped": "dormant"}
     s = get_session()
@@ -250,20 +260,31 @@ def verify_replay(run_id: str, tol: float = 1e-6) -> dict:
         if run is None or run.model_input_artifact_id is None:
             return {"run_id": run_id, "replayable": False,
                     "reason": "no input artifact"}
+        fx = s.get(Fixture, run.fixture_id) if run.fixture_id else None
+        slug = fx.competition_slug if fx is not None else None
+        try:
+            model_mod = competitions.model_module(slug)
+        except KeyError as exc:
+            # an unregistered competition must REFUSE, never be replayed
+            # under another league's engine
+            return {"run_id": run_id, "replayable": False,
+                    "competition_slug": slug, "reason": str(exc)[:200]}
         art = s.get(ModelInputArtifact, run.model_input_artifact_id)
         doc = _json.loads(art.document_json)
         # the frozen (stored) engine signature vs the current engine
         # (V9 eval F4). Surfaced in EVERY return path so the reproducibility
         # claim is engine-matched and independently visible, never blind.
         stored_sig = (doc.get("engine") or {}).get("signature_hash")
-        current_sig = model_mls.engine_signature()["signature_hash"]
+        current_sig = model_mod.engine_signature()["signature_hash"]
         if stored_sig:
-            engine_match, rev_only = model_mls.engine_matches(
+            engine_match, rev_only = model_mod.engine_matches(
                 stored_sig, run.git_revision)
         else:
             engine_match, rev_only = None, False
         base = {
             "run_id": run_id,
+            "competition_slug": slug,
+            "model_version": model_mod.MODEL_NAME,
             "artifact_hash": art.content_hash,
             "artifact_schema": art.schema_version,
             "stored_engine_signature_hash": stored_sig,
@@ -281,7 +302,7 @@ def verify_replay(run_id: str, tol: float = 1e-6) -> dict:
             return {**base, "replayable": False,
                     "reason": "engine signature mismatch — refusing to "
                               "replay under a different engine"}
-        replayed = model_mls.replay_from_artifact(doc)
+        replayed = model_mod.replay_from_artifact(doc)
         if replayed is None:
             return {**base, "replayable": False,
                     "reason": "artifact missing ratings"}
@@ -300,20 +321,26 @@ def verify_replay(run_id: str, tol: float = 1e-6) -> dict:
         s.close()
 
 
-def lock_audit() -> dict:
-    """Integrity audit over every shadow-touched fixture."""
+def lock_audit(competition_slug: str | None = None) -> dict:
+    """Integrity audit over every shadow-touched fixture of ONE
+    competition (EPL P0-2: an unscoped audit over a two-league database
+    scored EPL locks against the MLS engine and counted another league's
+    failed snapshots as MLS failures)."""
     if not plane_ready():
         return {"skipped": "dormant"}
+    slug = competition_slug or competitions.DEFAULT_SLUG
+    model_mod = competitions.model_module(slug)   # unknown slug -> raise
     s = get_session()
     try:
         # compute the current engine signature ONCE for the whole audit
         # (V9.1 eval F4) rather than per-lock — it hashes source files
-        from src.live import model_mls
-        current_engine = model_mls.engine_signature()["signature_hash"]
+        current_engine = model_mod.engine_signature()["signature_hash"]
         touched_ids = {r[0] for r in s.query(
             PredictionRun.fixture_id).distinct().all()}
         fixtures = [f for f in s.query(Fixture).filter_by(
-            competition_slug="mls-2026").all() if f.id in touched_ids]
+            competition_slug=slug).all() if f.id in touched_ids]
+        fixture_ids = {f.id for f in s.query(Fixture).filter_by(
+            competition_slug=slug).all()}
         locks_out, missed = [], []
         for f in fixtures:
             ko = _utc(f.current_kickoff_utc)
@@ -337,7 +364,8 @@ def lock_audit() -> dict:
                 continue
             for lock in canon:
                 locks_out.append(_lock_checks(s, f, lock, len(canon),
-                                              current_engine))
+                                              current_engine,
+                                              competition_slug=slug))
         failed_snaps = [{
             "market_snapshot_id": sn.id,
             "fixture_id": sn.fixture_id,
@@ -345,9 +373,11 @@ def lock_audit() -> dict:
                             if sn.captured_at else None),
             "failure_reason": sn.failure_reason,
         } for sn in s.query(MarketSnapshot).filter_by(
-            status="failed").all()]
+            status="failed").all() if sn.fixture_id in fixture_ids]
         body = {
             "audit_version": AUDIT_VERSION,
+            "competition_slug": slug,
+            "model_version": model_mod.MODEL_NAME,
             "generated_at": _now().isoformat(),
             "locks": locks_out,
             "missed_locks": missed,
@@ -367,11 +397,11 @@ def lock_audit() -> dict:
                 # is the PAPER EVIDENCE that is missing, and conflating
                 # the two would either excuse the gap or falsely condemn
                 # 15 clean locks. `clean` stays a statement about locks.
-                "paper_coverage": _paper_coverage_summary(),
+                "paper_coverage": _paper_coverage_summary(slug),
                 # deployment provenance, reported beside lock integrity
                 # rather than inside it (see the note in _lock_checks)
                 "engine_provenance": {
-                    "current_signature_hash": _current_engine_hash(),
+                    "current_signature_hash": _current_engine_hash(slug),
                     "locks_matching_current": sum(
                         1 for r in locks_out
                         if r.get("engine_matches_current")

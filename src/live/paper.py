@@ -31,6 +31,7 @@ import json
 from decimal import ROUND_HALF_UP, ROUND_UP, Decimal
 
 import config
+from src.live import competitions
 from src.live.db import get_session, plane_ready
 from src.live.models import (Fixture, MarketContract, MarketDepthLevel,
                              MarketQuote, MarketSnapshot, PaperEvaluationContext,
@@ -299,7 +300,19 @@ def _exposure_from_doc(doc: dict) -> dict:
     return exp
 
 
-def capture_evaluation_context(s, run) -> PaperEvaluationContext:
+def _run_competition(s, run) -> str:
+    """The competition a prediction run belongs to, from its fixture.
+    Explicit: paper decisions used to be evaluated against the MLS model
+    and the MLS engine signature no matter whose lock they were (EPL
+    P0-3)."""
+    fx = s.get(Fixture, run.fixture_id) if run.fixture_id else None
+    return (fx.competition_slug if fx is not None
+            else competitions.DEFAULT_SLUG)
+
+
+def capture_evaluation_context(s, run,
+                               competition_slug: str | None = None
+                               ) -> PaperEvaluationContext:
     """FREEZE the paper/risk state a lock is evaluated against.
 
     V9.5 eval C1. Paper decisions depended on three mutable inputs that
@@ -311,20 +324,24 @@ def capture_evaluation_context(s, run) -> PaperEvaluationContext:
     plausible.
 
     Idempotent: one context per run, returned as-is if already frozen."""
-    from src.live import model_mls, risk
+    from src.live import risk
     existing = (s.query(PaperEvaluationContext)
                 .filter_by(prediction_run_id=run.id).first())
     if existing is not None:
         return existing
+    slug = competition_slug or _run_competition(s, run)
+    model_mod = competitions.model_module(slug)
     exposure = _exposure_doc(risk.current_exposure(s))
     kill = risk.active_kill_switches(s)
-    approved = approved_model_version(s)
+    approved = approved_model_version(s, model_mod.MODEL_NAME)
     try:
-        engine = model_mls.engine_signature()["signature_hash"]
+        engine = model_mod.engine_signature()["signature_hash"]
     except Exception:
         engine = None
     doc = {
         "prediction_run_id": run.id,
+        "competition_slug": slug,
+        "model_version": model_mod.MODEL_NAME,
         "exec_policy": EXEC_POLICY,
         "fee_policy": FEE_POLICY,
         "risk_policy": risk.RISK_POLICY,
@@ -365,9 +382,13 @@ def paper_trade_lock(run_id: str, backfill: bool = False) -> dict:
     replay; when no context exists — locks written before V9.5 — the
     signal is marked `reconstructed` with a NULL context, which is the
     honest label for a decision that had to read recovery-time state
-    (V9.5 eval C1)."""
-    if not (plane_ready() and config.MLS_SHADOW_ENABLED
-            and config.PAPER_TRADING_ENABLED):
+    (V9.5 eval C1).
+
+    Competition-keyed (EPL P0-3): the master switch, the approved model
+    version and the frozen engine signature are all THIS lock's
+    competition's. Before that, an EPL lock was gated on
+    MLS_SHADOW_ENABLED and frozen against the MLS engine."""
+    if not (plane_ready() and config.PAPER_TRADING_ENABLED):
         return {"skipped": "off"}
     from src.live import risk
     s = get_session()
@@ -377,10 +398,14 @@ def paper_trade_lock(run_id: str, backfill: bool = False) -> dict:
         run = s.get(PredictionRun, run_id)
         if run is None or not (run.run_type == "t10" and run.canonical):
             return {"skipped": "not a canonical lock"}
+        slug = _run_competition(s, run)
+        if not competitions.shadow_enabled(slug):
+            return {"skipped": "off"}
+        model_mod = competitions.model_module(slug)
         ctx = (s.query(PaperEvaluationContext)
                .filter_by(prediction_run_id=run_id).first())
         if ctx is None and not backfill:
-            ctx = capture_evaluation_context(s, run)
+            ctx = capture_evaluation_context(s, run, competition_slug=slug)
         mode = "contemporaneous" if not backfill else "reconstructed"
         if ctx is not None:
             model_approved = bool(ctx.model_approved)
@@ -391,7 +416,8 @@ def paper_trade_lock(run_id: str, backfill: bool = False) -> dict:
             # DEGRADED replay: no frozen context exists for this lock, so
             # recovery-time state is the only thing available. Recorded
             # as such rather than presented as a faithful replay.
-            model_approved = approved_model_version(s) is not None
+            model_approved = approved_model_version(
+                s, model_mod.MODEL_NAME) is not None
             kill_switches = risk.active_kill_switches(s)
             exposure = risk.current_exposure(s)
         snap = (s.get(MarketSnapshot, run.market_snapshot_id)
@@ -612,7 +638,19 @@ def settle_paper(fixture_id: int | None = None) -> dict:
         s.close()
 
 
-def paper_coverage() -> dict:
+def _competition_run_ids(s, competition_slug: str | None):
+    """Prediction-run ids belonging to one competition (EPL P0-2). None
+    means "every competition" and is used by nothing on a reporting path
+    — every caller names its competition."""
+    slug = competition_slug or competitions.DEFAULT_SLUG
+    fixture_ids = {f.id for f in s.query(Fixture)
+                   .filter_by(competition_slug=slug).all()}
+    return fixture_ids, {r.id for r in s.query(PredictionRun)
+                         .filter(PredictionRun.fixture_id
+                                 .in_(fixture_ids)).all()}
+
+
+def paper_coverage(competition_slug: str | None = None) -> dict:
     """Did the paper engine actually evaluate every leg it could have?
 
     The first prospective slate (2026-07-25) exposed the gap this answers.
@@ -633,9 +671,11 @@ def paper_coverage() -> dict:
         return {}
     s = get_session()
     try:
-        locks = (s.query(PredictionRun)
-                 .filter_by(run_type="t10", canonical=True,
-                            status="complete").all())
+        fixture_ids, _ = _competition_run_ids(s, competition_slug)
+        locks = [r for r in (s.query(PredictionRun)
+                             .filter_by(run_type="t10", canonical=True,
+                                        status="complete").all())
+                 if r.fixture_id in fixture_ids]
         eligible_legs = signalled = backfilled = 0
         uncovered: list[dict] = []
         partial: list[dict] = []
@@ -684,7 +724,8 @@ def paper_coverage() -> dict:
         s.close()
 
 
-def backfill_uncovered_locks(limit: int = 50) -> dict:
+def backfill_uncovered_locks(limit: int = 50,
+                             competition_slug: str | None = None) -> dict:
     """Recompute paper signals for canonical locks the engine never ran.
 
     Faithful by construction: every input the decision reads is FROZEN on
@@ -697,13 +738,13 @@ def backfill_uncovered_locks(limit: int = 50) -> dict:
     The signals are still marked `backfilled_at`: deterministic recovery
     is not the same evidence as a signal that existed at lock time, and
     the ledger must never blur the two."""
-    cov = paper_coverage()
+    cov = paper_coverage(competition_slug=competition_slug)
     out: list[dict] = []
     for row in (cov.get("uncovered") or [])[:limit]:
         res = paper_trade_lock(row["run_id"], backfill=True)
         out.append({"run_id": row["run_id"],
                     "espn_event_id": row["espn_event_id"], **res})
-    after = paper_coverage()
+    after = paper_coverage(competition_slug=competition_slug)
     return {"attempted": len(out), "results": out,
             "coverage_before": {k: cov.get(k) for k in
                                 ("locks_uncovered", "legs_signalled",
@@ -712,20 +753,29 @@ def backfill_uncovered_locks(limit: int = 50) -> dict:
                                if k not in ("uncovered", "partial", "note")}}
 
 
-def paper_summary() -> dict:
+def paper_summary(competition_slug: str | None = None) -> dict:
     """The paper ledger P&L — settled economics + open exposure. All
-    labeled PAPER; never a real position."""
+    labeled PAPER; never a real position.
+
+    Scoped to ONE competition (EPL P0-2): a shared ledger would have
+    reported another league's fills inside MLS's headline P&L."""
     if not plane_ready():
         return {}
     s = get_session()
     try:
-        fills = s.query(PaperFill).all()
+        _fx_ids, run_ids = _competition_run_ids(s, competition_slug)
+        sig_ids = {g.id for g in s.query(PaperSignal).all()
+                   if g.prediction_run_id in run_ids}
+        fills = [f for f in s.query(PaperFill).all()
+                 if f.paper_signal_id in sig_ids]
         settled = [f for f in fills if f.status == "settled"]
-        rejects = s.query(PaperSignal).filter_by(decision="reject").count()
+        rejected = [g for g in s.query(PaperSignal)
+                    .filter_by(decision="reject").all()
+                    if g.id in sig_ids]
+        rejects = len(rejected)
         reasons: dict[str, int] = {}
-        for r in (s.query(PaperSignal.reject_reason)
-                  .filter_by(decision="reject").all()):
-            reasons[r[0]] = reasons.get(r[0], 0) + 1
+        for g in rejected:
+            reasons[g.reject_reason] = reasons.get(g.reject_reason, 0) + 1
         # V9.3 eval F4: a fill built from the top quote with no captured
         # depth is an ESTIMATE, not a depth-backed execution. Headline P&L
         # is EXECUTION-GRADE ONLY (bounded_depth); estimates are reported
@@ -772,12 +822,13 @@ def paper_summary() -> dict:
             "fee_basis": FEE_POLICY["not_modeled"],
             "settled_pnl_dollars": str(pnl_d),
             "settled_cost_dollars": str(cost_d),
-            "signals": s.query(PaperSignal).count(),
+            "signals": len(sig_ids),
             # the DENOMINATOR (2026-07-26): a signal count alone cannot
             # distinguish "examined the slate and found nothing" from
             # "never examined 40% of it". Never report one without this.
-            "coverage": {k: v for k, v in paper_coverage().items()
-                         if k not in ("uncovered", "partial")},
+            "coverage": {k: v for k, v in paper_coverage(
+                competition_slug=competition_slug).items()
+                if k not in ("uncovered", "partial")},
             "fills": len(fills),
             "rejected": rejects, "reject_reasons": reasons,
             "open_fills": sum(1 for f in fills if f.status == "open"),
