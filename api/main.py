@@ -231,7 +231,15 @@ def friendlies_markets(date: str | None = Query(None, pattern=r"^\d{8}$")):
     registry_incomplete) and freshness, plus a books-only census of how
     much friendly surface Kalshi lists beyond ESPN's bucket — with its
     own completeness on the record. Full per-event detector work lives
-    in the market hunter, not here."""
+    in the market hunter, not here.
+
+    Each mapped row also carries `implied`: the probabilities its book
+    implies with the overround stripped proportionally, plus the raw ask
+    sum, the bid side, the spreads and the exact fee-adjusted breakevens.
+    That block is ARITHMETIC ON OBSERVED PRICES attributed to the
+    exchange — not a prediction, not a forecast, and not a model output.
+    No model runs on friendlies (see src.friendlies.FRAMING); this is the
+    market's own view of the same match, which is a different claim."""
     from src import friendlies
     return {"fixtures": friendlies.daily_books(date),
             "listed": friendlies.listed_events_summary(),
@@ -251,7 +259,7 @@ def friendlies_match(event_id: str):
     # could not look, and "no book exists" is a claim a failure cannot
     # support (P0-2).
     books = {"status": "unavailable", "candidates": [], "freshness": None,
-             "families": []}
+             "implied": None, "families": []}
     try:                                # the page must not die on the book
         books = friendlies.find_all_books(
             out.get("date"),

@@ -54,11 +54,19 @@ claims impossible, so a no-candidate fixture is `registry_incomplete`,
 not "unmapped". A market fetch that failed is `unavailable`, never "no
 open markets". A stale cache may serve, but visibly: the book carries
 {"state": "stale", "age_seconds": n}.
+
+MARKET-IMPLIED PROBABILITIES (2026-07-29) do not weaken the modelless
+scope line above — they are arithmetic on the exchange's own prices,
+authored by the book and not by this platform. See the
+`market_implied` section for why a forecast is structurally
+unavailable here and why every name in that section refuses the words
+"prediction", "forecast", "model" and "edge".
 """
 from __future__ import annotations
 
 import threading
 import time
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
 import requests
 
@@ -66,6 +74,11 @@ import requests
 from src.mls import (parse_event, parse_game_books, parse_summary,
                      parse_team_colors)
 from src.mls import scoreline_disagreements as _mls_scoreline_audit
+# The EXACT fee module, imported and never re-implemented: a second copy
+# of the fee formula is precisely how the binary-float ceil that
+# overcharged by a cent at some prices got written in the first place
+# (V9.1 eval F3). Decimal in, Decimal out, no floats anywhere near it.
+from src.live.paper import FEE_POLICY, order_fee_dollars
 
 ESPN_LEAGUE = "club.friendly"          # fifa.friendly = internationals; out of scope
 ESPN_BASE = f"https://site.api.espn.com/apis/site/v2/sports/soccer/{ESPN_LEAGUE}"
@@ -495,6 +508,291 @@ def match_fixture_book(fixture_date: str, home_name: str, away_name: str,
             "freshness": None}
 
 
+# --- market-implied probabilities (arithmetic, NOT a forecast) -------------
+#
+# WHY THIS EXISTS, and why every name here refuses forecast vocabulary.
+#
+# Son asked for model predictions on friendlies. This platform cannot
+# produce them, and the reason is structural rather than a matter of
+# effort: team ratings are competition-scoped — `model_mls.fit` filters
+# `competition_slug="mls-2026"` and MLS is the only approved model —
+# while friendlies span the global club universe (J-League, Bundesliga,
+# Championship, League Two). ZERO of those clubs hold a rating anywhere
+# in this system, so there is no quantity to forecast WITH. A forecast is
+# therefore *unavailable*, not withheld and not pending.
+#
+# What IS available is arithmetic on prices somebody else set. Take the
+# exchange's own YES asks across a full 3-way partition, remove the
+# overround proportionally, and what falls out is the probability set
+# implied BY THE BOOK. It claims nothing beyond "this is what the book
+# prices", which is exactly what makes it honest on a surface with no
+# model: this platform is not the author of these numbers, and no field,
+# string or comment in this section may let a reader think otherwise.
+#
+# Consequences that are load-bearing, not stylistic:
+#   - the vocabulary is "market-implied, vig stripped". Never
+#     "prediction", "forecast", "model", "edge", nor "fair value"
+#     unqualified. Tests assert the absence of those words.
+#   - the ASK side is the basis, because the ask is what a reader would
+#     actually pay. The BID side is reported separately so the spread —
+#     the width of the market's own uncertainty — is visible beside the
+#     number instead of being averaged away into a clean-looking mid.
+#   - the RAW ask sum ships with the answer. A percentage that has had
+#     6% of vig quietly removed should say so; the reader can see how
+#     much of the number was the exchange's margin.
+#   - a raw sum BELOW $1.00 is not a probability set at all, it is a
+#     structural anomaly, and normalizing it upward would launder an
+#     arbitrage-shaped book into a comfortable-looking forecast. It comes
+#     back flagged with NO probabilities. The market hunter's
+#     SUM_BELOW_ONE finding class owns that observation (net of fees,
+#     with liquidity guards); this section deliberately re-detects
+#     nothing and asserts no margin.
+#   - a partial book is INCOMPLETE. Renormalizing two legs into a 3-way
+#     would invent a draw price out of nothing.
+#
+# Exact Decimal throughout. Fees come from the exact fee module.
+
+IMPLIED_BASIS = "yes_ask"
+IMPLIED_METHOD = "proportional_normalization"
+
+# The Kalshi taker fee is computed once on a WHOLE order and rounded up
+# to the centicent, so a "fee per contract" is not a well-defined number
+# — it depends on order size. The fee-adjusted breakeven is therefore
+# stated for an explicit reference order, and the reference is declared
+# rather than assumed. This is a UNIT for expressing the fee, NOT a
+# suggested size: money is locked, there is no order path here, and
+# nothing on this surface sizes anything.
+IMPLIED_FEE_REFERENCE_CONTRACTS = 100
+
+# Reported probabilities are quantized to a micro-probability. Exact
+# Decimal division does not terminate for most books, so a residue is
+# unavoidable; it is assigned to the LARGEST leg (first maximal ask in
+# book order — deterministic) so that the published set sums to exactly
+# $1. A set that does not sum to 1 is not a distribution, and burying
+# the residue somewhere unstated would be the dishonest fix.
+IMPLIED_PRECISION = Decimal("0.000001")
+IMPLIED_RESIDUE_RULE = "largest_leg_absorbs_rounding_residue"
+
+IMPLIED_ATTRIBUTION = (
+    "Market-implied probabilities: the exchange's own YES asks with the "
+    "overround removed proportionally. This is arithmetic on observed "
+    "Kalshi prices — the market's view, not this platform's. No model "
+    "runs on friendlies and none is planned.")
+
+_DRAW_TAILS = ("TIE", "DRAW")
+
+
+def _read_clock() -> str:
+    """OUR read clock, for `captured_at`. Deliberately not the
+    exchange's: Kalshi publishes no quote timestamp (see
+    `market_implied`), so the only honest instant available is the one
+    at which this process assembled the answer."""
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _is_draw_leg(row: dict) -> bool:
+    """The draw leg of a KXCLUBF/KXMLS-grammar 3-way book. Ticker tail
+    first (the grammar's own marker, same convention as the market
+    hunter's `_tie_leg`), label as a fallback for rows whose ticker did
+    not survive a provider rename."""
+    tail = (row.get("ticker") or "").rsplit("-", 1)[-1].upper()
+    if tail in _DRAW_TAILS:
+        return True
+    return _norm_name(row.get("label") or "") in ("tie", "draw")
+
+
+def _dollars(row: dict, field: str) -> Decimal | None:
+    """Exact dollar price of one side of one leg, or None when that side
+    is EMPTY. Only a value strictly inside (0, 1) counts: Kalshi reports
+    0 and 1 as empty-side placeholders, and treating a placeholder 0 as
+    "this outcome is priced at zero" would convert a missing quote into
+    certainty — the one thing this module exists not to do. Same rule as
+    the market hunter's `_price`."""
+    v = row.get(field)
+    if v is None:
+        return None
+    try:
+        d = Decimal(str(v))
+    except (InvalidOperation, ValueError, TypeError):
+        return None
+    if d <= 0 or d >= 1:
+        return None
+    return d
+
+
+def _s(d: Decimal | None) -> str | None:
+    return None if d is None else str(d)
+
+
+def _implied_freshness(freshness: dict | None) -> dict:
+    """The book's freshness, restated so the implied block can never be
+    read as current when it isn't. `match_fixture_book` threads None for
+    a fresh answer and {"state": "stale", "age_seconds": n} for a warm
+    cache served through a failed refetch; a "missing" book cannot reach
+    here (it becomes status `unavailable` upstream) but is mapped anyway
+    rather than defaulted to fresh."""
+    state = (freshness or {}).get("state") or "fresh"
+    if state == "missing":
+        return {"state": "unavailable", "age_seconds": None}
+    if state == "stale":
+        age = (freshness or {}).get("age_seconds")
+        return {"state": "stale",
+                "age_seconds": age if isinstance(age, int) else None}
+    return {"state": "fresh", "age_seconds": 0}
+
+
+def _implied_legs(rows: list[dict]) -> list[dict]:
+    """Per-leg ask/bid/spread and the fee-adjusted breakeven. No
+    probabilities here — those only exist once the whole partition is
+    proven priced."""
+    out = []
+    for r in rows:
+        ask = _dollars(r, "yes_ask")
+        bid = _dollars(r, "yes_bid")
+        fee = cost = breakeven = None
+        if ask is not None:
+            c = Decimal(IMPLIED_FEE_REFERENCE_CONTRACTS)
+            fee = order_fee_dollars(ask, IMPLIED_FEE_REFERENCE_CONTRACTS)
+            # what the reference order costs, and the probability at
+            # which it breaks even net of that fee: (C*ask + fee) / C.
+            # Every step exact — Decimal division by a power of ten is
+            # exact, so the breakeven is not a rounded figure.
+            cost = ask * c + fee
+            breakeven = cost / c
+        out.append({
+            "ticker": r.get("ticker"),
+            "label": r.get("label"),
+            "is_draw": _is_draw_leg(r),
+            "ask_dollars": _s(ask),
+            "bid_dollars": _s(bid),
+            "spread_dollars": _s(None if (ask is None or bid is None)
+                                 else ask - bid),
+            "implied_probability": None,       # set only when priced
+            "fee_dollars": _s(fee),
+            "cost_dollars": _s(cost),
+            "breakeven_probability": _s(breakeven),
+        })
+    return out
+
+
+def market_implied(book: dict | None, freshness: dict | None = None,
+                   captured_at: str | None = None) -> dict:
+    """The probabilities a friendly's 3-way Kalshi book IMPLIES, with the
+    vig removed proportionally — arithmetic on observed prices, never a
+    forecast (see the section comment above for why a forecast is
+    structurally unavailable on this surface).
+
+    PURE: dict in, dict out. No network, no cache, no clock — the caller
+    supplies `captured_at` because the only capture clock available is
+    OURS. Kalshi publishes no quote timestamp: `updated_time` is the
+    market *definition* clock and has been observed ~30h stale on
+    actively trading markets, so any claim of an exchange-side quote
+    instant would be fabricated. `captured_at` is therefore labelled as
+    this platform's read time, and staleness is carried separately.
+
+    -> {"state", "reason", ...} where state is
+       priced          exactly 3 legs, exactly one draw leg, every leg
+                       with a real ask, and the asks sum to >= $1.00.
+                       Each leg carries `implied_probability`; the set
+                       sums to exactly 1.
+       sum_below_one   a fully priced 3-way whose asks sum BELOW $1.00.
+                       Reported with the raw sum and the shortfall and
+                       NO probability set: normalizing it upward would
+                       dress a structural anomaly as a forecast. The
+                       hunter's SUM_BELOW_ONE class owns the finding;
+                       no margin is asserted here.
+       incomplete      the arithmetic's preconditions are not met, with
+                       `reason` one of
+                         no_book           nothing to compute from
+                         book_unavailable  the fetch failed upstream
+                         leg_count         not exactly 3 legs
+                         partition_unproven not exactly one draw leg, so
+                                           the legs are not provably a
+                                           mutually-exclusive partition
+                         missing_ask       at least one leg has no ask
+                       In every incomplete state `implied_probability` is
+                       None on every leg. A 2-way is NEVER renormalized
+                       into a 3-way: that invents a draw price.
+
+    `sum_ask_dollars` / `sum_bid_dollars` / `overround_dollars` ship with
+    every computable answer so a reader can see how much of the book was
+    the exchange's margin, and how wide the two sides sat.
+    `overround_dollars` is SIGNED (sum - 1), so the anomalous book shows
+    a negative one and `shortfall_dollars` names the same gap positively
+    — neither is silently clamped to zero."""
+    fresh = _implied_freshness(freshness)
+    base = {
+        "state": "incomplete",
+        "reason": "no_book",
+        "basis": IMPLIED_BASIS,
+        "method": None,
+        "legs": [],
+        "sum_ask_dollars": None,
+        "sum_bid_dollars": None,
+        "overround_dollars": None,
+        "shortfall_dollars": None,
+        "sum_implied_probability": None,
+        "residue_rule": None,
+        "fee_reference_contracts": IMPLIED_FEE_REFERENCE_CONTRACTS,
+        "fee_policy_version": FEE_POLICY["version"],
+        "freshness": fresh,
+        "captured_at": captured_at,
+        "attribution": IMPLIED_ATTRIBUTION,
+    }
+    if fresh["state"] == "unavailable":
+        return {**base, "reason": "book_unavailable"}
+    rows = (book or {}).get("markets") or []
+    if not rows:
+        return base
+
+    legs = _implied_legs(rows)
+    asks = [None if leg["ask_dollars"] is None else Decimal(leg["ask_dollars"])
+            for leg in legs]
+    bids = [None if leg["bid_dollars"] is None else Decimal(leg["bid_dollars"])
+            for leg in legs]
+    known_asks = [a for a in asks if a is not None]
+    known_bids = [b for b in bids if b is not None]
+    out = {**base, "legs": legs,
+           "sum_ask_dollars": (_s(sum(known_asks))
+                               if len(known_asks) == len(asks) else None),
+           "sum_bid_dollars": (_s(sum(known_bids))
+                               if len(known_bids) == len(bids) else None)}
+
+    # Preconditions, each refused separately so the caller can SAY which
+    # one failed instead of showing a confident nothing.
+    if len(rows) != 3:
+        return {**out, "reason": "leg_count"}
+    if sum(1 for leg in legs if leg["is_draw"]) != 1:
+        return {**out, "reason": "partition_unproven"}
+    if len(known_asks) != 3:
+        return {**out, "reason": "missing_ask"}
+
+    total = sum(known_asks)
+    overround = total - Decimal(1)
+    out = {**out, "overround_dollars": str(overround)}
+    if total < Decimal(1):
+        # NOT normalized, deliberately: see the section comment.
+        return {**out, "state": "sum_below_one", "reason": "asks_sum_below_one",
+                "shortfall_dollars": str(Decimal(1) - total)}
+
+    probs = [(a / total).quantize(IMPLIED_PRECISION, rounding=ROUND_HALF_UP)
+             for a in known_asks]
+    residue = Decimal(1) - sum(probs)
+    if residue != 0:
+        # first maximal ask in book order — deterministic, and the
+        # smallest relative distortion available
+        i = max(range(len(known_asks)), key=lambda k: known_asks[k])
+        probs[i] = probs[i] + residue
+    assert sum(probs) == Decimal(1)            # the published set IS a set
+    for leg, p in zip(legs, probs):
+        leg["implied_probability"] = str(p)
+    return {**out, "state": "priced", "reason": None,
+            "method": IMPLIED_METHOD,
+            "residue_rule": IMPLIED_RESIDUE_RULE,
+            "sum_implied_probability": str(sum(probs))}
+
+
 # --- per-match Kalshi families (all VERIFIED live 2026-07-28) --------------
 # Rows are market-only BY DESIGN: no model_key field exists on this
 # surface because no model does. See FRAMING.
@@ -515,13 +813,22 @@ def find_all_books(fixture_date: str, home_name: str,
     ({YYMONDD}{HOME}{AWAY}), so that join is exact and needs no name
     resolution. 30s bundle cache.
 
-    -> {"status", "candidates", "freshness", "families": [{key,label,
-        event_ticker, markets:[{ticker,label,yes_ask,yes_bid,status}]}]}
+    -> {"status", "candidates", "freshness", "implied", "families":
+        [{key,label,event_ticker, markets:[{ticker,label,yes_ask,yes_bid,
+        status}]}]}
+
+    `implied` is the ADDITIVE market-implied block for the 3-way winner
+    book (see `market_implied`) — arithmetic on the exchange's asks, not
+    a forecast. It is None when there is no book to compute from, which
+    the `status` already explains in words. Market rows stay market-only:
+    nothing is added to them, because a per-row field would be the first
+    step towards a row shape that implies a model exists.
     """
     m = match_fixture_book(fixture_date, home_name, away_name)
     if m["status"] != "mapped":
         return {"status": m["status"], "candidates": m["candidates"],
-                "freshness": m["freshness"], "families": []}
+                "freshness": m["freshness"], "implied": None,
+                "families": []}
     game = m["book"]
     suffix = game["event_ticker"].split("-", 1)[1]
 
@@ -548,7 +855,8 @@ def find_all_books(fixture_date: str, home_name: str,
         return fams
     families = _cached(f"allbooks:{suffix}", 30, fetch) or []
     return {"status": "mapped", "candidates": m["candidates"],
-            "freshness": m["freshness"], "families": families}
+            "freshness": m["freshness"], "families": families,
+            "implied": market_implied(game, m["freshness"], _read_clock())}
 
 
 def daily_books(date: str | None = None) -> list[dict]:
@@ -556,8 +864,13 @@ def daily_books(date: str | None = None) -> list[dict]:
     one row per ESPN fixture, every row carrying its explicit mapping
     status AND freshness so the UI can say "couldn't look", "registry
     incomplete", "ambiguous" or "stale, {n}s old" in words instead of
-    showing a confident nothing."""
+    showing a confident nothing.
+
+    Each row also carries the additive `implied` block (None where there
+    is no book): the probabilities the book itself implies, vig stripped.
+    Arithmetic on observed prices — see `market_implied`."""
     out = []
+    clock = _read_clock()
     for f in scoreboard(date):
         m = match_fixture_book(f.get("date") or "",
                                (f.get("home") or {}).get("name") or "",
@@ -567,5 +880,7 @@ def daily_books(date: str | None = None) -> list[dict]:
                     "away": (f.get("away") or {}).get("name"),
                     "status": m["status"], "book": m["book"],
                     "candidates": m["candidates"],
-                    "freshness": m["freshness"]})
+                    "freshness": m["freshness"],
+                    "implied": (market_implied(m["book"], m["freshness"], clock)
+                                if m["book"] else None)})
     return out
