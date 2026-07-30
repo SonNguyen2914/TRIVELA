@@ -461,8 +461,16 @@ def parse_fixture(row: object) -> dict | None:
         "league_name": lg.get("name"),
         "league_season": lg.get("season"),
         "is_classified_friendly": lg.get("id") in FRIENDLY_LEAGUES,
-        "home": {"apif_team_id": hid, "name": home.get("name")},
-        "away": {"apif_team_id": aid, "name": away.get("name")},
+        # crest comes free in the same payload; venue is frequently
+        # {id: None, name: None, city: None} on this feed, so it is
+        # reported as ABSENT rather than as an empty string
+        "venue": ((row.get("fixture") or {}).get("venue") or {}).get("name"),
+        "venue_city": ((row.get("fixture") or {}).get("venue")
+                       or {}).get("city"),
+        "home": {"apif_team_id": hid, "name": home.get("name"),
+                 "crest": home.get("logo")},
+        "away": {"apif_team_id": aid, "name": away.get("name"),
+                 "crest": away.get("logo")},
         # A null score is ABSENT, never 0-0. A fixture that has not
         # kicked off has no score, and rendering one as nil-nil would
         # invent a result.
@@ -1075,3 +1083,121 @@ def market_rows(horizon_days: int | None = None) -> dict:
         "framing": friendlies.FRAMING,
         "framing_note": FRAMING_NOTE,
     }
+
+
+# --- fixture-primary surface (the friendlies HUB, 2026-07-30) --------------
+# `market_rows` above is Kalshi-event-primary: it answers "what can I trade
+# and did it bridge". That is the wrong shape for a hub, which has to show
+# EVERY friendly whether or not Kalshi lists it. Measured 2026-07-29: ESPN's
+# club.friendly bucket could name 1 of 25 tradeable events (4%); this
+# date-scoped all-leagues sweep bridges 22 of 25 (88%) and, more to the
+# point, sees the hundreds of friendlies Kalshi never lists at all.
+
+
+def _bridge_by_fixture_id(swept: dict, events: list[dict]) -> dict:
+    """{apif fixture id -> bridge row} for every BRIDGED Kalshi event.
+
+    Factored out of `market_rows`'s loop so the fixture-primary and
+    event-primary surfaces share one bridge computation instead of two that
+    could disagree about the same fixture."""
+    out: dict[int, dict] = {}
+    for ev in events:
+        b = bridge_event(ev, swept)
+        if b.get("state") != "bridged":
+            continue
+        fid = b.get("fixture_id")
+        if fid is not None:
+            out[int(fid)] = b
+    return out
+
+
+def fixture_rows(horizon_days: int | None = None,
+                 with_strength: bool = True) -> dict:
+    """EVERY classified friendly in the horizon, Kalshi-listed or not.
+
+    Deliberately does NOT fetch a book per fixture: only the handful that
+    bridge to a Kalshi event are worth a request, and the hub renders
+    hundreds of rows. `kalshi.state` says which are worth opening.
+    """
+    swept = sweep(horizon_days)
+    fixtures = friendly_fixtures(swept)
+    try:
+        reg = tradeable_events()
+        bridged = _bridge_by_fixture_id(swept, reg["events"])
+        reg_ok = True
+    except Exception as exc:                      # never lose the fixtures
+        bridged, reg_ok = {}, False
+        print(f"[friendlies-apif] tradeable events failed: {exc}")
+
+    rows = []
+    for f in fixtures:
+        fid = f.get("fixture_id")
+        b = bridged.get(int(fid)) if fid is not None else None
+        row = dict(f)
+        row["kalshi"] = (
+            {"state": "bridged", "event_ticker": b.get("event_ticker")}
+            if b else
+            {"state": "none_listed" if reg_ok else "registry_unavailable",
+             "means": ("no Kalshi event bridges to this fixture"
+                       if reg_ok else
+                       "the Kalshi registry could not be read, so whether "
+                       "this fixture is listed is UNKNOWN — not 'unlisted'")})
+        if with_strength:
+            row["strength"] = _strength_for(f)
+        rows.append(row)
+    rows.sort(key=lambda r: (r.get("kickoff_utc") or ""))
+    return {"fixtures": rows, "count": len(rows),
+            "sweep": {"dates": swept.get("dates"),
+                      "complete": swept.get("complete"),
+                      "fixtures_seen": len(swept.get("fixtures") or [])},
+            "kalshi_registry_read": reg_ok,
+            "coverage_note": (
+                "fixtures come from a DATE-scoped sweep across every league, "
+                "not from a friendlies-league query: branded pre-season "
+                "tournaments get their own league id and are invisible to a "
+                "league-scoped call (measured, see module docstring)")}
+
+
+def fixture_by_id(fixture_id: int, horizon_days: int | None = None) -> dict | None:
+    """One friendly, from the sweep cache when possible, else one request."""
+    swept = sweep(horizon_days)
+    for f in friendly_fixtures(swept):
+        if int(f.get("fixture_id") or -1) == int(fixture_id):
+            return f
+    # outside the cached horizon: one targeted request, using this
+    # module's own key/redaction idiom rather than a second client
+    key, _source, _problems = load_key()
+    if not key:
+        return None
+    try:
+        r = requests.get(f"{APIF_BASE}/fixtures",
+                         params={"id": str(int(fixture_id))},
+                         headers={"x-apisports-key": key},
+                         timeout=APIF_TIMEOUT)
+        if r.status_code != 200:
+            return None
+        body = r.json()
+    except (requests.RequestException, ValueError) as exc:
+        print(f"[friendlies-apif] fixture {fixture_id}: "
+              f"{redact(str(exc), key)[:160]}")
+        return None
+    for row in response_items(body):
+        p = parse_fixture(row)
+        if p and int(p.get("fixture_id") or -1) == int(fixture_id):
+            return p
+    return None
+
+
+def _strength_for(f: dict) -> dict:
+    """The cross-league strength read, or a NAMED reason there is none.
+
+    Kept behind a lazy import and a broad except on purpose: this is
+    reader context attached to a fixture list, and a provider wobble in it
+    must never cost the caller the fixtures themselves."""
+    try:
+        from src.live import club_strength_estimate as cse
+        return cse.for_fixture(f)
+    except Exception as exc:
+        return {"available": False, "reason": "estimate_unavailable",
+                "reason_words": "the strength read could not be computed",
+                "detail": str(exc)[:160]}
