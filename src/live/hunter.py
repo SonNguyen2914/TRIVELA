@@ -47,17 +47,38 @@ Finding catalogue (each mechanically defined, net of EXACT fees):
                   hunter captures (capture-PAIRED: both of OUR clocks
                   stored) on a match dated today, AND the move exceeds
                   the wider of the two captures' spreads (spread-aware —
-                  a "move" inside quote noise is not a repricing).
+                  a "move" inside quote noise is not a repricing). The
+                  PRIMARY signal is the market compared with ITSELF and
+                  involves no model of ours at all — that is its whole
+                  virtue and it is not replaced by anything below.
                   CONDITIONALITY DISCIPLINE: a violent in-play move is
                   usually conditioned on a real match event (goal, red
-                  card) this scanner cannot observe across arbitrary
-                  competitions, so the row records the conditioning
-                  event as UNOBSERVED, is labelled context, never claims
-                  mispricing, and never alerts. The pair store is
-                  process-local: the first cycle after a restart has no
-                  pair and detects nothing, recorded honestly. It is
-                  bounded in AGE and SIZE (_prune_pair_store) so it can
-                  never grow without limit.
+                  card), so the row reports which of THREE states it is
+                  in, from API-Football's live feed where coverage allows
+                  (src/live/apifootball_live.py):
+                    conditioning_observed — a goal or red card was seen
+                      at or before the move, so the market's reaction is
+                      at least partly EXPLAINED, which makes it LESS
+                      likely to be an overreaction and the row says so;
+                    conditioning_unobserved_stats_available — the feed
+                      was readable and shows no explaining event, the
+                      strongest version of this finding;
+                    conditioning_unobserved_no_stats — no readable feed,
+                      exactly the behaviour that predates this and still
+                      the common case across the taxonomy.
+                  FINDING A REASON WEAKENS THE FINDING; it never
+                  strengthens it, and CONDITIONING_STRENGTH pins that
+                  ordering for a test rather than for prose. Live xG
+                  rides ALONGSIDE the market anchor as a labelled
+                  characterisation, never as a replacement or an
+                  overrule. Still context-class; it alerts only if
+                  HUNTER_IN_PLAY_ALERTS_ENABLED is turned on (default
+                  OFF — that promotion is Son's call), and then only
+                  through the same AMBIENT_DETAIL / detail-channel path.
+                  The pair store is process-local: the first cycle after
+                  a restart has no pair and detects nothing, recorded
+                  honestly. It is bounded in AGE and SIZE
+                  (_prune_pair_store) so it can never grow without limit.
 
 Fee discipline (provider-aware, fail-closed): Kalshi declares a fee
 schedule per SERIES (fee_type/fee_multiplier on the series object; the
@@ -147,6 +168,7 @@ from decimal import Decimal, InvalidOperation
 import requests
 
 import config
+from src.live import apifootball_live
 from src.live.db import get_session, plane_ready
 from src.live.models import (HunterCycle, HunterFinding,
                              HunterObservationWatermark)
@@ -762,9 +784,14 @@ def detect_overreaction(series: str, event_ticker: str, m: dict,
 
     Both captures must be two-sided; both capture timestamps (OUR
     clocks) are stored — capture-paired. CONDITIONALITY: the move may be
-    a correct instant repricing of an unobserved match event, so the
-    finding is context, records that the conditioning event is
-    unobserved, and never alerts."""
+    a correct instant repricing of a match event, so the finding is
+    context and never claims mispricing.
+
+    PURE by design — no provider I/O here. The row leaves this function
+    in the `conditioning_unobserved_no_stats` state, which is the honest
+    default and is what it stays in for every competition without live
+    coverage. `enrich_overreactions()` is the only thing that upgrades
+    it, and only from a reading it actually took."""
     if prev is None or not _event_dated_today(event_ticker, captured_at):
         return None
     yes_bid = _price(m, "yes_bid")
@@ -786,16 +813,36 @@ def detect_overreaction(series: str, event_ticker: str, m: dict,
     min_move = Decimal(str(config.HUNTER_OVERREACTION_MIN_MOVE_DOLLARS))
     if delta < min_move or delta <= max(spread_now, spread_prev):
         return None
+    prev_at = prev.get("captured_at")
+    window_s = None
+    if prev_at:
+        try:
+            window_s = (captured_at - datetime.fromisoformat(prev_at)
+                        ).total_seconds()
+        except (ValueError, TypeError):
+            window_s = None
     return {
         "finding_type": "IN_PLAY_OVERREACTION",
         "series": series, "event_ticker": event_ticker,
         "market_ticker": m.get("ticker"), "is_context": True,
         "net_margin_dollars": None,
         "captured_at": captured_at, "detected_at": _now(),
+        # the capture window in minutes, so the live-evidence layer can
+        # relate MATCH minutes to the wall-clock interval the move
+        # happened in. An estimate, and labelled one where it is used.
+        "capture_window_minutes": (None if window_s is None
+                                   else round(window_s / 60.0, 2)),
         "legs": {
             "rule": (f"|mid_now - mid_prev| >= {min_move} AND > "
                      "max(spread_prev, spread_now), event dated today "
                      "(context flag, not a win)"),
+            "primary_signal": (
+                "MARKET-ANCHORED and model-free: this market's mid "
+                "compared with its OWN previous mid. No model of ours "
+                "appears in it, which is exactly why it is the primary — "
+                "it cannot be wrong about a model because it contains "
+                "none. Any live-evidence block below sits BESIDE this "
+                "arithmetic and never replaces or overrules it"),
             "capture_pair": {
                 "prev": {"captured_at": prev.get("captured_at"),
                          "yes_bid_dollars": str(prev_bid),
@@ -812,13 +859,170 @@ def detect_overreaction(series: str, event_ticker: str, m: dict,
             "in_play_basis": ("ticker date segment matches today "
                               "US/Eastern; kickoff and live state are "
                               "UNVERIFIED for unmapped competitions"),
+            # the honest DEFAULT state. Upgraded only by
+            # enrich_overreactions(), and only from a reading actually
+            # taken — never by assuming coverage exists.
+            "conditioning": {
+                "state": apifootball_live.CONDITIONING_UNOBSERVED_NO_STATS,
+                "reason": ("no live-evidence pass has been applied to this "
+                           "finding (live stats disabled, no key "
+                           "configured, or no reading taken)"),
+                "note": apifootball_live.CONDITIONING_NOTE[
+                    apifootball_live.CONDITIONING_UNOBSERVED_NO_STATS],
+                "strength_rank": apifootball_live.CONDITIONING_STRENGTH[
+                    apifootball_live.CONDITIONING_UNOBSERVED_NO_STATS],
+            },
             "conditionality": ("the conditioning match event (goal, red "
-                               "card, abandonment...) is UNOBSERVED by "
-                               "this scanner; a large move may be a "
-                               "CORRECT instant repricing — this row "
-                               "claims a move happened, never that the "
-                               "market is wrong"),
+                               "card, abandonment...) may be OBSERVED or "
+                               "UNOBSERVED — read the `conditioning` "
+                               "block, which states which. A large move "
+                               "may be a CORRECT instant repricing; this "
+                               "row claims a move happened, never that "
+                               "the market is wrong"),
         }}
+
+
+def enrich_overreactions(s, findings: list[dict],
+                         event_market_tickers: dict[str, list[str]],
+                         now: datetime) -> dict:
+    """Attach OBSERVED conditioning evidence to IN_PLAY_OVERREACTION rows.
+
+    This is the only place the API-Football live endpoints are touched,
+    and it is deliberately the narrowest possible surface:
+
+      - it runs ONLY when at least one overreaction candidate exists, so
+        a quiet cycle spends ZERO provider requests. The scanner does not
+        sweep the world;
+      - it pays 1 request for every in-play fixture on earth, then 2 per
+        DISTINCT fixture a Kalshi market actually resolved to;
+      - a competition measured ABSENT inside its TTL is skipped without
+        spending anything, and the skip is recorded on the finding as a
+        cached verdict WITH its measurement date — never as a fresh
+        reading;
+      - every failure downgrades the finding to the honest no-feed state.
+        Nothing here may turn a failed read into a conclusion.
+
+    Returns a report block for the cycle row: what was spent, what
+    resolved, and what did not.
+
+    LEAKAGE: these readings reach `HunterFinding.legs_json` and the
+    coverage table only. Live xG carries post-lock information and must
+    never enter a lock, a PredictionRun, a paper signal, or a fitted or
+    scored feature.
+    """
+    report: dict = {"ran": False, "candidates": 0, "requests": 0}
+    candidates = [f for f in findings
+                  if f.get("finding_type") == "IN_PLAY_OVERREACTION"]
+    report["candidates"] = len(candidates)
+    if not candidates:
+        report["skipped"] = "no overreaction candidate this cycle"
+        return report
+    if not config.HUNTER_LIVE_STATS_ENABLED:
+        report["skipped"] = "HUNTER_LIVE_STATS_ENABLED is false"
+        return report
+    key, key_source = apifootball_live.load_key()
+    if not key:
+        # the deliberate inert state: deploying this changes nothing until
+        # an operator configures a key
+        report["skipped"] = (
+            f"no API-Football key configured (source: {key_source}) — the "
+            "live-evidence pass is INERT and every finding keeps the "
+            "honest conditioning_unobserved_no_stats state")
+        return report
+
+    client = apifootball_live.LiveClient(key)
+    report["ran"] = True
+    try:
+        index = apifootball_live.fetch_live_index(client)
+    except Exception as exc:
+        report["error"] = apifootball_live.redact(
+            f"live index read failed: {type(exc).__name__}: {exc}")
+        report["requests"] = client.used
+        report["budget"] = client.budget_block()
+        print(f"[hunter] live index read failed: {type(exc).__name__}")
+        return report
+    report["fixtures_live_total"] = index.get("fixtures_live_total")
+    if index.get("count_disagreement"):
+        report["count_disagreement"] = index["count_disagreement"]
+
+    apifootball_live.prune_reading_store(now)
+    joins: dict[str, dict] = {}
+    readings: dict[str, dict] = {}
+    states: dict[str, int] = {}
+    for f in candidates:
+        ev = f.get("event_ticker") or ""
+        if ev not in joins:
+            joins[ev] = apifootball_live.resolve_fixture(
+                f.get("series") or "", event_market_tickers.get(ev) or [],
+                index)
+        join = joins[ev]
+        reading = None
+        if join.get("status") == apifootball_live.JOIN_RESOLVED:
+            fid = str(join.get("fixture_id"))
+            if fid in readings:
+                reading = readings[fid]
+            elif apifootball_live.coverage_is_fresh_absent(
+                    s, join.get("league_id"), now):
+                # measured absent recently: skip the spend, and say so on
+                # the row as a CACHED verdict rather than a reading
+                join = dict(join)
+                join["coverage_shortcut"] = (
+                    "this competition was MEASURED to serve no live "
+                    "statistics within the coverage TTL, so no request was "
+                    "spent. This is a CACHED verdict, not a reading of "
+                    "this fixture — see /api/admin/hunter/live-coverage "
+                    "for the date it was measured")
+                joins[ev] = join
+            else:
+                try:
+                    reading = apifootball_live.fetch_reading(
+                        client, join.get("fixture_id"))
+                    readings[fid] = reading
+                    try:
+                        apifootball_live.record_coverage(
+                            s, join.get("league_id"), join.get("league_name"),
+                            index.get("by_league", {}).get(
+                                join.get("league_id"), [{}])[0].get(
+                                    "league_country"),
+                            reading, join.get("elapsed"), now)
+                    except Exception as exc:
+                        # coverage bookkeeping must never cost a finding
+                        print("[hunter] coverage upsert failed: "
+                              f"{type(exc).__name__}")
+                except apifootball_live.BudgetExceeded as exc:
+                    report.setdefault("budget_aborts", []).append(str(exc))
+                except Exception as exc:
+                    report.setdefault("reading_errors", []).append(
+                        apifootball_live.redact(
+                            f"{join.get('fixture_id')}: "
+                            f"{type(exc).__name__}"))
+        cond = apifootball_live.classify_conditioning(
+            reading, join, elapsed=join.get("elapsed"),
+            window_minutes=f.get("capture_window_minutes"))
+        f["legs"]["conditioning"] = cond
+        f["legs"]["live_xg_variant"] = (
+            apifootball_live.live_xg_characterisation(
+                reading, join,
+                apifootball_live.previous_reading(join.get("fixture_id"))))
+        f["legs"]["signal_precedence"] = (
+            "PRIMARY = the market-anchored capture_pair arithmetic above, "
+            "model-free. SECONDARY = live_xg_variant, a characterisation "
+            "of live evidence. They are reported separately and are NOT "
+            "reconciled into one verdict: if they disagree, the "
+            "market-anchored primary is what this finding is made of, and "
+            "the disagreement is itself the interesting part")
+        f["legs"]["conditioning_states_available"] = (
+            list(apifootball_live.CONDITIONING_STATES))
+        states[cond["state"]] = states.get(cond["state"], 0) + 1
+        if reading is not None:
+            apifootball_live.remember_reading(join.get("fixture_id"), reading)
+
+    report["conditioning_states"] = states
+    report["joins"] = {ev: j.get("status") for ev, j in joins.items()}
+    report["fixtures_read"] = len(readings)
+    report["requests"] = client.used
+    report["budget"] = client.budget_block()
+    return report
 
 
 def _update_pair_store(m: dict, captured_at: datetime) -> None:
@@ -1216,12 +1420,47 @@ def _alert_budget_ok(now: datetime) -> bool:
     return len(_alert_times) < config.HUNTER_ALERT_MAX_PER_HOUR
 
 
+def _in_play_alert_eligible(f: dict) -> bool:
+    """Whether an IN_PLAY_OVERREACTION may alert.
+
+    DEFAULT FALSE, by config, and that default is the point. Richer
+    conditioning evidence makes this finding more INTERESTING; it does not
+    make promoting a context-class row to the channel a consenting third
+    party reads an implementer's decision. Son deferred that call, so this
+    is off until he turns it on, and when he does it rides the same
+    AMBIENT_DETAIL / detail-channel path as everything else here — never
+    the act-now channel, never the phone.
+
+    Even switched ON, only the STRONGEST conditioning state qualifies:
+      - `conditioning_observed` is refused, because an explaining event
+        makes the move MORE reasonable. Alerting on a move that has a
+        visible cause would broadcast the opposite of what the evidence
+        says — this is the inference direction, enforced at the gate
+        rather than only described in a docstring;
+      - `conditioning_unobserved_no_stats` is refused, because "we could
+        not look" is not a finding worth interrupting anyone for.
+    """
+    if not config.HUNTER_IN_PLAY_ALERTS_ENABLED:
+        return False
+    cond = (f.get("legs") or {}).get("conditioning") or {}
+    return (cond.get("state")
+            == apifootball_live.CONDITIONING_UNOBSERVED_STATS_AVAILABLE)
+
+
 def _alert_eligible(f: dict) -> bool:
     """Whether a finding MAY alert: structural type, non-context, a fee
     schedule this repo actually models (P0-1), margin over the config
     bar, AND positive executable size proven on every required leg
     (P1-6). Eligibility is not delivery — the durable claim +
-    confirmed-transport path below decides that."""
+    confirmed-transport path below decides that.
+
+    IN_PLAY_OVERREACTION is the one CONTEXT type with a route here, and
+    only through `_in_play_alert_eligible`'s own config flag (default
+    OFF). It carries no margin and no liquidity proof, so it is checked
+    before the structural requirements below rather than being made to
+    satisfy them."""
+    if f["finding_type"] == "IN_PLAY_OVERREACTION":
+        return _in_play_alert_eligible(f)
     if f["finding_type"] not in ALERTABLE or f.get("is_context"):
         return False
     # fee_unknown can never alert: a structural margin computed with the
@@ -1244,6 +1483,27 @@ def _alert_eligible(f: dict) -> bool:
 def _alert_message(f: dict) -> str:
     subject = f.get("market_ticker") or f.get("event_ticker") or f["series"]
     legs = f.get("legs") or {}
+    if f["finding_type"] == "IN_PLAY_OVERREACTION":
+        # No margin and no executable size exist for this type, so it gets
+        # its own copy rather than being forced through a template that
+        # would print "net margin $None". The conditioning state is stated
+        # explicitly, including that the feed showed no cause — a reader
+        # must not have to infer which of the three states this is.
+        cond = legs.get("conditioning") or {}
+        xg = legs.get("live_xg_variant") or {}
+        xg_bit = ""
+        if xg.get("available"):
+            xg_bit = (f" Live xG differential "
+                      f"{xg.get('xg_differential_first_minus_second')} "
+                      f"(characterisation only, not a reprice).")
+        return (f"🔎 hunter observation [IN_PLAY_OVERREACTION] {subject}: "
+                f"mid moved ${legs.get('mid_move_dollars')} between two "
+                f"captures, exceeding both the threshold and the wider "
+                f"spread. Conditioning: {cond.get('state')} — "
+                f"{cond.get('reason')}.{xg_bit} The market-anchored move "
+                f"is the primary signal and is model-free; an observed "
+                f"cause would make the move MORE reasonable, not less. "
+                f"({SHADOW_FRAMING}.)")
     margin = f["net_margin_dollars"]
     if f["finding_type"] == "SUM_BELOW_ONE":
         detail = (f"3-way yes asks sum ${legs.get('sum_asks_dollars')}, "
@@ -1495,6 +1755,10 @@ def scan_cycle() -> dict:
 
     events_seen = markets_seen = 0
     new_findings: list[dict] = []
+    # per-event leg tickers: the ONLY defined way to read an event's two
+    # team codes (the concatenated ticker cannot be split without already
+    # knowing the answer; the legs carry them separately)
+    event_market_tickers: dict[str, list[str]] = {}
     series_outcomes: dict[str, dict] = {}     # ticker -> {outcome, detail?}
     series_capture: dict[str, datetime] = {}  # fetch-completion clocks
     mls_markets_by_ticker: dict[str, dict] = {}
@@ -1563,6 +1827,9 @@ def scan_cycle() -> dict:
                         mls_markets_by_ticker[m["ticker"]] = m
                 events_seen += len(by_event)
                 for ev_ticker, ev_markets in by_event.items():
+                    event_market_tickers[ev_ticker] = [
+                        m.get("ticker") for m in ev_markets
+                        if m.get("ticker")]
                     new_findings.extend(detect_event_findings(
                         series, ev_ticker, ev_markets, captured_at, fees))
                     # capture-paired repricing vs the PREVIOUS cycle's
@@ -1600,6 +1867,10 @@ def scan_cycle() -> dict:
     s = get_session()
     created = expired = alerted = stale_rejected = 0
     alert_candidates: list[tuple[HunterFinding, dict]] = []
+    live_stats_report: dict = {"ran": False, "candidates": 0,
+                               "requests": 0,
+                               "skipped": "the live-evidence pass did not "
+                                          "reach its entry point"}
     status = "failed"
     try:
         if MLS_SERIES in series_capture:
@@ -1643,6 +1914,24 @@ def scan_cycle() -> dict:
             except Exception as exc:
                 print(f"[hunter] model-edge error: {exc}")
                 _degrade_mls(f"model-edge: {exc}"[:300])
+
+        # LIVE-EVIDENCE PASS — make the conditioning event observable where
+        # coverage allows. Deliberately AFTER detection and BEFORE
+        # persistence, so the conditioning state is part of the row that
+        # gets committed rather than a later mutation of stored evidence.
+        # It must never break a scan: a provider failure leaves every
+        # finding in the honest conditioning_unobserved_no_stats state.
+        try:
+            live_stats_report = enrich_overreactions(
+                s, new_findings, event_market_tickers, started)
+        except Exception as exc:
+            live_stats_report = {
+                "error": apifootball_live.redact(
+                    f"{type(exc).__name__}: {exc}")}
+            print(f"[hunter] live-evidence pass failed: "
+                  f"{type(exc).__name__}")
+        counter["live_stats_requests"] = live_stats_report.get(
+            "requests", 0) or 0
 
         status = ("failed" if error
                   else "degraded" if failed_series or discovery_error
@@ -1723,6 +2012,13 @@ def scan_cycle() -> dict:
                 findings_new=created, findings_expired=expired,
                 stale_writes_rejected=stale_rejected,
                 request_count=counter.get("requests", 0),
+                # the SECOND provider's spend, kept in its own column: one
+                # combined number would hide which provider a budget
+                # problem came from, and they have different limits
+                live_stats_request_count=counter.get(
+                    "live_stats_requests", 0),
+                live_stats_json=json.dumps(live_stats_report,
+                                           sort_keys=True, default=str),
                 roster_size=len(series_all),
                 active_series=len(active_now),
                 discovery_at=_roster["at"],
@@ -1780,7 +2076,10 @@ def scan_cycle() -> dict:
             "events": events_seen, "markets": markets_seen,
             "findings_new": created, "findings_expired": expired,
             "stale_writes_rejected": stale_rejected,
-            "alerted": alerted, "error": error}
+            "alerted": alerted,
+            "kalshi_requests": counter.get("requests", 0),
+            "live_stats": live_stats_report,
+            "error": error}
 
 
 # --- the public read surface ----------------------------------------------

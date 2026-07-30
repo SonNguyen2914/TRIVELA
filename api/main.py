@@ -795,6 +795,35 @@ def hunter_findings(competition: str | None = Query(None, max_length=64),
         raise HTTPException(503, "hunter findings unavailable")
 
 
+@app.get("/api/hunter/live-coverage")
+def hunter_live_coverage():
+    """Which competitions API-Football was MEASURED to serve live in-play
+    data for, per competition, with the date measured and the number of
+    fixtures the verdict rests on.
+
+    Exposed because an unexposed coverage verdict is a private assumption,
+    and the in-play detector's whole claim is that coverage is measured
+    rather than assumed. Statistics and EVENTS coverage are reported
+    separately: events coverage is strictly broader (measured — some
+    competitions serve goal events with zero statistic types), and one
+    combined flag would hide that.
+
+    Also carries the three conditioning states with their strength ranks,
+    so the inference direction is readable from the API and not only from
+    the source: `conditioning_observed` ranks LOWEST, because an explaining
+    event makes a market's move more reasonable and therefore makes the
+    finding WEAKER.
+
+    Public read-only. Observational; nothing here is advice, and none of
+    it may reach a model — live xG carries post-lock information."""
+    try:
+        from src.live import apifootball_live
+        return apifootball_live.coverage_report()
+    except Exception as exc:
+        print(f"[hunter] live coverage failed: {exc}")
+        raise HTTPException(503, "hunter live coverage unavailable")
+
+
 @app.get("/api/mls/paper")
 def mls_paper():
     """The paper-trading ledger P&L: signals, fills, rejections (with

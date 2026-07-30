@@ -472,6 +472,59 @@ HUNTER_ALERT_MAX_PER_HOUR = _pos_int("HUNTER_ALERT_MAX_PER_HOUR", "4")
 HUNTER_MODEL_EDGE_MIN = float(
     _pos_decimal_str("HUNTER_MODEL_EDGE_MIN", "0.03"))
 
+# --- hunter in-play live statistics (API-Football) ------------------------
+# Makes IN_PLAY_OVERREACTION's conditioning event OBSERVABLE where the
+# provider's coverage allows. Purely OBSERVATIONAL: these readings reach
+# HunterFinding.legs_json and nothing else. They must never touch a T-10
+# lock, a PredictionRun, a paper signal, or anything the model is fitted
+# or scored on — live xG carries information from AFTER a lock, and
+# tests/test_hunter_live_stats.py fences that boundary statically and
+# behaviourally.
+#
+# Enabled by default but INERT WITHOUT A KEY: with no key configured this
+# spends zero requests and the detector reports exactly what it reports
+# today (conditioning_unobserved_no_stats). Setting the key IS the opt-in,
+# so deploying this changes nothing until an operator does that.
+HUNTER_LIVE_STATS_ENABLED = _parse_flag(
+    os.getenv("HUNTER_LIVE_STATS_ENABLED"), True,
+    "HUNTER_LIVE_STATS_ENABLED")
+# The PAID key, deliberately a DIFFERENT variable from the legacy
+# API_FOOTBALL_KEY above: that one may still hold the free-tier key, and
+# the free plan was measured season-blind for current seasons — reading it
+# would produce confident answers about the wrong plan. Same rule as
+# scripts/verify_apifootball.py.
+APIFOOTBALL_KEY = os.getenv("APIFOOTBALL_KEY", "").strip()
+APIFOOTBALL_BASE = os.getenv(
+    "APIFOOTBALL_BASE", "https://v3.football.api-sports.io").strip()
+# Per-CYCLE request ceiling. The cycle spends NOTHING unless an
+# overreaction candidate actually exists; when one does it pays 1 request
+# for the whole world's live fixtures plus 2 per distinct resolved
+# fixture. PRO is 300/min and 7,500/day.
+HUNTER_LIVE_STATS_MAX_REQUESTS_PER_CYCLE = _pos_int(
+    "HUNTER_LIVE_STATS_MAX_REQUESTS_PER_CYCLE", "12")
+# Whole-process daily ceiling, counted against OUR clock's UTC day. A
+# second guard behind the per-cycle one: a pathological slate that
+# produced candidates every cycle must still not eat the day's quota.
+HUNTER_LIVE_STATS_MAX_REQUESTS_PER_DAY = _pos_int(
+    "HUNTER_LIVE_STATS_MAX_REQUESTS_PER_DAY", "1200")
+# How long a measured ABSENT coverage verdict is trusted before the
+# competition is re-measured. Coverage drifts and this repo has been
+# broken at HTTP 200 by exactly that; a cached absence must expire.
+# A PRESENT verdict is never used in place of a fresh read — a finding's
+# evidence is always the reading it was actually made from.
+HUNTER_LIVE_STATS_COVERAGE_TTL_DAYS = _pos_int(
+    "HUNTER_LIVE_STATS_COVERAGE_TTL_DAYS", "7")
+# Whether IN_PLAY_OVERREACTION may ALERT now that its conditioning can be
+# characterised. DEFAULT OFF, and deliberately so: promoting a
+# context-class finding to the channel a consenting third party reads is
+# Son's decision, not an implementer's. With this false the finding is
+# recorded and served exactly as today and never dispatches. Turning it
+# true routes it through the SAME AMBIENT_DETAIL / detail-channel path as
+# the structural findings — never the act-now channel, never the phone.
+HUNTER_IN_PLAY_ALERTS_ENABLED = _parse_flag(
+    os.getenv("HUNTER_IN_PLAY_ALERTS_ENABLED"), False,
+    "HUNTER_IN_PLAY_ALERTS_ENABLED")
+
 # --- live-plane volume headroom -------------------------------------------
 # Railway's own volume alerts are Teams/Pro-only, so the platform CANNOT
 # warn before the disk fills. It filled once (2026-07-25) and every

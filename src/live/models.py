@@ -1058,6 +1058,16 @@ class HunterCycle(LiveBase):
     # the count rides on the heartbeat.
     stale_writes_rejected = Column(Integer)
     request_count = Column(Integer)
+    # the SECOND provider's spend (API-Football live in-play statistics),
+    # counted apart from Kalshi's. One combined number would hide which
+    # provider a budget problem came from, and the two have different
+    # limits and different failure modes.
+    live_stats_request_count = Column(Integer)
+    # what the live-evidence pass did this cycle: whether it ran at all,
+    # how many overreaction candidates it saw, which joins resolved or
+    # refused, the conditioning-state histogram, and the budget block. A
+    # cycle that spent nothing records WHY it spent nothing.
+    live_stats_json = Column(Text)
     roster_size = Column(Integer)          # discovered soccer GAME series
     active_series = Column(Integer)        # series with open markets
     # when the roster was last (re-)discovered, and whether a DUE
@@ -1086,3 +1096,65 @@ class CorpusExport(LiveBase):
     backend_revision = Column(String(40))
     size_bytes = Column(Integer)
     published_at = Column(DateTime(timezone=True))
+
+
+class ApiFootballLiveCoverage(LiveBase):
+    """Per-competition verdict on whether API-Football serves LIVE in-play
+    data — MEASURED, dated, and one row per competition.
+
+    The hunter's in-play conditioning inference is only as honest as its
+    knowledge of what the provider actually covers, and coverage is uneven
+    and undocumented: measured 2026-07-29, CONMEBOL Sudamericana served 18
+    statistic types at 90' while Copa Colombia served ZERO at 90'. So the
+    verdict is measured from readings the scanner actually took, never
+    assumed and never read off the provider's own coverage flag (which the
+    trial harness found declaring `False` for two leagues whose payloads
+    carried xG).
+
+    STATISTICS AND EVENTS ARE SEPARATE COLUMNS, not one "has live data"
+    flag, because event coverage is strictly BROADER: competitions with
+    zero statistic types still served goal events. Collapsing them would
+    have made the broader signal invisible.
+
+    `fixtures_probed` is the DENOMINATOR and travels with the verdict: a
+    verdict from one fixture at 20' and one from ten fixtures at 70' are
+    not the same evidence. `too_early_reads` counts readings taken before
+    a match had time to generate statistics — those never downgrade an
+    already-measured PRESENT verdict, because letting one early read erase
+    a measured presence would convert missing evidence into a conclusion.
+
+    Growth is bounded by the number of competitions, updated IN PLACE —
+    deliberately not one row per reading. Per-reading payloads with no
+    reader are what filled the production volume on 2026-07-25.
+
+    NOT A MODEL INPUT. Nothing here may reach a T-10 lock, a
+    PredictionRun, a paper signal, or a fitted/scored feature; live xG
+    carries information from after a lock. Enforced by
+    tests/test_hunter_live_stats.py."""
+    __tablename__ = "apifootball_live_coverage"
+    id = Column(Integer, primary_key=True)
+    # the PROVIDER's own league id — a provider-stable identity, never a
+    # competition name
+    league_id = Column(Integer, nullable=False, unique=True)
+    league_name = Column(String(128))
+    league_country = Column(String(64))
+    # LIVE_STATS_PRESENT | LIVE_STATS_ABSENT | TOO_EARLY_TO_CONCLUDE
+    verdict = Column(String(32))
+    statistic_type_count = Column(Integer)
+    statistic_types_json = Column(Text)
+    # xG presence means a PARSEABLE number for both teams; a present-but-
+    # null xG (several leagues serve one) is ABSENT, never zero
+    xg_present = Column(Boolean, default=False)
+    xg_type_offered = Column(Boolean, default=False)
+    # tracked separately from statistics on purpose — see the class note
+    events_present = Column(Boolean, default=False)
+    event_count_last = Column(Integer)
+    fixtures_probed = Column(Integer, default=0)
+    too_early_reads = Column(Integer, default=0)
+    last_elapsed_observed = Column(Integer)
+    first_measured_at = Column(DateTime(timezone=True))
+    last_measured_at = Column(DateTime(timezone=True))
+    # when a PRESENT verdict was last actually observed, kept apart from
+    # last_measured_at so a long run of absences cannot make a stale
+    # presence look current
+    last_present_at = Column(DateTime(timezone=True))
