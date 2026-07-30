@@ -1338,6 +1338,33 @@ class TestJsonBodies:
         assert journal.recent_broadcasts(1)[0]["message"] == msg
 
 
+# The ISO-8601 shapes the public bodies emit, written as character
+# classes: `d` is any digit, every other character is a literal. Only
+# the offset-aware forms are listed — a naive timestamp is a prefix of
+# its aware form, so any substring of one is a substring of the other.
+_TIMESTAMP_SHAPES = ("dddd-dd-ddTdd:dd:dd.dddddd+dd:dd",
+                     "dddd-dd-ddTdd:dd:dd+dd:dd")
+
+
+def _could_sit_inside_a_timestamp(needle: str) -> bool:
+    """Could `needle` be a substring of SOME ISO-8601 timestamp — of
+    any instant, not merely of the ones one run happens to produce?
+
+    Slides the string across each shape and asks whether every
+    character is compatible with the position it lands on. That is
+    exhaustive over every clock value, which is what this has to be: a
+    sampling loop cannot establish the absence of a collision that only
+    surfaces about once in a hundred runs.
+    """
+    for shape in _TIMESTAMP_SHAPES:
+        for i in range(len(shape) - len(needle) + 1):
+            if all(c in "0123456789" if shape[i + k] == "d"
+                   else c == shape[i + k]
+                   for k, c in enumerate(needle)):
+                return True
+    return False
+
+
 class TestPublicRedaction:
     """journal-P0 F2 + P0-C: the briefing, journal and corpus routes
     are UNAUTHENTICATED, and an execution row is a third party's
@@ -1349,16 +1376,38 @@ class TestPublicRedaction:
     RATIONALE = "RATIONALE-SENTINEL private prose"
     ACCT = "ACCT-SENTINEL"
     ORDER = "ORD-SENTINEL-1"
+    RECON = "RECON-SENTINEL"
+    BCAST = "BROADCAST-SENTINEL he filled the lot at 0.43"
+    # Two spellings of one instant, and the difference matters. The
+    # writer refuses a naive datetime, so consent is RECORDED with an
+    # offset — but it comes back without one and serializes as
+    # `2026-07-01T12:00:00`. Grepping for the offset-bearing spelling
+    # searched every body for a string none of them can contain, so the
+    # consent timestamp had no raw-text cover at all.
+    CONSENT_ISO = "2026-07-01T12:00:00+00:00"    # what gets written
+    CONSENT_SEEN = "2026-07-01T12:00:00"         # what would show up
+    # The money sentinels carry THREE OR MORE digits ahead of the
+    # decimal point, which no ISO-8601 timestamp can: it has exactly
+    # two there, preceded by ':'. The fee and the credit used to be
+    # "9.87" and "7.77", which fit inside a microsecond field —
+    # "...T22:52:47.777300" contains "7.77" — so the greps below failed
+    # roughly one run in a hundred with the redaction working
+    # perfectly. `test_the_sentinels_cannot_collide_with_public_bytes`
+    # holds that line for whoever adds the next sentinel.
     SIZE = "76543.21"
-    CONSENT_ISO = "2026-07-01T12:00:00+00:00"
-    BCAST = "BROADCAST-SENTINEL he filled ten at 0.43"
+    FEE = "8641.97"
+    CREDIT = "54321.98"
+    # Deliberately NOT a sentinel: a bare integer hides inside a
+    # microsecond field. It is here to exceed CREDIT, because a binary
+    # contract cannot settle above its own count.
+    CONTRACTS = "98765"
     PRIVATE_EXEC_FIELDS = (
         "account_label", "consent_recorded_at", "exchange_order_id",
         "fill_price_dollars", "filled_contracts", "fee_paid_dollars",
         "best_available_price_dollars", "settlement_credit_dollars",
         "reconciliation_note")
-    SENTINELS = (RATIONALE, ACCT, ORDER, SIZE, CONSENT_ISO, BCAST,
-                 "9.87", "7.77", "RECON-SENTINEL")
+    SENTINELS = (RATIONALE, ACCT, ORDER, RECON, BCAST, CONSENT_SEEN,
+                 SIZE, FEE, CREDIT)
 
     @pytest.fixture()
     def client(self, live_session, monkeypatch):
@@ -1394,13 +1443,20 @@ class TestPublicRedaction:
         ex = journal.record_execution(
             bet["id"], self.ACCT,
             consent_recorded_at=datetime.fromisoformat(self.CONSENT_ISO),
-            fill_price="0.43", filled_contracts="10", fee_paid="9.87",
+            fill_price="0.43", filled_contracts=self.CONTRACTS,
+            fee_paid=self.FEE,
             filled_at=now, market_quote_id_at_fill=1,
             exchange_order_id=self.ORDER)
-        journal.settle_execution(ex["id"], settlement_credit="7.77",
-                                 settled_at=now,
-                                 settled_outcome="home_win")
-        journal.reconcile_execution(ex["id"], note="RECON-SENTINEL")
+        # a rejected write would leave the sentinels absent from the
+        # record, and every grep below would then pass vacuously
+        assert "error" not in ex, ex
+        settled = journal.settle_execution(
+            ex["id"], settlement_credit=self.CREDIT, settled_at=now,
+            settled_outcome="home_win")
+        assert "error" not in settled, settled
+        reconciled = journal.reconcile_execution(ex["id"],
+                                                 note=self.RECON)
+        assert "error" not in reconciled, reconciled
         journal.broadcast(self.BCAST, channel="action", fixture_id=1,
                           capability=session_cap["capability"])
         return bet, ex
@@ -1419,6 +1475,58 @@ class TestPublicRedaction:
                             raising=False)
         monkeypatch.setattr(live_runs, "model_for_event",
                             lambda eid: {}, raising=False)
+
+    def test_the_sentinels_cannot_collide_with_public_bytes(self):
+        """The redaction tests below grep the RAW response body, and
+        that is the point: a leak that renames the field, nests it or
+        drops it into prose still gets caught. The cost is that a
+        sentinel the body can produce for an innocent reason is a false
+        alarm — and this suite had one. The fee and the credit were
+        two-digit decimals, and "7.77" is a substring of
+        "...T22:52:47.777300" whenever the microseconds open 77, so
+        roughly one run in a hundred failed with nothing wrong.
+
+        Loosening the grep was the wrong repair; the grep is the
+        valuable part. The sentinels are un-collidable by construction
+        instead, and this asserts the construction rather than trusting
+        the next person to remember it.
+
+        The consent sentinel is exempt from the timestamp check because
+        it IS a timestamp. It is safe on value rather than on shape: a
+        fixed instant four weeks before anything this suite records,
+        while every other timestamp in these bodies comes from the
+        clock at run time.
+        """
+        for sentinel in self.SENTINELS:
+            assert not set(sentinel) <= set("0123456789abcdef"), (
+                f"{sentinel!r} is pure lowercase hex, so it can hide "
+                f"inside a digest — the briefing carries content_hash")
+            if sentinel == self.CONSENT_SEEN:
+                continue
+            assert not _could_sit_inside_a_timestamp(sentinel), (
+                f"{sentinel!r} fits inside an ISO-8601 timestamp, so "
+                f"the greps below will fail at random")
+
+    def test_no_sentinel_grep_can_pass_vacuously(self, live_session,
+                                                 client, monkeypatch,
+                                                 session_cap):
+        """`sentinel not in body` is worth exactly nothing if the
+        sentinel is not in the record to begin with — and one of them
+        was not, for the reason recorded beside `CONSENT_SEEN`.
+
+        So pin every sentinel to the operator bytes. Adding one that
+        matches no stored value then fails here, loudly, instead of
+        quietly punching a hole in the redaction tests below.
+        """
+        self._record_full(live_session, monkeypatch, session_cap)
+        operator = (
+            client.get("/api/admin/mls/journal", headers=self.HDRS).text
+            + client.get("/api/admin/mls/broadcasts?fixture_id=1",
+                         headers=self.HDRS).text)
+        missing = [s for s in self.SENTINELS if s not in operator]
+        assert not missing, (
+            f"absent from the record, so the greps below say nothing "
+            f"about whether these leak: {missing}")
 
     def test_public_briefing_redacts_field_by_field(self, live_session,
                                                     client, monkeypatch,
@@ -1536,7 +1644,9 @@ class TestPublicRedaction:
         assert ex["account_label"] == self.ACCT
         assert ex["exchange_order_id"] == self.ORDER
         assert ex["fill_price_dollars"] == "0.43"
-        assert ex["settlement_credit_dollars"] == "7.77"
+        assert ex["fee_paid_dollars"] == self.FEE
+        assert ex["settlement_credit_dollars"] == self.CREDIT
+        assert ex["reconciliation_note"] == self.RECON
         assert "gaps" in ex
         # the broadcast thread lives behind the token too
         no = client.get("/api/admin/mls/broadcasts?fixture_id=1")

@@ -204,11 +204,13 @@ API_HOST unset · API_PORT 8000 · no PORT variable
 > controlled test — the same commit with no healthcheck deploys and
 > serves `200`; re-adding *only* the path fails from attempt #1 while
 > the previous container keeps serving `200` on the same route. Cause
-> unknown. Filed with Railway support 2026-07-28 (Hobby plan, so it is a
-> public Central Station thread, not a private ticket) — treat the path
-> as unusable until they answer, and do not assume an answer is coming
-> soon. **A set path blocks every deploy**, so it costs the ability to
-> ship a fix and buys nothing.
+> unknown. It WAS filed with Railway support 2026-07-28 (Hobby plan, so a
+> public Central Station thread rather than a private ticket), and that
+> thread is **no longer being pursued** — so treat the gap as PERMANENT,
+> not pending. Both halves matter: the filing is why no one should re-open
+> the investigation, and "not pending" is why no one should wait for an
+> answer before designing around it. **A set path blocks every deploy**,
+> so it costs the ability to ship a fix and buys nothing.
 >
 > Accept the consequence knowingly: with no healthcheck, Railway marks a
 > deploy successful as soon as the container starts, **whether or not it
@@ -421,14 +423,14 @@ throwaway database — §9.
 >
 > The frontend equivalent needs its own `npm install` in the worktree.
 
-## 9. Validation (verify against the repo; these are current as of 2026-07-26)
+## 9. Validation (verify against the repo; these are current as of 2026-07-29)
 
 Backend, from `~/dev/TRIVELA/backend`:
 
 ```bash
-.venv/bin/python -m pytest tests/ -q          # expect ~530 passed, 7 skipped
+.venv/bin/python -m pytest tests/ -q          # expect ~721 passed, 7 skipped
 PG_TEST_URL=postgresql+psycopg://<user>@localhost:5432/<throwaway> \
-  .venv/bin/python -m pytest tests/ -q        # expect ~537 passed
+  .venv/bin/python -m pytest tests/ -q        # expect ~728 passed
 .venv/bin/python -m alembic -x "url=<throwaway>" upgrade head
 ```
 
@@ -443,6 +445,10 @@ npx tsc --noEmit
 npm run build
 npx playwright test        # expect ~12 passed, 1 skipped
 ```
+
+The frontend figures still date from 2026-07-26 — they were not
+re-measured when the backend ones were, so treat them as the older
+claim they are.
 
 > **`npx playwright test` talks to PRODUCTION by default.**
 > `playwright.config.ts` falls back to the production Railway URL when
