@@ -1,0 +1,94 @@
+{
+  "probed_at": "2026-07-30",
+  "source": "worldclubratings.com/rankings/elo_men/",
+  "why": "ClubElo is European club football only (589 clubs), which left most of a friendlies slate unrated \u2014 measured, 63 of 399 fixtures. Son suggested this source; it closes exactly that gap.",
+  "access": {
+    "robots_txt": "contains a Sitemap line and NOTHING else \u2014 no Disallow, no AI-crawler block. Contrast footballdatabase.com, which names and disallows ClaudeBot and was ruled out rather than worked around.",
+    "shape": "Quarto/htmlwidget: the ENTIRE table arrives in one 162KB GET as a single application/json blob. No pagination, no AJAX, no browser needed. Refresh cost is one request.",
+    "cadence": "the source updates weekly, on Tuesdays"
+  },
+  "coverage": {
+    "clubs": 2446,
+    "unique_stable_ids": 2413,
+    "duplicate_rows": "31 byte-identical duplicate rows (tied ranks listed twice, e.g. '1. FC Union Berlin' at rank 100). Keying by stable id de-duplicates them; no data is lost.",
+    "countries": 166,
+    "columns": [
+      "rank",
+      "rank_change",
+      "name",
+      "country",
+      "points",
+      "points_change",
+      "STABLE_ID",
+      "country_code"
+    ],
+    "stable_id_note": "col 6 is a provider-stable id (e.g. 'nVp0wiqd'), which satisfies AGENTS.md's requirement for provider-stable identity over names."
+  },
+  "PUBLISHED_METHOD": {
+    "expectation": "We = 1/(10**(-dr/600) + 1)",
+    "DIVISOR": 600,
+    "CRITICAL": "600, NOT ClubElo's 400. The method is an adaptation of FIFA's post-2018 ranking procedure, not classic Elo. The same rating gap therefore means a materially different thing in each system: dr=200 gives 0.6830 here vs 0.7597 under a 400 divisor. Mixing a rating from one provider with a rating from the other inside one expectation would be arithmetic without a referent, and neither publishes a conversion.",
+    "W": "win=1, draw=0.5, loss=0 \u2014 so this is an expected POINTS SHARE",
+    "importance_factor": "I=10 official friendly, I=5 unofficial",
+    "initial_seeding": "800-1600, evenly spaced, from the 2018-06-09 ranking",
+    "cited_from": "worldclubratings.com/rankings/methods/elo_men.html"
+  },
+  "AUTHORS_OWN_CAVEAT": "Quoted, not paraphrased away: the ranking 'should thus not be deemed as a try to accurately rank club-level football around the world, but rather as an experiment on the effectiveness of the underlying method'. That is a weaker self-claim than ClubElo makes, and it travels with every number the module returns.",
+  "clubs_clubelo_could_not_reach": {
+    "Al-Sadd SC": {
+      "country": "Qatar",
+      "points": 1350
+    },
+    "Al Nassr Riyadh": {
+      "country": "Saudi Arabia",
+      "points": 1548
+    },
+    "FC Tokyo": {
+      "country": "Japan",
+      "points": 1298
+    },
+    "Estrela Amadora": {
+      "country": "Portugal",
+      "points": 1164
+    },
+    "CD Guadalajara": {
+      "country": "Mexico",
+      "points": 1317
+    },
+    "Puebla FC": {
+      "country": "Mexico",
+      "points": 1082
+    },
+    "Flamengo": {
+      "country": "Brazil",
+      "points": 1537
+    },
+    "Palmeiras": {
+      "country": "Brazil",
+      "points": 1531
+    }
+  },
+  "AMBIGUITY_HAZARD_FOUND": {
+    "case": "'Al Sadd' matches TWO clubs: Al-Sadd SC (Qatar, 1350) and Al Sadd (Yemen, 1029) \u2014 a 321-point gap. Both normalise to 'al sadd' because 'sc' is a stop word.",
+    "why_that_is_lucky": "the collision is DETECTABLE rather than silent. An exact-match-first implementation without the collision check would have confidently returned Yemen for a Qatari club playing Trabzonspor.",
+    "resolution": "candidates are collected across BOTH containment directions; if they span more than one country the pair is refused as name_ambiguous unless the fixture's league country disambiguates. Same-country collisions (FC Tokyo vs Tokyo Verdy, CD Guadalajara vs Atlas Guadalajara) are resolved by preferring EXACT token identity over containment, which needs no guess.",
+    "others_seen": [
+      "Al-Hilal SFC (Saudi 1629) vs Al-Hilal Omdurman (Sudan 1416)"
+    ]
+  },
+  "COVERAGE_RESULT_on_the_399_fixture_slate": {
+    "clubelo_alone": "63 rated (16%)",
+    "per_side_source_choice_REGRESSION": "50 rated (13%) \u2014 WORSE than ClubElo alone. Preferring worldclubratings per SIDE stranded 34 fixtures whose two clubs resolved in different providers, refused as sources_not_on_one_scale.",
+    "pair_level_source_choice": "83 rated (21%), zero scale-mismatch refusals",
+    "by_source": {
+      "worldclubratings": 35,
+      "clubelo": 48
+    },
+    "remaining_refusals": {
+      "name_unmapped": 306,
+      "name_ambiguous": 10
+    },
+    "note": "the 306 unmapped are overwhelmingly reserve sides and lower divisions genuinely absent from both providers; each says so rather than showing a number."
+  },
+  "reserve_side_guard": "Reserve/youth/women's markers refuse ahead of every matching tier, in BOTH provider clients. Without it 'Mallorca II' matches 'Mallorca' by containment and publishes a senior club's rating about a reserve team \u2014 the Real Madrid vs Castilla hazard this repo warns about in three files. Proven by removing it: 7 reserve cases fail."
+}
