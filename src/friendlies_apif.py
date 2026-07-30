@@ -1115,7 +1115,11 @@ def _bridge_by_fixture_id(swept: dict, events: list[dict]) -> dict:
         b = bridge_event(ev, swept)
         if b.get("state") != "bridged":
             continue
-        fid = b.get("fixture_id")
+        # the id is NESTED under "fixture", not flat on the row — reading
+        # b["fixture_id"] silently yielded None for every event, so the hub
+        # showed "no kalshi book" on all 399 rows while 20 of 22 tradeable
+        # events were in fact bridging correctly.
+        fid = ((b.get("fixture") or {}).get("fixture_id"))
         if fid is not None:
             out[int(fid)] = b
     return out
