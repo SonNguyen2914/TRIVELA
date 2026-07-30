@@ -634,6 +634,60 @@ def friendlies_markets(date: str | None = Query(None, pattern=r"^\d{8}$")):
     return payload
 
 
+@app.get("/api/friendlies/fixtures")
+def friendlies_fixtures(days: int = Query(3, ge=1, le=8)):
+    """EVERY club friendly in the window — the hub's fixture list.
+
+    Not the same surface as /markets, which is Kalshi-event-primary and so
+    can only show what is tradeable. Measured 2026-07-29: ESPN's
+    club.friendly bucket could name 1 of 25 tradeable events (4%); this
+    date-scoped all-leagues sweep bridges 22 of 25 (88%) and additionally
+    sees the friendlies Kalshi never lists at all.
+
+    Keyed by API-Football fixture id — the only identifier stable across
+    ALL friendlies rather than just the ESPN-visible subset."""
+    from src import friendlies_apif
+    from src.mls import _cached
+    try:
+        return _cached(f"friendlies_fixtures:{days}", 120,
+                       lambda: friendlies_apif.fixture_rows(days)) or {}
+    except Exception as exc:
+        print(f"[friendlies] fixtures failed: {exc}")
+        raise HTTPException(503, "friendlies fixtures unavailable")
+
+
+@app.get("/api/friendlies/fixtures/{fixture_id}")
+def friendlies_fixture_detail(fixture_id: str, days: int = Query(3, ge=1, le=8)):
+    """One friendly: the fixture, its Kalshi book if any, the strength
+    read, and the ESPN reference team news is keyed on.
+
+    `news_fixture_ref` is deliberately explicit. team_news captures a
+    friendly XI under the ESPN event id, NOT the API-Football fixture id,
+    so a caller passing this route's own id to /api/news/fixture/{ref}
+    would get `never_captured` forever and never learn why."""
+    if not fixture_id.isdigit() or len(fixture_id) > 12:
+        raise HTTPException(404, "unknown fixture")
+    from src import friendlies, friendlies_apif
+    f = friendlies_apif.fixture_by_id(int(fixture_id), days)
+    if f is None:
+        raise HTTPException(404, "no such friendly fixture")
+    out = {"fixture": f, "framing": getattr(friendlies, "FRAMING", None),
+           "generated_at": utcnow().isoformat()}
+    out["strength"] = friendlies_apif._strength_for(f)
+    book = None
+    try:
+        ko = (f.get("kickoff_utc") or "")[:10]
+        book = friendlies.find_all_books(
+            ko, (f.get("home") or {}).get("name") or "",
+            (f.get("away") or {}).get("name") or "")
+    except Exception as exc:
+        print(f"[friendlies] book for {fixture_id} failed: {exc}")
+        book = {"status": "unavailable",
+                "means": "the book could not be read — not 'no book exists'"}
+    out["books"] = book
+    return out
+
+
 @app.get("/api/friendlies/coverage")
 def friendlies_coverage(days: int | None = Query(None, ge=1, le=14)):
     """The API-Football-backed friendlies surface, denominated.
