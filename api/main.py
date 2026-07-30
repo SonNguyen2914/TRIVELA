@@ -1036,6 +1036,30 @@ def mls_stats_coverage():
         raise HTTPException(503, "stats-coverage unavailable")
 
 
+@app.get("/api/admin/mls/stats/xg-quarantine")
+def mls_xg_quarantine(request: Request,
+                      limit: int = Query(100, ge=1, le=500)):
+    """Operator-only, READ-ONLY: which stored MLS matches the xG
+    plausibility guard rejected, and whether the ratings exclude them.
+
+    Sportec's own xG collapsed on the 2026-07-22/23 restart slates while its
+    own shot volume held, and it labels every one of those rows
+    data_status="postmatch" — final. The guard is therefore derived from the
+    payload contradicting itself, which makes it a JUDGEMENT and not a
+    provider fact: it has to be inspectable, with the measured numbers and
+    the provider's own claim side by side, or it is just another silent
+    filter. `rows_never_screened` is reported separately from
+    `rows_screened` because a NULL verdict is not a pass."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import mls_stats
+    try:
+        return mls_stats.quarantine_report(limit=limit)
+    except Exception as exc:
+        print(f"[mls] xg-quarantine failed: {exc}")
+        raise HTTPException(503, "xg-quarantine unavailable")
+
+
 @app.post("/api/admin/mls/stats-backfill")
 def mls_stats_backfill(request: Request, players: bool = Query(True),
                        skip_existing: bool = Query(True)):

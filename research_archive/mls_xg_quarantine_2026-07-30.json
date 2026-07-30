@@ -1,0 +1,826 @@
+{
+ "_what": "Derivation, verification and cost of the Sportec xG plausibility guard in src/live/mls_stats.py",
+ "run_utc": "2026-07-30T01:01:44.800128-07:00",
+ "source_archive": "xg_2026-07-29.json",
+ "source_archive_sha256": "0834ebe79bf64de59bffa2001d3b0019507581dcb5a3f89ba46c502b3c45f059",
+ "matches_parsed": 253,
+ "thresholds": {
+  "min_xg_per_own_sot": 0.12,
+  "min_goals_tail_p": 0.02,
+  "min_own_sot_for_ratio_check": 3,
+  "guard_enabled": true,
+  "quarantine_excluded_from_ratings": false
+ },
+ "calibration": {
+  "monthly": {
+   "2026-02": {
+    "n": 19,
+    "xg": 3.1571,
+    "sot": 9.632,
+    "xg_per_sot": 0.3278,
+    "goals": 2.789
+   },
+   "2026-03": {
+    "n": 55,
+    "xg": 3.2904,
+    "sot": 9.855,
+    "xg_per_sot": 0.3339,
+    "goals": 3.109
+   },
+   "2026-04": {
+    "n": 70,
+    "xg": 3.3981,
+    "sot": 10.214,
+    "xg_per_sot": 0.3327,
+    "goals": 3.443
+   },
+   "2026-05": {
+    "n": 74,
+    "xg": 3.3495,
+    "sot": 10.149,
+    "xg_per_sot": 0.33,
+    "goals": 3.446
+   },
+   "2026-07": {
+    "n": 35,
+    "xg": 2.2612,
+    "sot": 9.257,
+    "xg_per_sot": 0.2443,
+    "goals": 2.829
+   }
+  },
+  "clean_n": 218,
+  "clean_min_xg_per_sot": 0.1443,
+  "clean_min_goals_tail_p": 0.022798,
+  "thresholds_below_clean_extreme": true
+ },
+ "verification": {
+  "screened": 253,
+  "quarantined": 7,
+  "clean_window": {
+   "n": 218,
+   "false_positives": 0
+  },
+  "july": {
+   "n": 35,
+   "q": 7
+  },
+  "by_month": {
+   "2026-02": {
+    "n": 19,
+    "q": 0
+   },
+   "2026-03": {
+    "n": 55,
+    "q": 0
+   },
+   "2026-04": {
+    "n": 70,
+    "q": 0
+   },
+   "2026-05": {
+    "n": 74,
+    "q": 0
+   },
+   "2026-07": {
+    "n": 35,
+    "q": 7
+   }
+  },
+  "by_date": {
+   "2026-07-22": {
+    "n": 5,
+    "q": 2
+   },
+   "2026-07-23": {
+    "n": 10,
+    "q": 5
+   }
+  },
+  "affected_dates": [
+   "2026-07-22",
+   "2026-07-23"
+  ],
+  "provider_data_status_on_flagged": {
+   "postmatch": 7
+  },
+  "flagged": [
+   {
+    "date": "2026-07-22",
+    "match_id": "MLS-MAT-0009HP",
+    "title": "Philadelphia Union:Red Bull New York",
+    "result": "3:1",
+    "data_status": "postmatch",
+    "scope": "match",
+    "total_xg": 1.3017,
+    "total_own_sot": 15,
+    "total_goals": 4,
+    "reason": "xg_per_own_sot=0.0868<0.12 (xg=1.302 on 15 SoT)",
+    "checks": {
+     "ratio": {
+      "xg_per_own_sot": 0.0868,
+      "threshold": 0.12,
+      "total_xg": 1.3017,
+      "total_own_sot": 15,
+      "passed": false
+     },
+     "goals": {
+      "tail_p": 0.043265,
+      "threshold": 0.02,
+      "total_goals": 4,
+      "total_xg": 1.3017,
+      "passed": true
+     }
+    }
+   },
+   {
+    "date": "2026-07-22",
+    "match_id": "MLS-MAT-0009HF",
+    "title": "FC Cincinnati:Vancouver Whitecaps FC",
+    "result": "4:3",
+    "data_status": "postmatch",
+    "scope": "match",
+    "total_xg": 1.3711,
+    "total_own_sot": 12,
+    "total_goals": 7,
+    "reason": "xg_per_own_sot=0.1143<0.12 (xg=1.371 on 12 SoT); goals_tail_p=0.00055<0.02 (7 goals on xg=1.371)",
+    "checks": {
+     "ratio": {
+      "xg_per_own_sot": 0.1143,
+      "threshold": 0.12,
+      "total_xg": 1.3711,
+      "total_own_sot": 12,
+      "passed": false
+     },
+     "goals": {
+      "tail_p": 0.000551,
+      "threshold": 0.02,
+      "total_goals": 7,
+      "total_xg": 1.3711,
+      "passed": false
+     }
+    }
+   },
+   {
+    "date": "2026-07-23",
+    "match_id": "MLS-MAT-0009HE",
+    "title": "Charlotte FC:Atlanta United",
+    "result": "2:2",
+    "data_status": "postmatch",
+    "scope": "match",
+    "total_xg": 0.9591,
+    "total_own_sot": 16,
+    "total_goals": 4,
+    "reason": "xg_per_own_sot=0.0599<0.12 (xg=0.959 on 16 SoT); goals_tail_p=0.01658<0.02 (4 goals on xg=0.959)",
+    "checks": {
+     "ratio": {
+      "xg_per_own_sot": 0.0599,
+      "threshold": 0.12,
+      "total_xg": 0.9591,
+      "total_own_sot": 16,
+      "passed": false
+     },
+     "goals": {
+      "tail_p": 0.016582,
+      "threshold": 0.02,
+      "total_goals": 4,
+      "total_xg": 0.9591,
+      "passed": false
+     }
+    }
+   },
+   {
+    "date": "2026-07-23",
+    "match_id": "MLS-MAT-0009HJ",
+    "title": "Sporting Kansas City:Minnesota United FC",
+    "result": "2:1",
+    "data_status": "postmatch",
+    "scope": "match",
+    "total_xg": 0.3338,
+    "total_own_sot": 15,
+    "total_goals": 3,
+    "reason": "xg_per_own_sot=0.0223<0.12 (xg=0.334 on 15 SoT); goals_tail_p=0.00484<0.02 (3 goals on xg=0.334)",
+    "checks": {
+     "ratio": {
+      "xg_per_own_sot": 0.0223,
+      "threshold": 0.12,
+      "total_xg": 0.3338,
+      "total_own_sot": 15,
+      "passed": false
+     },
+     "goals": {
+      "tail_p": 0.004836,
+      "threshold": 0.02,
+      "total_goals": 3,
+      "total_xg": 0.3338,
+      "passed": false
+     }
+    }
+   },
+   {
+    "date": "2026-07-23",
+    "match_id": "MLS-MAT-0009HG",
+    "title": "Colorado Rapids:San Diego FC",
+    "result": "1:0",
+    "data_status": "postmatch",
+    "scope": "match",
+    "total_xg": 0.1836,
+    "total_own_sot": 4,
+    "total_goals": 1,
+    "reason": "xg_per_own_sot=0.0459<0.12 (xg=0.184 on 4 SoT)",
+    "checks": {
+     "ratio": {
+      "xg_per_own_sot": 0.0459,
+      "threshold": 0.12,
+      "total_xg": 0.1836,
+      "total_own_sot": 4,
+      "passed": false
+     },
+     "goals": {
+      "tail_p": 0.167731,
+      "threshold": 0.02,
+      "total_goals": 1,
+      "total_xg": 0.1836,
+      "passed": true
+     }
+    }
+   },
+   {
+    "date": "2026-07-23",
+    "match_id": "MLS-MAT-0009HD",
+    "title": "Austin FC:Seattle Sounders FC",
+    "result": "3:1",
+    "data_status": "postmatch",
+    "scope": "match",
+    "total_xg": 0.5427,
+    "total_own_sot": 9,
+    "total_goals": 4,
+    "reason": "xg_per_own_sot=0.0603<0.12 (xg=0.543 on 9 SoT); goals_tail_p=0.00235<0.02 (4 goals on xg=0.543)",
+    "checks": {
+     "ratio": {
+      "xg_per_own_sot": 0.0603,
+      "threshold": 0.12,
+      "total_xg": 0.5427,
+      "total_own_sot": 9,
+      "passed": false
+     },
+     "goals": {
+      "tail_p": 0.002351,
+      "threshold": 0.02,
+      "total_goals": 4,
+      "total_xg": 0.5427,
+      "passed": false
+     }
+    }
+   },
+   {
+    "date": "2026-07-23",
+    "match_id": "MLS-MAT-0009HR",
+    "title": "San Jose Earthquakes:Orlando City",
+    "result": "0:4",
+    "data_status": "postmatch",
+    "scope": "match",
+    "total_xg": 0.4316,
+    "total_own_sot": 14,
+    "total_goals": 4,
+    "reason": "xg_per_own_sot=0.0308<0.12 (xg=0.432 on 14 SoT); goals_tail_p=0.00103<0.02 (4 goals on xg=0.432)",
+    "checks": {
+     "ratio": {
+      "xg_per_own_sot": 0.0308,
+      "threshold": 0.12,
+      "total_xg": 0.4316,
+      "total_own_sot": 14,
+      "passed": false
+     },
+     "goals": {
+      "tail_p": 0.001026,
+      "threshold": 0.02,
+      "total_goals": 4,
+      "total_xg": 0.4316,
+      "passed": false
+     }
+    }
+   }
+  ]
+ },
+ "cost_of_exclusion": {
+  "method": "model_mls.fit imported and parameterized; src/live/model_mls.py NOT modified",
+  "fixtures": 253,
+  "xg_alpha": 1.0,
+  "quarantined_dropped": 7,
+  "teams_that_played_one": [
+   "ATL",
+   "ATX",
+   "CIN",
+   "CLT",
+   "COL",
+   "MIN",
+   "ORL",
+   "PHI",
+   "RBNY",
+   "SD",
+   "SEA",
+   "SJ",
+   "SKC",
+   "VAN"
+  ],
+  "xg_coverage": {
+   "now": 1.0,
+   "excluded": 0.949
+  },
+  "league_xg": {
+   "now": 1.5348,
+   "excluded": 1.5976
+  },
+  "abs_delta_attack": {
+   "mean": 0.0267,
+   "max": 0.0458
+  },
+  "abs_delta_defence": {
+   "mean": 0.0266,
+   "max": 0.0459
+  },
+  "goals_only_reference_scale_attack": {
+   "mean": 0.0669,
+   "max": 0.175
+  },
+  "ordering": {
+   "attack": {
+    "changed_at_all": 28,
+    "moved_3_or_more": 10,
+    "moved_5_or_more": 2,
+    "largest_move": 8,
+    "n": 30
+   },
+   "defence": {
+    "changed_at_all": 22,
+    "moved_3_or_more": 10,
+    "moved_5_or_more": 3,
+    "largest_move": 5,
+    "n": 30
+   }
+  },
+  "per_team": [
+   {
+    "team": "ATL",
+    "games": 17,
+    "played_quarantined": true,
+    "attack_now": 0.9101,
+    "attack_excl": 0.9439,
+    "d_attack": 0.0338,
+    "defence_now": 1.0234,
+    "defence_excl": 1.033,
+    "d_defence": 0.0095
+   },
+   {
+    "team": "ATX",
+    "games": 17,
+    "played_quarantined": true,
+    "attack_now": 0.8396,
+    "attack_excl": 0.8738,
+    "d_attack": 0.0342,
+    "defence_now": 1.1666,
+    "defence_excl": 1.1993,
+    "d_defence": 0.0328
+   },
+   {
+    "team": "CHI",
+    "games": 16,
+    "played_quarantined": false,
+    "attack_now": 1.1682,
+    "attack_excl": 1.1387,
+    "d_attack": -0.0295,
+    "defence_now": 0.9383,
+    "defence_excl": 0.9178,
+    "d_defence": -0.0205
+   },
+   {
+    "team": "CIN",
+    "games": 17,
+    "played_quarantined": true,
+    "attack_now": 1.1529,
+    "attack_excl": 1.1538,
+    "d_attack": 0.0009,
+    "defence_now": 1.0988,
+    "defence_excl": 1.1352,
+    "d_defence": 0.0364
+   },
+   {
+    "team": "CLB",
+    "games": 17,
+    "played_quarantined": false,
+    "attack_now": 0.9746,
+    "attack_excl": 0.9522,
+    "d_attack": -0.0224,
+    "defence_now": 0.8763,
+    "defence_excl": 0.8577,
+    "d_defence": -0.0186
+   },
+   {
+    "team": "CLT",
+    "games": 17,
+    "played_quarantined": true,
+    "attack_now": 0.954,
+    "attack_excl": 0.9629,
+    "d_attack": 0.0089,
+    "defence_now": 0.9561,
+    "defence_excl": 0.9932,
+    "d_defence": 0.037
+   },
+   {
+    "team": "COL",
+    "games": 17,
+    "played_quarantined": true,
+    "attack_now": 0.8423,
+    "attack_excl": 0.879,
+    "d_attack": 0.0367,
+    "defence_now": 0.9207,
+    "defence_excl": 0.9599,
+    "d_defence": 0.0392
+   },
+   {
+    "team": "DAL",
+    "games": 17,
+    "played_quarantined": false,
+    "attack_now": 1.0039,
+    "attack_excl": 0.9803,
+    "d_attack": -0.0236,
+    "defence_now": 0.9938,
+    "defence_excl": 0.9706,
+    "d_defence": -0.0232
+   },
+   {
+    "team": "DC",
+    "games": 17,
+    "played_quarantined": false,
+    "attack_now": 0.9763,
+    "attack_excl": 0.9538,
+    "d_attack": -0.0225,
+    "defence_now": 1.0602,
+    "defence_excl": 1.0344,
+    "d_defence": -0.0258
+   },
+   {
+    "team": "HOU",
+    "games": 16,
+    "played_quarantined": false,
+    "attack_now": 0.8962,
+    "attack_excl": 0.8772,
+    "d_attack": -0.019,
+    "defence_now": 0.917,
+    "defence_excl": 0.8972,
+    "d_defence": -0.0198
+   },
+   {
+    "team": "LA",
+    "games": 18,
+    "played_quarantined": false,
+    "attack_now": 0.993,
+    "attack_excl": 0.9689,
+    "d_attack": -0.0241,
+    "defence_now": 1.0715,
+    "defence_excl": 1.0444,
+    "d_defence": -0.0272
+   },
+   {
+    "team": "LAFC",
+    "games": 18,
+    "played_quarantined": false,
+    "attack_now": 0.9888,
+    "attack_excl": 0.9649,
+    "d_attack": -0.0239,
+    "defence_now": 0.8464,
+    "defence_excl": 0.828,
+    "d_defence": -0.0183
+   },
+   {
+    "team": "MIA",
+    "games": 17,
+    "played_quarantined": false,
+    "attack_now": 1.2676,
+    "attack_excl": 1.2336,
+    "d_attack": -0.0339,
+    "defence_now": 1.0299,
+    "defence_excl": 1.0053,
+    "d_defence": -0.0246
+   },
+   {
+    "team": "MIN",
+    "games": 17,
+    "played_quarantined": true,
+    "attack_now": 0.9587,
+    "attack_excl": 0.9939,
+    "d_attack": 0.0352,
+    "defence_now": 0.8618,
+    "defence_excl": 0.8975,
+    "d_defence": 0.0356
+   },
+   {
+    "team": "MTL",
+    "games": 17,
+    "played_quarantined": false,
+    "attack_now": 0.9357,
+    "attack_excl": 0.9143,
+    "d_attack": -0.0214,
+    "defence_now": 1.0228,
+    "defence_excl": 0.998,
+    "d_defence": -0.0248
+   },
+   {
+    "team": "NE",
+    "games": 16,
+    "played_quarantined": false,
+    "attack_now": 0.9901,
+    "attack_excl": 0.9674,
+    "d_attack": -0.0227,
+    "defence_now": 1.0961,
+    "defence_excl": 1.0693,
+    "d_defence": -0.0268
+   },
+   {
+    "team": "NSH",
+    "games": 17,
+    "played_quarantined": false,
+    "attack_now": 0.9221,
+    "attack_excl": 0.9012,
+    "d_attack": -0.0208,
+    "defence_now": 0.845,
+    "defence_excl": 0.8272,
+    "d_defence": -0.0178
+   },
+   {
+    "team": "NYC",
+    "games": 17,
+    "played_quarantined": false,
+    "attack_now": 0.9606,
+    "attack_excl": 0.9387,
+    "d_attack": -0.0219,
+    "defence_now": 0.9774,
+    "defence_excl": 0.9548,
+    "d_defence": -0.0225
+   },
+   {
+    "team": "ORL",
+    "games": 17,
+    "played_quarantined": true,
+    "attack_now": 0.9285,
+    "attack_excl": 0.9585,
+    "d_attack": 0.03,
+    "defence_now": 1.1482,
+    "defence_excl": 1.1921,
+    "d_defence": 0.0439
+   },
+   {
+    "team": "PHI",
+    "games": 17,
+    "played_quarantined": true,
+    "attack_now": 1.0198,
+    "attack_excl": 1.0141,
+    "d_attack": -0.0057,
+    "defence_now": 0.9393,
+    "defence_excl": 0.9772,
+    "d_defence": 0.0379
+   },
+   {
+    "team": "POR",
+    "games": 17,
+    "played_quarantined": false,
+    "attack_now": 1.183,
+    "attack_excl": 1.152,
+    "d_attack": -0.0311,
+    "defence_now": 1.0019,
+    "defence_excl": 0.9779,
+    "d_defence": -0.024
+   },
+   {
+    "team": "RBNY",
+    "games": 17,
+    "played_quarantined": true,
+    "attack_now": 1.0508,
+    "attack_excl": 1.0919,
+    "d_attack": 0.0411,
+    "defence_now": 1.1241,
+    "defence_excl": 1.1213,
+    "d_defence": -0.0028
+   },
+   {
+    "team": "RSL",
+    "games": 16,
+    "played_quarantined": false,
+    "attack_now": 1.0141,
+    "attack_excl": 0.9906,
+    "d_attack": -0.0235,
+    "defence_now": 1.0443,
+    "defence_excl": 1.0196,
+    "d_defence": -0.0247
+   },
+   {
+    "team": "SD",
+    "games": 17,
+    "played_quarantined": true,
+    "attack_now": 1.0088,
+    "attack_excl": 1.0504,
+    "d_attack": 0.0416,
+    "defence_now": 1.1659,
+    "defence_excl": 1.2118,
+    "d_defence": 0.0459
+   },
+   {
+    "team": "SEA",
+    "games": 16,
+    "played_quarantined": true,
+    "attack_now": 0.9681,
+    "attack_excl": 0.9952,
+    "d_attack": 0.0271,
+    "defence_now": 0.9632,
+    "defence_excl": 1.0009,
+    "d_defence": 0.0376
+   },
+   {
+    "team": "SJ",
+    "games": 17,
+    "played_quarantined": true,
+    "attack_now": 1.2176,
+    "attack_excl": 1.2634,
+    "d_attack": 0.0458,
+    "defence_now": 0.9502,
+    "defence_excl": 0.9808,
+    "d_defence": 0.0306
+   },
+   {
+    "team": "SKC",
+    "games": 17,
+    "played_quarantined": true,
+    "attack_now": 0.741,
+    "attack_excl": 0.7714,
+    "d_attack": 0.0303,
+    "defence_now": 1.3082,
+    "defence_excl": 1.3504,
+    "d_defence": 0.0422
+   },
+   {
+    "team": "STL",
+    "games": 17,
+    "played_quarantined": false,
+    "attack_now": 1.04,
+    "attack_excl": 1.0146,
+    "d_attack": -0.0255,
+    "defence_now": 0.8708,
+    "defence_excl": 0.852,
+    "d_defence": -0.0188
+   },
+   {
+    "team": "TOR",
+    "games": 17,
+    "played_quarantined": false,
+    "attack_now": 0.8896,
+    "attack_excl": 0.8702,
+    "d_attack": -0.0195,
+    "defence_now": 0.9663,
+    "defence_excl": 0.9439,
+    "d_defence": -0.0225
+   },
+   {
+    "team": "VAN",
+    "games": 16,
+    "played_quarantined": true,
+    "attack_now": 1.2261,
+    "attack_excl": 1.2693,
+    "d_attack": 0.0432,
+    "defence_now": 0.8132,
+    "defence_excl": 0.8054,
+    "d_defence": -0.0078
+   }
+  ],
+  "m3_ladder": "NOT_RUN \u2014 needs the live plane's locked market data"
+ },
+ "refetch": {
+  "slates": [
+   "2026-07-22",
+   "2026-07-23"
+  ],
+  "matches": [
+   {
+    "match_id": "MLS-MAT-0009HH",
+    "was_total_xg": 1.7731,
+    "now_total_xg": 1.7731,
+    "changed": false,
+    "still_quarantined": false,
+    "data_status": "postmatch"
+   },
+   {
+    "match_id": "MLS-MAT-0009HO",
+    "was_total_xg": 2.833,
+    "now_total_xg": 2.833,
+    "changed": false,
+    "still_quarantined": false,
+    "data_status": "postmatch"
+   },
+   {
+    "match_id": "MLS-MAT-0009HP",
+    "was_total_xg": 1.3016999999999999,
+    "now_total_xg": 1.3017,
+    "changed": false,
+    "still_quarantined": true,
+    "data_status": "postmatch"
+   },
+   {
+    "match_id": "MLS-MAT-0009HF",
+    "was_total_xg": 1.3711,
+    "now_total_xg": 1.3711,
+    "changed": false,
+    "still_quarantined": true,
+    "data_status": "postmatch"
+   },
+   {
+    "match_id": "MLS-MAT-0009HM",
+    "was_total_xg": 1.7447,
+    "now_total_xg": 1.7447,
+    "changed": false,
+    "still_quarantined": false,
+    "data_status": "postmatch"
+   },
+   {
+    "match_id": "MLS-MAT-0009HE",
+    "was_total_xg": 0.9591,
+    "now_total_xg": 0.9591,
+    "changed": false,
+    "still_quarantined": true,
+    "data_status": "postmatch"
+   },
+   {
+    "match_id": "MLS-MAT-0009HJ",
+    "was_total_xg": 0.3338,
+    "now_total_xg": 0.3338,
+    "changed": false,
+    "still_quarantined": true,
+    "data_status": "postmatch"
+   },
+   {
+    "match_id": "MLS-MAT-0009HI",
+    "was_total_xg": 3.0475,
+    "now_total_xg": 3.0475,
+    "changed": false,
+    "still_quarantined": false,
+    "data_status": "postmatch"
+   },
+   {
+    "match_id": "MLS-MAT-0009HN",
+    "was_total_xg": 1.2682,
+    "now_total_xg": 1.2682,
+    "changed": false,
+    "still_quarantined": false,
+    "data_status": "postmatch"
+   },
+   {
+    "match_id": "MLS-MAT-0009HG",
+    "was_total_xg": 0.18359999999999999,
+    "now_total_xg": 0.1836,
+    "changed": false,
+    "still_quarantined": true,
+    "data_status": "postmatch"
+   },
+   {
+    "match_id": "MLS-MAT-0009HD",
+    "was_total_xg": 0.5427,
+    "now_total_xg": 0.5427,
+    "changed": false,
+    "still_quarantined": true,
+    "data_status": "postmatch"
+   },
+   {
+    "match_id": "MLS-MAT-0009HK",
+    "was_total_xg": 3.1164,
+    "now_total_xg": 3.1164,
+    "changed": false,
+    "still_quarantined": false,
+    "data_status": "postmatch"
+   },
+   {
+    "match_id": "MLS-MAT-0009HR",
+    "was_total_xg": 0.4316,
+    "now_total_xg": 0.4316,
+    "changed": false,
+    "still_quarantined": true,
+    "data_status": "postmatch"
+   },
+   {
+    "match_id": "MLS-MAT-0009HQ",
+    "was_total_xg": 3.6293,
+    "now_total_xg": 3.6293,
+    "changed": false,
+    "still_quarantined": false,
+    "data_status": "postmatch"
+   },
+   {
+    "match_id": "MLS-MAT-0009HL",
+    "was_total_xg": 2.3068,
+    "now_total_xg": 2.3068,
+    "changed": false,
+    "still_quarantined": false,
+    "data_status": "postmatch"
+   }
+  ],
+  "corrected": 0
+ }
+}
