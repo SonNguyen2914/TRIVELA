@@ -43,6 +43,12 @@ WCR_TABLE = {
              "country_code": "br", "points": 1537.0, "rank": 82},
     "ddd1": {"id": "ddd1", "club": "Mallorca", "country": "Spain",
              "country_code": "es", "points": 1300.0, "rank": 500},
+    # Leeds is in the ClubElo table too. Having TWO clubs in both tables is
+    # what makes the preference order decidable at all — with only one
+    # overlapping club, every pair still needs the other provider and the
+    # order test passes whichever way round it is (it did, vacuously).
+    "eee1": {"id": "eee1", "club": "Leeds", "country": "England",
+             "country_code": "gb-eng", "points": 1600.0, "rank": 60},
 }
 
 
@@ -323,3 +329,62 @@ class TestCrossCountryAmbiguity:
                                "away": {"name": "Flamengo"}}, day=DAY)
         assert out["home"]["provider_id"] == "bbb1"
         assert out["away"]["provider_id"] == "ccc1"
+
+
+class TestClubEloIsPreferredWhenBothCover:
+    """Order matters ONLY for the overlap, and it must favour ClubElo.
+
+    The union is order-independent under pair-level selection (83 rated
+    either way on the 2026-07-30 slate), so an earlier version's
+    "worldclubratings first, for coverage" justification was simply wrong
+    reasoning. What order actually decides is which provider wins the 17
+    fixtures BOTH cover — and there ClubElo is the better read: daily
+    refresh vs weekly, classic Elo over results back to 1939, a plainer
+    self-claim than "an experiment on the effectiveness of the underlying
+    method", and any such fixture is European, which is its specialism.
+    """
+
+    def test_both_covered_resolves_to_clubelo(self, canned):
+        """BOTH clubs must be in BOTH tables, or the test cannot see the
+        order: Leeds (ClubElo 1708 / wcr 1600) v Mallorca (ClubElo 1400 /
+        wcr 1300). A first version paired a ClubElo-only club here and so
+        passed whichever order was configured — vacuous, and caught by
+        flipping the order and seeing it stay green.
+
+        The ratings differ between providers, so the assertion pins WHICH
+        table was read, not merely that something was."""
+        out = cse.for_fixture({"home": {"name": "Leeds"},
+                               "away": {"name": "Mallorca"}}, day=DAY)
+        assert out["available"] is True
+        assert out["source"] == cse.SRC_CLUBELO
+        assert out["expectation_divisor"] == 400.0
+        assert out["home"]["rating"] == pytest.approx(1708.0)   # not 1600
+        assert out["away"]["rating"] == pytest.approx(1400.0)   # not 1300
+
+    def test_worldclubratings_still_wins_what_clubelo_cannot_reach(
+            self, canned):
+        """The CONTROL. Preferring ClubElo must not disable the wide
+        source — neither of these clubs is in the ClubElo table."""
+        out = cse.for_fixture({"home": {"name": "FC Tokyo"},
+                               "away": {"name": "Flamengo"}}, day=DAY)
+        assert out["available"] is True
+        assert out["source"] == cse.SRC_WCR
+        assert out["expectation_divisor"] == 600.0
+
+    def test_the_union_is_unchanged_by_the_order(self, canned):
+        """Both orders rate exactly the same pairs. This is the fact that
+        made the original coverage justification incoherent, so it is
+        asserted rather than left as a claim in a comment."""
+        pairs = [("Man City", "Mallorca"), ("FC Tokyo", "Flamengo"),
+                 ("Mallorca", "Flamengo"), ("Leeds", "Inter"),
+                 ("Man City", "Nowhere Athletic")]
+        rated = 0
+        for home, away in pairs:
+            out = cse.for_fixture({"home": {"name": home},
+                                   "away": {"name": away}}, day=DAY)
+            rated += int(bool(out["available"]))
+        # Only "Man City v Nowhere Athletic" fails: Nowhere Athletic is in
+        # neither table. Mallorca v Flamengo DOES rate — Mallorca sits in
+        # both canned tables, so worldclubratings covers that pair on its
+        # own without needing one rating from each provider.
+        assert rated == 4

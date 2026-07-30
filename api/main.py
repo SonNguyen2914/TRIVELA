@@ -634,6 +634,61 @@ def friendlies_markets(date: str | None = Query(None, pattern=r"^\d{8}$")):
     return payload
 
 
+# --- UEFA Europa Conference League (additive, 2026-07-30) -----------------
+# A CUP, deliberately not shaped like the four league planes. No model, no
+# approval decision, no odds board: measured on the 2025 edition the median
+# club played 4 matches and only 53 of 164 cleared the 5-match rating
+# floor, so a model fitted on this competition's own fixtures would refuse
+# two thirds of its participants — permanently, since that is the shape of
+# a four-round qualifying cup rather than a season that has not started.
+# What is served instead is fixtures, real Kalshi prices, and the
+# cross-league strength read, because an ECL club's strength lives in its
+# DOMESTIC league. See src/ecl.py.
+
+@app.get("/api/ecl/fixtures")
+def ecl_fixtures(season: int = Query(2026, ge=2020, le=2030),
+                 days: int | None = Query(None, ge=1, le=30)):
+    """ECL fixtures with the strength read, and the round on every row.
+
+    `round` matters here in a way it does not for a league: a 2nd
+    qualifying tie and a league-stage match are different kinds of
+    fixture, and most of this competition is qualifying."""
+    from src import ecl
+    try:
+        return ecl.fixtures(season, days)
+    except Exception as exc:
+        print(f"[ecl] fixtures failed: {exc}")
+        raise HTTPException(503, "ecl fixtures unavailable")
+
+
+@app.get("/api/ecl/markets")
+def ecl_markets():
+    """Kalshi KXUECLGAME books. The series ticker was PROBED (200 on
+    2026-07-30; KXECLGAME/KXCONFGAME/KXUEFACONFGAME all 404), and both
+    `listed_events` and `tradeable_events` are reported — the EPL probe
+    found ten status=open events that were all settled fixtures from the
+    previous season, so the flattering count alone would mislead."""
+    from src import ecl
+    try:
+        return ecl.markets()
+    except Exception as exc:
+        print(f"[ecl] markets failed: {exc}")
+        raise HTTPException(503, "ecl markets unavailable")
+
+
+@app.get("/api/ecl/status")
+def ecl_status():
+    """What this competition IS here: no model, and the measured reason."""
+    from src import ecl
+    return {"competition": ecl.COMPETITION, "display": ecl.DISPLAY,
+            "apif_league_id": ecl.APIF_LEAGUE_ID,
+            "kalshi_series": ecl.KALSHI_GAME_SERIES,
+            "model": ecl.NO_MODEL_REASON,
+            "framing": ecl.FRAMING,
+            "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
+            "generated_at": utcnow().isoformat()}
+
+
 @app.get("/api/friendlies/fixtures")
 def friendlies_fixtures(days: int = Query(3, ge=1, le=8)):
     """EVERY club friendly in the window — the hub's fixture list.
