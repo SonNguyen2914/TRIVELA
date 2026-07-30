@@ -762,11 +762,19 @@ def fit_style_vectors(rows: list[dict], scope: XgScope,
         raw_v[(tid, a)] = own
         shr_v[(tid, a)] = (w * own + k * league_mean[a]) / (w + k)
 
-    # stage 2: standardise WITHIN this league-season, over the shrunk values
+    # stage 2: standardise WITHIN this league-season, over the shrunk values.
+    # The centre and scale are computed ONCE per axis, over exactly the teams
+    # that will be placed on it — the below-floor teams are already excluded
+    # from `shr_v`, so two fixtures of an extreme outlier cannot move every
+    # other team's coordinate.
+    by_axis: dict[str, list[float]] = {a: [] for a in league_mean}
+    for (tid, ax), v in shr_v.items():
+        by_axis[ax].append(v)
     league_sd: dict[str, float] = {}
-    for a in league_mean:
-        vals = [v for (tid, ax), v in shr_v.items() if ax == a]
+    league_centre: dict[str, float] = {}
+    for a, vals in by_axis.items():
         league_sd[a] = (statistics.pstdev(vals) if len(vals) > 1 else 0.0)
+        league_centre[a] = statistics.fmean(vals) if vals else 0.0
 
     vectors: dict[int, StyleVector] = {}
     for tid in sorted(set(t for t, _ in den) | set(names)):
@@ -788,11 +796,10 @@ def fit_style_vectors(rows: list[dict], scope: XgScope,
             if sd <= 0:
                 refused[a] = AXIS_DOES_NOT_SEPARATE
                 continue
-            mu = statistics.fmean(
-                [v for (t2, ax), v in shr_v.items() if ax == a])
             coords[a] = AxisCoordinate(
                 scope=scope, axis=a,
-                z=ScopedStrength(scope, (shr_v[key] - mu) / sd),
+                z=ScopedStrength(scope,
+                                 (shr_v[key] - league_centre[a]) / sd),
                 raw=raw_v[key], shrunk=shr_v[key],
                 league_mean=league_mean[a], league_sd=sd,
                 n_obs=cnt[key], weight_sum=wgt[key])
