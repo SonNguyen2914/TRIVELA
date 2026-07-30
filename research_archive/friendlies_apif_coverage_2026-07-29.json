@@ -1,0 +1,297 @@
+{
+ "measured_utc": "2026-07-29",
+ "what": "Live coverage census from the shipped code path (src.friendlies_apif.market_rows), plus the ESPN baseline it replaces.",
+ "espn_baseline": {
+  "source": "site.api.espn.com .../soccer/club.friendly/scoreboard",
+  "buckets": {
+   "20260729": 4,
+   "20260730": 2,
+   "20260731": 2
+  },
+  "tradeable_kalshi_events_espn_could_name": 1,
+  "named": [
+   "Liverpool vs Wrexham"
+  ]
+ },
+ "coverage": {
+  "kalshi_open_events": 25,
+  "fixtures_known": 357,
+  "fixtures_known_all_leagues": 1611,
+  "events_bridged": 22,
+  "events_unbridged": 3,
+  "fraction_bridged": 0.88,
+  "bridged": [
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31SOUWIG",
+    "title": "Southport vs Wigan",
+    "et_date": "26JUL31",
+    "fixture_id": 1583515,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31BCBAR",
+    "title": "Birmingham vs Barcelona",
+    "et_date": "26JUL31",
+    "fixture_id": 1583514,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31CRAREA",
+    "title": "Crawley vs Reading",
+    "et_date": "26JUL31",
+    "fixture_id": 1583512,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31BROQPR",
+    "title": "Bromley vs QPR",
+    "et_date": "26JUL31",
+    "fixture_id": 1583511,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31MATDER",
+    "title": "Mansfield vs Derby",
+    "et_date": "26JUL31",
+    "fixture_id": 1583509,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31ALBRMA",
+    "title": "Albacete vs Real Madrid Castilla",
+    "et_date": "26JUL31",
+    "fixture_id": 1598568,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31SASFOL",
+    "title": "Sassuolo vs Folgore Caratese",
+    "et_date": "26JUL31",
+    "fixture_id": 1583505,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31NIJSEV",
+    "title": "Nijmegen vs Sevilla",
+    "et_date": "26JUL31",
+    "fixture_id": 1583504,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31JUVNIC",
+    "title": "Juventus vs Nice",
+    "et_date": "26JUL31",
+    "fixture_id": 1585004,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31CONPON",
+    "title": "Concarneau vs Pontivy GSI",
+    "et_date": "26JUL31",
+    "fixture_id": 1548928,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31M05SAH",
+    "title": "Mainz vs Shabab Al-Ahli",
+    "et_date": "26JUL31",
+    "fixture_id": 1604714,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31SPONFO",
+    "title": "Sporting CP vs Nottingham",
+    "et_date": "26JUL31",
+    "fixture_id": 1583500,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31SMCDIE",
+    "title": "Caen vs Dieppe",
+    "et_date": "26JUL31",
+    "fixture_id": 1604711,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31ELCCOR",
+    "title": "Elche vs Cordoba",
+    "et_date": "26JUL31",
+    "fixture_id": 1604708,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30LEESUN",
+    "title": "Leeds United vs Sunderland",
+    "et_date": "26JUL30",
+    "fixture_id": 1589334,
+    "league_id": 1022,
+    "league_name": "Premier League - Summer Series",
+    "orientation": "reversed"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30MCFITJ",
+    "title": "Malaga vs Al-Ittihad",
+    "et_date": "26JUL30",
+    "fixture_id": 1598562,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30ANDEUR",
+    "title": "Andorra vs Europa",
+    "et_date": "26JUL30",
+    "fixture_id": 1583496,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30MONARIS",
+    "title": "Monza vs Aris Thessaloniki",
+    "et_date": "26JUL30",
+    "fixture_id": 1585001,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30PARARE",
+    "title": "Parma Calcio vs Arezzo",
+    "et_date": "26JUL30",
+    "fixture_id": 1583495,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30BOUFCA",
+    "title": "Bournemouth vs Augsburg",
+    "et_date": "26JUL30",
+    "fixture_id": 1583494,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "reversed"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30LAVUSG",
+    "title": "Stade Lavallois vs US Granville",
+    "et_date": "26JUL30",
+    "fixture_id": 1604699,
+    "league_id": 667,
+    "league_name": "Friendlies Clubs",
+    "orientation": "same"
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL29LFCWRE",
+    "title": "Liverpool vs Wrexham",
+    "et_date": "26JUL29",
+    "fixture_id": 1589333,
+    "league_id": 1022,
+    "league_name": "Premier League - Summer Series",
+    "orientation": "same"
+   }
+  ],
+  "unbridged": [
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30SWEENN",
+    "title": "Essen vs Ennepetal",
+    "et_date": "26JUL30",
+    "state": "unbridged",
+    "reason": "measured provider absence for Essen, Ennepetal",
+    "candidates": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30FCREBMU",
+    "title": "FC Rottach-Egern vs Bayern Munich",
+    "et_date": "26JUL30",
+    "state": "unbridged",
+    "reason": "measured provider absence for FC Rottach-Egern, Bayern Munich",
+    "candidates": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30LUATER",
+    "title": "Luanda vs Teruel",
+    "et_date": "26JUL30",
+    "state": "unbridged",
+    "reason": "measured provider absence for Luanda, Teruel",
+    "candidates": []
+   }
+  ],
+  "breakdown": {
+   "bridged": 22,
+   "unbridged": 3
+  },
+  "league_discoveries": [],
+  "sweep": {
+   "utc_dates": [
+    "2026-07-29",
+    "2026-07-30",
+    "2026-07-31",
+    "2026-08-01"
+   ],
+   "complete": true,
+   "failures": [],
+   "requests_used": 4,
+   "cached": false,
+   "key_source": ".apifootball_key",
+   "problems": [],
+   "horizon_days": 3,
+   "classified_friendly_leagues": {
+    "667": "Friendlies Clubs",
+    "1022": "Premier League - Summer Series"
+   }
+  },
+  "request_budget": {
+   "per_minute": 300,
+   "per_day": 7500
+  },
+  "framing_note": "Fixtures come from API-Football; books come from Kalshi. Fixtures are joined to books by API-Football team id, never by name \u2014 an unbridged side is reported as unbridged and is never guessed. No model runs on friendlies and none is planned."
+ },
+ "kalshi_registry": {
+  "listed_total": 312,
+  "open_events": 25,
+  "complete": true,
+  "truncated": false,
+  "cached": false
+ },
+ "row_states": {
+  "bridge_state": {
+   "bridged": 22,
+   "unbridged": 3
+  },
+  "book_state": {
+   "open": 21,
+   "not_bridged": 3,
+   "unavailable": 1
+  }
+ }
+}

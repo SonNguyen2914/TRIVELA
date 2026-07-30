@@ -114,6 +114,14 @@ APIF_SWEEP_TTL = float(os.getenv("FRIENDLIES_APIF_SWEEP_TTL", "600"))
 APIF_TIMEOUT = float(os.getenv("FRIENDLIES_APIF_TIMEOUT", "20"))
 APIF_DELAY = float(os.getenv("FRIENDLIES_APIF_DELAY", "0.5"))
 
+# Burst-throttle between Kalshi BOOK fetches. Not decorative: the first
+# live run of `market_rows` fetched 22 books back to back and Kalshi
+# answered one of them with a 429. The fail-closed path handled it
+# correctly — that row came back `unavailable` rather than pretending the
+# market was closed — but a throttle we control is better than a refusal
+# we provoke, because the honest failure still cost real coverage.
+KALSHI_BOOK_DELAY = float(os.getenv("FRIENDLIES_KALSHI_BOOK_DELAY", "0.15"))
+
 # The key file route is preferred over an env var so the secret never
 # crosses a shell history or an agent transcript. Mode 600 is ENFORCED,
 # not advised: reading a group-readable secret would quietly normalise
@@ -469,6 +477,31 @@ def utc_dates_for(horizon_days: int, today: datetime | None = None) -> list[str]
             for i in range(n + 1)]
 
 
+def covered_et_dates(utc_dates: list[str]) -> set[str]:
+    """The US-Eastern dates a given set of UTC date buckets covers
+    COMPLETELY.
+
+    ET date E spans UTC E 04:00 -> E+1 04:00, so E is fully covered only
+    when BOTH E and E+1 were fetched. The last UTC bucket in a sweep is
+    therefore a partial tail and its ET date is NOT covered.
+
+    This exists because of a defect caught in live verification: with a
+    1-day horizon the census reported 17 events `unbridged` with the
+    reason "API-Football lists no fixture pairing them on this date". It
+    had never looked at those dates. Asserting an absence from a window
+    that was never swept is exactly the "missing evidence rendered as
+    authority" failure this surface is built to refuse — so an event
+    outside the horizon gets its own state instead."""
+    out: set[str] = set()
+    for d in (utc_dates or [])[:-1]:
+        try:
+            out.add(datetime.strptime(d, "%Y-%m-%d")
+                    .strftime("%y%b%d").upper())
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
 def _fetch_date(session, key: str, utc_date: str) -> tuple[list[dict] | None, str | None]:
     """One UTC date's fixtures, or (None, reason). A 200 carrying an
     empty array WITH a provider error is a FAILURE, not an answer — the
@@ -635,9 +668,17 @@ def bridge_event(event: dict, swept: dict) -> dict:
         "sides", "fixture", "orientation", "candidates", "proposal"}
 
     state is one of bridged / ambiguous / proposed / unbridged /
-    sweep_incomplete / not_a_match_title. `fixture` is populated ONLY for
-    `bridged`; a proposal carries its candidate under `proposal` so a
-    consumer cannot mistake one for the other by reading the same field.
+    outside_horizon / sweep_incomplete / not_a_match_title. `fixture` is
+    populated ONLY for `bridged`; a proposal carries its candidate under
+    `proposal` so a consumer cannot mistake one for the other by reading
+    the same field.
+
+    Three of those states are all ways of saying "we could not resolve
+    this", and they are kept apart on purpose, because only ONE of them
+    is a statement about the provider:
+      unbridged        we looked and API-Football has no such fixture
+      outside_horizon  we never looked — the date is beyond the sweep
+      sweep_incomplete we tried to look and a request failed
     """
     ticker = event.get("event_ticker") or ""
     title = event.get("title") or ""
@@ -656,6 +697,18 @@ def bridge_event(event: dict, swept: dict) -> dict:
     h = bridge_side(sides[0])
     a = bridge_side(sides[1])
     base["sides"] = {"home": h, "away": a}
+
+    # An event on a date the sweep never covered is NOT an absence. See
+    # covered_et_dates for the live defect this closes.
+    covered = covered_et_dates(swept.get("utc_dates") or [])
+    if covered and etd not in covered:
+        return {**base, "state": "outside_horizon",
+                "reason": f"this event's Eastern date {etd} is outside the "
+                          f"swept horizon "
+                          f"({', '.join(sorted(covered))}), so no absence "
+                          f"can be claimed — the fixtures were never "
+                          f"requested. Raise FRIENDLIES_APIF_HORIZON_DAYS "
+                          f"or the `days` parameter to reach it."}
 
     pool = [f for f in swept.get("fixtures") or [] if f["et_date"] == etd]
     complete = bool(swept.get("complete"))
@@ -772,16 +825,29 @@ def coverage(kalshi_events: list[dict], swept: dict | None = None,
     fixtures_all = swept.get("fixtures") or []
     friendly = friendly_fixtures(swept)
 
+    # "We never looked" is reported apart from "it is not there". Lumping
+    # them would let a short horizon masquerade as provider absence — the
+    # defect covered_et_dates was added to close.
+    outside = by_state.get("outside_horizon", [])
+    in_horizon = total - len(outside)
+
     return {
         # --- the denominators, first, so no count can be read alone ----
         "kalshi_open_events": total,
+        "kalshi_open_events_in_horizon": in_horizon,
         "fixtures_known": len(friendly),
         "fixtures_known_all_leagues": len(fixtures_all),
         # --- the counts ------------------------------------------------
         "events_bridged": len(bridged),
         "events_unbridged": len(unbridged),
+        "events_outside_horizon": len(outside),
         "fraction_bridged": (round(len(bridged) / total, 4)
                              if total else None),
+        # The same count against the denominator it was actually measured
+        # against. Both are reported because neither alone is honest: the
+        # first understates the join, the second hides the horizon.
+        "fraction_bridged_in_horizon": (round(len(bridged) / in_horizon, 4)
+                                        if in_horizon else None),
         # --- and the names, because a residual is not an answer -------
         "bridged": [{"event_ticker": r["event_ticker"], "title": r["title"],
                      "et_date": r["et_date"],
@@ -923,6 +989,7 @@ def market_rows(horizon_days: int | None = None) -> dict:
     clock = clock_fn() if callable(clock_fn) else None
 
     rows = []
+    fetched = 0
     for ev in reg["events"]:
         b = bridge_event(ev, swept)
         row = {
@@ -950,6 +1017,9 @@ def market_rows(horizon_days: int | None = None) -> dict:
                 "no price is rendered for an unbridged fixture")
             rows.append(row)
             continue
+        if fetched:
+            time.sleep(KALSHI_BOOK_DELAY)    # see KALSHI_BOOK_DELAY
+        fetched += 1
         book, stale = _book_for(row)
         if book is None:
             row["book_state"] = "unavailable"

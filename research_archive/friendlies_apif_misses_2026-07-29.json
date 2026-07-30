@@ -1,0 +1,5311 @@
+{
+ "measured_utc": "2026-07-29",
+ "what": "Individual attribution for every tradeable Kalshi event the crude substring matcher could not place, and the controls that make each absence claim credible rather than an artefact of the query.",
+ "league_scoped_sweep_667": {
+  "window": [
+   "2026-07-28",
+   "2026-08-01"
+  ],
+  "results": [
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL29LFCWRE",
+    "title": "Liverpool vs Wrexham",
+    "et_date": "26JUL29",
+    "kalshi_home": "Liverpool",
+    "kalshi_away": "Wrexham",
+    "apif_day_count": 71,
+    "strict": [],
+    "all_hits": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30ANDEUR",
+    "title": "Andorra vs Europa",
+    "et_date": "26JUL30",
+    "kalshi_home": "Andorra",
+    "kalshi_away": "Europa",
+    "apif_day_count": 16,
+    "strict": [
+     {
+      "tier": [
+       "tokenset",
+       "tokenset"
+      ],
+      "fixture_id": 1583496,
+      "kickoff": "2026-07-30T17:00:00+00:00",
+      "home": "FC Andorra",
+      "home_id": 8157,
+      "away": "Europa Fc",
+      "away_id": 593
+     }
+    ],
+    "all_hits": [
+     {
+      "tier": [
+       "tokenset",
+       "tokenset"
+      ],
+      "fixture_id": 1583496,
+      "kickoff": "2026-07-30T17:00:00+00:00",
+      "home": "FC Andorra",
+      "home_id": 8157,
+      "away": "Europa Fc",
+      "away_id": 593
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30BOUFCA",
+    "title": "Bournemouth vs Augsburg",
+    "et_date": "26JUL30",
+    "kalshi_home": "Bournemouth",
+    "kalshi_away": "Augsburg",
+    "apif_day_count": 16,
+    "strict": [],
+    "all_hits": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30FCREBMU",
+    "title": "FC Rottach-Egern vs Bayern Munich",
+    "et_date": "26JUL30",
+    "kalshi_home": "FC Rottach-Egern",
+    "kalshi_away": "Bayern Munich",
+    "apif_day_count": 16,
+    "strict": [],
+    "all_hits": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30LAVUSG",
+    "title": "Stade Lavallois vs US Granville",
+    "et_date": "26JUL30",
+    "kalshi_home": "Stade Lavallois",
+    "kalshi_away": "US Granville",
+    "apif_day_count": 16,
+    "strict": [],
+    "all_hits": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30LEESUN",
+    "title": "Leeds United vs Sunderland",
+    "et_date": "26JUL30",
+    "kalshi_home": "Leeds United",
+    "kalshi_away": "Sunderland",
+    "apif_day_count": 16,
+    "strict": [],
+    "all_hits": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30LUATER",
+    "title": "Luanda vs Teruel",
+    "et_date": "26JUL30",
+    "kalshi_home": "Luanda",
+    "kalshi_away": "Teruel",
+    "apif_day_count": 16,
+    "strict": [],
+    "all_hits": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30MCFITJ",
+    "title": "Malaga vs Al-Ittihad",
+    "et_date": "26JUL30",
+    "kalshi_home": "Malaga",
+    "kalshi_away": "Al-Ittihad",
+    "apif_day_count": 16,
+    "strict": [
+     {
+      "tier": [
+       "exact",
+       "tokenset"
+      ],
+      "fixture_id": 1598562,
+      "kickoff": "2026-07-30T18:00:00+00:00",
+      "home": "Malaga",
+      "home_id": 535,
+      "away": "Al-Ittihad FC",
+      "away_id": 2938
+     }
+    ],
+    "all_hits": [
+     {
+      "tier": [
+       "exact",
+       "tokenset"
+      ],
+      "fixture_id": 1598562,
+      "kickoff": "2026-07-30T18:00:00+00:00",
+      "home": "Malaga",
+      "home_id": 535,
+      "away": "Al-Ittihad FC",
+      "away_id": 2938
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30MONARIS",
+    "title": "Monza vs Aris Thessaloniki",
+    "et_date": "26JUL30",
+    "kalshi_home": "Monza",
+    "kalshi_away": "Aris Thessaloniki",
+    "apif_day_count": 16,
+    "strict": [],
+    "all_hits": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30PARARE",
+    "title": "Parma Calcio vs Arezzo",
+    "et_date": "26JUL30",
+    "kalshi_home": "Parma Calcio",
+    "kalshi_away": "Arezzo",
+    "apif_day_count": 16,
+    "strict": [
+     {
+      "tier": [
+       "tokenset",
+       "exact"
+      ],
+      "fixture_id": 1583495,
+      "kickoff": "2026-07-30T15:00:00+00:00",
+      "home": "Parma",
+      "home_id": 523,
+      "away": "Arezzo",
+      "away_id": 876
+     }
+    ],
+    "all_hits": [
+     {
+      "tier": [
+       "tokenset",
+       "exact"
+      ],
+      "fixture_id": 1583495,
+      "kickoff": "2026-07-30T15:00:00+00:00",
+      "home": "Parma",
+      "home_id": 523,
+      "away": "Arezzo",
+      "away_id": 876
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30SWEENN",
+    "title": "Essen vs Ennepetal",
+    "et_date": "26JUL30",
+    "kalshi_home": "Essen",
+    "kalshi_away": "Ennepetal",
+    "apif_day_count": 16,
+    "strict": [],
+    "all_hits": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31ALBRMA",
+    "title": "Albacete vs Real Madrid Castilla",
+    "et_date": "26JUL31",
+    "kalshi_home": "Albacete",
+    "kalshi_away": "Real Madrid Castilla",
+    "apif_day_count": 54,
+    "strict": [],
+    "all_hits": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31BCBAR",
+    "title": "Birmingham vs Barcelona",
+    "et_date": "26JUL31",
+    "kalshi_home": "Birmingham",
+    "kalshi_away": "Barcelona",
+    "apif_day_count": 54,
+    "strict": [
+     {
+      "tier": [
+       "exact",
+       "exact"
+      ],
+      "fixture_id": 1583514,
+      "kickoff": "2026-07-31T18:45:00+00:00",
+      "home": "Birmingham",
+      "home_id": 54,
+      "away": "Barcelona",
+      "away_id": 529
+     }
+    ],
+    "all_hits": [
+     {
+      "tier": [
+       "exact",
+       "exact"
+      ],
+      "fixture_id": 1583514,
+      "kickoff": "2026-07-31T18:45:00+00:00",
+      "home": "Birmingham",
+      "home_id": 54,
+      "away": "Barcelona",
+      "away_id": 529
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31BROQPR",
+    "title": "Bromley vs QPR",
+    "et_date": "26JUL31",
+    "kalshi_home": "Bromley",
+    "kalshi_away": "QPR",
+    "apif_day_count": 54,
+    "strict": [
+     {
+      "tier": [
+       "exact",
+       "exact"
+      ],
+      "fixture_id": 1583511,
+      "kickoff": "2026-07-31T18:30:00+00:00",
+      "home": "Bromley",
+      "home_id": 1832,
+      "away": "QPR",
+      "away_id": 72
+     }
+    ],
+    "all_hits": [
+     {
+      "tier": [
+       "exact",
+       "exact"
+      ],
+      "fixture_id": 1583511,
+      "kickoff": "2026-07-31T18:30:00+00:00",
+      "home": "Bromley",
+      "home_id": 1832,
+      "away": "QPR",
+      "away_id": 72
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31CONPON",
+    "title": "Concarneau vs Pontivy GSI",
+    "et_date": "26JUL31",
+    "kalshi_home": "Concarneau",
+    "kalshi_away": "Pontivy GSI",
+    "apif_day_count": 54,
+    "strict": [
+     {
+      "tier": [
+       "exact",
+       "exact"
+      ],
+      "fixture_id": 1548928,
+      "kickoff": "2026-07-31T12:00:00+00:00",
+      "home": "Concarneau",
+      "home_id": 1300,
+      "away": "Pontivy GSI",
+      "away_id": 3098
+     }
+    ],
+    "all_hits": [
+     {
+      "tier": [
+       "exact",
+       "exact"
+      ],
+      "fixture_id": 1548928,
+      "kickoff": "2026-07-31T12:00:00+00:00",
+      "home": "Concarneau",
+      "home_id": 1300,
+      "away": "Pontivy GSI",
+      "away_id": 3098
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31CRAREA",
+    "title": "Crawley vs Reading",
+    "et_date": "26JUL31",
+    "kalshi_home": "Crawley",
+    "kalshi_away": "Reading",
+    "apif_day_count": 54,
+    "strict": [],
+    "all_hits": [
+     {
+      "tier": [
+       "loose",
+       "exact"
+      ],
+      "fixture_id": 1583512,
+      "kickoff": "2026-07-31T18:30:00+00:00",
+      "home": "Crawley Town",
+      "home_id": 1362,
+      "away": "Reading",
+      "away_id": 53
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31ELCCOR",
+    "title": "Elche vs Cordoba",
+    "et_date": "26JUL31",
+    "kalshi_home": "Elche",
+    "kalshi_away": "Cordoba",
+    "apif_day_count": 54,
+    "strict": [
+     {
+      "tier": [
+       "exact",
+       "exact"
+      ],
+      "fixture_id": 1604708,
+      "kickoff": "2026-07-31T08:30:00+00:00",
+      "home": "Elche",
+      "home_id": 797,
+      "away": "Cordoba",
+      "away_id": 713
+     }
+    ],
+    "all_hits": [
+     {
+      "tier": [
+       "exact",
+       "exact"
+      ],
+      "fixture_id": 1604708,
+      "kickoff": "2026-07-31T08:30:00+00:00",
+      "home": "Elche",
+      "home_id": 797,
+      "away": "Cordoba",
+      "away_id": 713
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31JUVNIC",
+    "title": "Juventus vs Nice",
+    "et_date": "26JUL31",
+    "kalshi_home": "Juventus",
+    "kalshi_away": "Nice",
+    "apif_day_count": 54,
+    "strict": [
+     {
+      "tier": [
+       "exact",
+       "exact"
+      ],
+      "fixture_id": 1585004,
+      "kickoff": "2026-07-31T16:00:00+00:00",
+      "home": "Juventus",
+      "home_id": 496,
+      "away": "Nice",
+      "away_id": 84
+     }
+    ],
+    "all_hits": [
+     {
+      "tier": [
+       "exact",
+       "exact"
+      ],
+      "fixture_id": 1585004,
+      "kickoff": "2026-07-31T16:00:00+00:00",
+      "home": "Juventus",
+      "home_id": 496,
+      "away": "Nice",
+      "away_id": 84
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31M05SAH",
+    "title": "Mainz vs Shabab Al-Ahli",
+    "et_date": "26JUL31",
+    "kalshi_home": "Mainz",
+    "kalshi_away": "Shabab Al-Ahli",
+    "apif_day_count": 54,
+    "strict": [],
+    "all_hits": [
+     {
+      "tier": [
+       "loose",
+       "loose"
+      ],
+      "fixture_id": 1604714,
+      "kickoff": "2026-07-31T14:00:00+00:00",
+      "home": "FSV Mainz 05",
+      "home_id": 164,
+      "away": "Shabab Al Ahli Dubai",
+      "away_id": 2870
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31MATDER",
+    "title": "Mansfield vs Derby",
+    "et_date": "26JUL31",
+    "kalshi_home": "Mansfield",
+    "kalshi_away": "Derby",
+    "apif_day_count": 54,
+    "strict": [],
+    "all_hits": [
+     {
+      "tier": [
+       "loose",
+       "exact"
+      ],
+      "fixture_id": 1583509,
+      "kickoff": "2026-07-31T18:00:00+00:00",
+      "home": "Mansfield Town",
+      "home_id": 1374,
+      "away": "Derby",
+      "away_id": 69
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31NIJSEV",
+    "title": "Nijmegen vs Sevilla",
+    "et_date": "26JUL31",
+    "kalshi_home": "Nijmegen",
+    "kalshi_away": "Sevilla",
+    "apif_day_count": 54,
+    "strict": [],
+    "all_hits": [
+     {
+      "tier": [
+       "loose",
+       "exact"
+      ],
+      "fixture_id": 1583504,
+      "kickoff": "2026-07-31T17:00:00+00:00",
+      "home": "NEC Nijmegen",
+      "home_id": 413,
+      "away": "Sevilla",
+      "away_id": 536
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31SASFOL",
+    "title": "Sassuolo vs Folgore Caratese",
+    "et_date": "26JUL31",
+    "kalshi_home": "Sassuolo",
+    "kalshi_away": "Folgore Caratese",
+    "apif_day_count": 54,
+    "strict": [
+     {
+      "tier": [
+       "exact",
+       "exact"
+      ],
+      "fixture_id": 1583505,
+      "kickoff": "2026-07-31T17:00:00+00:00",
+      "home": "Sassuolo",
+      "home_id": 488,
+      "away": "Folgore Caratese",
+      "away_id": 9450
+     }
+    ],
+    "all_hits": [
+     {
+      "tier": [
+       "exact",
+       "exact"
+      ],
+      "fixture_id": 1583505,
+      "kickoff": "2026-07-31T17:00:00+00:00",
+      "home": "Sassuolo",
+      "home_id": 488,
+      "away": "Folgore Caratese",
+      "away_id": 9450
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31SMCDIE",
+    "title": "Caen vs Dieppe",
+    "et_date": "26JUL31",
+    "kalshi_home": "Caen",
+    "kalshi_away": "Dieppe",
+    "apif_day_count": 54,
+    "strict": [
+     {
+      "tier": [
+       "exact",
+       "exact"
+      ],
+      "fixture_id": 1604711,
+      "kickoff": "2026-07-31T09:30:00+00:00",
+      "home": "Caen",
+      "home_id": 88,
+      "away": "Dieppe",
+      "away_id": 9274
+     }
+    ],
+    "all_hits": [
+     {
+      "tier": [
+       "exact",
+       "exact"
+      ],
+      "fixture_id": 1604711,
+      "kickoff": "2026-07-31T09:30:00+00:00",
+      "home": "Caen",
+      "home_id": 88,
+      "away": "Dieppe",
+      "away_id": 9274
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31SOUWIG",
+    "title": "Southport vs Wigan",
+    "et_date": "26JUL31",
+    "kalshi_home": "Southport",
+    "kalshi_away": "Wigan",
+    "apif_day_count": 54,
+    "strict": [
+     {
+      "tier": [
+       "exact",
+       "exact"
+      ],
+      "fixture_id": 1583515,
+      "kickoff": "2026-07-31T18:45:00+00:00",
+      "home": "Southport",
+      "home_id": 1826,
+      "away": "Wigan",
+      "away_id": 61
+     }
+    ],
+    "all_hits": [
+     {
+      "tier": [
+       "exact",
+       "exact"
+      ],
+      "fixture_id": 1583515,
+      "kickoff": "2026-07-31T18:45:00+00:00",
+      "home": "Southport",
+      "home_id": 1826,
+      "away": "Wigan",
+      "away_id": 61
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31SPONFO",
+    "title": "Sporting CP vs Nottingham",
+    "et_date": "26JUL31",
+    "kalshi_home": "Sporting CP",
+    "kalshi_away": "Nottingham",
+    "apif_day_count": 54,
+    "strict": [],
+    "all_hits": [
+     {
+      "tier": [
+       "exact",
+       "loose"
+      ],
+      "fixture_id": 1583500,
+      "kickoff": "2026-07-31T18:45:00+00:00",
+      "home": "Sporting CP",
+      "home_id": 228,
+      "away": "Nottingham Forest",
+      "away_id": 65
+     }
+    ]
+   }
+  ]
+ },
+ "date_scoped_sweep": {
+  "utc_dates": [
+   "2026-07-29",
+   "2026-07-30",
+   "2026-07-31",
+   "2026-08-01"
+  ],
+  "fixture_count": 1611,
+  "results": [
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL29LFCWRE",
+    "title": "Liverpool vs Wrexham",
+    "et_date": "26JUL29",
+    "kalshi_home": "Liverpool",
+    "kalshi_away": "Wrexham",
+    "hits": [
+     {
+      "orientation": "same",
+      "fixture_id": 1589333,
+      "league": [
+       1022,
+       "Premier League - Summer Series",
+       2025
+      ],
+      "kickoff": "2026-07-29T23:30:00+00:00",
+      "apif_home": "Liverpool",
+      "apif_home_id": 40,
+      "apif_away": "Wrexham",
+      "apif_away_id": 1837,
+      "exact_both": true
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30ANDEUR",
+    "title": "Andorra vs Europa",
+    "et_date": "26JUL30",
+    "kalshi_home": "Andorra",
+    "kalshi_away": "Europa",
+    "hits": [
+     {
+      "orientation": "same",
+      "fixture_id": 1583496,
+      "league": [
+       667,
+       "Friendlies Clubs",
+       2026
+      ],
+      "kickoff": "2026-07-30T17:00:00+00:00",
+      "apif_home": "FC Andorra",
+      "apif_home_id": 8157,
+      "apif_away": "Europa Fc",
+      "apif_away_id": 593,
+      "exact_both": true
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30BOUFCA",
+    "title": "Bournemouth vs Augsburg",
+    "et_date": "26JUL30",
+    "kalshi_home": "Bournemouth",
+    "kalshi_away": "Augsburg",
+    "hits": [
+     {
+      "orientation": "reversed",
+      "fixture_id": 1583494,
+      "league": [
+       667,
+       "Friendlies Clubs",
+       2026
+      ],
+      "kickoff": "2026-07-30T14:00:00+00:00",
+      "apif_home": "FC Augsburg",
+      "apif_home_id": 170,
+      "apif_away": "Bournemouth",
+      "apif_away_id": 35,
+      "exact_both": true
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30FCREBMU",
+    "title": "FC Rottach-Egern vs Bayern Munich",
+    "et_date": "26JUL30",
+    "kalshi_home": "FC Rottach-Egern",
+    "kalshi_away": "Bayern Munich",
+    "hits": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30LAVUSG",
+    "title": "Stade Lavallois vs US Granville",
+    "et_date": "26JUL30",
+    "kalshi_home": "Stade Lavallois",
+    "kalshi_away": "US Granville",
+    "hits": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30LEESUN",
+    "title": "Leeds United vs Sunderland",
+    "et_date": "26JUL30",
+    "kalshi_home": "Leeds United",
+    "kalshi_away": "Sunderland",
+    "hits": [
+     {
+      "orientation": "reversed",
+      "fixture_id": 1589334,
+      "league": [
+       1022,
+       "Premier League - Summer Series",
+       2025
+      ],
+      "kickoff": "2026-07-30T23:30:00+00:00",
+      "apif_home": "Sunderland",
+      "apif_home_id": 746,
+      "apif_away": "Leeds",
+      "apif_away_id": 63,
+      "exact_both": true
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30LUATER",
+    "title": "Luanda vs Teruel",
+    "et_date": "26JUL30",
+    "kalshi_home": "Luanda",
+    "kalshi_away": "Teruel",
+    "hits": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30MCFITJ",
+    "title": "Malaga vs Al-Ittihad",
+    "et_date": "26JUL30",
+    "kalshi_home": "Malaga",
+    "kalshi_away": "Al-Ittihad",
+    "hits": [
+     {
+      "orientation": "same",
+      "fixture_id": 1598562,
+      "league": [
+       667,
+       "Friendlies Clubs",
+       2026
+      ],
+      "kickoff": "2026-07-30T18:00:00+00:00",
+      "apif_home": "Malaga",
+      "apif_home_id": 535,
+      "apif_away": "Al-Ittihad FC",
+      "apif_away_id": 2938,
+      "exact_both": true
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30MONARIS",
+    "title": "Monza vs Aris Thessaloniki",
+    "et_date": "26JUL30",
+    "kalshi_home": "Monza",
+    "kalshi_away": "Aris Thessaloniki",
+    "hits": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30PARARE",
+    "title": "Parma Calcio vs Arezzo",
+    "et_date": "26JUL30",
+    "kalshi_home": "Parma Calcio",
+    "kalshi_away": "Arezzo",
+    "hits": [
+     {
+      "orientation": "same",
+      "fixture_id": 1583495,
+      "league": [
+       667,
+       "Friendlies Clubs",
+       2026
+      ],
+      "kickoff": "2026-07-30T15:00:00+00:00",
+      "apif_home": "Parma",
+      "apif_home_id": 523,
+      "apif_away": "Arezzo",
+      "apif_away_id": 876,
+      "exact_both": true
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL30SWEENN",
+    "title": "Essen vs Ennepetal",
+    "et_date": "26JUL30",
+    "kalshi_home": "Essen",
+    "kalshi_away": "Ennepetal",
+    "hits": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31ALBRMA",
+    "title": "Albacete vs Real Madrid Castilla",
+    "et_date": "26JUL31",
+    "kalshi_home": "Albacete",
+    "kalshi_away": "Real Madrid Castilla",
+    "hits": []
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31BCBAR",
+    "title": "Birmingham vs Barcelona",
+    "et_date": "26JUL31",
+    "kalshi_home": "Birmingham",
+    "kalshi_away": "Barcelona",
+    "hits": [
+     {
+      "orientation": "same",
+      "fixture_id": 1583514,
+      "league": [
+       667,
+       "Friendlies Clubs",
+       2026
+      ],
+      "kickoff": "2026-07-31T18:45:00+00:00",
+      "apif_home": "Birmingham",
+      "apif_home_id": 54,
+      "apif_away": "Barcelona",
+      "apif_away_id": 529,
+      "exact_both": true
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31BROQPR",
+    "title": "Bromley vs QPR",
+    "et_date": "26JUL31",
+    "kalshi_home": "Bromley",
+    "kalshi_away": "QPR",
+    "hits": [
+     {
+      "orientation": "same",
+      "fixture_id": 1583511,
+      "league": [
+       667,
+       "Friendlies Clubs",
+       2026
+      ],
+      "kickoff": "2026-07-31T18:30:00+00:00",
+      "apif_home": "Bromley",
+      "apif_home_id": 1832,
+      "apif_away": "QPR",
+      "apif_away_id": 72,
+      "exact_both": true
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31CONPON",
+    "title": "Concarneau vs Pontivy GSI",
+    "et_date": "26JUL31",
+    "kalshi_home": "Concarneau",
+    "kalshi_away": "Pontivy GSI",
+    "hits": [
+     {
+      "orientation": "same",
+      "fixture_id": 1548928,
+      "league": [
+       667,
+       "Friendlies Clubs",
+       2026
+      ],
+      "kickoff": "2026-07-31T12:00:00+00:00",
+      "apif_home": "Concarneau",
+      "apif_home_id": 1300,
+      "apif_away": "Pontivy GSI",
+      "apif_away_id": 3098,
+      "exact_both": true
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31CRAREA",
+    "title": "Crawley vs Reading",
+    "et_date": "26JUL31",
+    "kalshi_home": "Crawley",
+    "kalshi_away": "Reading",
+    "hits": [
+     {
+      "orientation": "same",
+      "fixture_id": 1583512,
+      "league": [
+       667,
+       "Friendlies Clubs",
+       2026
+      ],
+      "kickoff": "2026-07-31T18:30:00+00:00",
+      "apif_home": "Crawley Town",
+      "apif_home_id": 1362,
+      "apif_away": "Reading",
+      "apif_away_id": 53,
+      "exact_both": true
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31ELCCOR",
+    "title": "Elche vs Cordoba",
+    "et_date": "26JUL31",
+    "kalshi_home": "Elche",
+    "kalshi_away": "Cordoba",
+    "hits": [
+     {
+      "orientation": "same",
+      "fixture_id": 1604708,
+      "league": [
+       667,
+       "Friendlies Clubs",
+       2026
+      ],
+      "kickoff": "2026-07-31T08:30:00+00:00",
+      "apif_home": "Elche",
+      "apif_home_id": 797,
+      "apif_away": "Cordoba",
+      "apif_away_id": 713,
+      "exact_both": true
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31JUVNIC",
+    "title": "Juventus vs Nice",
+    "et_date": "26JUL31",
+    "kalshi_home": "Juventus",
+    "kalshi_away": "Nice",
+    "hits": [
+     {
+      "orientation": "same",
+      "fixture_id": 1585004,
+      "league": [
+       667,
+       "Friendlies Clubs",
+       2026
+      ],
+      "kickoff": "2026-07-31T16:00:00+00:00",
+      "apif_home": "Juventus",
+      "apif_home_id": 496,
+      "apif_away": "Nice",
+      "apif_away_id": 84,
+      "exact_both": true
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31M05SAH",
+    "title": "Mainz vs Shabab Al-Ahli",
+    "et_date": "26JUL31",
+    "kalshi_home": "Mainz",
+    "kalshi_away": "Shabab Al-Ahli",
+    "hits": [
+     {
+      "orientation": "same",
+      "fixture_id": 1604714,
+      "league": [
+       667,
+       "Friendlies Clubs",
+       2026
+      ],
+      "kickoff": "2026-07-31T14:00:00+00:00",
+      "apif_home": "FSV Mainz 05",
+      "apif_home_id": 164,
+      "apif_away": "Shabab Al Ahli Dubai",
+      "apif_away_id": 2870,
+      "exact_both": false
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31MATDER",
+    "title": "Mansfield vs Derby",
+    "et_date": "26JUL31",
+    "kalshi_home": "Mansfield",
+    "kalshi_away": "Derby",
+    "hits": [
+     {
+      "orientation": "same",
+      "fixture_id": 1583509,
+      "league": [
+       667,
+       "Friendlies Clubs",
+       2026
+      ],
+      "kickoff": "2026-07-31T18:00:00+00:00",
+      "apif_home": "Mansfield Town",
+      "apif_home_id": 1374,
+      "apif_away": "Derby",
+      "apif_away_id": 69,
+      "exact_both": true
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31NIJSEV",
+    "title": "Nijmegen vs Sevilla",
+    "et_date": "26JUL31",
+    "kalshi_home": "Nijmegen",
+    "kalshi_away": "Sevilla",
+    "hits": [
+     {
+      "orientation": "same",
+      "fixture_id": 1583504,
+      "league": [
+       667,
+       "Friendlies Clubs",
+       2026
+      ],
+      "kickoff": "2026-07-31T17:00:00+00:00",
+      "apif_home": "NEC Nijmegen",
+      "apif_home_id": 413,
+      "apif_away": "Sevilla",
+      "apif_away_id": 536,
+      "exact_both": false
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31SASFOL",
+    "title": "Sassuolo vs Folgore Caratese",
+    "et_date": "26JUL31",
+    "kalshi_home": "Sassuolo",
+    "kalshi_away": "Folgore Caratese",
+    "hits": [
+     {
+      "orientation": "same",
+      "fixture_id": 1583505,
+      "league": [
+       667,
+       "Friendlies Clubs",
+       2026
+      ],
+      "kickoff": "2026-07-31T17:00:00+00:00",
+      "apif_home": "Sassuolo",
+      "apif_home_id": 488,
+      "apif_away": "Folgore Caratese",
+      "apif_away_id": 9450,
+      "exact_both": true
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31SMCDIE",
+    "title": "Caen vs Dieppe",
+    "et_date": "26JUL31",
+    "kalshi_home": "Caen",
+    "kalshi_away": "Dieppe",
+    "hits": [
+     {
+      "orientation": "same",
+      "fixture_id": 1604711,
+      "league": [
+       667,
+       "Friendlies Clubs",
+       2026
+      ],
+      "kickoff": "2026-07-31T09:30:00+00:00",
+      "apif_home": "Caen",
+      "apif_home_id": 88,
+      "apif_away": "Dieppe",
+      "apif_away_id": 9274,
+      "exact_both": true
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31SOUWIG",
+    "title": "Southport vs Wigan",
+    "et_date": "26JUL31",
+    "kalshi_home": "Southport",
+    "kalshi_away": "Wigan",
+    "hits": [
+     {
+      "orientation": "same",
+      "fixture_id": 1583515,
+      "league": [
+       667,
+       "Friendlies Clubs",
+       2026
+      ],
+      "kickoff": "2026-07-31T18:45:00+00:00",
+      "apif_home": "Southport",
+      "apif_home_id": 1826,
+      "apif_away": "Wigan",
+      "apif_away_id": 61,
+      "exact_both": true
+     }
+    ]
+   },
+   {
+    "event_ticker": "KXCLUBFGAME-26JUL31SPONFO",
+    "title": "Sporting CP vs Nottingham",
+    "et_date": "26JUL31",
+    "kalshi_home": "Sporting CP",
+    "kalshi_away": "Nottingham",
+    "hits": []
+   }
+  ],
+  "requests": [
+   {
+    "label": "fixtures?date=2026-07-29",
+    "path": "fixtures",
+    "params": {
+     "date": "2026-07-29"
+    },
+    "http_status": 200,
+    "array_length": 219,
+    "declared_results": 219,
+    "provider_errors": []
+   },
+   {
+    "label": "fixtures?date=2026-07-30",
+    "path": "fixtures",
+    "params": {
+     "date": "2026-07-30"
+    },
+    "http_status": 200,
+    "array_length": 136,
+    "declared_results": 136,
+    "provider_errors": []
+   },
+   {
+    "label": "fixtures?date=2026-07-31",
+    "path": "fixtures",
+    "params": {
+     "date": "2026-07-31"
+    },
+    "http_status": 200,
+    "array_length": 329,
+    "declared_results": 329,
+    "provider_errors": []
+   },
+   {
+    "label": "fixtures?date=2026-08-01",
+    "path": "fixtures",
+    "params": {
+     "date": "2026-08-01"
+    },
+    "http_status": 200,
+    "array_length": 927,
+    "declared_results": 927,
+    "provider_errors": []
+   }
+  ]
+ },
+ "team_existence_probes": {
+  "Liverpool": [
+   {
+    "id": 40,
+    "name": "Liverpool",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 1847,
+    "name": "Liverpool W",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 2358,
+    "name": "Liverpool Montevideo",
+    "country": "Uruguay",
+    "national": false
+   },
+   {
+    "id": 7196,
+    "name": "Liverpool U21",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 7630,
+    "name": "City of Liverpool",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 7909,
+    "name": "Liverpool U19",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 8669,
+    "name": "AFC Liverpool",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 15380,
+    "name": "Liverpool U18",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 15425,
+    "name": "Liverpool Feds W",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 15636,
+    "name": "Liverpool U23",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 24347,
+    "name": "South Liverpool",
+    "country": "England",
+    "national": false
+   }
+  ],
+  "Wrexham": [
+   {
+    "id": 1837,
+    "name": "Wrexham",
+    "country": "Wales",
+    "national": false
+   },
+   {
+    "id": 19881,
+    "name": "Wrexham Res.",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 25428,
+    "name": "Wrexham U18",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 27874,
+    "name": "Wrexham W",
+    "country": "England",
+    "national": false
+   }
+  ],
+  "Rottach": [],
+  "Bayern Munich": [
+   {
+    "id": 1860,
+    "name": "Bayern Munich W",
+    "country": "Germany",
+    "national": false
+   }
+  ],
+  "Leeds": [
+   {
+    "id": 63,
+    "name": "Leeds",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 14430,
+    "name": "Leeds United U21",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 15379,
+    "name": "Leeds United U18",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 15635,
+    "name": "Leeds United U23",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 18239,
+    "name": "Leeds W",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 22631,
+    "name": "Leeds Modernians W",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 23740,
+    "name": "Leeds",
+    "country": "Ireland",
+    "national": false
+   }
+  ],
+  "Sunderland": [
+   {
+    "id": 746,
+    "name": "Sunderland",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 1848,
+    "name": "Sunderland W",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 8959,
+    "name": "Sunderland RCA",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 8960,
+    "name": "Sunderland Ryhope CW",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 11915,
+    "name": "Sunderland U21",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 11927,
+    "name": "Sunderland U23",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 15386,
+    "name": "Sunderland U18",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 22074,
+    "name": "Sunderland Res.",
+    "country": "England",
+    "national": false
+   },
+   {
+    "id": 22649,
+    "name": "Sunderland West End",
+    "country": "England",
+    "national": false
+   }
+  ],
+  "Teruel": [
+   {
+    "id": 5278,
+    "name": "Teruel",
+    "country": "Spain",
+    "national": false
+   }
+  ],
+  "Ennepetal": [
+   {
+    "id": 14666,
+    "name": "Ennepetal",
+    "country": "Germany",
+    "national": false
+   }
+  ],
+  "Stade Lavallois": [],
+  "Granville": [
+   {
+    "id": 3185,
+    "name": "Granville",
+    "country": "France",
+    "national": false
+   }
+  ],
+  "Aris Thessaloniki": [
+   {
+    "id": 1123,
+    "name": "Aris Thessalonikis",
+    "country": "Greece",
+    "national": false
+   }
+  ]
+ },
+ "team_scoped_fixture_probes": [
+  {
+   "label": "teams?search=Bayern",
+   "path": "teams",
+   "params": {
+    "search": "Bayern"
+   },
+   "http_status": 200,
+   "array_length": 7,
+   "declared_results": 7,
+   "provider_errors": [],
+   "body": {
+    "get": "teams",
+    "parameters": {
+     "search": "Bayern"
+    },
+    "errors": [],
+    "results": 7,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "team": {
+       "id": 157,
+       "name": "Bayern M\u00fcnchen",
+       "code": "BAY",
+       "country": "Germany",
+       "founded": 1900,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/157.png"
+      },
+      "venue": {
+       "id": 700,
+       "name": "Allianz Arena",
+       "address": "Werner-Heisenberg-Allee 25",
+       "city": "M\u00fcnchen",
+       "capacity": 75024,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/700.png"
+      }
+     },
+     {
+      "team": {
+       "id": 1860,
+       "name": "Bayern Munich W",
+       "code": null,
+       "country": "Germany",
+       "founded": 1970,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/1860.png"
+      },
+      "venue": {
+       "id": 20989,
+       "name": "FC Bayern Campus Platz 1",
+       "address": "Ingolst\u00e4dter Str. 272",
+       "city": "M\u00fcnchen",
+       "capacity": 4347,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/20989.png"
+      }
+     },
+     {
+      "team": {
+       "id": 4674,
+       "name": "Bayern M\u00fcnchen II",
+       "code": "BAY",
+       "country": "Germany",
+       "founded": 1900,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/4674.png"
+      },
+      "venue": {
+       "id": 695,
+       "name": "St\u00e4dtisches Stadion an der Gr\u00fcnwalder Stra\u00dfe",
+       "address": "Gr\u00fcnwalder Stra\u00dfe 4",
+       "city": "M\u00fcnchen",
+       "capacity": 21272,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/695.png"
+      }
+     },
+     {
+      "team": {
+       "id": 7887,
+       "name": "Bayern M\u00fcnchen U19",
+       "code": "BAY",
+       "country": "Germany",
+       "founded": 0,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/7887.png"
+      },
+      "venue": {
+       "id": 20989,
+       "name": "FC Bayern Campus Platz 1",
+       "address": "Ingolst\u00e4dter Str. 272",
+       "city": "M\u00fcnchen",
+       "capacity": 4347,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/20989.png"
+      }
+     },
+     {
+      "team": {
+       "id": 9361,
+       "name": "Bayern Alzenau",
+       "code": "ALZ",
+       "country": "Germany",
+       "founded": 1920,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/9361.png"
+      },
+      "venue": {
+       "id": 6466,
+       "name": "St\u00e4dtisches Stadion im Sportzentrum am Prischo\u00df",
+       "address": "Prischo\u00dfstr. 57",
+       "city": "Alzenau",
+       "capacity": 5000,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/6466.png"
+      }
+     },
+     {
+      "team": {
+       "id": 12737,
+       "name": "Bayern Hof",
+       "code": "BAY",
+       "country": "Germany",
+       "founded": 2005,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/12737.png"
+      },
+      "venue": {
+       "id": 8096,
+       "name": "St\u00e4dtisches Stadion Gr\u00fcne Au",
+       "address": "Oelsnitzer Stra\u00dfe 101",
+       "city": "Hof",
+       "capacity": 8096,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/8096.png"
+      }
+     },
+     {
+      "team": {
+       "id": 22295,
+       "name": "Bayern M\u00fcnchen II W",
+       "code": null,
+       "country": "Germany",
+       "founded": 1900,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/22295.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "teams?search=Luanda",
+   "path": "teams",
+   "params": {
+    "search": "Luanda"
+   },
+   "http_status": 200,
+   "array_length": 4,
+   "declared_results": 4,
+   "provider_errors": [],
+   "body": {
+    "get": "teams",
+    "parameters": {
+     "search": "Luanda"
+    },
+    "errors": [],
+    "results": 4,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "team": {
+       "id": 4922,
+       "name": "Petro de Luanda",
+       "code": "PET",
+       "country": "Angola",
+       "founded": 1980,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/4922.png"
+      },
+      "venue": {
+       "id": 3712,
+       "name": "Est\u00e1dio 11 de Novembro",
+       "address": "Via Expresso, Bairro da Camama, Kilamba Kiaxi",
+       "city": "Luanda",
+       "capacity": 48500,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/3712.png"
+      }
+     },
+     {
+      "team": {
+       "id": 11149,
+       "name": "Benfica Luanda",
+       "code": "BEN",
+       "country": "Angola",
+       "founded": 1922,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/11149.png"
+      },
+      "venue": {
+       "id": 3724,
+       "name": "Est\u00e1dio Municipal dos Coqueiros",
+       "address": "Rua dos Coqueiros",
+       "city": "Luanda",
+       "capacity": 12000,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/3724.png"
+      }
+     },
+     {
+      "team": {
+       "id": 22230,
+       "name": "Luanda Villa",
+       "code": null,
+       "country": "Kenya",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/22230.png"
+      },
+      "venue": {
+       "id": 20411,
+       "name": "Mumboha Sports Ground",
+       "address": null,
+       "city": "Luanda",
+       "capacity": 1000,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/20411.png"
+      }
+     },
+     {
+      "team": {
+       "id": 24909,
+       "name": "Luanda City",
+       "code": null,
+       "country": "Angola",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/24909.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "teams?search=Schwarz-Weiss Essen",
+   "path": "teams",
+   "params": {
+    "search": "Schwarz-Weiss Essen"
+   },
+   "http_status": 200,
+   "array_length": 0,
+   "declared_results": 0,
+   "provider_errors": {
+    "search": "The Search field may only contain alpha-numeric characters and spaces."
+   },
+   "body": {
+    "get": "teams",
+    "parameters": {
+     "search": "Schwarz-Weiss Essen"
+    },
+    "errors": {
+     "search": "The Search field may only contain alpha-numeric characters and spaces."
+    },
+    "results": 0,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": []
+   }
+  },
+  {
+   "label": "teams?search=Schwarz",
+   "path": "teams",
+   "params": {
+    "search": "Schwarz"
+   },
+   "http_status": 200,
+   "array_length": 8,
+   "declared_results": 8,
+   "provider_errors": [],
+   "body": {
+    "get": "teams",
+    "parameters": {
+     "search": "Schwarz"
+    },
+    "errors": [],
+    "results": 8,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "team": {
+       "id": 4992,
+       "name": "Schwarzach",
+       "code": null,
+       "country": "Austria",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/4992.png"
+      },
+      "venue": {
+       "id": 3783,
+       "name": "Sportplatz Schwarzach",
+       "address": "Klosterwiesweg 31",
+       "city": "Schwarzach",
+       "capacity": 1500,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/3783.png"
+      }
+     },
+     {
+      "team": {
+       "id": 8259,
+       "name": "Schwarz-Wei\u00df Bregenz",
+       "code": "BRE",
+       "country": "Austria",
+       "founded": 2005,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/8259.png"
+      },
+      "venue": {
+       "id": 10523,
+       "name": "ImmoAgentur Stadion Bregenz",
+       "address": "S\u00e4gerstra\u00dfe 2",
+       "city": "Bregenz",
+       "capacity": 11112,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/10523.png"
+      }
+     },
+     {
+      "team": {
+       "id": 9345,
+       "name": "Schwarz-Wei\u00df Rehden",
+       "code": "REH",
+       "country": "Germany",
+       "founded": 1954,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/9345.png"
+      },
+      "venue": {
+       "id": 6452,
+       "name": "Sportplatz Waldsportst\u00e4tten",
+       "address": "Dickeler Str.",
+       "city": "Rehden",
+       "capacity": 4350,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/6452.png"
+      }
+     },
+     {
+      "team": {
+       "id": 14783,
+       "name": "Schwarz-Wei\u00df D\u00fcsseldorf",
+       "code": null,
+       "country": "Germany",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/14783.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 18172,
+       "name": "Schwarz-Wei\u00df Alstaden",
+       "code": null,
+       "country": null,
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/18172.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 19190,
+       "name": "SV Schwarzach",
+       "code": null,
+       "country": "Austria",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/19190.png"
+      },
+      "venue": {
+       "id": 3783,
+       "name": "Sportplatz Schwarzach",
+       "address": "Klosterwiesweg 31",
+       "city": "Schwarzach",
+       "capacity": 1500,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/3783.png"
+      }
+     },
+     {
+      "team": {
+       "id": 21383,
+       "name": "Gro\u00dfschwarzenlohe",
+       "code": null,
+       "country": "Germany",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/21383.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 21389,
+       "name": "SV Schwarzenbach",
+       "code": null,
+       "country": null,
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/21389.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "teams?search=Laval",
+   "path": "teams",
+   "params": {
+    "search": "Laval"
+   },
+   "http_status": 200,
+   "array_length": 6,
+   "declared_results": 6,
+   "provider_errors": [],
+   "body": {
+    "get": "teams",
+    "parameters": {
+     "search": "Laval"
+    },
+    "errors": [],
+    "results": 6,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "team": {
+       "id": 433,
+       "name": "Laval",
+       "code": "LAV",
+       "country": "France",
+       "founded": 1902,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/433.png"
+      },
+      "venue": {
+       "id": 651,
+       "name": "Stade Francis Le Basser",
+       "address": "Avenue Pierre de Coubertin",
+       "city": "Laval",
+       "capacity": 18607,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/651.png"
+      }
+     },
+     {
+      "team": {
+       "id": 3029,
+       "name": "Bourny Laval",
+       "code": null,
+       "country": "France",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/3029.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 9916,
+       "name": "Laval II",
+       "code": null,
+       "country": "France",
+       "founded": 1902,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/9916.png"
+      },
+      "venue": {
+       "id": 6992,
+       "name": "Stade des Gandonni\u00e8res N\u00b0 5",
+       "address": "Rue Georges Coupeau, Zone Industrielle des Align\u00e9s",
+       "city": "Laval",
+       "capacity": 1000,
+       "surface": "artificial turf",
+       "image": "https://media.api-sports.io/football/venues/6992.png"
+      }
+     },
+     {
+      "team": {
+       "id": 19338,
+       "name": "Lavalleja de Minas",
+       "code": null,
+       "country": "Uruguay",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/19338.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 19339,
+       "name": "Lavalleja de Rocha",
+       "code": null,
+       "country": "Uruguay",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/19339.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 20886,
+       "name": "FC Laval",
+       "code": null,
+       "country": "Canada",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/20886.png"
+      },
+      "venue": {
+       "id": 21642,
+       "name": "Berthiaume-du-Tremblay Stadium",
+       "address": "4250 Boulevard L\u00e9vesque O",
+       "city": "Laval, Quebec",
+       "capacity": 2000,
+       "surface": "artificial turf",
+       "image": "https://media.api-sports.io/football/venues/21642.png"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "teams?search=Real Madrid",
+   "path": "teams",
+   "params": {
+    "search": "Real Madrid"
+   },
+   "http_status": 200,
+   "array_length": 7,
+   "declared_results": 7,
+   "provider_errors": [],
+   "body": {
+    "get": "teams",
+    "parameters": {
+     "search": "Real Madrid"
+    },
+    "errors": [],
+    "results": 7,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "team": {
+       "id": 541,
+       "name": "Real Madrid",
+       "code": "REA",
+       "country": "Spain",
+       "founded": 1902,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/541.png"
+      },
+      "venue": {
+       "id": 1456,
+       "name": "Estadio Santiago Bernab\u00e9u",
+       "address": "Avenida de Concha Espina 1, Chamart\u00edn",
+       "city": "Madrid",
+       "capacity": 85454,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/1456.png"
+      }
+     },
+     {
+      "team": {
+       "id": 7926,
+       "name": "Real Madrid U19",
+       "code": "REA",
+       "country": "Spain",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/7926.png"
+      },
+      "venue": {
+       "id": 6669,
+       "name": "Estadio Alfredo Di St\u00e9fano",
+       "address": "Ciudad Deportiva del Real Madrid, Valdebebas",
+       "city": "Madrid",
+       "capacity": 6500,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/6669.png"
+      }
+     },
+     {
+      "team": {
+       "id": 9575,
+       "name": "Real Madrid II",
+       "code": "REA",
+       "country": "Spain",
+       "founded": 1972,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/9575.png"
+      },
+      "venue": {
+       "id": 6669,
+       "name": "Estadio Alfredo Di St\u00e9fano",
+       "address": "Ciudad Deportiva del Real Madrid, Valdebebas",
+       "city": "Madrid",
+       "capacity": 6500,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/6669.png"
+      }
+     },
+     {
+      "team": {
+       "id": 15224,
+       "name": "Real Madrid W",
+       "code": null,
+       "country": "Spain",
+       "founded": 2020,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/15224.png"
+      },
+      "venue": {
+       "id": 22055,
+       "name": "Ciudad Deportiva Real Madrid Campo 11",
+       "address": "Parque de Valdebebas, 402",
+       "city": "Madrid",
+       "capacity": 3000,
+       "surface": "artificial turf",
+       "image": "https://media.api-sports.io/football/venues/22055.png"
+      }
+     },
+     {
+      "team": {
+       "id": 22013,
+       "name": "Real Madrid U20",
+       "code": null,
+       "country": null,
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/22013.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 22142,
+       "name": "Real Madrid III",
+       "code": null,
+       "country": "Spain",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/22142.png"
+      },
+      "venue": {
+       "id": 20161,
+       "name": "Ciudad Real Madrid Campo 3",
+       "address": "Ciudad Deportiva del Real Madrid, Valdebebas",
+       "city": "Madrid",
+       "capacity": 3000,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/20161.png"
+      }
+     },
+     {
+      "team": {
+       "id": 26996,
+       "name": "Real Madrid U21",
+       "code": null,
+       "country": "Spain",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/26996.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "teams?search=Crawley",
+   "path": "teams",
+   "params": {
+    "search": "Crawley"
+   },
+   "http_status": 200,
+   "array_length": 4,
+   "declared_results": 4,
+   "provider_errors": [],
+   "body": {
+    "get": "teams",
+    "parameters": {
+     "search": "Crawley"
+    },
+    "errors": [],
+    "results": 4,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "team": {
+       "id": 1362,
+       "name": "Crawley Town",
+       "code": "CRA",
+       "country": "England",
+       "founded": 1896,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/1362.png"
+      },
+      "venue": {
+       "id": 19200,
+       "name": "Broadfield Stadium",
+       "address": "Brighton Road",
+       "city": "Crawley, West Sussex",
+       "capacity": 6134,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/19200.png"
+      }
+     },
+     {
+      "team": {
+       "id": 8757,
+       "name": "Crawley Down Gatwick",
+       "code": null,
+       "country": "England",
+       "founded": 1993,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/8757.png"
+      },
+      "venue": {
+       "id": 6217,
+       "name": "The Haven Sportsfield",
+       "address": "Hophurst Lane",
+       "city": "Crawley Down, West Sussex",
+       "capacity": 1500,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/6217.png"
+      }
+     },
+     {
+      "team": {
+       "id": 8758,
+       "name": "Crawley Green",
+       "code": null,
+       "country": "England",
+       "founded": 1992,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/8758.png"
+      },
+      "venue": {
+       "id": 11727,
+       "name": "The Brache",
+       "address": "307 Park Street",
+       "city": "Luton, Bedfordshire",
+       "capacity": 1000,
+       "surface": "artificial turf",
+       "image": "https://media.api-sports.io/football/venues/11727.png"
+      }
+     },
+     {
+      "team": {
+       "id": 15415,
+       "name": "Crawley Wasps W",
+       "code": null,
+       "country": "England",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/15415.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "teams?search=Mansfield",
+   "path": "teams",
+   "params": {
+    "search": "Mansfield"
+   },
+   "http_status": 200,
+   "array_length": 5,
+   "declared_results": 5,
+   "provider_errors": [],
+   "body": {
+    "get": "teams",
+    "parameters": {
+     "search": "Mansfield"
+    },
+    "errors": [],
+    "results": 5,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "team": {
+       "id": 1374,
+       "name": "Mansfield Town",
+       "code": "MAN",
+       "country": "England",
+       "founded": 1897,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/1374.png"
+      },
+      "venue": {
+       "id": 557,
+       "name": "One Call Stadium",
+       "address": "Quarry Lane",
+       "city": "Mansfield, Nottinghamshire",
+       "capacity": 9186,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/557.png"
+      }
+     },
+     {
+      "team": {
+       "id": 8670,
+       "name": "AFC Mansfield",
+       "code": null,
+       "country": "England",
+       "founded": 2012,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/8670.png"
+      },
+      "venue": {
+       "id": 6198,
+       "name": "Forest Town Stadium",
+       "address": "Clipstone Road W, Forest Town",
+       "city": "Mansfield, Nottinghamshire",
+       "capacity": 500,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/6198.png"
+      }
+     },
+     {
+      "team": {
+       "id": 17797,
+       "name": "Mansfield Town U23",
+       "code": null,
+       "country": "England",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/17797.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 22071,
+       "name": "Mansfield Town Res.",
+       "code": null,
+       "country": "England",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/22071.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 22682,
+       "name": "Mansfield Town W",
+       "code": null,
+       "country": "England",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/22682.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "teams?search=Nijmegen",
+   "path": "teams",
+   "params": {
+    "search": "Nijmegen"
+   },
+   "http_status": 200,
+   "array_length": 3,
+   "declared_results": 3,
+   "provider_errors": [],
+   "body": {
+    "get": "teams",
+    "parameters": {
+     "search": "Nijmegen"
+    },
+    "errors": [],
+    "results": 3,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "team": {
+       "id": 413,
+       "name": "NEC Nijmegen",
+       "code": "NIJ",
+       "country": "Netherlands",
+       "founded": 1900,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/413.png"
+      },
+      "venue": {
+       "id": 1140,
+       "name": "Goffertstadion",
+       "address": "Stadionplein 1",
+       "city": "Nijmegen",
+       "capacity": 12540,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/1140.png"
+      }
+     },
+     {
+      "team": {
+       "id": 26994,
+       "name": "NEC Nijmegen U19",
+       "code": null,
+       "country": "Netherlands",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/26994.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 27400,
+       "name": "NEC Nijmegen U21",
+       "code": null,
+       "country": "Netherlands",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/27400.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "teams?search=Nottingham",
+   "path": "teams",
+   "params": {
+    "search": "Nottingham"
+   },
+   "http_status": 200,
+   "array_length": 8,
+   "declared_results": 8,
+   "provider_errors": [],
+   "body": {
+    "get": "teams",
+    "parameters": {
+     "search": "Nottingham"
+    },
+    "errors": [],
+    "results": 8,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "team": {
+       "id": 65,
+       "name": "Nottingham Forest",
+       "code": "NOT",
+       "country": "England",
+       "founded": 1865,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/65.png"
+      },
+      "venue": {
+       "id": 566,
+       "name": "The City Ground",
+       "address": "Pavilion Road",
+       "city": "Nottingham, Nottinghamshire",
+       "capacity": 30576,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/566.png"
+      }
+     },
+     {
+      "team": {
+       "id": 14513,
+       "name": "Nottingham U23",
+       "code": null,
+       "country": "England",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/14513.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 14739,
+       "name": "Nottingham Forest U23",
+       "code": null,
+       "country": "England",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/14739.png"
+      },
+      "venue": {
+       "id": 3526,
+       "name": "The Impact Arena",
+       "address": "North Street",
+       "city": "Alfreton, Derbyshire",
+       "capacity": 3600,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/3526.png"
+      }
+     },
+     {
+      "team": {
+       "id": 15450,
+       "name": "Nottingham Forest W",
+       "code": null,
+       "country": "England",
+       "founded": 0,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/15450.png"
+      },
+      "venue": {
+       "id": 566,
+       "name": "The City Ground",
+       "address": "Pavilion Road",
+       "city": "Nottingham, Nottinghamshire",
+       "capacity": 30576,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/566.png"
+      }
+     },
+     {
+      "team": {
+       "id": 17426,
+       "name": "Nottingham Forest U18",
+       "code": null,
+       "country": "England",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/17426.png"
+      },
+      "venue": {
+       "id": 21474,
+       "name": "Nottingham Forest Football Academy",
+       "address": null,
+       "city": "West Bridgford, Nottingham",
+       "capacity": 1000,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/21474.png"
+      }
+     },
+     {
+      "team": {
+       "id": 19746,
+       "name": "Nottingham Forest U21",
+       "code": null,
+       "country": "England",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/19746.png"
+      },
+      "venue": {
+       "id": 3526,
+       "name": "The Impact Arena",
+       "address": "North Street",
+       "city": "Alfreton, Derbyshire",
+       "capacity": 3600,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/3526.png"
+      }
+     },
+     {
+      "team": {
+       "id": 22636,
+       "name": "Nottingham Trent",
+       "code": null,
+       "country": "England",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/22636.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 26920,
+       "name": "University of Nottingham W",
+       "code": null,
+       "country": "England",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/26920.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "teams?search=Mainz",
+   "path": "teams",
+   "params": {
+    "search": "Mainz"
+   },
+   "http_status": 200,
+   "array_length": 8,
+   "declared_results": 8,
+   "provider_errors": [],
+   "body": {
+    "get": "teams",
+    "parameters": {
+     "search": "Mainz"
+    },
+    "errors": [],
+    "results": 8,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "team": {
+       "id": 164,
+       "name": "FSV Mainz 05",
+       "code": "MAI",
+       "country": "Germany",
+       "founded": 1905,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/164.png"
+      },
+      "venue": {
+       "id": 11899,
+       "name": "MEWA ARENA",
+       "address": "Eugen-Salomon-Stra\u00dfe 1",
+       "city": "Mainz",
+       "capacity": 34034,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/11899.png"
+      }
+     },
+     {
+      "team": {
+       "id": 1331,
+       "name": "FSV Mainz 05 II",
+       "code": "MAI",
+       "country": "Germany",
+       "founded": 1905,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/1331.png"
+      },
+      "venue": {
+       "id": 2728,
+       "name": "Stadion am Bruchweg",
+       "address": "Dr.-Martin-Luther-King-Weg 20",
+       "city": "Mainz",
+       "capacity": 13508,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/2728.png"
+      }
+     },
+     {
+      "team": {
+       "id": 10268,
+       "name": "Mainz 05 U19",
+       "code": null,
+       "country": "Germany",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/10268.png"
+      },
+      "venue": {
+       "id": 2728,
+       "name": "Stadion am Bruchweg",
+       "address": "Dr.-Martin-Luther-King-Weg 20",
+       "city": "Mainz",
+       "capacity": 13508,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/2728.png"
+      }
+     },
+     {
+      "team": {
+       "id": 12736,
+       "name": "Basara Mainz",
+       "code": null,
+       "country": "Germany",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/12736.png"
+      },
+      "venue": {
+       "id": 12468,
+       "name": "Mainz Albert-Schweitzer-Strasse Kunstrasen",
+       "address": "Albert-Schweitzer-Str. 19",
+       "city": "Mainz",
+       "capacity": 1000,
+       "surface": "artificial turf",
+       "image": "https://media.api-sports.io/football/venues/12468.png"
+      }
+     },
+     {
+      "team": {
+       "id": 14524,
+       "name": "Schott Mainz",
+       "code": null,
+       "country": "Germany",
+       "founded": 1953,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/14524.png"
+      },
+      "venue": {
+       "id": 12702,
+       "name": "Mainz Golden Eagles Stadium",
+       "address": "Auf der langen Lein 2",
+       "city": "Mainz-Mombach",
+       "capacity": 2500,
+       "surface": "artificial turf",
+       "image": "https://media.api-sports.io/football/venues/12702.png"
+      }
+     },
+     {
+      "team": {
+       "id": 15744,
+       "name": "Schott Mainz U19",
+       "code": null,
+       "country": "Germany",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/15744.png"
+      },
+      "venue": {
+       "id": 21566,
+       "name": "Otto-Schott-Sportzentrum",
+       "address": "Karlsbader Str. 23",
+       "city": "Mainz",
+       "capacity": 1000,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/21566.png"
+      }
+     },
+     {
+      "team": {
+       "id": 21564,
+       "name": "Mainz 05 W",
+       "code": null,
+       "country": "Germany",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/21564.png"
+      },
+      "venue": {
+       "id": 2728,
+       "name": "Stadion am Bruchweg",
+       "address": "Dr.-Martin-Luther-King-Weg 20",
+       "city": "Mainz",
+       "capacity": 13508,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/2728.png"
+      }
+     },
+     {
+      "team": {
+       "id": 26716,
+       "name": "Mainz W",
+       "code": null,
+       "country": "Germany",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/26716.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "teams?search=Shabab",
+   "path": "teams",
+   "params": {
+    "search": "Shabab"
+   },
+   "http_status": 200,
+   "array_length": 28,
+   "declared_results": 28,
+   "provider_errors": [],
+   "body": {
+    "get": "teams",
+    "parameters": {
+     "search": "Shabab"
+    },
+    "errors": [],
+    "results": 28,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "team": {
+       "id": 2870,
+       "name": "Shabab Al Ahli Dubai",
+       "code": "AHL",
+       "country": "United-Arab-Emirates",
+       "founded": 1958,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/2870.png"
+      },
+      "venue": {
+       "id": 8344,
+       "name": "Rashid Stadium",
+       "address": "Al-Nahda Road",
+       "city": "Dubai",
+       "capacity": 12000,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/8344.png"
+      }
+     },
+     {
+      "team": {
+       "id": 2940,
+       "name": "Al Shabab",
+       "code": "SHA",
+       "country": "Saudi-Arabia",
+       "founded": 1947,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/2940.png"
+      },
+      "venue": {
+       "id": 1374,
+       "name": "SHG Arena",
+       "address": "King Fahad Branch Road",
+       "city": "Riyadh",
+       "capacity": 15000,
+       "surface": "artificial turf",
+       "image": "https://media.api-sports.io/football/venues/1374.png"
+      }
+     },
+     {
+      "team": {
+       "id": 3541,
+       "name": "Al Shabab",
+       "code": "SHA",
+       "country": "Kuwait",
+       "founded": 1963,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/3541.png"
+      },
+      "venue": {
+       "id": 2341,
+       "name": "Al Ahmadi Stadium",
+       "address": null,
+       "city": "Al Ahmadi",
+       "capacity": 18000,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/2341.png"
+      }
+     },
+     {
+      "team": {
+       "id": 4539,
+       "name": "Shabab Al Ordon",
+       "code": "SHA",
+       "country": "Jordan",
+       "founded": 2002,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/4539.png"
+      },
+      "venue": {
+       "id": 988,
+       "name": "Amman International Stadium",
+       "address": null,
+       "city": "Amman",
+       "capacity": 25000,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/988.png"
+      }
+     },
+     {
+      "team": {
+       "id": 4575,
+       "name": "Shabab Al Ghazieh",
+       "code": null,
+       "country": "Lebanon",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/4575.png"
+      },
+      "venue": {
+       "id": 3461,
+       "name": "Sa\u00efda International Stadium",
+       "address": null,
+       "city": "Saida",
+       "capacity": 22600,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/3461.png"
+      }
+     },
+     {
+      "team": {
+       "id": 4576,
+       "name": "Shabab Al Sahel",
+       "code": null,
+       "country": "Lebanon",
+       "founded": 1966,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/4576.png"
+      },
+      "venue": {
+       "id": 3454,
+       "name": "Al Ahed Stadium",
+       "address": "Airport Road",
+       "city": "Bayr\u016bt (Beirut)",
+       "capacity": 2000,
+       "surface": "artificial turf",
+       "image": "https://media.api-sports.io/football/venues/3454.png"
+      }
+     },
+     {
+      "team": {
+       "id": 4580,
+       "name": "Al Shabab Al Arabi",
+       "code": null,
+       "country": "Lebanon",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/4580.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 5329,
+       "name": "Al-Shabab",
+       "code": null,
+       "country": "Oman",
+       "founded": 2003,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/5329.png"
+      },
+      "venue": {
+       "id": 4025,
+       "name": "Al-Seeb Stadium",
+       "address": "Al Barakat Street",
+       "city": "Seeb",
+       "capacity": 14000,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/4025.png"
+      }
+     },
+     {
+      "team": {
+       "id": 5480,
+       "name": "Al Shabab",
+       "code": null,
+       "country": "Bahrain",
+       "founded": 2001,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/5480.png"
+      },
+      "venue": {
+       "id": 159,
+       "name": "St\u0101d al-Bahrayn al-Watan\u012b (Bahrain National Stadium)",
+       "address": "Muharraq Avenue",
+       "city": "Riffa",
+       "capacity": 35580,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/159.png"
+      }
+     },
+     {
+      "team": {
+       "id": 7517,
+       "name": "Shabab El Bourj",
+       "code": null,
+       "country": "Lebanon",
+       "founded": 1967,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/7517.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 8046,
+       "name": "Shabab Al Khaleel",
+       "code": null,
+       "country": "Palestine",
+       "founded": 1943,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/8046.png"
+      },
+      "venue": {
+       "id": 5730,
+       "name": "Hussein Bin Ali Stadium",
+       "address": null,
+       "city": "Hebron",
+       "capacity": 8000,
+       "surface": "artificial turf",
+       "image": "https://media.api-sports.io/football/venues/5730.png"
+      }
+     },
+     {
+      "team": {
+       "id": 10693,
+       "name": "Al Shabab Dubai",
+       "code": null,
+       "country": "United-Arab-Emirates",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/10693.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 11473,
+       "name": "Shabab El Hussein",
+       "code": null,
+       "country": "Jordan",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/11473.png"
+      },
+      "venue": {
+       "id": 3428,
+       "name": "Petra Field",
+       "address": null,
+       "city": "Amman",
+       "capacity": 5000,
+       "surface": "artificial turf",
+       "image": "https://media.api-sports.io/football/venues/3428.png"
+      }
+     },
+     {
+      "team": {
+       "id": 12486,
+       "name": "Shabab Al Am'ari",
+       "code": null,
+       "country": "Palestine",
+       "founded": 1953,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/12486.png"
+      },
+      "venue": {
+       "id": 1206,
+       "name": "Faisal Al-Husseini International Stadium",
+       "address": null,
+       "city": "Al-Ram",
+       "capacity": 12500,
+       "surface": "artificial turf",
+       "image": "https://media.api-sports.io/football/venues/1206.png"
+      }
+     },
+     {
+      "team": {
+       "id": 12487,
+       "name": "Shabab Alsamu",
+       "code": null,
+       "country": "Palestine",
+       "founded": 1976,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/12487.png"
+      },
+      "venue": {
+       "id": 5730,
+       "name": "Hussein Bin Ali Stadium",
+       "address": null,
+       "city": "Hebron",
+       "capacity": 8000,
+       "surface": "artificial turf",
+       "image": "https://media.api-sports.io/football/venues/5730.png"
+      }
+     },
+     {
+      "team": {
+       "id": 12491,
+       "name": "Shabab Al-Dhahiriya",
+       "code": null,
+       "country": "Palestine",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/12491.png"
+      },
+      "venue": {
+       "id": 7952,
+       "name": "Dora International Stadium",
+       "address": "Dura al-Qari&apos; District",
+       "city": "Hebron",
+       "capacity": 18000,
+       "surface": "artificial turf",
+       "image": "https://media.api-sports.io/football/venues/7952.png"
+      }
+     },
+     {
+      "team": {
+       "id": 12492,
+       "name": "Shabab Al Khader",
+       "code": null,
+       "country": "Palestine",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/12492.png"
+      },
+      "venue": {
+       "id": 7953,
+       "name": "Al-Khader Stadium",
+       "address": null,
+       "city": "Al-Khader",
+       "capacity": 6000,
+       "surface": "artificial turf",
+       "image": "https://media.api-sports.io/football/venues/7953.png"
+      }
+     },
+     {
+      "team": {
+       "id": 12493,
+       "name": "Shabab Dora",
+       "code": null,
+       "country": "Palestine",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/12493.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 12494,
+       "name": "Shabab Yatta",
+       "code": null,
+       "country": "Palestine",
+       "founded": 1982,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/12494.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 13267,
+       "name": "Al Shabab",
+       "code": "SHA",
+       "country": "United-Arab-Emirates",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/13267.png"
+      },
+      "venue": {
+       "id": 8345,
+       "name": "Maktoum Bin Rashid al Maktoum Stadium (Al-Shabab Stadium)",
+       "address": "Al-Rashid Road",
+       "city": "Dubai",
+       "capacity": 12000,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/8345.png"
+      }
+     },
+     {
+      "team": {
+       "id": 15738,
+       "name": "Shabab Al Obour",
+       "code": null,
+       "country": "Egypt",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/15738.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 17470,
+       "name": "Shabab Hwarah",
+       "code": null,
+       "country": "Jordan",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/17470.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 19294,
+       "name": "Shabab Nazzal",
+       "code": null,
+       "country": "Jordan",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/19294.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 22152,
+       "name": "Shabab Al-Obaideya",
+       "code": null,
+       "country": "Palestine",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/22152.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 24904,
+       "name": "Shabab Houran",
+       "code": null,
+       "country": "Jordan",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/24904.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 25456,
+       "name": "Shabab Al-Ghar",
+       "code": null,
+       "country": "Libya",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/25456.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 26879,
+       "name": "Shabab Talbieh SSC",
+       "code": null,
+       "country": "Jordan",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/26879.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 27497,
+       "name": "Shabab Al-Ahli Dubai U23",
+       "code": null,
+       "country": "United-Arab-Emirates",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/27497.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "teams?search=Albacete",
+   "path": "teams",
+   "params": {
+    "search": "Albacete"
+   },
+   "http_status": 200,
+   "array_length": 3,
+   "declared_results": 3,
+   "provider_errors": [],
+   "body": {
+    "get": "teams",
+    "parameters": {
+     "search": "Albacete"
+    },
+    "errors": [],
+    "results": 3,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "team": {
+       "id": 722,
+       "name": "Albacete",
+       "code": "ALB",
+       "country": "Spain",
+       "founded": 1940,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/722.png"
+      },
+      "venue": {
+       "id": 1458,
+       "name": "Estadio Carlos Belmonte",
+       "address": "Avenida de Espa\u00f1a",
+       "city": "Albacete",
+       "capacity": 17524,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/1458.png"
+      }
+     },
+     {
+      "team": {
+       "id": 1915,
+       "name": "Fundacion Albacete W",
+       "code": null,
+       "country": "Spain",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/1915.png"
+      },
+      "venue": {
+       "id": null,
+       "name": null,
+       "address": null,
+       "city": null,
+       "capacity": null,
+       "surface": null,
+       "image": null
+      }
+     },
+     {
+      "team": {
+       "id": 9895,
+       "name": "Albacete II",
+       "code": null,
+       "country": "Spain",
+       "founded": null,
+       "national": false,
+       "logo": "https://media.api-sports.io/football/teams/9895.png"
+      },
+      "venue": {
+       "id": 6973,
+       "name": "Ciudad Deportiva Andr\u00e9s Iniesta",
+       "address": "Prolongaci\u00f3n de la Avenida de Espa\u00f1a, s/n",
+       "city": "Albacete",
+       "capacity": 3000,
+       "surface": "grass",
+       "image": "https://media.api-sports.io/football/venues/6973.png"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "fixtures?team=40 (Liverpool)",
+   "path": "fixtures",
+   "params": {
+    "team": 40,
+    "season": 2026,
+    "from": "2026-07-28",
+    "to": "2026-08-01"
+   },
+   "http_status": 200,
+   "array_length": 0,
+   "declared_results": 0,
+   "provider_errors": [],
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "team": "40",
+     "season": "2026",
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "errors": [],
+    "results": 0,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": []
+   }
+  },
+  {
+   "label": "fixtures?team=1837 (Wrexham)",
+   "path": "fixtures",
+   "params": {
+    "team": 1837,
+    "season": 2026,
+    "from": "2026-07-28",
+    "to": "2026-08-01"
+   },
+   "http_status": 200,
+   "array_length": 0,
+   "declared_results": 0,
+   "provider_errors": [],
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "team": "1837",
+     "season": "2026",
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "errors": [],
+    "results": 0,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": []
+   }
+  },
+  {
+   "label": "fixtures?team=63 (Leeds)",
+   "path": "fixtures",
+   "params": {
+    "team": 63,
+    "season": 2026,
+    "from": "2026-07-28",
+    "to": "2026-08-01"
+   },
+   "http_status": 200,
+   "array_length": 0,
+   "declared_results": 0,
+   "provider_errors": [],
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "team": "63",
+     "season": "2026",
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "errors": [],
+    "results": 0,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": []
+   }
+  },
+  {
+   "label": "fixtures?team=746 (Sunderland)",
+   "path": "fixtures",
+   "params": {
+    "team": 746,
+    "season": 2026,
+    "from": "2026-07-28",
+    "to": "2026-08-01"
+   },
+   "http_status": 200,
+   "array_length": 0,
+   "declared_results": 0,
+   "provider_errors": [],
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "team": "746",
+     "season": "2026",
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "errors": [],
+    "results": 0,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": []
+   }
+  },
+  {
+   "label": "fixtures?team=5278 (Teruel)",
+   "path": "fixtures",
+   "params": {
+    "team": 5278,
+    "season": 2026,
+    "from": "2026-07-28",
+    "to": "2026-08-01"
+   },
+   "http_status": 200,
+   "array_length": 0,
+   "declared_results": 0,
+   "provider_errors": [],
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "team": "5278",
+     "season": "2026",
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "errors": [],
+    "results": 0,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": []
+   }
+  },
+  {
+   "label": "fixtures?team=14666 (Ennepetal)",
+   "path": "fixtures",
+   "params": {
+    "team": 14666,
+    "season": 2026,
+    "from": "2026-07-28",
+    "to": "2026-08-01"
+   },
+   "http_status": 200,
+   "array_length": 0,
+   "declared_results": 0,
+   "provider_errors": [],
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "team": "14666",
+     "season": "2026",
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "errors": [],
+    "results": 0,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": []
+   }
+  },
+  {
+   "label": "fixtures?team=157 (Bayern Munich)",
+   "path": "fixtures",
+   "params": {
+    "team": 157,
+    "season": 2026,
+    "from": "2026-07-28",
+    "to": "2026-08-01"
+   },
+   "http_status": 200,
+   "array_length": 0,
+   "declared_results": 0,
+   "provider_errors": [],
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "team": "157",
+     "season": "2026",
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "errors": [],
+    "results": 0,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": []
+   }
+  }
+ ],
+ "absence_controls": [
+  {
+   "label": "C1 team=40 s2025 (Liverpool)",
+   "path": "fixtures",
+   "params": {
+    "team": 40,
+    "season": 2025,
+    "from": "2026-07-28",
+    "to": "2026-08-01"
+   },
+   "http_status": 200,
+   "array_length": 1,
+   "declared_results": 1,
+   "provider_errors": [],
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "team": "40",
+     "season": "2025",
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "errors": [],
+    "results": 1,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "fixture": {
+       "id": 1589333,
+       "referee": null,
+       "timezone": "UTC",
+       "date": "2026-07-29T23:30:00+00:00",
+       "timestamp": 1785367800,
+       "periods": {
+        "first": 1785367800,
+        "second": null
+       },
+       "venue": {
+        "id": 0,
+        "name": null,
+        "city": null
+       },
+       "status": {
+        "long": "First Half",
+        "short": "1H",
+        "elapsed": 1,
+        "extra": null
+       }
+      },
+      "league": {
+       "id": 1022,
+       "name": "Premier League - Summer Series",
+       "country": "England",
+       "logo": "https://media.api-sports.io/football/leagues/1022.png",
+       "flag": "https://media.api-sports.io/flags/gb-eng.svg",
+       "season": 2025,
+       "round": "Regular Season - 2",
+       "standings": true
+      },
+      "teams": {
+       "home": {
+        "id": 40,
+        "name": "Liverpool",
+        "logo": "https://media.api-sports.io/football/teams/40.png",
+        "winner": null
+       },
+       "away": {
+        "id": 1837,
+        "name": "Wrexham",
+        "logo": "https://media.api-sports.io/football/teams/1837.png",
+        "winner": null
+       }
+      },
+      "goals": {
+       "home": 0,
+       "away": 0
+      },
+      "score": {
+       "halftime": {
+        "home": 0,
+        "away": 0
+       },
+       "fulltime": {
+        "home": null,
+        "away": null
+       },
+       "extratime": {
+        "home": null,
+        "away": null
+       },
+       "penalty": {
+        "home": null,
+        "away": null
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "C1 team=63 s2025 (Leeds)",
+   "path": "fixtures",
+   "params": {
+    "team": 63,
+    "season": 2025,
+    "from": "2026-07-28",
+    "to": "2026-08-01"
+   },
+   "http_status": 200,
+   "array_length": 1,
+   "declared_results": 1,
+   "provider_errors": [],
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "team": "63",
+     "season": "2025",
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "errors": [],
+    "results": 1,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "fixture": {
+       "id": 1589334,
+       "referee": null,
+       "timezone": "UTC",
+       "date": "2026-07-30T23:30:00+00:00",
+       "timestamp": 1785454200,
+       "periods": {
+        "first": null,
+        "second": null
+       },
+       "venue": {
+        "id": 0,
+        "name": null,
+        "city": null
+       },
+       "status": {
+        "long": "Not Started",
+        "short": "NS",
+        "elapsed": null,
+        "extra": null
+       }
+      },
+      "league": {
+       "id": 1022,
+       "name": "Premier League - Summer Series",
+       "country": "England",
+       "logo": "https://media.api-sports.io/football/leagues/1022.png",
+       "flag": "https://media.api-sports.io/flags/gb-eng.svg",
+       "season": 2025,
+       "round": "Regular Season - 2",
+       "standings": true
+      },
+      "teams": {
+       "home": {
+        "id": 746,
+        "name": "Sunderland",
+        "logo": "https://media.api-sports.io/football/teams/746.png",
+        "winner": null
+       },
+       "away": {
+        "id": 63,
+        "name": "Leeds",
+        "logo": "https://media.api-sports.io/football/teams/63.png",
+        "winner": null
+       }
+      },
+      "goals": {
+       "home": null,
+       "away": null
+      },
+      "score": {
+       "halftime": {
+        "home": null,
+        "away": null
+       },
+       "fulltime": {
+        "home": null,
+        "away": null
+       },
+       "extratime": {
+        "home": null,
+        "away": null
+       },
+       "penalty": {
+        "home": null,
+        "away": null
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "C1 team=157 s2025 (Bayern M\u00fcnchen)",
+   "path": "fixtures",
+   "params": {
+    "team": 157,
+    "season": 2025,
+    "from": "2026-07-28",
+    "to": "2026-08-01"
+   },
+   "http_status": 200,
+   "array_length": 0,
+   "declared_results": 0,
+   "provider_errors": [],
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "team": "157",
+     "season": "2025",
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "errors": [],
+    "results": 0,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": []
+   }
+  },
+  {
+   "label": "C2 team=40 no-season (Liverpool)",
+   "path": "fixtures",
+   "params": {
+    "team": 40,
+    "from": "2026-07-28",
+    "to": "2026-08-01"
+   },
+   "http_status": 200,
+   "array_length": 0,
+   "declared_results": 0,
+   "provider_errors": {
+    "season": "The Season field is required."
+   },
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "team": "40",
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "errors": {
+     "season": "The Season field is required."
+    },
+    "results": 0,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": []
+   }
+  },
+  {
+   "label": "C2 team=157 no-season (Bayern M\u00fcnchen)",
+   "path": "fixtures",
+   "params": {
+    "team": 157,
+    "from": "2026-07-28",
+    "to": "2026-08-01"
+   },
+   "http_status": 200,
+   "array_length": 0,
+   "declared_results": 0,
+   "provider_errors": {
+    "season": "The Season field is required."
+   },
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "team": "157",
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "errors": {
+     "season": "The Season field is required."
+    },
+    "results": 0,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": []
+   }
+  },
+  {
+   "label": "C3 team=496 (Juventus)",
+   "path": "fixtures",
+   "params": {
+    "team": 496,
+    "season": 2026,
+    "from": "2026-07-28",
+    "to": "2026-08-01"
+   },
+   "http_status": 200,
+   "array_length": 1,
+   "declared_results": 1,
+   "provider_errors": [],
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "team": "496",
+     "season": "2026",
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "errors": [],
+    "results": 1,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "fixture": {
+       "id": 1585004,
+       "referee": null,
+       "timezone": "UTC",
+       "date": "2026-07-31T16:00:00+00:00",
+       "timestamp": 1785513600,
+       "periods": {
+        "first": null,
+        "second": null
+       },
+       "venue": {
+        "id": null,
+        "name": "Juventus Training Center",
+        "city": "Turin"
+       },
+       "status": {
+        "long": "Not Started",
+        "short": "NS",
+        "elapsed": null,
+        "extra": null
+       }
+      },
+      "league": {
+       "id": 667,
+       "name": "Friendlies Clubs",
+       "country": "World",
+       "logo": "https://media.api-sports.io/football/leagues/667.png",
+       "flag": null,
+       "season": 2026,
+       "round": "Club Friendlies",
+       "standings": false
+      },
+      "teams": {
+       "home": {
+        "id": 496,
+        "name": "Juventus",
+        "logo": "https://media.api-sports.io/football/teams/496.png",
+        "winner": null
+       },
+       "away": {
+        "id": 84,
+        "name": "Nice",
+        "logo": "https://media.api-sports.io/football/teams/84.png",
+        "winner": null
+       }
+      },
+      "goals": {
+       "home": null,
+       "away": null
+      },
+      "score": {
+       "halftime": {
+        "home": null,
+        "away": null
+       },
+       "fulltime": {
+        "home": null,
+        "away": null
+       },
+       "extratime": {
+        "home": null,
+        "away": null
+       },
+       "penalty": {
+        "home": null,
+        "away": null
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "C3 team=536 (Sevilla)",
+   "path": "fixtures",
+   "params": {
+    "team": 536,
+    "season": 2026,
+    "from": "2026-07-28",
+    "to": "2026-08-01"
+   },
+   "http_status": 200,
+   "array_length": 1,
+   "declared_results": 1,
+   "provider_errors": [],
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "team": "536",
+     "season": "2026",
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "errors": [],
+    "results": 1,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "fixture": {
+       "id": 1583504,
+       "referee": null,
+       "timezone": "UTC",
+       "date": "2026-07-31T17:00:00+00:00",
+       "timestamp": 1785517200,
+       "periods": {
+        "first": null,
+        "second": null
+       },
+       "venue": {
+        "id": null,
+        "name": null,
+        "city": null
+       },
+       "status": {
+        "long": "Not Started",
+        "short": "NS",
+        "elapsed": null,
+        "extra": null
+       }
+      },
+      "league": {
+       "id": 667,
+       "name": "Friendlies Clubs",
+       "country": "World",
+       "logo": "https://media.api-sports.io/football/leagues/667.png",
+       "flag": null,
+       "season": 2026,
+       "round": "Club Friendlies",
+       "standings": false
+      },
+      "teams": {
+       "home": {
+        "id": 413,
+        "name": "NEC Nijmegen",
+        "logo": "https://media.api-sports.io/football/teams/413.png",
+        "winner": null
+       },
+       "away": {
+        "id": 536,
+        "name": "Sevilla",
+        "logo": "https://media.api-sports.io/football/teams/536.png",
+        "winner": null
+       }
+      },
+      "goals": {
+       "home": null,
+       "away": null
+      },
+      "score": {
+       "halftime": {
+        "home": null,
+        "away": null
+       },
+       "fulltime": {
+        "home": null,
+        "away": null
+       },
+       "extratime": {
+        "home": null,
+        "away": null
+       },
+       "penalty": {
+        "home": null,
+        "away": null
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "C3 team=722 (Albacete)",
+   "path": "fixtures",
+   "params": {
+    "team": 722,
+    "season": 2026,
+    "from": "2026-07-28",
+    "to": "2026-08-01"
+   },
+   "http_status": 200,
+   "array_length": 2,
+   "declared_results": 2,
+   "provider_errors": [],
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "team": "722",
+     "season": "2026",
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "errors": [],
+    "results": 2,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "fixture": {
+       "id": 1585007,
+       "referee": null,
+       "timezone": "UTC",
+       "date": "2026-08-01T08:00:00+00:00",
+       "timestamp": 1785571200,
+       "periods": {
+        "first": null,
+        "second": null
+       },
+       "venue": {
+        "id": null,
+        "name": null,
+        "city": null
+       },
+       "status": {
+        "long": "Not Started",
+        "short": "NS",
+        "elapsed": null,
+        "extra": null
+       }
+      },
+      "league": {
+       "id": 667,
+       "name": "Friendlies Clubs",
+       "country": "World",
+       "logo": "https://media.api-sports.io/football/leagues/667.png",
+       "flag": null,
+       "season": 2026,
+       "round": "Club Friendlies",
+       "standings": false
+      },
+      "teams": {
+       "home": {
+        "id": 539,
+        "name": "Levante",
+        "logo": "https://media.api-sports.io/football/teams/539.png",
+        "winner": null
+       },
+       "away": {
+        "id": 722,
+        "name": "Albacete",
+        "logo": "https://media.api-sports.io/football/teams/722.png",
+        "winner": null
+       }
+      },
+      "goals": {
+       "home": null,
+       "away": null
+      },
+      "score": {
+       "halftime": {
+        "home": null,
+        "away": null
+       },
+       "fulltime": {
+        "home": null,
+        "away": null
+       },
+       "extratime": {
+        "home": null,
+        "away": null
+       },
+       "penalty": {
+        "home": null,
+        "away": null
+       }
+      }
+     },
+     {
+      "fixture": {
+       "id": 1598568,
+       "referee": null,
+       "timezone": "UTC",
+       "date": "2026-07-31T18:00:00+00:00",
+       "timestamp": 1785520800,
+       "periods": {
+        "first": null,
+        "second": null
+       },
+       "venue": {
+        "id": null,
+        "name": null,
+        "city": null
+       },
+       "status": {
+        "long": "Not Started",
+        "short": "NS",
+        "elapsed": null,
+        "extra": null
+       }
+      },
+      "league": {
+       "id": 667,
+       "name": "Friendlies Clubs",
+       "country": "World",
+       "logo": "https://media.api-sports.io/football/leagues/667.png",
+       "flag": null,
+       "season": 2026,
+       "round": "Club Friendlies",
+       "standings": false
+      },
+      "teams": {
+       "home": {
+        "id": 722,
+        "name": "Albacete",
+        "logo": "https://media.api-sports.io/football/teams/722.png",
+        "winner": null
+       },
+       "away": {
+        "id": 9575,
+        "name": "Real Madrid II",
+        "logo": "https://media.api-sports.io/football/teams/9575.png",
+        "winner": null
+       }
+      },
+      "goals": {
+       "home": null,
+       "away": null
+      },
+      "score": {
+       "halftime": {
+        "home": null,
+        "away": null
+       },
+       "fulltime": {
+        "home": null,
+        "away": null
+       },
+       "extratime": {
+        "home": null,
+        "away": null
+       },
+       "penalty": {
+        "home": null,
+        "away": null
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "label": "fixtures?id=1583514",
+   "path": "fixtures",
+   "params": {
+    "id": 1583514
+   },
+   "http_status": 200,
+   "array_length": 1,
+   "declared_results": 1,
+   "provider_errors": [],
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "id": "1583514"
+    },
+    "errors": [],
+    "results": 1,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "fixture": {
+       "id": 1583514,
+       "referee": null,
+       "timezone": "UTC",
+       "date": "2026-07-31T18:45:00+00:00",
+       "timestamp": 1785523500,
+       "periods": {
+        "first": null,
+        "second": null
+       },
+       "venue": {
+        "id": null,
+        "name": null,
+        "city": "Birmingham"
+       },
+       "status": {
+        "long": "Not Started",
+        "short": "NS",
+        "elapsed": null,
+        "extra": null
+       }
+      },
+      "league": {
+       "id": 667,
+       "name": "Friendlies Clubs",
+       "country": "World",
+       "logo": "https://media.api-sports.io/football/leagues/667.png",
+       "flag": null,
+       "season": 2026,
+       "round": "Club Friendlies",
+       "standings": false
+      },
+      "teams": {
+       "home": {
+        "id": 54,
+        "name": "Birmingham",
+        "logo": "https://media.api-sports.io/football/teams/54.png",
+        "winner": null
+       },
+       "away": {
+        "id": 529,
+        "name": "Barcelona",
+        "logo": "https://media.api-sports.io/football/teams/529.png",
+        "winner": null
+       }
+      },
+      "goals": {
+       "home": null,
+       "away": null
+      },
+      "score": {
+       "halftime": {
+        "home": null,
+        "away": null
+       },
+       "fulltime": {
+        "home": null,
+        "away": null
+       },
+       "extratime": {
+        "home": null,
+        "away": null
+       },
+       "penalty": {
+        "home": null,
+        "away": null
+       }
+      },
+      "events": [],
+      "lineups": [],
+      "statistics": [],
+      "players": []
+     }
+    ]
+   }
+  },
+  {
+   "label": "fixtures?id=1583504",
+   "path": "fixtures",
+   "params": {
+    "id": 1583504
+   },
+   "http_status": 200,
+   "array_length": 1,
+   "declared_results": 1,
+   "provider_errors": [],
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "id": "1583504"
+    },
+    "errors": [],
+    "results": 1,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "fixture": {
+       "id": 1583504,
+       "referee": null,
+       "timezone": "UTC",
+       "date": "2026-07-31T17:00:00+00:00",
+       "timestamp": 1785517200,
+       "periods": {
+        "first": null,
+        "second": null
+       },
+       "venue": {
+        "id": null,
+        "name": null,
+        "city": null
+       },
+       "status": {
+        "long": "Not Started",
+        "short": "NS",
+        "elapsed": null,
+        "extra": null
+       }
+      },
+      "league": {
+       "id": 667,
+       "name": "Friendlies Clubs",
+       "country": "World",
+       "logo": "https://media.api-sports.io/football/leagues/667.png",
+       "flag": null,
+       "season": 2026,
+       "round": "Club Friendlies",
+       "standings": false
+      },
+      "teams": {
+       "home": {
+        "id": 413,
+        "name": "NEC Nijmegen",
+        "logo": "https://media.api-sports.io/football/teams/413.png",
+        "winner": null
+       },
+       "away": {
+        "id": 536,
+        "name": "Sevilla",
+        "logo": "https://media.api-sports.io/football/teams/536.png",
+        "winner": null
+       }
+      },
+      "goals": {
+       "home": null,
+       "away": null
+      },
+      "score": {
+       "halftime": {
+        "home": null,
+        "away": null
+       },
+       "fulltime": {
+        "home": null,
+        "away": null
+       },
+       "extratime": {
+        "home": null,
+        "away": null
+       },
+       "penalty": {
+        "home": null,
+        "away": null
+       }
+      },
+      "events": [],
+      "lineups": [],
+      "statistics": [],
+      "players": []
+     }
+    ]
+   }
+  },
+  {
+   "label": "fixtures?team=529 (Barcelona)",
+   "path": "fixtures",
+   "params": {
+    "team": 529,
+    "season": 2026,
+    "from": "2026-07-28",
+    "to": "2026-08-01"
+   },
+   "http_status": 200,
+   "array_length": 1,
+   "declared_results": 1,
+   "provider_errors": [],
+   "body": {
+    "get": "fixtures",
+    "parameters": {
+     "team": "529",
+     "season": "2026",
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "errors": [],
+    "results": 1,
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "response": [
+     {
+      "fixture": {
+       "id": 1583514,
+       "referee": null,
+       "timezone": "UTC",
+       "date": "2026-07-31T18:45:00+00:00",
+       "timestamp": 1785523500,
+       "periods": {
+        "first": null,
+        "second": null
+       },
+       "venue": {
+        "id": null,
+        "name": null,
+        "city": "Birmingham"
+       },
+       "status": {
+        "long": "Not Started",
+        "short": "NS",
+        "elapsed": null,
+        "extra": null
+       }
+      },
+      "league": {
+       "id": 667,
+       "name": "Friendlies Clubs",
+       "country": "World",
+       "logo": "https://media.api-sports.io/football/leagues/667.png",
+       "flag": null,
+       "season": 2026,
+       "round": "Club Friendlies",
+       "standings": false
+      },
+      "teams": {
+       "home": {
+        "id": 54,
+        "name": "Birmingham",
+        "logo": "https://media.api-sports.io/football/teams/54.png",
+        "winner": null
+       },
+       "away": {
+        "id": 529,
+        "name": "Barcelona",
+        "logo": "https://media.api-sports.io/football/teams/529.png",
+        "winner": null
+       }
+      },
+      "goals": {
+       "home": null,
+       "away": null
+      },
+      "score": {
+       "halftime": {
+        "home": null,
+        "away": null
+       },
+       "fulltime": {
+        "home": null,
+        "away": null
+       },
+       "extratime": {
+        "home": null,
+        "away": null
+       },
+       "penalty": {
+        "home": null,
+        "away": null
+       }
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "kalshi_leg_codes": {
+  "KXCLUBFGAME-26JUL31SOUWIG": {
+   "title": "Southport vs Wigan",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL31SOUWIG-SOU",
+     "tail": "SOU",
+     "label": "Southport",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31SOUWIG-WIG",
+     "tail": "WIG",
+     "label": "Wigan",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31SOUWIG-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL31BCBAR": {
+   "title": "Birmingham vs Barcelona",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL31BCBAR-BC",
+     "tail": "BC",
+     "label": "Birmingham",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31BCBAR-BAR",
+     "tail": "BAR",
+     "label": "Barcelona",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31BCBAR-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL31CRAREA": {
+   "title": "Crawley vs Reading",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL31CRAREA-CRA",
+     "tail": "CRA",
+     "label": "Crawley",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31CRAREA-REA",
+     "tail": "REA",
+     "label": "Reading",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31CRAREA-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL31BROQPR": {
+   "title": "Bromley vs QPR",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL31BROQPR-BRO",
+     "tail": "BRO",
+     "label": "Bromley",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31BROQPR-QPR",
+     "tail": "QPR",
+     "label": "QPR",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31BROQPR-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL31MATDER": {
+   "title": "Mansfield vs Derby",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL31MATDER-MAT",
+     "tail": "MAT",
+     "label": "Mansfield",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31MATDER-DER",
+     "tail": "DER",
+     "label": "Derby",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31MATDER-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL31ALBRMA": {
+   "title": "Albacete vs Real Madrid Castilla",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL31ALBRMA-ALB",
+     "tail": "ALB",
+     "label": "Albacete",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31ALBRMA-RMA",
+     "tail": "RMA",
+     "label": "Real Madrid Castilla",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31ALBRMA-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL31SASFOL": {
+   "title": "Sassuolo vs Folgore Caratese",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL31SASFOL-SAS",
+     "tail": "SAS",
+     "label": "Sassuolo",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31SASFOL-FOL",
+     "tail": "FOL",
+     "label": "Folgore Caratese",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31SASFOL-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL31NIJSEV": {
+   "title": "Nijmegen vs Sevilla",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL31NIJSEV-NIJ",
+     "tail": "NIJ",
+     "label": "Nijmegen",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31NIJSEV-SEV",
+     "tail": "SEV",
+     "label": "Sevilla",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31NIJSEV-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL31JUVNIC": {
+   "title": "Juventus vs Nice",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL31JUVNIC-JUV",
+     "tail": "JUV",
+     "label": "Juventus",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31JUVNIC-NIC",
+     "tail": "NIC",
+     "label": "Nice",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31JUVNIC-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL31CONPON": {
+   "title": "Concarneau vs Pontivy GSI",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL31CONPON-CON",
+     "tail": "CON",
+     "label": "Concarneau",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31CONPON-PON",
+     "tail": "PON",
+     "label": "Pontivy GSI",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31CONPON-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL31M05SAH": {
+   "title": "Mainz vs Shabab Al-Ahli",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL31M05SAH-M05",
+     "tail": "M05",
+     "label": "Mainz",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31M05SAH-SAH",
+     "tail": "SAH",
+     "label": "Shabab Al-Ahli",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31M05SAH-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL31SPONFO": {
+   "title": "Sporting CP vs Nottingham",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL31SPONFO-SPO",
+     "tail": "SPO",
+     "label": "Sporting CP",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31SPONFO-NFO",
+     "tail": "NFO",
+     "label": "Nottingham",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31SPONFO-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL31SMCDIE": {
+   "title": "Caen vs Dieppe",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL31SMCDIE-SMC",
+     "tail": "SMC",
+     "label": "Caen",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31SMCDIE-DIE",
+     "tail": "DIE",
+     "label": "Dieppe",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31SMCDIE-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL31ELCCOR": {
+   "title": "Elche vs Cordoba",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL31ELCCOR-ELC",
+     "tail": "ELC",
+     "label": "Elche",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31ELCCOR-COR",
+     "tail": "COR",
+     "label": "Cordoba",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL31ELCCOR-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL30LEESUN": {
+   "title": "Leeds United vs Sunderland",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL30LEESUN-LEE",
+     "tail": "LEE",
+     "label": "Leeds United",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30LEESUN-SUN",
+     "tail": "SUN",
+     "label": "Sunderland",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30LEESUN-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL30MCFITJ": {
+   "title": "Malaga vs Al-Ittihad",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL30MCFITJ-MCF",
+     "tail": "MCF",
+     "label": "Malaga",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30MCFITJ-ITJ",
+     "tail": "ITJ",
+     "label": "Al-Ittihad",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30MCFITJ-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL30SWEENN": {
+   "title": "Essen vs Ennepetal",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL30SWEENN-SWE",
+     "tail": "SWE",
+     "label": "Essen",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30SWEENN-ENN",
+     "tail": "ENN",
+     "label": "Ennepetal",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30SWEENN-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL30ANDEUR": {
+   "title": "Andorra vs Europa",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL30ANDEUR-AND",
+     "tail": "AND",
+     "label": "Andorra",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30ANDEUR-EUR",
+     "tail": "EUR",
+     "label": "Europa",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30ANDEUR-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL30MONARIS": {
+   "title": "Monza vs Aris Thessaloniki",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL30MONARIS-MON",
+     "tail": "MON",
+     "label": "Monza",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30MONARIS-ARIS",
+     "tail": "ARIS",
+     "label": "Aris Thessaloniki",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30MONARIS-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL30FCREBMU": {
+   "title": "FC Rottach-Egern vs Bayern Munich",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL30FCREBMU-FCRE",
+     "tail": "FCRE",
+     "label": "FC Rottach-Egern",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30FCREBMU-BMU",
+     "tail": "BMU",
+     "label": "Bayern Munich",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30FCREBMU-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL30PARARE": {
+   "title": "Parma Calcio vs Arezzo",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL30PARARE-PAR",
+     "tail": "PAR",
+     "label": "Parma Calcio",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30PARARE-ARE",
+     "tail": "ARE",
+     "label": "Arezzo",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30PARARE-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL30BOUFCA": {
+   "title": "Bournemouth vs Augsburg",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL30BOUFCA-BOU",
+     "tail": "BOU",
+     "label": "Bournemouth",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30BOUFCA-FCA",
+     "tail": "FCA",
+     "label": "Augsburg",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30BOUFCA-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL30LUATER": {
+   "title": "Luanda vs Teruel",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL30LUATER-LUA",
+     "tail": "LUA",
+     "label": "Luanda",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30LUATER-TER",
+     "tail": "TER",
+     "label": "Teruel",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30LUATER-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL30LAVUSG": {
+   "title": "Stade Lavallois vs US Granville",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL30LAVUSG-LAV",
+     "tail": "LAV",
+     "label": "Stade Lavallois",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30LAVUSG-USG",
+     "tail": "USG",
+     "label": "US Granville",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL30LAVUSG-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  },
+  "KXCLUBFGAME-26JUL29LFCWRE": {
+   "title": "Liverpool vs Wrexham",
+   "legs": [
+    {
+     "ticker": "KXCLUBFGAME-26JUL29LFCWRE-LFC",
+     "tail": "LFC",
+     "label": "Liverpool",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL29LFCWRE-WRE",
+     "tail": "WRE",
+     "label": "Wrexham",
+     "status": "active"
+    },
+    {
+     "ticker": "KXCLUBFGAME-26JUL29LFCWRE-TIE",
+     "tail": "TIE",
+     "label": "Tie",
+     "status": "active"
+    }
+   ]
+  }
+ },
+ "known_provider_absences": {
+  "fc rottach-egern": "no such team in API-Football (/teams?search=Rottach -> 0 rows). Bayern Munchen exists as id 157 but has NO fixture in the traded window under season 2026 or 2025. The three `bayern` fixtures in the window are Bayern Hof (12737), Bayern Munchen II (4674) and Bayern Alzenau (9361) \u2014 none is the senior side, so a matcher that stripped `II` would have bridged to the reserve team.",
+  "bayern munich": "id 157 confirmed, no fixture in the traded window in ANY league (season 2026 and season 2025 both empty). Not a Munich/Munchen normalisation gap: normalisation was never the obstacle, the fixture is not in the provider.",
+  "luanda": "unidentifiable: /teams?search=Luanda returns Petro de Luanda (4922), Benfica Luanda (11149), Luanda Villa (22230, Kenya) and Luanda City (24909), and zero of them appears anywhere in the traded window. Guessing between four clubs is the thing this module refuses to do.",
+  "teruel": "id 5278 confirmed, no fixture in the traded window in any league under season 2026 or 2025.",
+  "essen": "Kalshi's own leg code is SWE, not RWE, which points at Schwarz-Weiss Essen \u2014 a club API-Football's team search does not carry at all. The only Essen side in the window is Rot-Weiss Essen (1621), playing Bayer Leverkusen on a DIFFERENT ET date. Matching on the name `Essen` would have bridged to the wrong club; refusing is the correct behaviour here.",
+  "ennepetal": "id 14666 confirmed, no fixture in the traded window in any league under season 2026 or 2025."
+ }
+}
