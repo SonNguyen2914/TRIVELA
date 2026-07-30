@@ -260,6 +260,16 @@ def approval_status() -> dict:
             out["mode"] = "approved_decision_present"
             out["decision_id"] = dec.id
             out["content_hash"] = dec.content_hash
+            # the dark-state note above is now stale — restate what is
+            # actually true rather than leave a decision_id sitting next
+            # to a sentence claiming none exists
+            out["note"] = (
+                f"liga-mx-2026-v0 has an active approval decision "
+                f"(id {dec.id}, policy {dec.policy_version!r}) — shadow "
+                f"collection and locks run once fixtures exist. This does "
+                f"NOT mean real money signals are enabled "
+                f"(real_money_signals stays server-side gated) or that an "
+                f"edge is established.")
         return out
     finally:
         s.close()

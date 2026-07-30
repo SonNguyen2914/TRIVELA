@@ -7,9 +7,11 @@ The load-bearing pair here is TestLigamxModelIsDark: the same seeded
 state produces ZERO runs while liga-mx-2026-v0 is unapproved and >=1
 run the moment the F3 flag alone is flipped — proving the gate (not a
 missing model or fixture) is what keeps Liga MX dark even though its
-markets are OPEN. Flipping that flag in production requires the
-operator approval path that does not exist for Liga MX; no code path in
-this build can do it."""
+markets are OPEN. Flipping that flag in production is an explicit
+operator action (POST /api/admin/liga-mx-2026/replay-approval/activate,
+the same generalized replay-approval route EPL uses) — never boot,
+never a request path, and the decision it writes records its own
+REPLAYED-evidence weakness."""
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -454,6 +456,39 @@ class TestLigamxModelIsDark:
         assert st["approved_for_shadow"] is False
         assert st["approval_decision_missing"] is True
         assert st["model_version_registered"] is True
+
+    def test_approval_status_note_reflects_a_real_decision(
+            self, ligamx_session):
+        """Regression guard for what /api/ligamx/approval showed in
+        production on 2026-07-30 right after the first-ever Liga MX
+        activation: mode/decision_id flipped correctly but `note` still
+        read the DARK boilerplate ('no approval decision exists') sitting
+        directly beside a populated decision_id in the same payload."""
+        import hashlib as _h
+
+        from src.live.models import ModelApprovalDecision
+
+        model_ligamx.ensure_model_version(approved_for_shadow=True)
+        mv = ligamx_session.query(ModelVersion).filter_by(
+            name=model_ligamx.MODEL_NAME).one()
+        doc = ('{"model":"liga-mx-2026-v0","mode":"shadow",'
+               '"note":"test-only approval"}')
+        dec = ModelApprovalDecision(
+            model_version_id=mv.id,
+            model_version_name=model_ligamx.MODEL_NAME,
+            approved_mode="shadow", approved=True,
+            policy_version="shadow-approval-replay-v1",
+            decision_document=doc,
+            content_hash=_h.sha256(doc.encode()).hexdigest(),
+            created_at=datetime.now(timezone.utc) - timedelta(hours=1))
+        ligamx_session.add(dec)
+        ligamx_session.commit()
+
+        st = ligamx_plane.approval_status()
+        assert st["mode"] == "approved_decision_present"
+        assert st["decision_id"] == dec.id
+        assert "UNAPPROVED" not in st["note"]
+        assert str(dec.id) in st["note"]
 
     def test_no_ligamx_xg_knob_exists(self):
         """The xG gap is documented, not papered over: no Liga MX
