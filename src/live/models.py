@@ -918,3 +918,162 @@ class CorpusExport(LiveBase):
     backend_revision = Column(String(40))
     size_bytes = Column(Integer)
     published_at = Column(DateTime(timezone=True))
+
+
+# --- league-derived xG (API-Football) -------------------------------------
+#
+# These three tables are PROVIDER-NATIVE: keyed by API-Football's own league,
+# season, fixture and team ids rather than by rows in `fixture` / `team`.
+# That is deliberate. Friendlies span the global club universe, so the vast
+# majority of the clubs these ratings describe have no row in `team` and never
+# will — keying to our own fixtures would make the store unable to hold the
+# very data it exists for. The optional bridge to our fixtures lives in
+# `apifootball.bridge_fixture_xg`, which is a READ over these rows.
+#
+# No SourceObservation payload is written per fixture. That is a deliberate
+# departure from `mls_stats`, and the reason is the 2026-07-25 DiskFull
+# incident: `source_observation` payloads with no reader were one of the two
+# growth drivers that filled the volume and made every prediction write fail
+# silently. A full-season xG ingest is ~380 statistics responses per league,
+# which is exactly that shape. What is retained instead is the parsed value
+# PLUS the provider's raw string, which is what an audit actually needs.
+
+
+class ApiFootballLeagueCoverage(LiveBase):
+    """MEASURED xG coverage for one (league, season), and the date measured.
+
+    API-Football's documentation is 403-walled, so no published coverage list
+    exists — this table IS the coverage documentation. It records an empirical
+    probe, never a provider claim.
+
+    The measurement that matters is the VALUE, not the type. The
+    expected-goals statistic TYPE is present in `fixtures/statistics`
+    responses even where every value is null, so a type-presence check
+    succeeds while carrying no data — the same shallow-success shape as this
+    repo's `results: 0` and `{"created": 0}` incidents.
+    `type_without_value_seen` records that the hollow form was observed, so
+    the distinction stays on the record rather than being inferred.
+
+    `verdict` is one of xg_available (every sampled fixture had a numeric
+    value for both teams), xg_partial (some did), xg_absent (none did), or
+    indeterminate_no_completed_fixture (the probe could not run, which is
+    never read as clean)."""
+    __tablename__ = "apifootball_league_coverage"
+    id = Column(Integer, primary_key=True)
+    league_id = Column(Integer, nullable=False)
+    season = Column(Integer, nullable=False)
+    league_name = Column(String(96))
+    country = Column(String(64))
+    verdict = Column(String(40), nullable=False)
+    measured_rate = Column(Float)                 # fraction of samples with
+    # completed fixtures the provider showed for this season. Load-bearing for
+    # SEASON CHOICE, not decoration: on 2026-07-29 the provider's 'current'
+    # season for the Premier League was 2026 (barely started, a handful of
+    # completed fixtures) while the xG history sat in 2025 (380), and J1's
+    # 'current' was 2027 against 200 completed in 2026 — the J-League moved to
+    # an autumn-spring calendar. A rating fitted on the 'current' season would
+    # have been fitted on almost nothing, so the season with the data wins.
+    completed_fixtures_visible = Column(Integer)
+    samples_taken = Column(Integer, nullable=False, default=0)
+    samples_with_xg = Column(Integer, nullable=False, default=0)
+    type_without_value_seen = Column(Boolean, default=False, nullable=False)
+    # rounds whose sample carried no value — the attributable form of the
+    # rate. End-of-season promotion/relegation ties were MEASURED to be the
+    # miss on three leagues that a most-recent-N sample called 'partial'.
+    miss_rounds_json = Column(Text)
+    sampling_method = Column(String(40))          # spread_across_season
+    measured_at = Column(DateTime(timezone=True), nullable=False)
+    __table_args__ = (UniqueConstraint("league_id", "season"),)
+
+
+class ApiFootballFixtureXg(LiveBase):
+    """One team's provider xG in one league fixture, AS READ AT ONE INSTANT.
+
+    APPEND-ONLY BY CONSTRUCTION. API-Football's documentation is 403-walled
+    and Sportmonks-style retroactive correction of historical values cannot
+    be ruled out, so a stored xG is evidence of what the provider said WHEN WE
+    ASKED — never a cell to be refetched and overwritten. The unique key
+    includes `value_hash`, so:
+
+      - a re-read returning the SAME value collides and writes nothing
+        (the ingest is idempotent and cheap to resume);
+      - a re-read returning a DIFFERENT value inserts a SECOND row, which
+        makes a retroactive correction VISIBLE and countable instead of
+        silently replacing the evidence.
+
+    `xg` is NULL where the provider offered no usable value; `xg_raw` keeps
+    the provider's own string so the parse can be re-audited. A null, empty,
+    '-' or exactly-zero value is ABSENCE, never zero: the provider uses null
+    and 0 interchangeably as placeholders and the two cannot be told apart,
+    so 0 is never read as data (the pre-registered trial criteria took the
+    same line)."""
+    __tablename__ = "apifootball_fixture_xg"
+    id = Column(Integer, primary_key=True)
+    provider_fixture_id = Column(Integer, nullable=False)
+    side = Column(String(8), nullable=False)          # home | away
+    league_id = Column(Integer, nullable=False)
+    season = Column(Integer, nullable=False)
+    provider_team_id = Column(Integer, nullable=False)
+    team_name = Column(String(96))
+    opponent_team_id = Column(Integer)
+    xg = Column(Float)                                # None == absent
+    xg_raw = Column(String(32))                       # provider's own string
+    xg_against = Column(Float)                        # opponent's xg
+    goals = Column(Integer)
+    goals_conceded = Column(Integer)
+    kickoff_utc = Column(DateTime(timezone=True))
+    round_label = Column(String(64))
+    # sha256 over the canonical (xg_raw, xg_against_raw, goals) triple — the
+    # discriminator that turns an overwrite into a new row
+    value_hash = Column(String(64), nullable=False)
+    read_at = Column(DateTime(timezone=True), nullable=False)
+    __table_args__ = (
+        UniqueConstraint("provider_fixture_id", "side", "value_hash"),
+        Index("ix_apif_xg_league_season", "league_id", "season"),
+        Index("ix_apif_xg_team", "provider_team_id"),
+    )
+
+
+class ApiFootballClubLeague(LiveBase):
+    """A club's DOMESTIC league, derived from provider data and archived.
+
+    A friendly's clubs must be resolved to the league whose fixtures the
+    club's rating is fitted on — Son's rule: a club's xG rating comes from
+    the league that club plays in. The resolution is provider-derived
+    (`/teams?search=` then `/leagues?team=`), never guessed from a name.
+
+    Resolution is authoritative against LEAGUE ROSTERS, not against the
+    provider's own club->league answer. That answer is structurally ambiguous:
+    `/leagues?team=` mixes the real league with pre-season friendly
+    tournaments ('Premier League - Summer Series') and years-stale lower-tier
+    registrations, with no field distinguishing them. Membership of a league
+    roster has no such problem — a club belongs to exactly one domestic league
+    roster — and one request buys a whole league.
+
+    `resolution` is one of resolved (exactly one roster club at the strongest
+    matching tier), ambiguous_team (several at that tier — never guessed), or
+    league_not_indexed (no roster we hold contains this club, which is a
+    statement about OUR coverage and is worded as one, never as 'this club has
+    no league'). Only `resolved` may be used to pick a rating; every other
+    value is shown in words.
+
+    `match_tier` records HOW it matched, because the tiers are not equally
+    strong: exact and token_set are safe alone, while unique_containment
+    ('Newcastle' for 'Newcastle United') is directional — the roster name's
+    tokens must be a strict subset of the query's. The reverse direction is
+    what makes 'Real Madrid' match 'Real Madrid Castilla'."""
+    __tablename__ = "apifootball_club_league"
+    id = Column(Integer, primary_key=True)
+    # the name we asked about (an ESPN displayName on the friendlies surface)
+    query_name = Column(String(96), nullable=False, unique=True)
+    resolution = Column(String(24), nullable=False)
+    provider_team_id = Column(Integer)
+    provider_team_name = Column(String(96))
+    country = Column(String(64))
+    league_id = Column(Integer)
+    season = Column(Integer)
+    league_name = Column(String(96))
+    league_country = Column(String(64))
+    match_tier = Column(String(24))       # exact | token_set | alias
+    candidates_json = Column(Text)        # what was refused, and why
+    resolved_at = Column(DateTime(timezone=True), nullable=False)

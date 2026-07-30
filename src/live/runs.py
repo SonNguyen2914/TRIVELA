@@ -25,6 +25,30 @@ from src.live.models import (Fixture, MarketContract, MarketEvent,
 GIT_REV = os.getenv("RAILWAY_GIT_COMMIT_SHA", "")[:40]
 
 
+# --- competition spec (EPL build, 2026-07-28) ------------------------------
+# The run/lock machinery is competition-KEYED, not duplicated: every
+# public function takes an optional spec and defaults to MLS, so
+# existing MLS call sites and behaviour are unchanged. The model module
+# must expose model_mls's surface (MODEL_NAME, current_model,
+# predict_fixture, build_input_artifact, INPUT_ARTIFACT_SCHEMA).
+class CompetitionRunsSpec:
+    def __init__(self, slug: str, model_module, market_spec, label: str,
+                 expected_teams: int = 30, enabled_fn=None):
+        self.slug = slug
+        self.model = model_module
+        self.market_spec = market_spec       # markets.CompetitionMarketSpec
+        self.label = label                   # alert prefix ("MLS", "EPL")
+        self.expected_teams = expected_teams
+        # read at call time so an env flip needs no re-import
+        self.enabled_fn = enabled_fn or (
+            lambda: config.MLS_SHADOW_ENABLED)
+
+
+MLS_RUNS_SPEC = CompetitionRunsSpec(
+    slug="mls-2026", model_module=model_mls,
+    market_spec=markets.MLS_SPEC, label="MLS", expected_teams=30)
+
+
 def _now():
     return datetime.now(timezone.utc)
 
@@ -33,12 +57,13 @@ def _utc(dt):
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
-def approved_model_version(s) -> ModelVersion | None:
+def approved_model_version(s, model_name: str | None = None
+                           ) -> ModelVersion | None:
     """The enforcement point for F3: run paths may only publish under a
     ModelVersion row that is approved for shadow. Missing or unapproved
     fails CLOSED (no runs), never open."""
     return (s.query(ModelVersion)
-            .filter_by(name=model_mls.MODEL_NAME,
+            .filter_by(name=model_name or model_mls.MODEL_NAME,
                        approved_for_shadow=True)
             .first())
 
@@ -64,24 +89,28 @@ REGISTRY_MAX_AGE_HOURS = 6
 
 def _write_run(s, fixture, run_type: str, model: dict, mv: ModelVersion,
                canonical: bool = False, snapshot: dict | None = None,
-               lineup: dict | None = None) -> PredictionRun | None:
+               lineup: dict | None = None,
+               spec: CompetitionRunsSpec | None = None
+               ) -> PredictionRun | None:
     """The transactional core. Returns the committed run or None.
     For canonical locks the caller supplies a COMPLETE MarketSnapshot
     (capture_lock_snapshot) — its id and ticker->quote map are frozen
     onto the run and its contracts (V8 evaluation F1/F2) — plus the
     lineup snapshot the lock saw (Phase 5)."""
-    pred = model_mls.predict_fixture(fixture, model, run_type=run_type)
+    spec = spec or MLS_RUNS_SPEC
+    model_mod = spec.model
+    pred = model_mod.predict_fixture(fixture, model, run_type=run_type)
     if pred is None:
         return None
     # the retrievable input artifact (Phase 2): store the exact bytes the
     # run simulated from, deduped by content hash, and link the run to it
-    _doc, canon, ihash = model_mls.build_input_artifact(
+    _doc, canon, ihash = model_mod.build_input_artifact(
         fixture, model, run_type)
     artifact = (s.query(ModelInputArtifact)
                 .filter_by(content_hash=ihash).first())
     if artifact is None:
         artifact = ModelInputArtifact(
-            schema_version=model_mls.INPUT_ARTIFACT_SCHEMA,
+            schema_version=model_mod.INPUT_ARTIFACT_SCHEMA,
             content_hash=ihash, size_bytes=len(canon.encode()),
             document_json=canon, created_at=_now())
         s.add(artifact)
@@ -91,7 +120,7 @@ def _write_run(s, fixture, run_type: str, model: dict, mv: ModelVersion,
     # on the SAME session so no second connection is opened mid-write.
     from src.live.models import ModelApprovalDecision
     _dec = (s.query(ModelApprovalDecision)
-            .filter_by(model_version_name=model_mls.MODEL_NAME,
+            .filter_by(model_version_name=model_mod.MODEL_NAME,
                        approved=True)
             .order_by(ModelApprovalDecision.id.desc()).first())
     # V9.1 eval F9: never CREATE an audit-invalid canonical lock — a
@@ -186,7 +215,7 @@ def _write_run(s, fixture, run_type: str, model: dict, mv: ModelVersion,
     if canonical:
         from src.live.models import RegistryDiscovery
         reg = (s.query(RegistryDiscovery)
-               .filter_by(competition_slug="mls-2026", provider="kalshi",
+               .filter_by(competition_slug=spec.slug, provider="kalshi",
                           complete=True)
                .order_by(RegistryDiscovery.id.desc()).first())
         fresh_reg = bool(
@@ -224,15 +253,17 @@ def _write_run(s, fixture, run_type: str, model: dict, mv: ModelVersion,
 
 
 def scheduled_runs(horizon_hours: float = 168.0,
-                   freshness_hours: float = 4.0) -> dict:
+                   freshness_hours: float = 4.0,
+                   spec: CompetitionRunsSpec | None = None) -> dict:
     """Rolling shadow odds: every upcoming fixture inside the horizon
     gets a fresh 'scheduled' run unless one is younger than
     freshness_hours (operator sweeps may pass 0 to force regeneration).
     The default horizon matches the dashboard's seven-day fixture list —
     "odds up and running for all matches" means every visible fixture."""
-    if not (plane_ready() and config.MLS_SHADOW_ENABLED):
+    spec = spec or MLS_RUNS_SPEC
+    if not (plane_ready() and spec.enabled_fn()):
         return {"skipped": "off"}
-    model = model_mls.current_model()
+    model = spec.model.current_model()
     if model is None:
         return {"skipped": "no model (no completed fixtures ingested)"}
     s = get_session()
@@ -240,7 +271,7 @@ def scheduled_runs(horizon_hours: float = 168.0,
     failures: list[str] = []
     no_prediction: list[str] = []
     try:
-        mv = approved_model_version(s)
+        mv = approved_model_version(s, spec.model.MODEL_NAME)
         if mv is None:
             return {"skipped": "model not approved for shadow (F3 gate)"}
         cutoff = _now() + timedelta(hours=horizon_hours)
@@ -248,7 +279,7 @@ def scheduled_runs(horizon_hours: float = 168.0,
         # in-play read), and never after the canonical lock exists — the
         # lock is the fixture's final pre-match word (F9)
         for f in (s.query(Fixture)
-                  .filter_by(competition_slug="mls-2026", status="pre")
+                  .filter_by(competition_slug=spec.slug, status="pre")
                   .all()):
             if f.current_kickoff_utc is None:
                 continue
@@ -273,7 +304,7 @@ def scheduled_runs(horizon_hours: float = 168.0,
             # one bad fixture must not kill the whole sweep — the prod
             # boot of Jul 23 lost all 15 runs to a single insert error
             try:
-                if _write_run(s, f, "scheduled", model, mv):
+                if _write_run(s, f, "scheduled", model, mv, spec=spec):
                     created += 1
                 else:
                     # _write_run declines (no prediction) rather than
@@ -303,22 +334,23 @@ def scheduled_runs(horizon_hours: float = 168.0,
         s.close()
 
 
-def t10_locks() -> dict:
+def t10_locks(spec: CompetitionRunsSpec | None = None) -> dict:
     """The lock sweep: fixtures inside the window get a lock-grade
     market snapshot (validated for completeness) and then ONE canonical
     complete t10 run frozen against it. NO complete snapshot -> NO
     canonical lock (V8 evaluation F1) — the sweep retries every tick
     until kickoff, and a fixture that never captures stays visibly
     missing."""
-    if not (plane_ready() and config.MLS_SHADOW_ENABLED):
+    spec = spec or MLS_RUNS_SPEC
+    if not (plane_ready() and spec.enabled_fn()):
         return {"skipped": "off"}
-    model = model_mls.current_model()
+    model = spec.model.current_model()
     if model is None:
         return {"skipped": "no model"}
     s = get_session()
     locked = 0
     try:
-        mv = approved_model_version(s)
+        mv = approved_model_version(s, spec.model.MODEL_NAME)
         if mv is None:
             return {"skipped": "model not approved for shadow (F3 gate)"}
         # V9.1 eval F9: a canonical lock MUST reference a valid approved
@@ -326,11 +358,11 @@ def t10_locks() -> dict:
         # creating an audit-invalid run and detecting it afterward.
         from src.live.models import ModelApprovalDecision
         if (s.query(ModelApprovalDecision)
-                .filter_by(model_version_name=model_mls.MODEL_NAME,
+                .filter_by(model_version_name=spec.model.MODEL_NAME,
                            approved=True).first()) is None:
             return {"skipped": "no approved model-approval decision (F9)"}
         for f in (s.query(Fixture)
-                  .filter_by(competition_slug="mls-2026", status="pre")
+                  .filter_by(competition_slug=spec.slug, status="pre")
                   .all()):
             if f.current_kickoff_utc is None:
                 continue
@@ -344,7 +376,8 @@ def t10_locks() -> dict:
                 continue
             # 1. the lock-grade snapshot — completeness-gated; a failed
             # or partial capture records WHY and produces no lock
-            snapshot = markets.capture_lock_snapshot(f.id)
+            snapshot = markets.capture_lock_snapshot(
+                f.id, spec=spec.market_spec)
             if snapshot is None:
                 continue
             # 1b. the lineup snapshot the lock SAW (Phase 5). A pending
@@ -357,7 +390,8 @@ def t10_locks() -> dict:
             # of the slate down with it)
             try:
                 run = _write_run(s, f, "t10", model, mv, canonical=True,
-                                 snapshot=snapshot, lineup=lineup)
+                                 snapshot=snapshot, lineup=lineup,
+                                 spec=spec)
             except Exception as exc:
                 s.rollback()
                 print(f"[runs] t10 {f.espn_event_id} failed: {exc}")
@@ -396,13 +430,13 @@ def t10_locks() -> dict:
                          .filter_by(prediction_run_id=run.id).all())
                     probs = {c.outcome_key: c.raw_probability for c in o}
                     send_alert(
-                        f"📋 PAPER · MLS T-10 lock — fixture "
+                        f"📋 PAPER · {spec.label} T-10 lock — fixture "
                         f"{f.espn_event_id}: "
                         f"H {probs.get('home_win', 0):.0%} / "
                         f"D {probs.get('draw', 0):.0%} / "
                         f"A {probs.get('away_win', 0):.0%} "
-                        f"({model_mls.MODEL_NAME}, shadow — not advice)",
-                        title="MLS shadow lock",
+                        f"({spec.model.MODEL_NAME}, shadow — not advice)",
+                        title=f"{spec.label} shadow lock",
                         dispatch_class=OPERATIONAL)
                 except Exception as exc:
                     print(f"[runs] t10 lock record failed: {exc}")
@@ -415,16 +449,18 @@ def t10_locks() -> dict:
         s.close()
 
 
-def model_for_event(espn_event_id: str) -> dict | None:
+def model_for_event(espn_event_id: str,
+                    spec: CompetitionRunsSpec | None = None) -> dict | None:
     """The match hub's model section: this fixture's newest complete run
     with full provenance, plus its canonical T-10 lock if one exists.
     None when the fixture is unknown or no complete run exists yet."""
+    spec = spec or MLS_RUNS_SPEC
     if not plane_ready():
         return None
     s = get_session()
     try:
         f = (s.query(Fixture)
-             .filter_by(competition_slug="mls-2026",
+             .filter_by(competition_slug=spec.slug,
                         espn_event_id=str(espn_event_id)).first())
         if f is None:
             return None
@@ -478,7 +514,7 @@ def model_for_event(espn_event_id: str) -> dict | None:
         # exists it IS the fixture's model — a later scheduled run must
         # never silently supersede it. "primary" is what the page shows.
         return {
-            "model_version": model_mls.MODEL_NAME,
+            "model_version": spec.model.MODEL_NAME,
             "shadow": True,
             "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
             "primary": _payload(lock) if lock else _payload(latest),
@@ -489,26 +525,38 @@ def model_for_event(espn_event_id: str) -> dict | None:
         s.close()
 
 
-def shadow_counts() -> dict:
+def shadow_counts(spec: CompetitionRunsSpec | None = None) -> dict:
     """Readiness for /api/ready's live section — counts PLUS the
     operating gates (V8 evaluation F12): shadow_ready is true only when
     the pipeline could actually produce a lock right now, and blockers
-    names whatever is in the way."""
+    names whatever is in the way.
+
+    Counts are competition-scoped since the EPL build: mapped events,
+    complete runs and locks join through THIS competition's fixtures,
+    and the approval decision is looked up by THIS competition's model
+    name. Identical numbers for MLS while it is the only populated
+    competition; correct (not shared) numbers once a second one lands."""
+    spec = spec or MLS_RUNS_SPEC
     if not plane_ready():
         return {}
     s = get_session()
     try:
         from src.live.models import Team
         teams = s.query(Team).filter_by(
-            competition_slug="mls-2026").count()
-        mapped = s.query(MarketEvent).filter_by(
-            mapping_approved=True).count()
-        runs_n = s.query(PredictionRun).filter_by(
-            status="complete").count()
-        mv = approved_model_version(s)
+            competition_slug=spec.slug).count()
+        mapped = (s.query(MarketEvent)
+                  .filter_by(competition_slug=spec.slug,
+                             mapping_approved=True).count())
+        runs_n = (s.query(PredictionRun).join(
+            Fixture, PredictionRun.fixture_id == Fixture.id)
+            .filter(Fixture.competition_slug == spec.slug,
+                    PredictionRun.status == "complete").count())
+        mv = approved_model_version(s, spec.model.MODEL_NAME)
         from src.live.models import ModelApprovalDecision
         approval_decision = (s.query(ModelApprovalDecision)
-                             .filter_by(approved=True)
+                             .filter_by(approved=True,
+                                        model_version_name=spec.model
+                                        .MODEL_NAME)
                              .order_by(ModelApprovalDecision.id.desc())
                              .first())
         # upcoming fixtures (48h) whose teams lack an approved mapped
@@ -523,7 +571,7 @@ def shadow_counts() -> dict:
         # the 48h window — i.e. Jul 28 (found by audit Jul 24).
         horizon = _now() + timedelta(hours=48)
         upcoming = [f for f in s.query(Fixture)
-                    .filter_by(competition_slug="mls-2026", status="pre")
+                    .filter_by(competition_slug=spec.slug, status="pre")
                     .all()
                     if f.current_kickoff_utc
                     and _utc(f.current_kickoff_utc) <= horizon
@@ -534,8 +582,8 @@ def shadow_counts() -> dict:
             if not s.query(MarketEvent).filter_by(
                 fixture_id=f.id, mapping_approved=True).first()]
         blockers = []
-        if teams < 30:
-            blockers.append(f"teams {teams}/30")
+        if teams < spec.expected_teams:
+            blockers.append(f"teams {teams}/{spec.expected_teams}")
         if mv is None:
             blockers.append("model not approved for shadow")
         if approval_decision is None:
@@ -550,13 +598,16 @@ def shadow_counts() -> dict:
         return {
             "teams": teams,
             "fixtures": s.query(Fixture).filter_by(
-                competition_slug="mls-2026").count(),
+                competition_slug=spec.slug).count(),
             "completed_fixtures": s.query(Fixture).filter_by(
-                competition_slug="mls-2026", status="post").count(),
+                competition_slug=spec.slug, status="post").count(),
             "complete_runs": runs_n,
-            "t10_locks": s.query(PredictionRun).filter_by(
-                run_type="t10", canonical=True,
-                status="complete").count(),
+            "t10_locks": (s.query(PredictionRun).join(
+                Fixture, PredictionRun.fixture_id == Fixture.id)
+                .filter(Fixture.competition_slug == spec.slug,
+                        PredictionRun.run_type == "t10",
+                        PredictionRun.canonical.is_(True),
+                        PredictionRun.status == "complete").count()),
             "mapped_events": mapped,
             "model_approved_for_shadow": mv is not None,
             "approval_decision_present": approval_decision is not None,
@@ -571,16 +622,17 @@ def shadow_counts() -> dict:
         s.close()
 
 
-def latest_odds() -> list[dict]:
+def latest_odds(spec: CompetitionRunsSpec | None = None) -> list[dict]:
     """Every upcoming fixture's newest complete run — the public shadow
     odds board. Reads ONLY status='complete' runs, per the decision."""
+    spec = spec or MLS_RUNS_SPEC
     if not plane_ready():
         return []
     s = get_session()
     out = []
     try:
         for f in (s.query(Fixture)
-                  .filter_by(competition_slug="mls-2026")
+                  .filter_by(competition_slug=spec.slug)
                   .filter(Fixture.status.in_(("pre", "in")))
                   .all()):
             run = (s.query(PredictionRun)
@@ -598,7 +650,7 @@ def latest_odds() -> list[dict]:
                 "run_type": run.run_type,
                 "captured_at": (_utc(run.captured_at).isoformat()
                                 if run.captured_at else None),
-                "model_version": model_mls.MODEL_NAME,
+                "model_version": spec.model.MODEL_NAME,
                 "outcomes": {c.outcome_key: round(c.raw_probability, 4)
                              for c in contracts
                              if c.outcome_key in ("home_win", "draw",

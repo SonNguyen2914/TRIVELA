@@ -1,0 +1,2452 @@
+{
+ "approval_previews": {
+  "epl-2026": {
+   "activation_route": "POST /api/admin/epl-2026/replay-approval/activate",
+   "approval_forbidden": null,
+   "archive": {
+    "path": "research_archive/ladder_eng1_prior_season_2026-07-29.json",
+    "sha256": "919563eef90a740b9ac3b72d9574dabd84dc16223b6079320b5b9d5426d4e9ca"
+   },
+   "competition": "epl-2026",
+   "edges": {
+    "M1_vs_M0": {
+     "ci95": [
+      -0.0145,
+      0.0755
+     ],
+     "delta_log_loss": 0.0304,
+     "significant": false
+    },
+    "M2C_vs_M0": {
+     "ci95": [
+      0.0205,
+      0.0478
+     ],
+     "delta_log_loss": 0.0334,
+     "significant": true
+    },
+    "M2C_vs_M2": {
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "delta_log_loss": 0.0,
+     "significant": false
+    },
+    "M2_vs_M0": {
+     "ci95": [
+      0.0205,
+      0.0478
+     ],
+     "delta_log_loss": 0.0334,
+     "significant": true
+    },
+    "M2_vs_M1": {
+     "ci95": [
+      -0.0299,
+      0.0364
+     ],
+     "delta_log_loss": 0.0031,
+     "significant": false
+    }
+   },
+   "evaluated_rung": "M2",
+   "evaluated_rung_note": "always M2. The archive carries NO provider xG (ESPN's scoreboard has no xG fields), so a replay cannot evaluate an xG rung — for MLS an M3 label would falsely imply it had, and for EPL/Liga MX no team-level xG source exists at all.",
+   "evidence_class": "REPLAYED",
+   "evidence_note": "prior-season replay: the ladder was fitted and scored on the league's PREVIOUS completed season, retrieved after the fact from ESPN. Nothing was frozen before kickoff, so this can never be MEASURED evidence; and because it reads a DIFFERENT season from the one an approval licenses (different squads, and for the promoted/relegated clubs a different club list entirely), it is weaker than a same-season rolling-origin ladder. It is NOT comparable to any prospective result.",
+   "model_version": "epl-2026-v0",
+   "n_scored": 330,
+   "persisted": false,
+   "policy_note": "STRICTER than the MLS live-plane policy: a replay reads a different season, so M2 must BEAT its own M0 on a point estimate, not merely fail to lose significantly",
+   "policy_version": "shadow-approval-replay-v1",
+   "reason": "M2 beats its own M0 baseline on REPLAYED prior-season history (edge 0.0334, CI [0.0205, 0.0478], significant=True) — safe to collect prospective evidence, NOT an established edge, and NOT comparable to a prospective result",
+   "variants": {
+    "M0": {
+     "brier": 0.6577,
+     "desc": "league scoring + venue split",
+     "log_loss": 1.0857,
+     "rps": 0.2293
+    },
+    "M1": {
+     "brier": 0.6355,
+     "desc": "team ratings, equal-weighted, minimal pooling",
+     "log_loss": 1.0554,
+     "rps": 0.2154
+    },
+    "M2": {
+     "brier": 0.6334,
+     "desc": "+ recency + partial pooling",
+     "log_loss": 1.0523,
+     "rps": 0.2167
+    },
+    "M2C": {
+     "brier": 0.6334,
+     "desc": "+ calibration (shrink the 3-way toward uniform)",
+     "log_loss": 1.0523,
+     "rps": 0.2167
+    }
+   },
+   "would_approve": true
+  },
+  "liga-mx-2026": {
+   "activation_route": "POST /api/admin/liga-mx-2026/replay-approval/activate",
+   "approval_forbidden": null,
+   "archive": {
+    "path": "research_archive/ladder_mex1_prior_season_2026-07-29.json",
+    "sha256": "acf38cfbf8de449355f1013f7f5e05708e293e12c92d84e74b454c1f5dfed351"
+   },
+   "competition": "liga-mx-2026",
+   "edges": {
+    "M1_vs_M0": {
+     "ci95": [
+      -0.0172,
+      0.0901
+     ],
+     "delta_log_loss": 0.0364,
+     "significant": false
+    },
+    "M2C_vs_M0": {
+     "ci95": [
+      0.0149,
+      0.046
+     ],
+     "delta_log_loss": 0.0301,
+     "significant": true
+    },
+    "M2C_vs_M2": {
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "delta_log_loss": 0.0,
+     "significant": false
+    },
+    "M2_vs_M0": {
+     "ci95": [
+      0.0149,
+      0.046
+     ],
+     "delta_log_loss": 0.0301,
+     "significant": true
+    },
+    "M2_vs_M1": {
+     "ci95": [
+      -0.0452,
+      0.0335
+     ],
+     "delta_log_loss": -0.0062,
+     "significant": false
+    }
+   },
+   "evaluated_rung": "M2",
+   "evaluated_rung_note": "always M2. The archive carries NO provider xG (ESPN's scoreboard has no xG fields), so a replay cannot evaluate an xG rung — for MLS an M3 label would falsely imply it had, and for EPL/Liga MX no team-level xG source exists at all.",
+   "evidence_class": "REPLAYED",
+   "evidence_note": "prior-season replay: the ladder was fitted and scored on the league's PREVIOUS completed season, retrieved after the fact from ESPN. Nothing was frozen before kickoff, so this can never be MEASURED evidence; and because it reads a DIFFERENT season from the one an approval licenses (different squads, and for the promoted/relegated clubs a different club list entirely), it is weaker than a same-season rolling-origin ladder. It is NOT comparable to any prospective result.",
+   "model_version": "liga-mx-2026-v0",
+   "n_scored": 260,
+   "persisted": false,
+   "policy_note": "STRICTER than the MLS live-plane policy: a replay reads a different season, so M2 must BEAT its own M0 on a point estimate, not merely fail to lose significantly",
+   "policy_version": "shadow-approval-replay-v1",
+   "reason": "M2 beats its own M0 baseline on REPLAYED prior-season history (edge 0.0301, CI [0.0149, 0.046], significant=True) — safe to collect prospective evidence, NOT an established edge, and NOT comparable to a prospective result",
+   "variants": {
+    "M0": {
+     "brier": 0.6417,
+     "desc": "league scoring + venue split",
+     "log_loss": 1.063,
+     "rps": 0.2261
+    },
+    "M1": {
+     "brier": 0.6139,
+     "desc": "team ratings, equal-weighted, minimal pooling",
+     "log_loss": 1.0266,
+     "rps": 0.2117
+    },
+    "M2": {
+     "brier": 0.6192,
+     "desc": "+ recency + partial pooling",
+     "log_loss": 1.0329,
+     "rps": 0.2152
+    },
+    "M2C": {
+     "brier": 0.6192,
+     "desc": "+ calibration (shrink the 3-way toward uniform)",
+     "log_loss": 1.0329,
+     "rps": 0.2152
+    }
+   },
+   "would_approve": true
+  },
+  "mls-2026": {
+   "activation_route": "POST /api/admin/mls-2026/replay-approval/activate",
+   "approval_forbidden": "MLS holds a LIVE-PLANE shadow approval. A prior-season replay is weaker evidence and must never create a second decision under the same model name; this competition is a methodological control only.",
+   "archive": {
+    "path": "research_archive/ladder_usa1_prior_season_2026-07-29.json",
+    "sha256": "2ae1ab4d946945d1fab2c7b08b709917fc2bf50b9de1c310817b47836db13e37"
+   },
+   "competition": "mls-2026",
+   "edges": {
+    "M1_vs_M0": {
+     "ci95": [
+      -0.03,
+      0.0426
+     ],
+     "delta_log_loss": 0.0071,
+     "significant": false
+    },
+    "M2C_vs_M0": {
+     "ci95": [
+      0.0056,
+      0.0262
+     ],
+     "delta_log_loss": 0.0159,
+     "significant": true
+    },
+    "M2C_vs_M2": {
+     "ci95": [
+      -0.0098,
+      0.0038
+     ],
+     "delta_log_loss": -0.0032,
+     "significant": false
+    },
+    "M2_vs_M0": {
+     "ci95": [
+      0.0077,
+      0.0305
+     ],
+     "delta_log_loss": 0.0191,
+     "significant": true
+    },
+    "M2_vs_M1": {
+     "ci95": [
+      -0.0139,
+      0.0383
+     ],
+     "delta_log_loss": 0.012,
+     "significant": false
+    },
+    "M3_vs_M0": {
+     "ci95": [
+      0.0056,
+      0.0262
+     ],
+     "delta_log_loss": 0.0159,
+     "significant": true
+    },
+    "M3_vs_M2C": {
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "delta_log_loss": 0.0,
+     "significant": false
+    }
+   },
+   "evaluated_rung": "M2",
+   "evaluated_rung_note": "always M2. The archive carries NO provider xG (ESPN's scoreboard has no xG fields), so a replay cannot evaluate an xG rung — for MLS an M3 label would falsely imply it had, and for EPL/Liga MX no team-level xG source exists at all.",
+   "evidence_class": "REPLAYED",
+   "evidence_note": "prior-season replay: the ladder was fitted and scored on the league's PREVIOUS completed season, retrieved after the fact from ESPN. Nothing was frozen before kickoff, so this can never be MEASURED evidence; and because it reads a DIFFERENT season from the one an approval licenses (different squads, and for the promoted/relegated clubs a different club list entirely), it is weaker than a same-season rolling-origin ladder. It is NOT comparable to any prospective result.",
+   "model_version": "mls-2026-v0",
+   "n_scored": 434,
+   "persisted": false,
+   "policy_note": "STRICTER than the MLS live-plane policy: a replay reads a different season, so M2 must BEAT its own M0 on a point estimate, not merely fail to lose significantly",
+   "policy_version": "shadow-approval-replay-v1",
+   "reason": "M2 beats its own M0 baseline on REPLAYED prior-season history (edge 0.0191, CI [0.0077, 0.0305], significant=True) — safe to collect prospective evidence, NOT an established edge, and NOT comparable to a prospective result",
+   "variants": {
+    "M0": {
+     "brier": 0.6504,
+     "desc": "league scoring + venue split",
+     "log_loss": 1.0742,
+     "rps": 0.2311
+    },
+    "M1": {
+     "brier": 0.6423,
+     "desc": "team ratings, equal-weighted, minimal pooling",
+     "log_loss": 1.0671,
+     "rps": 0.2253
+    },
+    "M2": {
+     "brier": 0.6361,
+     "desc": "+ recency + partial pooling (mls-2026-v0)",
+     "log_loss": 1.0551,
+     "rps": 0.2239
+    },
+    "M2C": {
+     "brier": 0.6386,
+     "desc": "+ calibration (shrink the 3-way toward uniform)",
+     "log_loss": 1.0583,
+     "rps": 0.2251
+    },
+    "M3": {
+     "brier": 0.6386,
+     "desc": "+ provider xG attack/defence ratings (own lighter shrink — xG is far less noisy than goals)",
+     "log_loss": 1.0583,
+     "rps": 0.2251
+    }
+   },
+   "would_approve": true
+  }
+ },
+ "archives": {
+  "epl-2026": {
+   "espn_league": "eng.1",
+   "path": "research_archive/ladder_eng1_prior_season_2026-07-29.json",
+   "season_label": "2025-26",
+   "sha256": "919563eef90a740b9ac3b72d9574dabd84dc16223b6079320b5b9d5426d4e9ca"
+  },
+  "la-liga-2026": {
+   "espn_league": "esp.1",
+   "path": "research_archive/ladder_esp1_prior_season_2026-07-29.json",
+   "season_label": "2025-26",
+   "sha256": "47242f93d265fb208df8a493d94e1f69e6621f6339d7eedb645575a6d259b00b"
+  },
+  "liga-mx-2026": {
+   "espn_league": "mex.1",
+   "path": "research_archive/ladder_mex1_prior_season_2026-07-29.json",
+   "season_label": "Apertura 2025 + Clausura 2026",
+   "sha256": "acf38cfbf8de449355f1013f7f5e05708e293e12c92d84e74b454c1f5dfed351"
+  },
+  "mls-2026": {
+   "espn_league": "usa.1",
+   "path": "research_archive/ladder_usa1_prior_season_2026-07-29.json",
+   "season_label": "2025",
+   "sha256": "2ae1ab4d946945d1fab2c7b08b709917fc2bf50b9de1c310817b47836db13e37"
+  }
+ },
+ "evidence_class": "REPLAYED",
+ "evidence_note": "prior-season replay: the ladder was fitted and scored on the league's PREVIOUS completed season, retrieved after the fact from ESPN. Nothing was frozen before kickoff, so this can never be MEASURED evidence; and because it reads a DIFFERENT season from the one an approval licenses (different squads, and for the promoted/relegated clubs a different club list entirely), it is weaker than a same-season rolling-origin ladder. It is NOT comparable to any prospective result.",
+ "generated_at": "2026-07-29T21:41:26.417339+00:00",
+ "la_liga_status": {
+  "history_archived_and_gated": true,
+  "model_module_present": false,
+  "note": "La Liga's 380/380 history is archived and passes stage 1 on this branch. Its model module lives on feat-la-liga (unrebased), so the ladder cannot run here; the registry row is already present, so it needs the module and nothing else.",
+  "registered": true
+ },
+ "ladders_per_segment": {
+  "epl-2026": {
+   "archive": {
+    "fetched_at": "2026-07-29T21:13:02.711156+00:00",
+    "path": "research_archive/ladder_eng1_prior_season_2026-07-29.json",
+    "sha256": "919563eef90a740b9ac3b72d9574dabd84dc16223b6079320b5b9d5426d4e9ca",
+    "source": "ESPN site.api scoreboard (keyless, public)"
+   },
+   "club_turnover_note": "3 clubs are relegated and 3 promoted each season, so ~15% of the 2026-27 club list has NO rating in this replay's fit",
+   "competition": "epl-2026",
+   "eligibility_note": "n_scored < n_fixtures_input by construction: a fixture is scored only when BOTH teams already have >= min_games prior completed games, so the opening rounds of every segment are not scorable by the ratings rungs and are excluded from ALL rungs to keep the comparison on identical ground",
+   "evidence_class": "REPLAYED",
+   "evidence_note": "prior-season replay: the ladder was fitted and scored on the league's PREVIOUS completed season, retrieved after the fact from ESPN. Nothing was frozen before kickoff, so this can never be MEASURED evidence; and because it reads a DIFFERENT season from the one an approval licenses (different squads, and for the promoted/relegated clubs a different club list entirely), it is weaker than a same-season rolling-origin ladder. It is NOT comparable to any prospective result.",
+   "generated_at": "2026-07-29T21:41:26.422689+00:00",
+   "hyperparameters": {
+    "calibration_alpha": 0.0,
+    "half_life_days": 90.0,
+    "min_games": 5,
+    "provenance": "carried from MLS league play as STARTING POINTS and NOT re-swept on this league's data — see the sweep block when present, and treat an unswept constant as unmeasured",
+    "result_shrink": 8.0
+   },
+   "ladders": {
+    "2025-26-english-premier-league": {
+     "edges": {
+      "M1_vs_M0": {
+       "ci95": [
+        -0.0145,
+        0.0755
+       ],
+       "delta_log_loss": 0.0304,
+       "significant": false
+      },
+      "M2C_vs_M0": {
+       "ci95": [
+        0.0205,
+        0.0478
+       ],
+       "delta_log_loss": 0.0334,
+       "significant": true
+      },
+      "M2C_vs_M2": {
+       "ci95": [
+        0.0,
+        0.0
+       ],
+       "delta_log_loss": 0.0,
+       "significant": false
+      },
+      "M2_vs_M0": {
+       "ci95": [
+        0.0205,
+        0.0478
+       ],
+       "delta_log_loss": 0.0334,
+       "significant": true
+      },
+      "M2_vs_M1": {
+       "ci95": [
+        -0.0299,
+        0.0364
+       ],
+       "delta_log_loss": 0.0031,
+       "significant": false
+      }
+     },
+     "eval_version": "model-eval-v1",
+     "future_rungs": {
+      "M3": "provider xG ratings — NO trustworthy team-level xG source exists for this league in this stack, so this rung is not merely unbuilt, it is unavailable",
+      "M4": "availability / lineup effects — no lineup capture yet",
+      "M5": "goalkeeper effects — no GK capture yet"
+     },
+     "generated_at": "2026-07-29T21:41:27.697034+00:00",
+     "method": "analytic independent-Poisson 3-way, rolling-origin, match-cluster bootstrap (no Monte Carlo noise)",
+     "n_bootstrap": 2000,
+     "n_fixtures_input": 380,
+     "n_scored": 330,
+     "variants": {
+      "M0": {
+       "brier": 0.6577,
+       "desc": "league scoring + venue split",
+       "log_loss": 1.0857,
+       "rps": 0.2293
+      },
+      "M1": {
+       "brier": 0.6355,
+       "desc": "team ratings, equal-weighted, minimal pooling",
+       "log_loss": 1.0554,
+       "rps": 0.2154
+      },
+      "M2": {
+       "brier": 0.6334,
+       "desc": "+ recency + partial pooling",
+       "log_loss": 1.0523,
+       "rps": 0.2167
+      },
+      "M2C": {
+       "brier": 0.6334,
+       "desc": "+ calibration (shrink the 3-way toward uniform)",
+       "log_loss": 1.0523,
+       "rps": 0.2167
+      }
+     }
+    }
+   },
+   "model_version": "epl-2026-v0",
+   "rungs": {
+    "M0": "league scoring + venue split",
+    "M1": "team ratings, equal-weighted, minimal pooling",
+    "M2": "+ recency + partial pooling",
+    "M2C": "+ calibration (shrink the 3-way toward uniform)"
+   },
+   "segment_mode": "per_segment",
+   "stage1_completeness": {
+    "archive_path": "research_archive/ladder_eng1_prior_season_2026-07-29.json",
+    "competition": "epl-2026",
+    "espn_league": "eng.1",
+    "excluded_non_regular_season": {},
+    "excluded_non_regular_season_total": 0,
+    "excluded_reason": "knockout/exhibition events (Liguilla, MLS playoffs, All-Star) are not league fixtures and are never mixed into a league table; they are reported, not dropped in silence",
+    "gate": "PASS",
+    "gate_meaning": "PASS = the ladder may be fitted on this history. FAIL = incomplete history KILLS the replay for this league; it waits for live accumulation rather than being fitted on a partial season.",
+    "min_completeness": 0.98,
+    "per_segment": {
+     "2025-26-english-premier-league": {
+      "complete_enough": true,
+      "expected": 380,
+      "ratio": 1.0,
+      "retrieved": 380
+     }
+    },
+    "regular_season_total": 380,
+    "season_label": "2025-26",
+    "winner_flag_disagreements": 0
+   }
+  },
+  "liga-mx-2026": {
+   "archive": {
+    "fetched_at": "2026-07-29T21:13:28.862056+00:00",
+    "path": "research_archive/ladder_mex1_prior_season_2026-07-29.json",
+    "sha256": "acf38cfbf8de449355f1013f7f5e05708e293e12c92d84e74b454c1f5dfed351",
+    "source": "ESPN site.api scoreboard (keyless, public)"
+   },
+   "club_turnover_note": "18 clubs, no promotion/relegation in this period, so the club list is stable — the turnover risk here is squad churn between tournaments, not a changed league",
+   "competition": "liga-mx-2026",
+   "eligibility_note": "n_scored < n_fixtures_input by construction: a fixture is scored only when BOTH teams already have >= min_games prior completed games, so the opening rounds of every segment are not scorable by the ratings rungs and are excluded from ALL rungs to keep the comparison on identical ground",
+   "evidence_class": "REPLAYED",
+   "evidence_note": "prior-season replay: the ladder was fitted and scored on the league's PREVIOUS completed season, retrieved after the fact from ESPN. Nothing was frozen before kickoff, so this can never be MEASURED evidence; and because it reads a DIFFERENT season from the one an approval licenses (different squads, and for the promoted/relegated clubs a different club list entirely), it is weaker than a same-season rolling-origin ladder. It is NOT comparable to any prospective result.",
+   "generated_at": "2026-07-29T21:41:41.654583+00:00",
+   "hyperparameters": {
+    "calibration_alpha": 0.0,
+    "half_life_days": 90.0,
+    "min_games": 5,
+    "provenance": "carried from MLS league play as STARTING POINTS and NOT re-swept on this league's data — see the sweep block when present, and treat an unswept constant as unmeasured",
+    "result_shrink": 8.0
+   },
+   "ladders": {
+    "torneo-apertura": {
+     "edges": {
+      "M1_vs_M0": {
+       "ci95": [
+        -0.0396,
+        0.1284
+       ],
+       "delta_log_loss": 0.0465,
+       "significant": false
+      },
+      "M2C_vs_M0": {
+       "ci95": [
+        0.0091,
+        0.0557
+       ],
+       "delta_log_loss": 0.0324,
+       "significant": true
+      },
+      "M2C_vs_M2": {
+       "ci95": [
+        0.0,
+        0.0
+       ],
+       "delta_log_loss": 0.0,
+       "significant": false
+      },
+      "M2_vs_M0": {
+       "ci95": [
+        0.0091,
+        0.0557
+       ],
+       "delta_log_loss": 0.0324,
+       "significant": true
+      },
+      "M2_vs_M1": {
+       "ci95": [
+        -0.0743,
+        0.0504
+       ],
+       "delta_log_loss": -0.0142,
+       "significant": false
+      }
+     },
+     "eval_version": "model-eval-v1",
+     "future_rungs": {
+      "M3": "provider xG ratings — NO trustworthy team-level xG source exists for this league in this stack, so this rung is not merely unbuilt, it is unavailable",
+      "M4": "availability / lineup effects — no lineup capture yet",
+      "M5": "goalkeeper effects — no GK capture yet"
+     },
+     "generated_at": "2026-07-29T21:41:42.021682+00:00",
+     "method": "analytic independent-Poisson 3-way, rolling-origin, match-cluster bootstrap (no Monte Carlo noise)",
+     "n_bootstrap": 2000,
+     "n_fixtures_input": 153,
+     "n_scored": 107,
+     "variants": {
+      "M0": {
+       "brier": 0.6347,
+       "desc": "league scoring + venue split",
+       "log_loss": 1.0538,
+       "rps": 0.2229
+      },
+      "M1": {
+       "brier": 0.6007,
+       "desc": "team ratings, equal-weighted, minimal pooling",
+       "log_loss": 1.0072,
+       "rps": 0.2049
+      },
+      "M2": {
+       "brier": 0.6099,
+       "desc": "+ recency + partial pooling",
+       "log_loss": 1.0214,
+       "rps": 0.2107
+      },
+      "M2C": {
+       "brier": 0.6099,
+       "desc": "+ calibration (shrink the 3-way toward uniform)",
+       "log_loss": 1.0214,
+       "rps": 0.2107
+      }
+     }
+    },
+    "torneo-clausura": {
+     "edges": {
+      "M1_vs_M0": {
+       "ci95": [
+        -0.0962,
+        0.0604
+       ],
+       "delta_log_loss": -0.0162,
+       "significant": false
+      },
+      "M2C_vs_M0": {
+       "ci95": [
+        -0.0066,
+        0.0349
+       ],
+       "delta_log_loss": 0.0135,
+       "significant": false
+      },
+      "M2C_vs_M2": {
+       "ci95": [
+        0.0,
+        0.0
+       ],
+       "delta_log_loss": 0.0,
+       "significant": false
+      },
+      "M2_vs_M0": {
+       "ci95": [
+        -0.0066,
+        0.0349
+       ],
+       "delta_log_loss": 0.0135,
+       "significant": false
+      },
+      "M2_vs_M1": {
+       "ci95": [
+        -0.0279,
+        0.0899
+       ],
+       "delta_log_loss": 0.0297,
+       "significant": false
+      }
+     },
+     "eval_version": "model-eval-v1",
+     "future_rungs": {
+      "M3": "provider xG ratings — NO trustworthy team-level xG source exists for this league in this stack, so this rung is not merely unbuilt, it is unavailable",
+      "M4": "availability / lineup effects — no lineup capture yet",
+      "M5": "goalkeeper effects — no GK capture yet"
+     },
+     "generated_at": "2026-07-29T21:41:42.465951+00:00",
+     "method": "analytic independent-Poisson 3-way, rolling-origin, match-cluster bootstrap (no Monte Carlo noise)",
+     "n_bootstrap": 2000,
+     "n_fixtures_input": 153,
+     "n_scored": 108,
+     "variants": {
+      "M0": {
+       "brier": 0.6399,
+       "desc": "league scoring + venue split",
+       "log_loss": 1.06,
+       "rps": 0.2279
+      },
+      "M1": {
+       "brier": 0.6527,
+       "desc": "team ratings, equal-weighted, minimal pooling",
+       "log_loss": 1.0763,
+       "rps": 0.2317
+      },
+      "M2": {
+       "brier": 0.6299,
+       "desc": "+ recency + partial pooling",
+       "log_loss": 1.0465,
+       "rps": 0.2231
+      },
+      "M2C": {
+       "brier": 0.6299,
+       "desc": "+ calibration (shrink the 3-way toward uniform)",
+       "log_loss": 1.0465,
+       "rps": 0.2231
+      }
+     }
+    }
+   },
+   "model_version": "liga-mx-2026-v0",
+   "rungs": {
+    "M0": "league scoring + venue split",
+    "M1": "team ratings, equal-weighted, minimal pooling",
+    "M2": "+ recency + partial pooling",
+    "M2C": "+ calibration (shrink the 3-way toward uniform)"
+   },
+   "segment_mode": "per_segment",
+   "stage1_completeness": {
+    "archive_path": "research_archive/ladder_mex1_prior_season_2026-07-29.json",
+    "competition": "liga-mx-2026",
+    "espn_league": "mex.1",
+    "excluded_non_regular_season": {
+     "apertura---7th-place-vs-8th-place": 1,
+     "apertura---8th-seed-game": 1,
+     "apertura---9th-place-vs-10th-place": 1,
+     "apertura---finals": 2,
+     "apertura---quarterfinals": 8,
+     "apertura---semifinals": 4,
+     "clausura---finals": 2,
+     "clausura---quarterfinals": 8,
+     "clausura---semifinals": 4
+    },
+    "excluded_non_regular_season_total": 31,
+    "excluded_reason": "knockout/exhibition events (Liguilla, MLS playoffs, All-Star) are not league fixtures and are never mixed into a league table; they are reported, not dropped in silence",
+    "gate": "PASS",
+    "gate_meaning": "PASS = the ladder may be fitted on this history. FAIL = incomplete history KILLS the replay for this league; it waits for live accumulation rather than being fitted on a partial season.",
+    "min_completeness": 0.98,
+    "per_segment": {
+     "torneo-apertura": {
+      "complete_enough": true,
+      "expected": 153,
+      "ratio": 1.0,
+      "retrieved": 153
+     },
+     "torneo-clausura": {
+      "complete_enough": true,
+      "expected": 153,
+      "ratio": 1.0,
+      "retrieved": 153
+     }
+    },
+    "regular_season_total": 306,
+    "season_label": "Apertura 2025 + Clausura 2026",
+    "winner_flag_disagreements": 3
+   }
+  },
+  "mls-2026": {
+   "archive": {
+    "fetched_at": "2026-07-29T21:14:19.028196+00:00",
+    "path": "research_archive/ladder_usa1_prior_season_2026-07-29.json",
+    "sha256": "2ae1ab4d946945d1fab2c7b08b709917fc2bf50b9de1c310817b47836db13e37",
+    "source": "ESPN site.api scoreboard (keyless, public)"
+   },
+   "club_turnover_note": "MLS expanded between 2025 and 2026; the 2025 fit cannot rate a 2026 expansion club",
+   "competition": "mls-2026",
+   "eligibility_note": "n_scored < n_fixtures_input by construction: a fixture is scored only when BOTH teams already have >= min_games prior completed games, so the opening rounds of every segment are not scorable by the ratings rungs and are excluded from ALL rungs to keep the comparison on identical ground",
+   "evidence_class": "REPLAYED",
+   "evidence_note": "prior-season replay: the ladder was fitted and scored on the league's PREVIOUS completed season, retrieved after the fact from ESPN. Nothing was frozen before kickoff, so this can never be MEASURED evidence; and because it reads a DIFFERENT season from the one an approval licenses (different squads, and for the promoted/relegated clubs a different club list entirely), it is weaker than a same-season rolling-origin ladder. It is NOT comparable to any prospective result.",
+   "generated_at": "2026-07-29T21:41:47.765394+00:00",
+   "hyperparameters": {
+    "calibration_alpha": 0.25,
+    "half_life_days": 90.0,
+    "min_games": 5,
+    "provenance": "carried from MLS league play as STARTING POINTS and NOT re-swept on this league's data — see the sweep block when present, and treat an unswept constant as unmeasured",
+    "result_shrink": 8.0
+   },
+   "ladders": {
+    "regular-season": {
+     "edges": {
+      "M1_vs_M0": {
+       "ci95": [
+        -0.03,
+        0.0426
+       ],
+       "delta_log_loss": 0.0071,
+       "significant": false
+      },
+      "M2C_vs_M0": {
+       "ci95": [
+        0.0056,
+        0.0262
+       ],
+       "delta_log_loss": 0.0159,
+       "significant": true
+      },
+      "M2C_vs_M2": {
+       "ci95": [
+        -0.0098,
+        0.0038
+       ],
+       "delta_log_loss": -0.0032,
+       "significant": false
+      },
+      "M2_vs_M0": {
+       "ci95": [
+        0.0077,
+        0.0305
+       ],
+       "delta_log_loss": 0.0191,
+       "significant": true
+      },
+      "M2_vs_M1": {
+       "ci95": [
+        -0.0139,
+        0.0383
+       ],
+       "delta_log_loss": 0.012,
+       "significant": false
+      },
+      "M3_vs_M0": {
+       "ci95": [
+        0.0056,
+        0.0262
+       ],
+       "delta_log_loss": 0.0159,
+       "significant": true
+      },
+      "M3_vs_M2C": {
+       "ci95": [
+        0.0,
+        0.0
+       ],
+       "delta_log_loss": 0.0,
+       "significant": false
+      }
+     },
+     "eval_version": "model-eval-v1",
+     "future_rungs": {
+      "M4": "availability / lineup effects — player stats captured (mls_stats), consumed once measured to help",
+      "M5": "goalkeeper effects — player GK stats captured, consumed once measured to help"
+     },
+     "generated_at": "2026-07-29T21:41:50.715959+00:00",
+     "method": "analytic independent-Poisson 3-way, rolling-origin, match-cluster bootstrap (no Monte Carlo noise)",
+     "n_bootstrap": 2000,
+     "n_fixtures_input": 510,
+     "n_scored": 434,
+     "variants": {
+      "M0": {
+       "brier": 0.6504,
+       "desc": "league scoring + venue split",
+       "log_loss": 1.0742,
+       "rps": 0.2311
+      },
+      "M1": {
+       "brier": 0.6423,
+       "desc": "team ratings, equal-weighted, minimal pooling",
+       "log_loss": 1.0671,
+       "rps": 0.2253
+      },
+      "M2": {
+       "brier": 0.6361,
+       "desc": "+ recency + partial pooling (mls-2026-v0)",
+       "log_loss": 1.0551,
+       "rps": 0.2239
+      },
+      "M2C": {
+       "brier": 0.6386,
+       "desc": "+ calibration (shrink the 3-way toward uniform)",
+       "log_loss": 1.0583,
+       "rps": 0.2251
+      },
+      "M3": {
+       "brier": 0.6386,
+       "desc": "+ provider xG attack/defence ratings (own lighter shrink — xG is far less noisy than goals)",
+       "log_loss": 1.0583,
+       "rps": 0.2251
+      }
+     }
+    }
+   },
+   "model_version": "mls-2026-v0",
+   "rungs": {
+    "M0": "league scoring + venue split",
+    "M1": "team ratings, equal-weighted, minimal pooling",
+    "M2": "+ recency + partial pooling (mls-2026-v0)",
+    "M2C": "+ calibration (shrink the 3-way toward uniform)",
+    "M3": "+ provider xG attack/defence ratings (own lighter shrink — xG is far less noisy than goals)"
+   },
+   "segment_mode": "per_segment",
+   "stage1_completeness": {
+    "archive_path": "research_archive/ladder_usa1_prior_season_2026-07-29.json",
+    "competition": "mls-2026",
+    "espn_league": "usa.1",
+    "excluded_non_regular_season": {
+     "all-star-game": 1,
+     "eastern-conference-playoffs---final": 1,
+     "eastern-conference-playoffs---round-one": 12,
+     "eastern-conference-playoffs---semifinals": 2,
+     "eastern-conference-playoffs---wild-card": 1,
+     "mls-cup": 1,
+     "western-conference-playoffs---final": 1,
+     "western-conference-playoffs---round-one": 12,
+     "western-conference-playoffs---semifinals": 2,
+     "western-conference-playoffs---wild-card": 1
+    },
+    "excluded_non_regular_season_total": 34,
+    "excluded_reason": "knockout/exhibition events (Liguilla, MLS playoffs, All-Star) are not league fixtures and are never mixed into a league table; they are reported, not dropped in silence",
+    "gate": "PASS",
+    "gate_meaning": "PASS = the ladder may be fitted on this history. FAIL = incomplete history KILLS the replay for this league; it waits for live accumulation rather than being fitted on a partial season.",
+    "min_completeness": 0.98,
+    "per_segment": {
+     "regular-season": {
+      "complete_enough": true,
+      "expected": 510,
+      "ratio": 1.0,
+      "retrieved": 510
+     }
+    },
+    "regular_season_total": 510,
+    "season_label": "2025",
+    "winner_flag_disagreements": 7
+   }
+  }
+ },
+ "ladders_spanning": {
+  "epl-2026": {
+   "archive": {
+    "fetched_at": "2026-07-29T21:13:02.711156+00:00",
+    "path": "research_archive/ladder_eng1_prior_season_2026-07-29.json",
+    "sha256": "919563eef90a740b9ac3b72d9574dabd84dc16223b6079320b5b9d5426d4e9ca",
+    "source": "ESPN site.api scoreboard (keyless, public)"
+   },
+   "club_turnover_note": "3 clubs are relegated and 3 promoted each season, so ~15% of the 2026-27 club list has NO rating in this replay's fit",
+   "competition": "epl-2026",
+   "eligibility_note": "n_scored < n_fixtures_input by construction: a fixture is scored only when BOTH teams already have >= min_games prior completed games, so the opening rounds of every segment are not scorable by the ratings rungs and are excluded from ALL rungs to keep the comparison on identical ground",
+   "evidence_class": "REPLAYED",
+   "evidence_note": "prior-season replay: the ladder was fitted and scored on the league's PREVIOUS completed season, retrieved after the fact from ESPN. Nothing was frozen before kickoff, so this can never be MEASURED evidence; and because it reads a DIFFERENT season from the one an approval licenses (different squads, and for the promoted/relegated clubs a different club list entirely), it is weaker than a same-season rolling-origin ladder. It is NOT comparable to any prospective result.",
+   "generated_at": "2026-07-29T21:41:27.697970+00:00",
+   "hyperparameters": {
+    "calibration_alpha": 0.0,
+    "half_life_days": 90.0,
+    "min_games": 5,
+    "provenance": "carried from MLS league play as STARTING POINTS and NOT re-swept on this league's data — see the sweep block when present, and treat an unswept constant as unmeasured",
+    "result_shrink": 8.0
+   },
+   "ladders": {
+    "ALL_SEGMENTS_SPANNING": {
+     "edges": {
+      "M1_vs_M0": {
+       "ci95": [
+        -0.0145,
+        0.0755
+       ],
+       "delta_log_loss": 0.0304,
+       "significant": false
+      },
+      "M2C_vs_M0": {
+       "ci95": [
+        0.0205,
+        0.0478
+       ],
+       "delta_log_loss": 0.0334,
+       "significant": true
+      },
+      "M2C_vs_M2": {
+       "ci95": [
+        0.0,
+        0.0
+       ],
+       "delta_log_loss": 0.0,
+       "significant": false
+      },
+      "M2_vs_M0": {
+       "ci95": [
+        0.0205,
+        0.0478
+       ],
+       "delta_log_loss": 0.0334,
+       "significant": true
+      },
+      "M2_vs_M1": {
+       "ci95": [
+        -0.0299,
+        0.0364
+       ],
+       "delta_log_loss": 0.0031,
+       "significant": false
+      }
+     },
+     "eval_version": "model-eval-v1",
+     "future_rungs": {
+      "M3": "provider xG ratings — NO trustworthy team-level xG source exists for this league in this stack, so this rung is not merely unbuilt, it is unavailable",
+      "M4": "availability / lineup effects — no lineup capture yet",
+      "M5": "goalkeeper effects — no GK capture yet"
+     },
+     "generated_at": "2026-07-29T21:41:28.962249+00:00",
+     "method": "analytic independent-Poisson 3-way, rolling-origin, match-cluster bootstrap (no Monte Carlo noise)",
+     "n_bootstrap": 2000,
+     "n_fixtures_input": 380,
+     "n_scored": 330,
+     "variants": {
+      "M0": {
+       "brier": 0.6577,
+       "desc": "league scoring + venue split",
+       "log_loss": 1.0857,
+       "rps": 0.2293
+      },
+      "M1": {
+       "brier": 0.6355,
+       "desc": "team ratings, equal-weighted, minimal pooling",
+       "log_loss": 1.0554,
+       "rps": 0.2154
+      },
+      "M2": {
+       "brier": 0.6334,
+       "desc": "+ recency + partial pooling",
+       "log_loss": 1.0523,
+       "rps": 0.2167
+      },
+      "M2C": {
+       "brier": 0.6334,
+       "desc": "+ calibration (shrink the 3-way toward uniform)",
+       "log_loss": 1.0523,
+       "rps": 0.2167
+      }
+     }
+    }
+   },
+   "model_version": "epl-2026-v0",
+   "rungs": {
+    "M0": "league scoring + venue split",
+    "M1": "team ratings, equal-weighted, minimal pooling",
+    "M2": "+ recency + partial pooling",
+    "M2C": "+ calibration (shrink the 3-way toward uniform)"
+   },
+   "segment_mode": "span",
+   "stage1_completeness": {
+    "archive_path": "research_archive/ladder_eng1_prior_season_2026-07-29.json",
+    "competition": "epl-2026",
+    "espn_league": "eng.1",
+    "excluded_non_regular_season": {},
+    "excluded_non_regular_season_total": 0,
+    "excluded_reason": "knockout/exhibition events (Liguilla, MLS playoffs, All-Star) are not league fixtures and are never mixed into a league table; they are reported, not dropped in silence",
+    "gate": "PASS",
+    "gate_meaning": "PASS = the ladder may be fitted on this history. FAIL = incomplete history KILLS the replay for this league; it waits for live accumulation rather than being fitted on a partial season.",
+    "min_completeness": 0.98,
+    "per_segment": {
+     "2025-26-english-premier-league": {
+      "complete_enough": true,
+      "expected": 380,
+      "ratio": 1.0,
+      "retrieved": 380
+     }
+    },
+    "regular_season_total": 380,
+    "season_label": "2025-26",
+    "winner_flag_disagreements": 0
+   }
+  },
+  "liga-mx-2026": {
+   "archive": {
+    "fetched_at": "2026-07-29T21:13:28.862056+00:00",
+    "path": "research_archive/ladder_mex1_prior_season_2026-07-29.json",
+    "sha256": "acf38cfbf8de449355f1013f7f5e05708e293e12c92d84e74b454c1f5dfed351",
+    "source": "ESPN site.api scoreboard (keyless, public)"
+   },
+   "club_turnover_note": "18 clubs, no promotion/relegation in this period, so the club list is stable — the turnover risk here is squad churn between tournaments, not a changed league",
+   "competition": "liga-mx-2026",
+   "eligibility_note": "n_scored < n_fixtures_input by construction: a fixture is scored only when BOTH teams already have >= min_games prior completed games, so the opening rounds of every segment are not scorable by the ratings rungs and are excluded from ALL rungs to keep the comparison on identical ground",
+   "evidence_class": "REPLAYED",
+   "evidence_note": "prior-season replay: the ladder was fitted and scored on the league's PREVIOUS completed season, retrieved after the fact from ESPN. Nothing was frozen before kickoff, so this can never be MEASURED evidence; and because it reads a DIFFERENT season from the one an approval licenses (different squads, and for the promoted/relegated clubs a different club list entirely), it is weaker than a same-season rolling-origin ladder. It is NOT comparable to any prospective result.",
+   "generated_at": "2026-07-29T21:41:42.466767+00:00",
+   "hyperparameters": {
+    "calibration_alpha": 0.0,
+    "half_life_days": 90.0,
+    "min_games": 5,
+    "provenance": "carried from MLS league play as STARTING POINTS and NOT re-swept on this league's data — see the sweep block when present, and treat an unswept constant as unmeasured",
+    "result_shrink": 8.0
+   },
+   "ladders": {
+    "ALL_SEGMENTS_SPANNING": {
+     "edges": {
+      "M1_vs_M0": {
+       "ci95": [
+        -0.0172,
+        0.0901
+       ],
+       "delta_log_loss": 0.0364,
+       "significant": false
+      },
+      "M2C_vs_M0": {
+       "ci95": [
+        0.0149,
+        0.046
+       ],
+       "delta_log_loss": 0.0301,
+       "significant": true
+      },
+      "M2C_vs_M2": {
+       "ci95": [
+        0.0,
+        0.0
+       ],
+       "delta_log_loss": 0.0,
+       "significant": false
+      },
+      "M2_vs_M0": {
+       "ci95": [
+        0.0149,
+        0.046
+       ],
+       "delta_log_loss": 0.0301,
+       "significant": true
+      },
+      "M2_vs_M1": {
+       "ci95": [
+        -0.0452,
+        0.0335
+       ],
+       "delta_log_loss": -0.0062,
+       "significant": false
+      }
+     },
+     "eval_version": "model-eval-v1",
+     "future_rungs": {
+      "M3": "provider xG ratings — NO trustworthy team-level xG source exists for this league in this stack, so this rung is not merely unbuilt, it is unavailable",
+      "M4": "availability / lineup effects — no lineup capture yet",
+      "M5": "goalkeeper effects — no GK capture yet"
+     },
+     "generated_at": "2026-07-29T21:41:43.349742+00:00",
+     "method": "analytic independent-Poisson 3-way, rolling-origin, match-cluster bootstrap (no Monte Carlo noise)",
+     "n_bootstrap": 2000,
+     "n_fixtures_input": 306,
+     "n_scored": 260,
+     "variants": {
+      "M0": {
+       "brier": 0.6417,
+       "desc": "league scoring + venue split",
+       "log_loss": 1.063,
+       "rps": 0.2261
+      },
+      "M1": {
+       "brier": 0.6139,
+       "desc": "team ratings, equal-weighted, minimal pooling",
+       "log_loss": 1.0266,
+       "rps": 0.2117
+      },
+      "M2": {
+       "brier": 0.6192,
+       "desc": "+ recency + partial pooling",
+       "log_loss": 1.0329,
+       "rps": 0.2152
+      },
+      "M2C": {
+       "brier": 0.6192,
+       "desc": "+ calibration (shrink the 3-way toward uniform)",
+       "log_loss": 1.0329,
+       "rps": 0.2152
+      }
+     }
+    }
+   },
+   "model_version": "liga-mx-2026-v0",
+   "rungs": {
+    "M0": "league scoring + venue split",
+    "M1": "team ratings, equal-weighted, minimal pooling",
+    "M2": "+ recency + partial pooling",
+    "M2C": "+ calibration (shrink the 3-way toward uniform)"
+   },
+   "segment_mode": "span",
+   "stage1_completeness": {
+    "archive_path": "research_archive/ladder_mex1_prior_season_2026-07-29.json",
+    "competition": "liga-mx-2026",
+    "espn_league": "mex.1",
+    "excluded_non_regular_season": {
+     "apertura---7th-place-vs-8th-place": 1,
+     "apertura---8th-seed-game": 1,
+     "apertura---9th-place-vs-10th-place": 1,
+     "apertura---finals": 2,
+     "apertura---quarterfinals": 8,
+     "apertura---semifinals": 4,
+     "clausura---finals": 2,
+     "clausura---quarterfinals": 8,
+     "clausura---semifinals": 4
+    },
+    "excluded_non_regular_season_total": 31,
+    "excluded_reason": "knockout/exhibition events (Liguilla, MLS playoffs, All-Star) are not league fixtures and are never mixed into a league table; they are reported, not dropped in silence",
+    "gate": "PASS",
+    "gate_meaning": "PASS = the ladder may be fitted on this history. FAIL = incomplete history KILLS the replay for this league; it waits for live accumulation rather than being fitted on a partial season.",
+    "min_completeness": 0.98,
+    "per_segment": {
+     "torneo-apertura": {
+      "complete_enough": true,
+      "expected": 153,
+      "ratio": 1.0,
+      "retrieved": 153
+     },
+     "torneo-clausura": {
+      "complete_enough": true,
+      "expected": 153,
+      "ratio": 1.0,
+      "retrieved": 153
+     }
+    },
+    "regular_season_total": 306,
+    "season_label": "Apertura 2025 + Clausura 2026",
+    "winner_flag_disagreements": 3
+   }
+  },
+  "mls-2026": {
+   "archive": {
+    "fetched_at": "2026-07-29T21:14:19.028196+00:00",
+    "path": "research_archive/ladder_usa1_prior_season_2026-07-29.json",
+    "sha256": "2ae1ab4d946945d1fab2c7b08b709917fc2bf50b9de1c310817b47836db13e37",
+    "source": "ESPN site.api scoreboard (keyless, public)"
+   },
+   "club_turnover_note": "MLS expanded between 2025 and 2026; the 2025 fit cannot rate a 2026 expansion club",
+   "competition": "mls-2026",
+   "eligibility_note": "n_scored < n_fixtures_input by construction: a fixture is scored only when BOTH teams already have >= min_games prior completed games, so the opening rounds of every segment are not scorable by the ratings rungs and are excluded from ALL rungs to keep the comparison on identical ground",
+   "evidence_class": "REPLAYED",
+   "evidence_note": "prior-season replay: the ladder was fitted and scored on the league's PREVIOUS completed season, retrieved after the fact from ESPN. Nothing was frozen before kickoff, so this can never be MEASURED evidence; and because it reads a DIFFERENT season from the one an approval licenses (different squads, and for the promoted/relegated clubs a different club list entirely), it is weaker than a same-season rolling-origin ladder. It is NOT comparable to any prospective result.",
+   "generated_at": "2026-07-29T21:41:50.717259+00:00",
+   "hyperparameters": {
+    "calibration_alpha": 0.25,
+    "half_life_days": 90.0,
+    "min_games": 5,
+    "provenance": "carried from MLS league play as STARTING POINTS and NOT re-swept on this league's data — see the sweep block when present, and treat an unswept constant as unmeasured",
+    "result_shrink": 8.0
+   },
+   "ladders": {
+    "ALL_SEGMENTS_SPANNING": {
+     "edges": {
+      "M1_vs_M0": {
+       "ci95": [
+        -0.03,
+        0.0426
+       ],
+       "delta_log_loss": 0.0071,
+       "significant": false
+      },
+      "M2C_vs_M0": {
+       "ci95": [
+        0.0056,
+        0.0262
+       ],
+       "delta_log_loss": 0.0159,
+       "significant": true
+      },
+      "M2C_vs_M2": {
+       "ci95": [
+        -0.0098,
+        0.0038
+       ],
+       "delta_log_loss": -0.0032,
+       "significant": false
+      },
+      "M2_vs_M0": {
+       "ci95": [
+        0.0077,
+        0.0305
+       ],
+       "delta_log_loss": 0.0191,
+       "significant": true
+      },
+      "M2_vs_M1": {
+       "ci95": [
+        -0.0139,
+        0.0383
+       ],
+       "delta_log_loss": 0.012,
+       "significant": false
+      },
+      "M3_vs_M0": {
+       "ci95": [
+        0.0056,
+        0.0262
+       ],
+       "delta_log_loss": 0.0159,
+       "significant": true
+      },
+      "M3_vs_M2C": {
+       "ci95": [
+        0.0,
+        0.0
+       ],
+       "delta_log_loss": 0.0,
+       "significant": false
+      }
+     },
+     "eval_version": "model-eval-v1",
+     "future_rungs": {
+      "M4": "availability / lineup effects — player stats captured (mls_stats), consumed once measured to help",
+      "M5": "goalkeeper effects — player GK stats captured, consumed once measured to help"
+     },
+     "generated_at": "2026-07-29T21:41:53.494097+00:00",
+     "method": "analytic independent-Poisson 3-way, rolling-origin, match-cluster bootstrap (no Monte Carlo noise)",
+     "n_bootstrap": 2000,
+     "n_fixtures_input": 510,
+     "n_scored": 434,
+     "variants": {
+      "M0": {
+       "brier": 0.6504,
+       "desc": "league scoring + venue split",
+       "log_loss": 1.0742,
+       "rps": 0.2311
+      },
+      "M1": {
+       "brier": 0.6423,
+       "desc": "team ratings, equal-weighted, minimal pooling",
+       "log_loss": 1.0671,
+       "rps": 0.2253
+      },
+      "M2": {
+       "brier": 0.6361,
+       "desc": "+ recency + partial pooling (mls-2026-v0)",
+       "log_loss": 1.0551,
+       "rps": 0.2239
+      },
+      "M2C": {
+       "brier": 0.6386,
+       "desc": "+ calibration (shrink the 3-way toward uniform)",
+       "log_loss": 1.0583,
+       "rps": 0.2251
+      },
+      "M3": {
+       "brier": 0.6386,
+       "desc": "+ provider xG attack/defence ratings (own lighter shrink — xG is far less noisy than goals)",
+       "log_loss": 1.0583,
+       "rps": 0.2251
+      }
+     }
+    }
+   },
+   "model_version": "mls-2026-v0",
+   "rungs": {
+    "M0": "league scoring + venue split",
+    "M1": "team ratings, equal-weighted, minimal pooling",
+    "M2": "+ recency + partial pooling (mls-2026-v0)",
+    "M2C": "+ calibration (shrink the 3-way toward uniform)",
+    "M3": "+ provider xG attack/defence ratings (own lighter shrink — xG is far less noisy than goals)"
+   },
+   "segment_mode": "span",
+   "stage1_completeness": {
+    "archive_path": "research_archive/ladder_usa1_prior_season_2026-07-29.json",
+    "competition": "mls-2026",
+    "espn_league": "usa.1",
+    "excluded_non_regular_season": {
+     "all-star-game": 1,
+     "eastern-conference-playoffs---final": 1,
+     "eastern-conference-playoffs---round-one": 12,
+     "eastern-conference-playoffs---semifinals": 2,
+     "eastern-conference-playoffs---wild-card": 1,
+     "mls-cup": 1,
+     "western-conference-playoffs---final": 1,
+     "western-conference-playoffs---round-one": 12,
+     "western-conference-playoffs---semifinals": 2,
+     "western-conference-playoffs---wild-card": 1
+    },
+    "excluded_non_regular_season_total": 34,
+    "excluded_reason": "knockout/exhibition events (Liguilla, MLS playoffs, All-Star) are not league fixtures and are never mixed into a league table; they are reported, not dropped in silence",
+    "gate": "PASS",
+    "gate_meaning": "PASS = the ladder may be fitted on this history. FAIL = incomplete history KILLS the replay for this league; it waits for live accumulation rather than being fitted on a partial season.",
+    "min_completeness": 0.98,
+    "per_segment": {
+     "regular-season": {
+      "complete_enough": true,
+      "expected": 510,
+      "ratio": 1.0,
+      "retrieved": 510
+     }
+    },
+    "regular_season_total": 510,
+    "season_label": "2025",
+    "winner_flag_disagreements": 7
+   }
+  }
+ },
+ "liga_mx_split_season": {
+  "archive": {
+   "path": "research_archive/ladder_mex1_prior_season_2026-07-29.json",
+   "sha256": "acf38cfbf8de449355f1013f7f5e05708e293e12c92d84e74b454c1f5dfed351"
+  },
+  "competition": "liga-mx-2026",
+  "denominator_note": "215 fixtures could be scored under BOTH policies, out of 260 scorable when spanning and 215 when resetting; only the shared set is compared, because only there is the policy the sole difference",
+  "did_meaning": "the M2 gain from spanning MINUS the M0 gain from spanning. M0 carries no team information, so its span-vs-reset difference is purely the effect of fitting the league goals-per-game and venue split on more history. Subtracting it leaves the RATING-CARRYOVER effect, which is the question actually asked.",
+  "did_seed_stability": {
+   "note": "a significance flag that depends on the bootstrap seed is an artifact; the verdict requires ALL seeds to agree",
+   "seeds_tried": 10,
+   "significant_in": 0
+  },
+  "difference_in_differences": {
+   "ci95": [
+    -0.00341,
+    0.00815
+   ],
+   "control_rung": "M0",
+   "delta": 0.00235,
+   "n_bootstrap": 2000,
+   "n_paired": 215,
+   "rung": "M2",
+   "seed": 12345,
+   "significant": false
+  },
+  "evidence_class": "REPLAYED",
+  "evidence_note": "prior-season replay: the ladder was fitted and scored on the league's PREVIOUS completed season, retrieved after the fact from ESPN. Nothing was frozen before kickoff, so this can never be MEASURED evidence; and because it reads a DIFFERENT season from the one an approval licenses (different squads, and for the promoted/relegated clubs a different club list entirely), it is weaker than a same-season rolling-origin ladder. It is NOT comparable to any prospective result.",
+  "half_life_days": 90.0,
+  "n_paired": 215,
+  "n_scored_reset_only": 215,
+  "n_scored_span_only": 260,
+  "no_team_info_control_M0": {
+   "ci95": [
+    -0.0016,
+    0.0101
+   ],
+   "delta": 0.0041,
+   "log_loss_a": 1.0528,
+   "log_loss_b": 1.0569,
+   "metric": "log_loss",
+   "n_bootstrap": 2000,
+   "n_paired": 215,
+   "rung": "M0",
+   "significant": false
+  },
+  "paired_edge_span_minus_reset": {
+   "ci95": [
+    0.0002,
+    0.0129
+   ],
+   "delta": 0.0065,
+   "log_loss_a": 1.0275,
+   "log_loss_b": 1.034,
+   "metric": "log_loss",
+   "n_bootstrap": 2000,
+   "n_paired": 215,
+   "rung": "M2",
+   "significant": true
+  },
+  "question": "should ratings carry across the Apertura->Clausura boundary (SPAN) or reset at it (RESET)?",
+  "raw_comparison_caveat": "this raw edge is CONFOUNDED and the verdict does not rest on it: spanning changes both the rating carryover and the amount of history the league-level parameters are fitted on. See difference_in_differences.",
+  "rung_compared": "M2",
+  "sign_convention": "positive delta = SPANNING has the lower log loss, i.e. carrying ratings across the boundary is better",
+  "verdict": "INDISTINGUISHABLE",
+  "verdict_meaning": "the rating-carryover interval spans zero, so the two policies are NOT distinguishable on this history. The SIMPLER one therefore wins by default: keep the current spanning fit, which is what the shared machinery already does. Resetting would add a per-tournament special case that buys no measured improvement."
+ },
+ "n_bootstrap": 2000,
+ "not_comparable_to": "MLS's standing PROSPECTIVE result (+0.0269, n=177, CI [-0.0050, +0.0596], NOT significant). That is prospective; everything here is a prior-season replay.",
+ "seed": 12345,
+ "stage1": {
+  "epl-2026": {
+   "archive_path": "research_archive/ladder_eng1_prior_season_2026-07-29.json",
+   "competition": "epl-2026",
+   "espn_league": "eng.1",
+   "excluded_non_regular_season": {},
+   "excluded_non_regular_season_total": 0,
+   "excluded_reason": "knockout/exhibition events (Liguilla, MLS playoffs, All-Star) are not league fixtures and are never mixed into a league table; they are reported, not dropped in silence",
+   "gate": "PASS",
+   "gate_meaning": "PASS = the ladder may be fitted on this history. FAIL = incomplete history KILLS the replay for this league; it waits for live accumulation rather than being fitted on a partial season.",
+   "min_completeness": 0.98,
+   "per_segment": {
+    "2025-26-english-premier-league": {
+     "complete_enough": true,
+     "expected": 380,
+     "ratio": 1.0,
+     "retrieved": 380
+    }
+   },
+   "regular_season_total": 380,
+   "season_label": "2025-26",
+   "winner_flag_disagreements": 0
+  },
+  "la-liga-2026": {
+   "archive_path": "research_archive/ladder_esp1_prior_season_2026-07-29.json",
+   "competition": "la-liga-2026",
+   "espn_league": "esp.1",
+   "excluded_non_regular_season": {},
+   "excluded_non_regular_season_total": 0,
+   "excluded_reason": "knockout/exhibition events (Liguilla, MLS playoffs, All-Star) are not league fixtures and are never mixed into a league table; they are reported, not dropped in silence",
+   "gate": "PASS",
+   "gate_meaning": "PASS = the ladder may be fitted on this history. FAIL = incomplete history KILLS the replay for this league; it waits for live accumulation rather than being fitted on a partial season.",
+   "min_completeness": 0.98,
+   "per_segment": {
+    "2025-26-laliga": {
+     "complete_enough": true,
+     "expected": 380,
+     "ratio": 1.0,
+     "retrieved": 380
+    }
+   },
+   "regular_season_total": 380,
+   "season_label": "2025-26",
+   "winner_flag_disagreements": 0
+  },
+  "liga-mx-2026": {
+   "archive_path": "research_archive/ladder_mex1_prior_season_2026-07-29.json",
+   "competition": "liga-mx-2026",
+   "espn_league": "mex.1",
+   "excluded_non_regular_season": {
+    "apertura---7th-place-vs-8th-place": 1,
+    "apertura---8th-seed-game": 1,
+    "apertura---9th-place-vs-10th-place": 1,
+    "apertura---finals": 2,
+    "apertura---quarterfinals": 8,
+    "apertura---semifinals": 4,
+    "clausura---finals": 2,
+    "clausura---quarterfinals": 8,
+    "clausura---semifinals": 4
+   },
+   "excluded_non_regular_season_total": 31,
+   "excluded_reason": "knockout/exhibition events (Liguilla, MLS playoffs, All-Star) are not league fixtures and are never mixed into a league table; they are reported, not dropped in silence",
+   "gate": "PASS",
+   "gate_meaning": "PASS = the ladder may be fitted on this history. FAIL = incomplete history KILLS the replay for this league; it waits for live accumulation rather than being fitted on a partial season.",
+   "min_completeness": 0.98,
+   "per_segment": {
+    "torneo-apertura": {
+     "complete_enough": true,
+     "expected": 153,
+     "ratio": 1.0,
+     "retrieved": 153
+    },
+    "torneo-clausura": {
+     "complete_enough": true,
+     "expected": 153,
+     "ratio": 1.0,
+     "retrieved": 153
+    }
+   },
+   "regular_season_total": 306,
+   "season_label": "Apertura 2025 + Clausura 2026",
+   "winner_flag_disagreements": 3
+  },
+  "mls-2026": {
+   "archive_path": "research_archive/ladder_usa1_prior_season_2026-07-29.json",
+   "competition": "mls-2026",
+   "espn_league": "usa.1",
+   "excluded_non_regular_season": {
+    "all-star-game": 1,
+    "eastern-conference-playoffs---final": 1,
+    "eastern-conference-playoffs---round-one": 12,
+    "eastern-conference-playoffs---semifinals": 2,
+    "eastern-conference-playoffs---wild-card": 1,
+    "mls-cup": 1,
+    "western-conference-playoffs---final": 1,
+    "western-conference-playoffs---round-one": 12,
+    "western-conference-playoffs---semifinals": 2,
+    "western-conference-playoffs---wild-card": 1
+   },
+   "excluded_non_regular_season_total": 34,
+   "excluded_reason": "knockout/exhibition events (Liguilla, MLS playoffs, All-Star) are not league fixtures and are never mixed into a league table; they are reported, not dropped in silence",
+   "gate": "PASS",
+   "gate_meaning": "PASS = the ladder may be fitted on this history. FAIL = incomplete history KILLS the replay for this league; it waits for live accumulation rather than being fitted on a partial season.",
+   "min_completeness": 0.98,
+   "per_segment": {
+    "regular-season": {
+     "complete_enough": true,
+     "expected": 510,
+     "ratio": 1.0,
+     "retrieved": 510
+    }
+   },
+   "regular_season_total": 510,
+   "season_label": "2025",
+   "winner_flag_disagreements": 7
+  }
+ },
+ "sweeps": {
+  "epl-2026": {
+   "archive": {
+    "path": "research_archive/ladder_eng1_prior_season_2026-07-29.json",
+    "sha256": "919563eef90a740b9ac3b72d9574dabd84dc16223b6079320b5b9d5426d4e9ca"
+   },
+   "best_on_this_history": {
+    "half_life_days": 90.0,
+    "mean_m2_vs_m0": 0.047,
+    "per_segment": {
+     "2025-26-english-premier-league": {
+      "m2_log_loss": 1.0388,
+      "m2_vs_m0": 0.047,
+      "n_scored": 330
+     }
+    },
+    "shrink_games": 6.0
+   },
+   "carried_from_mls": {
+    "half_life_days": 90.0,
+    "shrink_games": 24.0
+   },
+   "carried_result": {
+    "half_life_days": 90.0,
+    "mean_m2_vs_m0": 0.0334,
+    "per_segment": {
+     "2025-26-english-premier-league": {
+      "m2_log_loss": 1.0523,
+      "m2_vs_m0": 0.0334,
+      "n_scored": 330
+     }
+    },
+    "shrink_games": 24.0
+   },
+   "caveat": "DIAGNOSTIC ONLY. Selecting a constant on this sample and evaluating it on the same sample is optimistic (V9.3 F8). The approval decisions use the CARRIED constants, not these, so no approval is inflated by a selection made on its own evidence. Treat `best_on_this_history` as an upper bound on what a re-sweep could buy, not as a measured improvement.",
+   "competition": "epl-2026",
+   "evidence_class": "REPLAYED",
+   "gain_over_carried": 0.0136,
+   "grid": [
+    {
+     "half_life_days": 30.0,
+     "mean_m2_vs_m0": 0.0418,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0439,
+       "m2_vs_m0": 0.0418,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 6.0
+    },
+    {
+     "half_life_days": 30.0,
+     "mean_m2_vs_m0": 0.0333,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0525,
+       "m2_vs_m0": 0.0333,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 12.0
+    },
+    {
+     "half_life_days": 30.0,
+     "mean_m2_vs_m0": 0.0225,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0632,
+       "m2_vs_m0": 0.0225,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 24.0
+    },
+    {
+     "half_life_days": 30.0,
+     "mean_m2_vs_m0": 0.0137,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.072,
+       "m2_vs_m0": 0.0137,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 48.0
+    },
+    {
+     "half_life_days": 60.0,
+     "mean_m2_vs_m0": 0.0464,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0394,
+       "m2_vs_m0": 0.0464,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 6.0
+    },
+    {
+     "half_life_days": 60.0,
+     "mean_m2_vs_m0": 0.0406,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0452,
+       "m2_vs_m0": 0.0406,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 12.0
+    },
+    {
+     "half_life_days": 60.0,
+     "mean_m2_vs_m0": 0.0302,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0556,
+       "m2_vs_m0": 0.0302,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 24.0
+    },
+    {
+     "half_life_days": 60.0,
+     "mean_m2_vs_m0": 0.0195,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0663,
+       "m2_vs_m0": 0.0195,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 48.0
+    },
+    {
+     "half_life_days": 90.0,
+     "mean_m2_vs_m0": 0.047,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0388,
+       "m2_vs_m0": 0.047,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 6.0
+    },
+    {
+     "half_life_days": 90.0,
+     "mean_m2_vs_m0": 0.0428,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0429,
+       "m2_vs_m0": 0.0428,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 12.0
+    },
+    {
+     "half_life_days": 90.0,
+     "mean_m2_vs_m0": 0.0334,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0523,
+       "m2_vs_m0": 0.0334,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 24.0
+    },
+    {
+     "half_life_days": 90.0,
+     "mean_m2_vs_m0": 0.0225,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0633,
+       "m2_vs_m0": 0.0225,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 48.0
+    },
+    {
+     "half_life_days": 180.0,
+     "mean_m2_vs_m0": 0.0461,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0396,
+       "m2_vs_m0": 0.0461,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 6.0
+    },
+    {
+     "half_life_days": 180.0,
+     "mean_m2_vs_m0": 0.0442,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0416,
+       "m2_vs_m0": 0.0442,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 12.0
+    },
+    {
+     "half_life_days": 180.0,
+     "mean_m2_vs_m0": 0.0366,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0491,
+       "m2_vs_m0": 0.0366,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 24.0
+    },
+    {
+     "half_life_days": 180.0,
+     "mean_m2_vs_m0": 0.0261,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0597,
+       "m2_vs_m0": 0.0261,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 48.0
+    },
+    {
+     "half_life_days": 365.0,
+     "mean_m2_vs_m0": 0.0448,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0409,
+       "m2_vs_m0": 0.0448,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 6.0
+    },
+    {
+     "half_life_days": 365.0,
+     "mean_m2_vs_m0": 0.0441,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0416,
+       "m2_vs_m0": 0.0441,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 12.0
+    },
+    {
+     "half_life_days": 365.0,
+     "mean_m2_vs_m0": 0.0379,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0478,
+       "m2_vs_m0": 0.0379,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 24.0
+    },
+    {
+     "half_life_days": 365.0,
+     "mean_m2_vs_m0": 0.028,
+     "per_segment": {
+      "2025-26-english-premier-league": {
+       "m2_log_loss": 1.0578,
+       "m2_vs_m0": 0.028,
+       "n_scored": 330
+      }
+     },
+     "shrink_games": 48.0
+    }
+   ]
+  },
+  "liga-mx-2026": {
+   "archive": {
+    "path": "research_archive/ladder_mex1_prior_season_2026-07-29.json",
+    "sha256": "acf38cfbf8de449355f1013f7f5e05708e293e12c92d84e74b454c1f5dfed351"
+   },
+   "best_on_this_history": {
+    "half_life_days": 180.0,
+    "mean_m2_vs_m0": 0.0324,
+    "per_segment": {
+     "torneo-apertura": {
+      "m2_log_loss": 0.9996,
+      "m2_vs_m0": 0.0542,
+      "n_scored": 107
+     },
+     "torneo-clausura": {
+      "m2_log_loss": 1.0495,
+      "m2_vs_m0": 0.0106,
+      "n_scored": 108
+     }
+    },
+    "shrink_games": 6.0
+   },
+   "carried_from_mls": {
+    "half_life_days": 90.0,
+    "shrink_games": 24.0
+   },
+   "carried_result": {
+    "half_life_days": 90.0,
+    "mean_m2_vs_m0": 0.0229,
+    "per_segment": {
+     "torneo-apertura": {
+      "m2_log_loss": 1.0214,
+      "m2_vs_m0": 0.0324,
+      "n_scored": 107
+     },
+     "torneo-clausura": {
+      "m2_log_loss": 1.0465,
+      "m2_vs_m0": 0.0135,
+      "n_scored": 108
+     }
+    },
+    "shrink_games": 24.0
+   },
+   "caveat": "DIAGNOSTIC ONLY. Selecting a constant on this sample and evaluating it on the same sample is optimistic (V9.3 F8). The approval decisions use the CARRIED constants, not these, so no approval is inflated by a selection made on its own evidence. Treat `best_on_this_history` as an upper bound on what a re-sweep could buy, not as a measured improvement.",
+   "competition": "liga-mx-2026",
+   "evidence_class": "REPLAYED",
+   "gain_over_carried": 0.0095,
+   "grid": [
+    {
+     "half_life_days": 30.0,
+     "mean_m2_vs_m0": 0.0284,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.0069,
+       "m2_vs_m0": 0.0468,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0501,
+       "m2_vs_m0": 0.0099,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 6.0
+    },
+    {
+     "half_life_days": 30.0,
+     "mean_m2_vs_m0": 0.0232,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.0185,
+       "m2_vs_m0": 0.0353,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0489,
+       "m2_vs_m0": 0.0111,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 12.0
+    },
+    {
+     "half_life_days": 30.0,
+     "mean_m2_vs_m0": 0.0152,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.0315,
+       "m2_vs_m0": 0.0222,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0517,
+       "m2_vs_m0": 0.0083,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 24.0
+    },
+    {
+     "half_life_days": 30.0,
+     "mean_m2_vs_m0": 0.0085,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.0418,
+       "m2_vs_m0": 0.012,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0551,
+       "m2_vs_m0": 0.005,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 48.0
+    },
+    {
+     "half_life_days": 60.0,
+     "mean_m2_vs_m0": 0.0318,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.0014,
+       "m2_vs_m0": 0.0523,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0487,
+       "m2_vs_m0": 0.0113,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 6.0
+    },
+    {
+     "half_life_days": 60.0,
+     "mean_m2_vs_m0": 0.0286,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.0108,
+       "m2_vs_m0": 0.0429,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0457,
+       "m2_vs_m0": 0.0143,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 12.0
+    },
+    {
+     "half_life_days": 60.0,
+     "mean_m2_vs_m0": 0.0209,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.0241,
+       "m2_vs_m0": 0.0297,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0478,
+       "m2_vs_m0": 0.0122,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 24.0
+    },
+    {
+     "half_life_days": 60.0,
+     "mean_m2_vs_m0": 0.013,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.036,
+       "m2_vs_m0": 0.0177,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0517,
+       "m2_vs_m0": 0.0083,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 48.0
+    },
+    {
+     "half_life_days": 90.0,
+     "mean_m2_vs_m0": 0.0323,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.0003,
+       "m2_vs_m0": 0.0535,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0489,
+       "m2_vs_m0": 0.0112,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 6.0
+    },
+    {
+     "half_life_days": 90.0,
+     "mean_m2_vs_m0": 0.0301,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.0085,
+       "m2_vs_m0": 0.0452,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0449,
+       "m2_vs_m0": 0.0151,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 12.0
+    },
+    {
+     "half_life_days": 90.0,
+     "mean_m2_vs_m0": 0.0229,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.0214,
+       "m2_vs_m0": 0.0324,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0465,
+       "m2_vs_m0": 0.0135,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 24.0
+    },
+    {
+     "half_life_days": 90.0,
+     "mean_m2_vs_m0": 0.0147,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.0338,
+       "m2_vs_m0": 0.02,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0505,
+       "m2_vs_m0": 0.0095,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 48.0
+    },
+    {
+     "half_life_days": 180.0,
+     "mean_m2_vs_m0": 0.0324,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 0.9996,
+       "m2_vs_m0": 0.0542,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0495,
+       "m2_vs_m0": 0.0106,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 6.0
+    },
+    {
+     "half_life_days": 180.0,
+     "mean_m2_vs_m0": 0.0314,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.0065,
+       "m2_vs_m0": 0.0473,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0445,
+       "m2_vs_m0": 0.0155,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 12.0
+    },
+    {
+     "half_life_days": 180.0,
+     "mean_m2_vs_m0": 0.0249,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.0187,
+       "m2_vs_m0": 0.0351,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0454,
+       "m2_vs_m0": 0.0146,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 24.0
+    },
+    {
+     "half_life_days": 180.0,
+     "mean_m2_vs_m0": 0.0166,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.0313,
+       "m2_vs_m0": 0.0225,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0493,
+       "m2_vs_m0": 0.0107,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 48.0
+    },
+    {
+     "half_life_days": 365.0,
+     "mean_m2_vs_m0": 0.0321,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 0.9995,
+       "m2_vs_m0": 0.0543,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.05,
+       "m2_vs_m0": 0.01,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 6.0
+    },
+    {
+     "half_life_days": 365.0,
+     "mean_m2_vs_m0": 0.0318,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.0056,
+       "m2_vs_m0": 0.0481,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0445,
+       "m2_vs_m0": 0.0155,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 12.0
+    },
+    {
+     "half_life_days": 365.0,
+     "mean_m2_vs_m0": 0.0258,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.0173,
+       "m2_vs_m0": 0.0364,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0449,
+       "m2_vs_m0": 0.0152,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 24.0
+    },
+    {
+     "half_life_days": 365.0,
+     "mean_m2_vs_m0": 0.0175,
+     "per_segment": {
+      "torneo-apertura": {
+       "m2_log_loss": 1.03,
+       "m2_vs_m0": 0.0238,
+       "n_scored": 107
+      },
+      "torneo-clausura": {
+       "m2_log_loss": 1.0487,
+       "m2_vs_m0": 0.0113,
+       "n_scored": 108
+      }
+     },
+     "shrink_games": 48.0
+    }
+   ]
+  },
+  "mls-2026": {
+   "archive": {
+    "path": "research_archive/ladder_usa1_prior_season_2026-07-29.json",
+    "sha256": "2ae1ab4d946945d1fab2c7b08b709917fc2bf50b9de1c310817b47836db13e37"
+   },
+   "best_on_this_history": {
+    "half_life_days": 365.0,
+    "mean_m2_vs_m0": 0.026,
+    "per_segment": {
+     "regular-season": {
+      "m2_log_loss": 1.0482,
+      "m2_vs_m0": 0.026,
+      "n_scored": 434
+     }
+    },
+    "shrink_games": 12.0
+   },
+   "carried_from_mls": {
+    "half_life_days": 90.0,
+    "shrink_games": 24.0
+   },
+   "carried_result": {
+    "half_life_days": 90.0,
+    "mean_m2_vs_m0": 0.0191,
+    "per_segment": {
+     "regular-season": {
+      "m2_log_loss": 1.0551,
+      "m2_vs_m0": 0.0191,
+      "n_scored": 434
+     }
+    },
+    "shrink_games": 24.0
+   },
+   "caveat": "DIAGNOSTIC ONLY. Selecting a constant on this sample and evaluating it on the same sample is optimistic (V9.3 F8). The approval decisions use the CARRIED constants, not these, so no approval is inflated by a selection made on its own evidence. Treat `best_on_this_history` as an upper bound on what a re-sweep could buy, not as a measured improvement.",
+   "competition": "mls-2026",
+   "evidence_class": "REPLAYED",
+   "gain_over_carried": 0.0069,
+   "grid": [
+    {
+     "half_life_days": 30.0,
+     "mean_m2_vs_m0": 0.0111,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0631,
+       "m2_vs_m0": 0.0111,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 6.0
+    },
+    {
+     "half_life_days": 30.0,
+     "mean_m2_vs_m0": 0.0118,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0624,
+       "m2_vs_m0": 0.0118,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 12.0
+    },
+    {
+     "half_life_days": 30.0,
+     "mean_m2_vs_m0": 0.0084,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0658,
+       "m2_vs_m0": 0.0084,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 24.0
+    },
+    {
+     "half_life_days": 30.0,
+     "mean_m2_vs_m0": 0.0043,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0699,
+       "m2_vs_m0": 0.0043,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 48.0
+    },
+    {
+     "half_life_days": 60.0,
+     "mean_m2_vs_m0": 0.019,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0552,
+       "m2_vs_m0": 0.019,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 6.0
+    },
+    {
+     "half_life_days": 60.0,
+     "mean_m2_vs_m0": 0.02,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0542,
+       "m2_vs_m0": 0.02,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 12.0
+    },
+    {
+     "half_life_days": 60.0,
+     "mean_m2_vs_m0": 0.016,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0582,
+       "m2_vs_m0": 0.016,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 24.0
+    },
+    {
+     "half_life_days": 60.0,
+     "mean_m2_vs_m0": 0.0104,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0638,
+       "m2_vs_m0": 0.0104,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 48.0
+    },
+    {
+     "half_life_days": 90.0,
+     "mean_m2_vs_m0": 0.0213,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0529,
+       "m2_vs_m0": 0.0213,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 6.0
+    },
+    {
+     "half_life_days": 90.0,
+     "mean_m2_vs_m0": 0.0228,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0514,
+       "m2_vs_m0": 0.0228,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 12.0
+    },
+    {
+     "half_life_days": 90.0,
+     "mean_m2_vs_m0": 0.0191,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0551,
+       "m2_vs_m0": 0.0191,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 24.0
+    },
+    {
+     "half_life_days": 90.0,
+     "mean_m2_vs_m0": 0.0131,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0611,
+       "m2_vs_m0": 0.0131,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 48.0
+    },
+    {
+     "half_life_days": 180.0,
+     "mean_m2_vs_m0": 0.0229,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0513,
+       "m2_vs_m0": 0.0229,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 6.0
+    },
+    {
+     "half_life_days": 180.0,
+     "mean_m2_vs_m0": 0.0251,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0491,
+       "m2_vs_m0": 0.0251,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 12.0
+    },
+    {
+     "half_life_days": 180.0,
+     "mean_m2_vs_m0": 0.0223,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0519,
+       "m2_vs_m0": 0.0223,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 24.0
+    },
+    {
+     "half_life_days": 180.0,
+     "mean_m2_vs_m0": 0.0162,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.058,
+       "m2_vs_m0": 0.0162,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 48.0
+    },
+    {
+     "half_life_days": 365.0,
+     "mean_m2_vs_m0": 0.0234,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0508,
+       "m2_vs_m0": 0.0234,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 6.0
+    },
+    {
+     "half_life_days": 365.0,
+     "mean_m2_vs_m0": 0.026,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0482,
+       "m2_vs_m0": 0.026,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 12.0
+    },
+    {
+     "half_life_days": 365.0,
+     "mean_m2_vs_m0": 0.0237,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0505,
+       "m2_vs_m0": 0.0237,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 24.0
+    },
+    {
+     "half_life_days": 365.0,
+     "mean_m2_vs_m0": 0.0179,
+     "per_segment": {
+      "regular-season": {
+       "m2_log_loss": 1.0563,
+       "m2_vs_m0": 0.0179,
+       "n_scored": 434
+      }
+     },
+     "shrink_games": 48.0
+    }
+   ]
+  }
+ },
+ "title": "S-5 prior-season REPLAY ladders — full evidence run"
+}

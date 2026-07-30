@@ -1,0 +1,354 @@
+"""EPL live plane: competition-keyed identity/ingest/markets/runs plus
+the DARK-model fail-closed contract. All canned — no network anywhere.
+
+The load-bearing pair here is TestEplModelIsDark: the same seeded state
+produces ZERO runs while epl-2026-v0 is unapproved and >=1 run the
+moment the F3 flag alone is flipped — proving the gate (not a missing
+model or fixture) is what keeps the EPL dark. Flipping that flag in
+production requires the operator approval path that does not exist for
+EPL; no code path in this build can do it."""
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
+
+import pytest
+
+import config
+from src.live import epl_plane, identity, ingest, markets, model_epl, runs
+from src.live.db import get_session
+from src.live import db as live_db
+from src.live.models import (Competition, Fixture, LiveBase, MarketContract,
+                             MarketEvent, ModelVersion, PredictionRun,
+                             RegistryDiscovery, Team)
+from tests.test_mls_shadow import _enforce_varchar_lengths
+
+UTC = timezone.utc
+
+CANNED_EPL = [
+    {"id": 359, "displayName": "Arsenal",
+     "shortDisplayName": "Arsenal", "abbreviation": "ARS"},
+    {"id": 360, "displayName": "Manchester United",
+     "shortDisplayName": "Man United", "abbreviation": "MUN"},
+    {"id": 363, "displayName": "Chelsea",
+     "shortDisplayName": "Chelsea", "abbreviation": "CHE"},
+    {"id": 364, "displayName": "Liverpool",
+     "shortDisplayName": "Liverpool", "abbreviation": "LIV"},
+]
+
+
+@pytest.fixture()
+def epl_session(tmp_path, monkeypatch):
+    """The live plane on a throwaway sqlite file, with BOTH competitions
+    seeded — the two-league world every test here assumes — and the
+    PostgreSQL-grade VARCHAR guard on."""
+    url = f"sqlite:///{tmp_path}/live.db"
+    monkeypatch.setattr(config, "LIVE_DATABASE_URL", url)
+    monkeypatch.setattr(live_db, "_engine", None)
+    monkeypatch.setattr(live_db, "_Session", None)
+    monkeypatch.setattr(live_db, "LIVE_BOOT_ERROR", None)
+    LiveBase.metadata.create_all(live_db.get_engine())
+    from sqlalchemy import event
+    from sqlalchemy.orm import Session as _Session
+    event.listen(_Session, "before_flush", _enforce_varchar_lengths)
+    s = live_db.get_session()
+    s.add(Competition(slug="mls-2026", name="MLS", season=2026))
+    s.add(Competition(slug="epl-2026", name="Premier League", season=2026))
+    s.commit()
+    yield s
+    event.remove(_Session, "before_flush", _enforce_varchar_lengths)
+    s.close()
+    monkeypatch.setattr(live_db, "_engine", None)
+    monkeypatch.setattr(live_db, "_Session", None)
+
+
+class TestEplIdentity:
+    def test_seed_is_idempotent_and_competition_keyed(self, epl_session):
+        out1 = identity.seed_league_teams(
+            "epl-2026", epl_plane.ESPN_TEAMS_URL,
+            epl_plane.KALSHI_BRIDGES, espn_teams=CANNED_EPL)
+        out2 = identity.seed_league_teams(
+            "epl-2026", epl_plane.ESPN_TEAMS_URL,
+            epl_plane.KALSHI_BRIDGES, espn_teams=CANNED_EPL)
+        assert out1["added_teams"] == 4 and out2["added_teams"] == 0
+        assert (epl_session.query(Team)
+                .filter_by(competition_slug="epl-2026").count()) == 4
+
+    def test_man_utd_bridge_resolves_through_approved_alias(
+            self, epl_session):
+        identity.seed_league_teams(
+            "epl-2026", epl_plane.ESPN_TEAMS_URL,
+            epl_plane.KALSHI_BRIDGES, espn_teams=CANNED_EPL)
+        t = identity.resolve("kalshi", "Man Utd",
+                             competition_slug="epl-2026")
+        assert t is not None and t.canonical_name == "Manchester United"
+
+    def test_cross_competition_resolution_fails_explicitly(
+            self, epl_session):
+        """The alias table is global (source, alias); once two leagues
+        coexist, a scoped resolve must refuse a hit that belongs to the
+        other league rather than silently attaching it. The UNSCOPED
+        call below is the CONTROL: it shows what the guard prevents."""
+        identity.seed_league_teams(
+            "epl-2026", epl_plane.ESPN_TEAMS_URL,
+            epl_plane.KALSHI_BRIDGES, espn_teams=CANNED_EPL)
+        # control: without a scope the (EPL) team comes back
+        assert identity.resolve("kalshi", "Arsenal") is not None
+        # guard: scoped to MLS, the EPL club must NOT attach
+        assert identity.resolve("kalshi", "Arsenal",
+                                competition_slug="mls-2026") is None
+
+    def test_promoted_clubs_have_no_kalshi_bridge(self):
+        """Coventry/Hull/Ipswich have no 25/26 Kalshi history — their
+        names are unknowable until 26/27 listings, so the curated map
+        must NOT guess them (they surface as unmapped instead)."""
+        for club in ("Coventry", "Hull", "Ipswich"):
+            assert not any(club.lower() in k.lower()
+                           for k in epl_plane.KALSHI_BRIDGES)
+
+
+class TestEplIngest:
+    def test_upsert_keys_fixtures_by_competition(self, epl_session):
+        identity.seed_league_teams(
+            "epl-2026", epl_plane.ESPN_TEAMS_URL,
+            epl_plane.KALSHI_BRIDGES, espn_teams=CANNED_EPL)
+        now = datetime.now(UTC)
+        f = {"espn_event_id": "401879301",
+             "kickoff": now + timedelta(days=3),
+             "home_name": "Arsenal", "away_name": "Chelsea",
+             "status": "pre", "home_goals": None, "away_goals": None,
+             "venue": "Emirates Stadium"}
+        created, _ = ingest._upsert_fixture(
+            epl_session, f, now, competition_slug="epl-2026")
+        epl_session.commit()
+        assert created
+        row = (epl_session.query(Fixture)
+               .filter_by(competition_slug="epl-2026",
+                          espn_event_id="401879301").one())
+        assert row.home_team_id is not None
+        assert (epl_session.get(Team, row.home_team_id).canonical_name
+                == "Arsenal")
+        # and nothing leaked into the MLS competition
+        assert (epl_session.query(Fixture)
+                .filter_by(competition_slug="mls-2026").count()) == 0
+
+
+def _fake_kalshi_paged(events_by_series, markets_by_event):
+    """A cursor-complete _kalshi_paged double for both the events and
+    markets endpoints, always reporting a clean full sweep."""
+    def fake(url, params, key, page_limit=200, max_pages=30, meta=None):
+        if meta is not None:
+            meta.update({"pages": 1, "complete": True,
+                         "cap_reached": False})
+        if key == "events":
+            return list(events_by_series.get(
+                params.get("series_ticker"), []))
+        if key == "markets":
+            return list(markets_by_event.get(
+                params.get("event_ticker"), []))
+        return []
+    return fake
+
+
+class TestEplDiscovery:
+    def test_discovery_maps_via_verified_bridges_and_records_slug(
+            self, epl_session, monkeypatch):
+        identity.seed_league_teams(
+            "epl-2026", epl_plane.ESPN_TEAMS_URL,
+            epl_plane.KALSHI_BRIDGES, espn_teams=CANNED_EPL)
+        ars = identity.resolve_espn_name("Arsenal",
+                                         competition_slug="epl-2026")
+        mun = identity.resolve_espn_name("Manchester United",
+                                         competition_slug="epl-2026")
+        ko = datetime(2026, 8, 22, 14, 0, tzinfo=UTC)
+        fx = Fixture(competition_slug="epl-2026", espn_event_id="e1",
+                     home_team_id=ars.id, away_team_id=mun.id,
+                     current_kickoff_utc=ko, original_kickoff_utc=ko,
+                     status="pre")
+        epl_session.add(fx)
+        epl_session.commit()
+
+        et = "KXEPLGAME-26AUG22ARSMUN"
+        fake = _fake_kalshi_paged(
+            {"KXEPLGAME": [{"event_ticker": et,
+                            "title": "Arsenal vs Man Utd"}]},
+            {et: [
+                {"ticker": f"{et}-ARS", "yes_sub_title": "Arsenal"},
+                {"ticker": f"{et}-TIE", "yes_sub_title": "Tie"},
+                {"ticker": f"{et}-MUN", "yes_sub_title": "Man Utd"},
+            ]})
+        monkeypatch.setattr(markets, "_kalshi_paged", fake)
+        out = epl_plane.discover_and_map()
+        assert out["events_seen"] == 1
+        assert out["newly_mapped"] == 1
+        assert out["discovery_complete"] is True
+
+        ev = (epl_session.query(MarketEvent)
+              .filter_by(kalshi_event_ticker=et).one())
+        assert ev.competition_slug == "epl-2026"
+        assert ev.mapping_approved and ev.fixture_id == fx.id
+        keys = {c.ticker: c.outcome_key for c in
+                epl_session.query(MarketContract)
+                .filter_by(market_event_id=ev.id)}
+        assert keys[f"{et}-ARS"] == "home_win"
+        assert keys[f"{et}-TIE"] == "draw"
+        assert keys[f"{et}-MUN"] == "away_win"     # via the Man Utd bridge
+
+        reg = (epl_session.query(RegistryDiscovery)
+               .order_by(RegistryDiscovery.id.desc()).first())
+        assert reg.competition_slug == "epl-2026"
+        assert reg.complete is True
+
+    def test_unbridged_promoted_club_stays_unmapped(
+            self, epl_session, monkeypatch):
+        """A 26/27 Kalshi title for a promoted club (no verified bridge)
+        must stay unmapped — an explicit state, never a fuzzy attach."""
+        identity.seed_league_teams(
+            "epl-2026", epl_plane.ESPN_TEAMS_URL,
+            epl_plane.KALSHI_BRIDGES, espn_teams=CANNED_EPL + [
+                {"id": 392, "displayName": "Coventry City",
+                 "shortDisplayName": "Coventry", "abbreviation": "COV"}])
+        cov = identity.resolve_espn_name("Coventry City",
+                                         competition_slug="epl-2026")
+        ars = identity.resolve_espn_name("Arsenal",
+                                         competition_slug="epl-2026")
+        ko = datetime(2026, 8, 21, 19, 0, tzinfo=UTC)
+        fx = Fixture(competition_slug="epl-2026", espn_event_id="e2",
+                     home_team_id=ars.id, away_team_id=cov.id,
+                     current_kickoff_utc=ko, original_kickoff_utc=ko,
+                     status="pre")
+        epl_session.add(fx)
+        epl_session.commit()
+        et = "KXEPLGAME-26AUG21ARSCOV"
+        fake = _fake_kalshi_paged(
+            {"KXEPLGAME": [{"event_ticker": et,
+                            # a Kalshi name we have NO evidence for
+                            "title": "Arsenal vs Coventry"}]},
+            {et: []})
+        monkeypatch.setattr(markets, "_kalshi_paged", fake)
+        out = epl_plane.discover_and_map()
+        assert out["newly_mapped"] == 0 and out["unmapped"] == 1
+        ev = (epl_session.query(MarketEvent)
+              .filter_by(kalshi_event_ticker=et).one())
+        assert not ev.mapping_approved and ev.fixture_id is None
+
+
+def _seed_epl_history(s, upcoming_in_hours: float = 20.0):
+    """Round-robin completed history so every club clears MIN_GAMES,
+    plus one upcoming fixture — mirrors the MLS test seed, WITHOUT any
+    approval (the dark default)."""
+    identity.seed_league_teams(
+        "epl-2026", epl_plane.ESPN_TEAMS_URL,
+        epl_plane.KALSHI_BRIDGES, espn_teams=CANNED_EPL)
+    teams = {t.canonical_name: t.id for t in
+             s.query(Team).filter_by(competition_slug="epl-2026")}
+    ids = list(teams.values())
+    now = datetime.now(UTC)
+    k = 0
+    for rnd in range(6):
+        for a, b in ((0, 1), (2, 3), (0, 2), (1, 3)):
+            k += 1
+            s.add(Fixture(
+                competition_slug="epl-2026", espn_event_id=f"eh{k}",
+                home_team_id=ids[a], away_team_id=ids[b],
+                current_kickoff_utc=now - timedelta(days=3 * rnd + 2),
+                original_kickoff_utc=now - timedelta(days=3 * rnd + 2),
+                status="post", home_goals=(a + 1) % 3,
+                away_goals=b % 2))
+    up = Fixture(competition_slug="epl-2026", espn_event_id="e9001",
+                 home_team_id=ids[0], away_team_id=ids[1],
+                 current_kickoff_utc=now + timedelta(hours=upcoming_in_hours),
+                 original_kickoff_utc=now + timedelta(hours=upcoming_in_hours),
+                 status="pre")
+    s.add(up)
+    s.commit()
+    return up
+
+
+class TestEplModelIsDark:
+    """THE dark contract, proven as a pair: identical seeded state, zero
+    runs unapproved (guard) / runs the moment F3 alone flips (control) —
+    so the approval gate, and nothing else, is what keeps EPL dark."""
+
+    def test_scheduled_runs_refuse_while_unapproved(
+            self, epl_session, monkeypatch):
+        monkeypatch.setattr(config, "N_SIMULATIONS", 400)
+        _seed_epl_history(epl_session)
+        # register the model version DARK, exactly as the boot does
+        model_epl.ensure_model_version(approved_for_shadow=False)
+        r = epl_plane.scheduled_runs()
+        assert "not approved" in r["skipped"]
+        assert (epl_session.query(PredictionRun).count()) == 0
+        # the odds board is an explicit empty, never a zero-bar
+        assert epl_plane.latest_odds() == []
+
+    def test_flipping_f3_alone_would_produce_runs(
+            self, epl_session, monkeypatch):
+        """CONTROL for the test above (and the machinery-parity proof):
+        the pipeline is fully wired — approve the version and the same
+        state creates a run. In production no code path can perform
+        this flip for EPL; it exists only to prove the gate is the
+        blocker."""
+        monkeypatch.setattr(config, "N_SIMULATIONS", 400)
+        up = _seed_epl_history(epl_session)
+        model_epl.ensure_model_version(approved_for_shadow=True)
+        r = epl_plane.scheduled_runs()
+        assert r["created"] >= 1
+        board = epl_plane.latest_odds()
+        row = next(o for o in board if o["espn_event_id"] == "e9001")
+        assert row["model_version"] == "epl-2026-v0"
+        assert sum(row["outcomes"].values()) == pytest.approx(1.0,
+                                                              abs=0.01)
+        # deterministic provider-keyed seed, epl-scoped
+        hub = epl_plane.model_for_event("e9001")
+        assert hub["model_version"] == "epl-2026-v0"
+        assert hub["latest"]["seed"] == model_epl.seed_for(up, "scheduled")
+
+    def test_t10_needs_the_approval_decision_too(
+            self, epl_session, monkeypatch):
+        """Even with F3 flipped, a canonical lock still requires the
+        immutable approval DECISION (F9) — which nothing in this build
+        can create for EPL."""
+        monkeypatch.setattr(config, "N_SIMULATIONS", 400)
+        _seed_epl_history(epl_session, upcoming_in_hours=0.15)
+        model_epl.ensure_model_version(approved_for_shadow=True)
+        r = epl_plane.t10_locks()
+        assert "approval decision" in r["skipped"]
+        assert (epl_session.query(PredictionRun)
+                .filter_by(canonical=True).count()) == 0
+
+    def test_approval_status_reports_dark(self, epl_session):
+        model_epl.ensure_model_version(approved_for_shadow=False)
+        st = epl_plane.approval_status()
+        assert st["mode"] == "dark"
+        assert st["approved_for_shadow"] is False
+        assert st["approval_decision_missing"] is True
+        assert st["model_version_registered"] is True
+
+    def test_no_epl_xg_knob_exists(self):
+        """The xG gap is documented, not papered over: no EPL analogue
+        of MLS_XG_RATING_ALPHA exists anywhere in config, and the EPL
+        model module carries no xG rating machinery."""
+        assert not hasattr(config, "EPL_XG_RATING_ALPHA")
+        assert not hasattr(model_epl, "XG_SHRINK_GAMES")
+
+
+class TestCompetitionIsolation:
+    def test_mls_counts_do_not_absorb_epl_state(self, epl_session):
+        _seed_epl_history(epl_session)
+        model_epl.ensure_model_version(approved_for_shadow=False)
+        mls_counts = runs.shadow_counts()               # default = MLS
+        epl_counts = epl_plane.shadow_counts()
+        assert mls_counts["teams"] == 0                 # no MLS teams here
+        assert epl_counts["teams"] == 4
+        assert mls_counts["fixtures"] == 0
+        assert epl_counts["fixtures"] == 25
+        # the MLS default sweep must not touch EPL fixtures
+        assert runs.scheduled_runs() == {
+            "skipped": "no model (no completed fixtures ingested)"}
+
+    def test_epl_seed_for_differs_from_mls_seed_for(self):
+        from types import SimpleNamespace
+        fx = SimpleNamespace(espn_event_id="12345")
+        from src.live import model_mls
+        assert (model_epl.seed_for(fx, "t10")
+                != model_mls.seed_for(fx, "t10"))

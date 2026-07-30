@@ -1,0 +1,3222 @@
+{
+ "_what": "exactly what the friendlies page would render, per club slot: a league-derived rating or a NAMED refusal. No blanks, no zeros, and no match probability anywhere.",
+ "generated_utc": "2026-07-30T00:12:23.290569+00:00",
+ "club_slots_total": 48,
+ "club_slots_rated": 40,
+ "summary": {
+  "coverage": [
+   {
+    "league_id": 39,
+    "season": 2026,
+    "league_name": "Premier League",
+    "country": "England",
+    "verdict": "indeterminate_no_completed_fixture",
+    "measured_rate": null,
+    "completed_fixtures_visible": 0,
+    "samples_taken": 0,
+    "samples_with_xg": 0,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:49:36.658125-07:00",
+    "fittable": false
+   },
+   {
+    "league_id": 39,
+    "season": 2025,
+    "league_name": "Premier League",
+    "country": "England",
+    "verdict": "xg_available",
+    "measured_rate": 1.0,
+    "completed_fixtures_visible": 380,
+    "samples_taken": 6,
+    "samples_with_xg": 6,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:49:39.828042-07:00",
+    "fittable": true
+   },
+   {
+    "league_id": 40,
+    "season": 2026,
+    "league_name": "Championship",
+    "country": "England",
+    "verdict": "indeterminate_no_completed_fixture",
+    "measured_rate": null,
+    "completed_fixtures_visible": 0,
+    "samples_taken": 0,
+    "samples_with_xg": 0,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:49:40.316716-07:00",
+    "fittable": false
+   },
+   {
+    "league_id": 40,
+    "season": 2025,
+    "league_name": "Championship",
+    "country": "England",
+    "verdict": "xg_available",
+    "measured_rate": 1.0,
+    "completed_fixtures_visible": 557,
+    "samples_taken": 6,
+    "samples_with_xg": 6,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:49:43.492057-07:00",
+    "fittable": true
+   },
+   {
+    "league_id": 42,
+    "season": 2026,
+    "league_name": "League Two",
+    "country": "England",
+    "verdict": "indeterminate_no_completed_fixture",
+    "measured_rate": null,
+    "completed_fixtures_visible": 0,
+    "samples_taken": 0,
+    "samples_with_xg": 0,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:49:43.983417-07:00",
+    "fittable": false
+   },
+   {
+    "league_id": 42,
+    "season": 2025,
+    "league_name": "League Two",
+    "country": "England",
+    "verdict": "xg_partial",
+    "measured_rate": 0.5,
+    "completed_fixtures_visible": 557,
+    "samples_taken": 6,
+    "samples_with_xg": 3,
+    "type_without_value_seen": true,
+    "miss_rounds": [
+     "Regular Season - 10",
+     "Regular Season - 19",
+     "Regular Season - 38"
+    ],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:49:47.169224-07:00",
+    "fittable": true
+   },
+   {
+    "league_id": 61,
+    "season": 2026,
+    "league_name": "Ligue 1",
+    "country": "France",
+    "verdict": "indeterminate_no_completed_fixture",
+    "measured_rate": null,
+    "completed_fixtures_visible": 0,
+    "samples_taken": 0,
+    "samples_with_xg": 0,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:49:47.642674-07:00",
+    "fittable": false
+   },
+   {
+    "league_id": 61,
+    "season": 2025,
+    "league_name": "Ligue 1",
+    "country": "France",
+    "verdict": "xg_partial",
+    "measured_rate": 0.833,
+    "completed_fixtures_visible": 309,
+    "samples_taken": 6,
+    "samples_with_xg": 5,
+    "type_without_value_seen": true,
+    "miss_rounds": [
+     "Final"
+    ],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:49:50.849195-07:00",
+    "fittable": true
+   },
+   {
+    "league_id": 78,
+    "season": 2026,
+    "league_name": "Bundesliga",
+    "country": "Germany",
+    "verdict": "indeterminate_no_completed_fixture",
+    "measured_rate": null,
+    "completed_fixtures_visible": 0,
+    "samples_taken": 0,
+    "samples_with_xg": 0,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:49:51.338622-07:00",
+    "fittable": false
+   },
+   {
+    "league_id": 78,
+    "season": 2025,
+    "league_name": "Bundesliga",
+    "country": "Germany",
+    "verdict": "xg_partial",
+    "measured_rate": 0.833,
+    "completed_fixtures_visible": 308,
+    "samples_taken": 6,
+    "samples_with_xg": 5,
+    "type_without_value_seen": true,
+    "miss_rounds": [
+     "Final"
+    ],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:49:54.592259-07:00",
+    "fittable": true
+   },
+   {
+    "league_id": 88,
+    "season": 2026,
+    "league_name": "Eredivisie",
+    "country": "Netherlands",
+    "verdict": "indeterminate_no_completed_fixture",
+    "measured_rate": null,
+    "completed_fixtures_visible": 0,
+    "samples_taken": 0,
+    "samples_with_xg": 0,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:49:55.057460-07:00",
+    "fittable": false
+   },
+   {
+    "league_id": 88,
+    "season": 2025,
+    "league_name": "Eredivisie",
+    "country": "Netherlands",
+    "verdict": "xg_available",
+    "measured_rate": 1.0,
+    "completed_fixtures_visible": 309,
+    "samples_taken": 6,
+    "samples_with_xg": 6,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:49:58.277492-07:00",
+    "fittable": true
+   },
+   {
+    "league_id": 89,
+    "season": 2026,
+    "league_name": "Eerste Divisie",
+    "country": "Netherlands",
+    "verdict": "indeterminate_no_completed_fixture",
+    "measured_rate": null,
+    "completed_fixtures_visible": 0,
+    "samples_taken": 0,
+    "samples_with_xg": 0,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:49:58.761086-07:00",
+    "fittable": false
+   },
+   {
+    "league_id": 89,
+    "season": 2025,
+    "league_name": "Eerste Divisie",
+    "country": "Netherlands",
+    "verdict": "xg_partial",
+    "measured_rate": 0.5,
+    "completed_fixtures_visible": 392,
+    "samples_taken": 6,
+    "samples_with_xg": 3,
+    "type_without_value_seen": true,
+    "miss_rounds": [
+     "Regular Season - 9",
+     "Regular Season - 16",
+     "Final"
+    ],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:50:02.025535-07:00",
+    "fittable": true
+   },
+   {
+    "league_id": 94,
+    "season": 2026,
+    "league_name": "Primeira Liga",
+    "country": "Portugal",
+    "verdict": "indeterminate_no_completed_fixture",
+    "measured_rate": null,
+    "completed_fixtures_visible": 0,
+    "samples_taken": 0,
+    "samples_with_xg": 0,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:50:02.515126-07:00",
+    "fittable": false
+   },
+   {
+    "league_id": 94,
+    "season": 2025,
+    "league_name": "Primeira Liga",
+    "country": "Portugal",
+    "verdict": "xg_partial",
+    "measured_rate": 0.833,
+    "completed_fixtures_visible": 308,
+    "samples_taken": 6,
+    "samples_with_xg": 5,
+    "type_without_value_seen": true,
+    "miss_rounds": [
+     "Final"
+    ],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:50:05.809919-07:00",
+    "fittable": true
+   },
+   {
+    "league_id": 98,
+    "season": 2027,
+    "league_name": "J1 League",
+    "country": "Japan",
+    "verdict": "indeterminate_no_completed_fixture",
+    "measured_rate": null,
+    "completed_fixtures_visible": 0,
+    "samples_taken": 0,
+    "samples_with_xg": 0,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:50:06.283824-07:00",
+    "fittable": false
+   },
+   {
+    "league_id": 98,
+    "season": 2026,
+    "league_name": "J1 League",
+    "country": "Japan",
+    "verdict": "xg_partial",
+    "measured_rate": 0.667,
+    "completed_fixtures_visible": 200,
+    "samples_taken": 6,
+    "samples_with_xg": 4,
+    "type_without_value_seen": true,
+    "miss_rounds": [
+     "Regular Season - 11",
+     "7th place"
+    ],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:50:09.450545-07:00",
+    "fittable": true
+   },
+   {
+    "league_id": 135,
+    "season": 2026,
+    "league_name": "Serie A",
+    "country": "Italy",
+    "verdict": "indeterminate_no_completed_fixture",
+    "measured_rate": null,
+    "completed_fixtures_visible": 0,
+    "samples_taken": 0,
+    "samples_with_xg": 0,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:50:09.921417-07:00",
+    "fittable": false
+   },
+   {
+    "league_id": 135,
+    "season": 2025,
+    "league_name": "Serie A",
+    "country": "Italy",
+    "verdict": "xg_available",
+    "measured_rate": 1.0,
+    "completed_fixtures_visible": 380,
+    "samples_taken": 6,
+    "samples_with_xg": 6,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:50:13.136434-07:00",
+    "fittable": true
+   },
+   {
+    "league_id": 140,
+    "season": 2026,
+    "league_name": "La Liga",
+    "country": "Spain",
+    "verdict": "indeterminate_no_completed_fixture",
+    "measured_rate": null,
+    "completed_fixtures_visible": 0,
+    "samples_taken": 0,
+    "samples_with_xg": 0,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:50:13.612216-07:00",
+    "fittable": false
+   },
+   {
+    "league_id": 140,
+    "season": 2025,
+    "league_name": "La Liga",
+    "country": "Spain",
+    "verdict": "xg_available",
+    "measured_rate": 1.0,
+    "completed_fixtures_visible": 380,
+    "samples_taken": 6,
+    "samples_with_xg": 6,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:50:16.799665-07:00",
+    "fittable": true
+   },
+   {
+    "league_id": 141,
+    "season": 2026,
+    "league_name": "Segunda División",
+    "country": "Spain",
+    "verdict": "indeterminate_no_completed_fixture",
+    "measured_rate": null,
+    "completed_fixtures_visible": 0,
+    "samples_taken": 0,
+    "samples_with_xg": 0,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:50:17.274301-07:00",
+    "fittable": false
+   },
+   {
+    "league_id": 141,
+    "season": 2025,
+    "league_name": "Segunda División",
+    "country": "Spain",
+    "verdict": "xg_partial",
+    "measured_rate": 0.333,
+    "completed_fixtures_visible": 468,
+    "samples_taken": 6,
+    "samples_with_xg": 2,
+    "type_without_value_seen": true,
+    "miss_rounds": [
+     "Regular Season - 9",
+     "Regular Season - 18",
+     "Regular Season - 35",
+     "Final"
+    ],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:50:20.505921-07:00",
+    "fittable": true
+   },
+   {
+    "league_id": 203,
+    "season": 2026,
+    "league_name": "Süper Lig",
+    "country": "Turkey",
+    "verdict": "indeterminate_no_completed_fixture",
+    "measured_rate": null,
+    "completed_fixtures_visible": 0,
+    "samples_taken": 0,
+    "samples_with_xg": 0,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:50:20.997820-07:00",
+    "fittable": false
+   },
+   {
+    "league_id": 203,
+    "season": 2025,
+    "league_name": "Süper Lig",
+    "country": "Turkey",
+    "verdict": "xg_available",
+    "measured_rate": 1.0,
+    "completed_fixtures_visible": 306,
+    "samples_taken": 6,
+    "samples_with_xg": 6,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:50:24.208216-07:00",
+    "fittable": true
+   },
+   {
+    "league_id": 292,
+    "season": 2026,
+    "league_name": "K League 1",
+    "country": "South-Korea",
+    "verdict": "xg_absent",
+    "measured_rate": 0.0,
+    "completed_fixtures_visible": 120,
+    "samples_taken": 6,
+    "samples_with_xg": 0,
+    "type_without_value_seen": true,
+    "miss_rounds": [
+     "Regular Season - 1",
+     "Regular Season - 5",
+     "Regular Season - 9",
+     "Regular Season - 12",
+     "Regular Season - 16",
+     "Regular Season - 20"
+    ],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:50:27.420631-07:00",
+    "fittable": false
+   },
+   {
+    "league_id": 305,
+    "season": 2026,
+    "league_name": "Stars League",
+    "country": "Qatar",
+    "verdict": "indeterminate_no_completed_fixture",
+    "measured_rate": null,
+    "completed_fixtures_visible": 0,
+    "samples_taken": 0,
+    "samples_with_xg": 0,
+    "type_without_value_seen": false,
+    "miss_rounds": [],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:50:27.889755-07:00",
+    "fittable": false
+   },
+   {
+    "league_id": 305,
+    "season": 2025,
+    "league_name": "Stars League",
+    "country": "Qatar",
+    "verdict": "xg_absent",
+    "measured_rate": 0.0,
+    "completed_fixtures_visible": 133,
+    "samples_taken": 6,
+    "samples_with_xg": 0,
+    "type_without_value_seen": true,
+    "miss_rounds": [
+     "Regular Season - 1",
+     "Regular Season - 5",
+     "Regular Season - 7",
+     "Regular Season - 14",
+     "Regular Season - 19",
+     "Final"
+    ],
+    "sampling_method": "spread_across_season",
+    "measured_at": "2026-07-29T16:50:31.100378-07:00",
+    "fittable": false
+   }
+  ],
+  "ingest": {
+   "leagues": [
+    {
+     "league_id": 39,
+     "season": 2025,
+     "rows": 300,
+     "fixtures": 150,
+     "fixtures_with_usable_xg": 150,
+     "teams": 20
+    },
+    {
+     "league_id": 40,
+     "season": 2025,
+     "rows": 300,
+     "fixtures": 150,
+     "fixtures_with_usable_xg": 150,
+     "teams": 24
+    },
+    {
+     "league_id": 42,
+     "season": 2025,
+     "rows": 300,
+     "fixtures": 150,
+     "fixtures_with_usable_xg": 120,
+     "teams": 24
+    },
+    {
+     "league_id": 61,
+     "season": 2025,
+     "rows": 300,
+     "fixtures": 150,
+     "fixtures_with_usable_xg": 146,
+     "teams": 21
+    },
+    {
+     "league_id": 78,
+     "season": 2025,
+     "rows": 300,
+     "fixtures": 150,
+     "fixtures_with_usable_xg": 148,
+     "teams": 19
+    },
+    {
+     "league_id": 88,
+     "season": 2025,
+     "rows": 300,
+     "fixtures": 150,
+     "fixtures_with_usable_xg": 145,
+     "teams": 18
+    },
+    {
+     "league_id": 89,
+     "season": 2025,
+     "rows": 276,
+     "fixtures": 138,
+     "fixtures_with_usable_xg": 89,
+     "teams": 20
+    },
+    {
+     "league_id": 94,
+     "season": 2025,
+     "rows": 300,
+     "fixtures": 150,
+     "fixtures_with_usable_xg": 148,
+     "teams": 19
+    },
+    {
+     "league_id": 98,
+     "season": 2026,
+     "rows": 300,
+     "fixtures": 150,
+     "fixtures_with_usable_xg": 120,
+     "teams": 20
+    },
+    {
+     "league_id": 135,
+     "season": 2025,
+     "rows": 300,
+     "fixtures": 150,
+     "fixtures_with_usable_xg": 150,
+     "teams": 20
+    },
+    {
+     "league_id": 140,
+     "season": 2025,
+     "rows": 300,
+     "fixtures": 150,
+     "fixtures_with_usable_xg": 150,
+     "teams": 20
+    },
+    {
+     "league_id": 141,
+     "season": 2025,
+     "rows": 300,
+     "fixtures": 150,
+     "fixtures_with_usable_xg": 64,
+     "teams": 22
+    },
+    {
+     "league_id": 203,
+     "season": 2025,
+     "rows": 300,
+     "fixtures": 150,
+     "fixtures_with_usable_xg": 150,
+     "teams": 18
+    }
+   ]
+  },
+  "retroactive_corrections": {
+   "pairs_with_multiple_readings": 0,
+   "detail": []
+  },
+  "clubs": [
+   {
+    "query_name": "AC Milan",
+    "resolution": "resolved",
+    "provider_team_id": 489,
+    "league_id": 135,
+    "season": 2026,
+    "league_name": "Serie A",
+    "league_country": "Italy",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Ajax Amsterdam",
+    "resolution": "resolved",
+    "provider_team_id": 194,
+    "league_id": 88,
+    "season": 2026,
+    "league_name": "Eredivisie",
+    "league_country": "Netherlands",
+    "match_tier": "slate_confirmed_league"
+   },
+   {
+    "query_name": "Al Nassr",
+    "resolution": "league_not_indexed",
+    "provider_team_id": null,
+    "league_id": null,
+    "season": null,
+    "league_name": null,
+    "league_country": null,
+    "match_tier": null
+   },
+   {
+    "query_name": "Al Sadd",
+    "resolution": "resolved",
+    "provider_team_id": 2895,
+    "league_id": 305,
+    "season": 2026,
+    "league_name": "Stars League",
+    "league_country": "Qatar",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Almería",
+    "resolution": "resolved",
+    "provider_team_id": 723,
+    "league_id": 141,
+    "season": 2026,
+    "league_name": "Segunda División",
+    "league_country": "Spain",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Arsenal",
+    "resolution": "resolved",
+    "provider_team_id": 42,
+    "league_id": 39,
+    "season": 2026,
+    "league_name": "Premier League",
+    "league_country": "England",
+    "match_tier": "slate_confirmed_league"
+   },
+   {
+    "query_name": "AS Roma",
+    "resolution": "resolved",
+    "provider_team_id": 497,
+    "league_id": 135,
+    "season": 2026,
+    "league_name": "Serie A",
+    "league_country": "Italy",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Atalanta",
+    "resolution": "resolved",
+    "provider_team_id": 499,
+    "league_id": 135,
+    "season": 2026,
+    "league_name": "Serie A",
+    "league_country": "Italy",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Atlético Madrid",
+    "resolution": "resolved",
+    "provider_team_id": 530,
+    "league_id": 140,
+    "season": 2026,
+    "league_name": "La Liga",
+    "league_country": "Spain",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Barcelona",
+    "resolution": "resolved",
+    "provider_team_id": 529,
+    "league_id": 140,
+    "season": 2026,
+    "league_name": "La Liga",
+    "league_country": "Spain",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Bayern Munich",
+    "resolution": "resolved",
+    "provider_team_id": 157,
+    "league_id": 78,
+    "season": 2026,
+    "league_name": "Bundesliga",
+    "league_country": "Germany",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Birmingham City",
+    "resolution": "resolved",
+    "provider_team_id": 54,
+    "league_id": 40,
+    "season": 2026,
+    "league_name": "Championship",
+    "league_country": "England",
+    "match_tier": "unique_containment"
+   },
+   {
+    "query_name": "Borussia Dortmund",
+    "resolution": "resolved",
+    "provider_team_id": 165,
+    "league_id": 78,
+    "season": 2026,
+    "league_name": "Bundesliga",
+    "league_country": "Germany",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Bristol City",
+    "resolution": "resolved",
+    "provider_team_id": 56,
+    "league_id": 40,
+    "season": 2026,
+    "league_name": "Championship",
+    "league_country": "England",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Cardiff City",
+    "resolution": "resolved",
+    "provider_team_id": 43,
+    "league_id": 40,
+    "season": 2026,
+    "league_name": "Championship",
+    "league_country": "England",
+    "match_tier": "unique_containment"
+   },
+   {
+    "query_name": "Cerezo Osaka",
+    "resolution": "resolved",
+    "provider_team_id": 291,
+    "league_id": 98,
+    "season": 2027,
+    "league_name": "J1 League",
+    "league_country": "Japan",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Chelsea",
+    "resolution": "resolved",
+    "provider_team_id": 49,
+    "league_id": 39,
+    "season": 2026,
+    "league_name": "Premier League",
+    "league_country": "England",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Estrela",
+    "resolution": "resolved",
+    "provider_team_id": 15130,
+    "league_id": 94,
+    "season": 2026,
+    "league_name": "Primeira Liga",
+    "league_country": "Portugal",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "FC Tokyo",
+    "resolution": "resolved",
+    "provider_team_id": 292,
+    "league_id": 98,
+    "season": 2027,
+    "league_name": "J1 League",
+    "league_country": "Japan",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "FC Volendam",
+    "resolution": "resolved",
+    "provider_team_id": 416,
+    "league_id": 89,
+    "season": 2026,
+    "league_name": "Eerste Divisie",
+    "league_country": "Netherlands",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Feyenoord Rotterdam",
+    "resolution": "resolved",
+    "provider_team_id": 209,
+    "league_id": 88,
+    "season": 2026,
+    "league_name": "Eredivisie",
+    "league_country": "Netherlands",
+    "match_tier": "unique_containment"
+   },
+   {
+    "query_name": "Fiorentina",
+    "resolution": "resolved",
+    "provider_team_id": 502,
+    "league_id": 135,
+    "season": 2026,
+    "league_name": "Serie A",
+    "league_country": "Italy",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Galatasaray",
+    "resolution": "resolved",
+    "provider_team_id": 645,
+    "league_id": 203,
+    "season": 2026,
+    "league_name": "Süper Lig",
+    "league_country": "Turkey",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Getafe",
+    "resolution": "resolved",
+    "provider_team_id": 546,
+    "league_id": 140,
+    "season": 2026,
+    "league_name": "La Liga",
+    "league_country": "Spain",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Girona",
+    "resolution": "resolved",
+    "provider_team_id": 547,
+    "league_id": 141,
+    "season": 2026,
+    "league_name": "Segunda División",
+    "league_country": "Spain",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Internazionale",
+    "resolution": "resolved",
+    "provider_team_id": 505,
+    "league_id": 135,
+    "season": 2026,
+    "league_name": "Serie A",
+    "league_country": "Italy",
+    "match_tier": "slate_confirmed_league"
+   },
+   {
+    "query_name": "Jeju United",
+    "resolution": "resolved",
+    "provider_team_id": 2761,
+    "league_id": 292,
+    "season": 2026,
+    "league_name": "K League 1",
+    "league_country": "South-Korea",
+    "match_tier": "token_set"
+   },
+   {
+    "query_name": "Juventus",
+    "resolution": "resolved",
+    "provider_team_id": 496,
+    "league_id": 135,
+    "season": 2026,
+    "league_name": "Serie A",
+    "league_country": "Italy",
+    "match_tier": "slate_confirmed_league"
+   },
+   {
+    "query_name": "Leeds United",
+    "resolution": "resolved",
+    "provider_team_id": 63,
+    "league_id": 39,
+    "season": 2026,
+    "league_name": "Premier League",
+    "league_country": "England",
+    "match_tier": "unique_containment"
+   },
+   {
+    "query_name": "Liverpool",
+    "resolution": "resolved",
+    "provider_team_id": 40,
+    "league_id": 39,
+    "season": 2026,
+    "league_name": "Premier League",
+    "league_country": "England",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Mallorca",
+    "resolution": "resolved",
+    "provider_team_id": 798,
+    "league_id": 141,
+    "season": 2026,
+    "league_name": "Segunda División",
+    "league_country": "Spain",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Manchester City",
+    "resolution": "resolved",
+    "provider_team_id": 50,
+    "league_id": 39,
+    "season": 2026,
+    "league_name": "Premier League",
+    "league_country": "England",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Manchester United",
+    "resolution": "resolved",
+    "provider_team_id": 33,
+    "league_id": 39,
+    "season": 2026,
+    "league_name": "Premier League",
+    "league_country": "England",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Newcastle United",
+    "resolution": "resolved",
+    "provider_team_id": 34,
+    "league_id": 39,
+    "season": 2026,
+    "league_name": "Premier League",
+    "league_country": "England",
+    "match_tier": "unique_containment"
+   },
+   {
+    "query_name": "Newport County",
+    "resolution": "resolved",
+    "provider_team_id": 1367,
+    "league_id": 42,
+    "season": 2026,
+    "league_name": "League Two",
+    "league_country": "England",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Nice",
+    "resolution": "resolved",
+    "provider_team_id": 84,
+    "league_id": 61,
+    "season": 2026,
+    "league_name": "Ligue 1",
+    "league_country": "France",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Paris Saint-Germain",
+    "resolution": "resolved",
+    "provider_team_id": 85,
+    "league_id": 61,
+    "season": 2026,
+    "league_name": "Ligue 1",
+    "league_country": "France",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Real Betis",
+    "resolution": "resolved",
+    "provider_team_id": 543,
+    "league_id": 140,
+    "season": 2026,
+    "league_name": "La Liga",
+    "league_country": "Spain",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Real Madrid",
+    "resolution": "resolved",
+    "provider_team_id": 541,
+    "league_id": 140,
+    "season": 2026,
+    "league_name": "La Liga",
+    "league_country": "Spain",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Stade Rennais",
+    "resolution": "resolved",
+    "provider_team_id": 94,
+    "league_id": 61,
+    "season": 2026,
+    "league_name": "Ligue 1",
+    "league_country": "France",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Sunderland",
+    "resolution": "resolved",
+    "provider_team_id": 746,
+    "league_id": 39,
+    "season": 2026,
+    "league_name": "Premier League",
+    "league_country": "England",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Trabzonspor",
+    "resolution": "resolved",
+    "provider_team_id": 998,
+    "league_id": 203,
+    "season": 2026,
+    "league_name": "Süper Lig",
+    "league_country": "Turkey",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Udinese",
+    "resolution": "resolved",
+    "provider_team_id": 494,
+    "league_id": 135,
+    "season": 2026,
+    "league_name": "Serie A",
+    "league_country": "Italy",
+    "match_tier": "exact"
+   },
+   {
+    "query_name": "Wrexham",
+    "resolution": "resolved",
+    "provider_team_id": 1837,
+    "league_id": 40,
+    "season": 2026,
+    "league_name": "Championship",
+    "league_country": "England",
+    "match_tier": "exact"
+   }
+  ],
+  "parameters": {
+   "shrink_games": 6.0,
+   "half_life_days": 90.0,
+   "min_fixtures": 5,
+   "provenance": "shrink and half-life are STARTING POINTS carried from MLS league play (model_mls), NOT swept on these leagues' own data. Nothing prices off these ratings."
+  },
+  "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them.",
+  "mls_note": "MLS is served by Sportec, not API-Football: its xG already exists free with a measured effect and sits inside the MLS engine signature. apifootball refuses league 253 by name."
+ },
+ "fixtures": [
+  {
+   "espn_event_id": "401898691",
+   "date": "2026-07-30T15:30Z",
+   "name": "Al Sadd at Trabzonspor",
+   "ratings": {
+    "home": {
+     "club": "Trabzonspor",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 203,
+      "roster_season": 2026,
+      "league_name": "Süper Lig",
+      "league_country": "Turkey",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 203,
+      "season": 2025,
+      "league_name": "Süper Lig",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 306,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:24.208216-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 998,
+      "team_name": "Trabzonspor",
+      "attack": 1.0001,
+      "defence": 0.9549,
+      "n_fixtures": 17,
+      "competition_key": "api-football:203:2025",
+      "league_id": 203,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-18T06:00:00-08:00",
+      "window_end": "2026-05-17T10:00:00-07:00",
+      "league_mean_xg": 1.311,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Al Sadd",
+     "rated": false,
+     "reason": "league_has_no_xg",
+     "reason_words": "no xG data for this club's league",
+     "rating": null,
+     "league": {
+      "league_id": 305,
+      "roster_season": 2026,
+      "league_name": "Stars League",
+      "league_country": "Qatar",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 305,
+      "season": 2025,
+      "league_name": "Stars League",
+      "verdict": "xg_absent",
+      "measured_rate": 0.0,
+      "completed_fixtures_visible": 133,
+      "samples_taken": 6,
+      "samples_with_xg": 0,
+      "measured_at": "2026-07-29T16:50:31.100378-07:00",
+      "fittable": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401897750",
+   "date": "2026-07-30T23:30Z",
+   "name": "Leeds United at Sunderland",
+   "ratings": {
+    "home": {
+     "club": "Sunderland",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 39,
+      "roster_season": 2026,
+      "league_name": "Premier League",
+      "league_country": "England",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 39,
+      "season": 2025,
+      "league_name": "Premier League",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:49:39.828042-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 746,
+      "team_name": "Sunderland",
+      "attack": 0.9202,
+      "defence": 0.9717,
+      "n_fixtures": 15,
+      "competition_key": "api-football:39:2025",
+      "league_id": 39,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-02T12:00:00-08:00",
+      "window_end": "2026-05-24T08:00:00-07:00",
+      "league_mean_xg": 1.4337,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Leeds United",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 39,
+      "roster_season": 2026,
+      "league_name": "Premier League",
+      "league_country": "England",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 39,
+      "season": 2025,
+      "league_name": "Premier League",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:49:39.828042-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 63,
+      "team_name": "Leeds",
+      "attack": 0.9887,
+      "defence": 1.0432,
+      "n_fixtures": 15,
+      "competition_key": "api-football:39:2025",
+      "league_id": 39,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-31T07:00:00-08:00",
+      "window_end": "2026-05-24T08:00:00-07:00",
+      "league_mean_xg": 1.4337,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": true,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401887800",
+   "date": "2026-07-31T16:00Z",
+   "name": "Nice at Juventus",
+   "ratings": {
+    "home": {
+     "club": "Juventus",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 135,
+      "roster_season": 2026,
+      "league_name": "Serie A",
+      "league_country": "Italy",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 135,
+      "season": 2025,
+      "league_name": "Serie A",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:13.136434-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 496,
+      "team_name": "Juventus",
+      "attack": 1.2421,
+      "defence": 0.8699,
+      "n_fixtures": 15,
+      "competition_key": "api-football:135:2025",
+      "league_id": 135,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-08T11:45:00-08:00",
+      "window_end": "2026-05-24T11:45:00-07:00",
+      "league_mean_xg": 1.2479,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Nice",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 61,
+      "roster_season": 2026,
+      "league_name": "Ligue 1",
+      "league_country": "France",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 61,
+      "season": 2025,
+      "league_name": "Ligue 1",
+      "verdict": "xg_partial",
+      "measured_rate": 0.833,
+      "completed_fixtures_visible": 309,
+      "samples_taken": 6,
+      "samples_with_xg": 5,
+      "measured_at": "2026-07-29T16:49:50.849195-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 84,
+      "team_name": "Nice",
+      "attack": 0.9479,
+      "defence": 1.0662,
+      "n_fixtures": 16,
+      "competition_key": "api-football:61:2025",
+      "league_id": 61,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-25T06:00:00-08:00",
+      "window_end": "2026-05-17T12:00:00-07:00",
+      "league_mean_xg": 1.4257,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401886550",
+   "date": "2026-07-31T18:45Z",
+   "name": "Barcelona at Birmingham City",
+   "ratings": {
+    "home": {
+     "club": "Birmingham City",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 40,
+      "roster_season": 2026,
+      "league_name": "Championship",
+      "league_country": "England",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 40,
+      "season": 2025,
+      "league_name": "Championship",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 557,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:49:43.492057-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 54,
+      "team_name": "Birmingham",
+      "attack": 0.9187,
+      "defence": 0.9213,
+      "n_fixtures": 12,
+      "competition_key": "api-football:40:2025",
+      "league_id": 40,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-03-02T12:00:00-08:00",
+      "window_end": "2026-05-02T04:30:00-07:00",
+      "league_mean_xg": 1.403,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Barcelona",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 140,
+      "roster_season": 2026,
+      "league_name": "La Liga",
+      "league_country": "Spain",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 140,
+      "season": 2025,
+      "league_name": "La Liga",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:16.799665-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 529,
+      "team_name": "Barcelona",
+      "attack": 1.1703,
+      "defence": 0.9131,
+      "n_fixtures": 15,
+      "competition_key": "api-football:140:2025",
+      "league_id": 140,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-16T12:00:00-08:00",
+      "window_end": "2026-05-23T12:00:00-07:00",
+      "league_mean_xg": 1.3107,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401872737",
+   "date": "2026-08-01T10:00Z",
+   "name": "Borussia Dortmund at FC Tokyo",
+   "ratings": {
+    "home": {
+     "club": "FC Tokyo",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 98,
+      "roster_season": 2027,
+      "league_name": "J1 League",
+      "league_country": "Japan",
+      "season": 2026
+     },
+     "coverage": {
+      "league_id": 98,
+      "season": 2026,
+      "league_name": "J1 League",
+      "verdict": "xg_partial",
+      "measured_rate": 0.667,
+      "completed_fixtures_visible": 200,
+      "samples_taken": 6,
+      "samples_with_xg": 4,
+      "measured_at": "2026-07-29T16:50:09.450545-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 292,
+      "team_name": "FC Tokyo",
+      "attack": 1.1529,
+      "defence": 0.9339,
+      "n_fixtures": 11,
+      "competition_key": "api-football:98:2026",
+      "league_id": 98,
+      "season": 2026,
+      "source": "api-football",
+      "window_start": "2026-03-13T22:00:00-07:00",
+      "window_end": "2026-05-29T23:00:00-07:00",
+      "league_mean_xg": 1.3468,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Borussia Dortmund",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 78,
+      "roster_season": 2026,
+      "league_name": "Bundesliga",
+      "league_country": "Germany",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 78,
+      "season": 2025,
+      "league_name": "Bundesliga",
+      "verdict": "xg_partial",
+      "measured_rate": 0.833,
+      "completed_fixtures_visible": 308,
+      "samples_taken": 6,
+      "samples_with_xg": 5,
+      "measured_at": "2026-07-29T16:49:54.592259-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 165,
+      "team_name": "Borussia Dortmund",
+      "attack": 1.1107,
+      "defence": 0.8985,
+      "n_fixtures": 16,
+      "competition_key": "api-football:78:2025",
+      "league_id": 78,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-24T09:30:00-08:00",
+      "window_end": "2026-05-16T06:30:00-07:00",
+      "league_mean_xg": 1.6736,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401871493",
+   "date": "2026-08-01T11:30Z",
+   "name": "Internazionale at Manchester City",
+   "ratings": {
+    "home": {
+     "club": "Manchester City",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 39,
+      "roster_season": 2026,
+      "league_name": "Premier League",
+      "league_country": "England",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 39,
+      "season": 2025,
+      "league_name": "Premier League",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:49:39.828042-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 50,
+      "team_name": "Manchester City",
+      "attack": 1.1883,
+      "defence": 0.9448,
+      "n_fixtures": 15,
+      "competition_key": "api-football:39:2025",
+      "league_id": 39,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-01T08:30:00-08:00",
+      "window_end": "2026-05-24T08:00:00-07:00",
+      "league_mean_xg": 1.4337,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Internazionale",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 135,
+      "roster_season": 2026,
+      "league_name": "Serie A",
+      "league_country": "Italy",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 135,
+      "season": 2025,
+      "league_name": "Serie A",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:13.136434-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 505,
+      "team_name": "Inter",
+      "attack": 1.2112,
+      "defence": 0.9651,
+      "n_fixtures": 15,
+      "competition_key": "api-football:135:2025",
+      "league_id": 135,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-08T09:00:00-08:00",
+      "window_end": "2026-05-23T09:00:00-07:00",
+      "league_mean_xg": 1.2479,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401869198",
+   "date": "2026-08-01T13:00Z",
+   "name": "Atlético Madrid at Manchester United",
+   "ratings": {
+    "home": {
+     "club": "Manchester United",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 39,
+      "roster_season": 2026,
+      "league_name": "Premier League",
+      "league_country": "England",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 39,
+      "season": 2025,
+      "league_name": "Premier League",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:49:39.828042-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 33,
+      "team_name": "Manchester United",
+      "attack": 1.0842,
+      "defence": 0.9691,
+      "n_fixtures": 15,
+      "competition_key": "api-football:39:2025",
+      "league_id": 39,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-01T06:00:00-08:00",
+      "window_end": "2026-05-24T08:00:00-07:00",
+      "league_mean_xg": 1.4337,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Atlético Madrid",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 140,
+      "roster_season": 2026,
+      "league_name": "La Liga",
+      "league_country": "Spain",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 140,
+      "season": 2025,
+      "league_name": "La Liga",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:16.799665-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 530,
+      "team_name": "Atletico Madrid",
+      "attack": 1.1011,
+      "defence": 1.1326,
+      "n_fixtures": 15,
+      "competition_key": "api-football:140:2025",
+      "league_id": 140,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-15T07:15:00-08:00",
+      "window_end": "2026-05-24T12:00:00-07:00",
+      "league_mean_xg": 1.3107,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401886531",
+   "date": "2026-08-01T14:00Z",
+   "name": "AS Roma at Cardiff City",
+   "ratings": {
+    "home": {
+     "club": "Cardiff City",
+     "rated": false,
+     "reason": "insufficient_fixtures",
+     "reason_words": "not enough xG fixtures to rate this club",
+     "rating": null,
+     "league": {
+      "league_id": 40,
+      "roster_season": 2026,
+      "league_name": "Championship",
+      "league_country": "England",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 40,
+      "season": 2025,
+      "league_name": "Championship",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 557,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:49:43.492057-07:00",
+      "fittable": true
+     }
+    },
+    "away": {
+     "club": "AS Roma",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 135,
+      "roster_season": 2026,
+      "league_name": "Serie A",
+      "league_country": "Italy",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 135,
+      "season": 2025,
+      "league_name": "Serie A",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:13.136434-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 497,
+      "team_name": "AS Roma",
+      "attack": 1.1812,
+      "defence": 0.8689,
+      "n_fixtures": 15,
+      "competition_key": "api-football:135:2025",
+      "league_id": 135,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-09T11:45:00-08:00",
+      "window_end": "2026-05-24T11:45:00-07:00",
+      "league_mean_xg": 1.2479,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401888842",
+   "date": "2026-08-01T16:00Z",
+   "name": "Fiorentina at Real Madrid",
+   "ratings": {
+    "home": {
+     "club": "Real Madrid",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 140,
+      "roster_season": 2026,
+      "league_name": "La Liga",
+      "league_country": "Spain",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 140,
+      "season": 2025,
+      "league_name": "La Liga",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:16.799665-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 541,
+      "team_name": "Real Madrid",
+      "attack": 1.1183,
+      "defence": 0.9087,
+      "n_fixtures": 15,
+      "competition_key": "api-football:140:2025",
+      "league_id": 140,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-14T12:00:00-08:00",
+      "window_end": "2026-05-23T12:00:00-07:00",
+      "league_mean_xg": 1.3107,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Fiorentina",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 135,
+      "roster_season": 2026,
+      "league_name": "Serie A",
+      "league_country": "Italy",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 135,
+      "season": 2025,
+      "league_name": "Serie A",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:13.136434-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 502,
+      "team_name": "Fiorentina",
+      "attack": 0.9364,
+      "defence": 0.9835,
+      "n_fixtures": 15,
+      "competition_key": "api-football:135:2025",
+      "league_id": 135,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-07T11:45:00-08:00",
+      "window_end": "2026-05-22T11:45:00-07:00",
+      "league_mean_xg": 1.2479,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401898015",
+   "date": "2026-08-01T17:00Z",
+   "name": "Al Nassr at Estrela",
+   "ratings": {
+    "home": {
+     "club": "Estrela",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 94,
+      "roster_season": 2026,
+      "league_name": "Primeira Liga",
+      "league_country": "Portugal",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 94,
+      "season": 2025,
+      "league_name": "Primeira Liga",
+      "verdict": "xg_partial",
+      "measured_rate": 0.833,
+      "completed_fixtures_visible": 308,
+      "samples_taken": 6,
+      "samples_with_xg": 5,
+      "measured_at": "2026-07-29T16:50:05.809919-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 15130,
+      "team_name": "Estrela",
+      "attack": 0.9551,
+      "defence": 1.1168,
+      "n_fixtures": 17,
+      "competition_key": "api-football:94:2025",
+      "league_id": 94,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-19T12:15:00-08:00",
+      "window_end": "2026-05-16T10:00:00-07:00",
+      "league_mean_xg": 1.2742,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Al Nassr",
+     "rated": false,
+     "reason": "league_not_indexed",
+     "reason_words": "no xG data for this club's league",
+     "rating": null,
+     "resolution": "league_not_indexed"
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401886553",
+   "date": "2026-08-01T18:00Z",
+   "name": "Arsenal at Girona",
+   "ratings": {
+    "home": {
+     "club": "Girona",
+     "rated": false,
+     "reason": "insufficient_fixtures",
+     "reason_words": "not enough xG fixtures to rate this club",
+     "rating": null,
+     "league": {
+      "league_id": 141,
+      "roster_season": 2026,
+      "league_name": "Segunda División",
+      "league_country": "Spain",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 141,
+      "season": 2025,
+      "league_name": "Segunda División",
+      "verdict": "xg_partial",
+      "measured_rate": 0.333,
+      "completed_fixtures_visible": 468,
+      "samples_taken": 6,
+      "samples_with_xg": 2,
+      "measured_at": "2026-07-29T16:50:20.505921-07:00",
+      "fittable": true
+     }
+    },
+    "away": {
+     "club": "Arsenal",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 39,
+      "roster_season": 2026,
+      "league_name": "Premier League",
+      "league_country": "England",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 39,
+      "season": 2025,
+      "league_name": "Premier League",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:49:39.828042-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 42,
+      "team_name": "Arsenal",
+      "attack": 1.0932,
+      "defence": 0.7881,
+      "n_fixtures": 15,
+      "competition_key": "api-football:39:2025",
+      "league_id": 39,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-31T07:00:00-08:00",
+      "window_end": "2026-05-24T08:00:00-07:00",
+      "league_mean_xg": 1.4337,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401886552",
+   "date": "2026-08-02T12:30Z",
+   "name": "Ajax Amsterdam at FC Volendam",
+   "ratings": {
+    "home": {
+     "club": "FC Volendam",
+     "rated": false,
+     "reason": "insufficient_fixtures",
+     "reason_words": "not enough xG fixtures to rate this club",
+     "rating": null,
+     "league": {
+      "league_id": 89,
+      "roster_season": 2026,
+      "league_name": "Eerste Divisie",
+      "league_country": "Netherlands",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 89,
+      "season": 2025,
+      "league_name": "Eerste Divisie",
+      "verdict": "xg_partial",
+      "measured_rate": 0.5,
+      "completed_fixtures_visible": 392,
+      "samples_taken": 6,
+      "samples_with_xg": 3,
+      "measured_at": "2026-07-29T16:50:02.025535-07:00",
+      "fittable": true
+     }
+    },
+    "away": {
+     "club": "Ajax Amsterdam",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 88,
+      "roster_season": 2026,
+      "league_name": "Eredivisie",
+      "league_country": "Netherlands",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 88,
+      "season": 2025,
+      "league_name": "Eredivisie",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 309,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:49:58.277492-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 194,
+      "team_name": "Ajax",
+      "attack": 1.0385,
+      "defence": 0.8706,
+      "n_fixtures": 17,
+      "competition_key": "api-football:88:2025",
+      "league_id": 88,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-17T07:30:00-08:00",
+      "window_end": "2026-05-24T03:15:00-07:00",
+      "league_mean_xg": 1.504,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401886551",
+   "date": "2026-08-02T13:00Z",
+   "name": "Atalanta at Feyenoord Rotterdam",
+   "ratings": {
+    "home": {
+     "club": "Feyenoord Rotterdam",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 88,
+      "roster_season": 2026,
+      "league_name": "Eredivisie",
+      "league_country": "Netherlands",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 88,
+      "season": 2025,
+      "league_name": "Eredivisie",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 309,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:49:58.277492-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 209,
+      "team_name": "Feyenoord",
+      "attack": 1.1258,
+      "defence": 0.8905,
+      "n_fixtures": 15,
+      "competition_key": "api-football:88:2025",
+      "league_id": 88,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-18T07:45:00-08:00",
+      "window_end": "2026-05-17T05:30:00-07:00",
+      "league_mean_xg": 1.504,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Atalanta",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 135,
+      "roster_season": 2026,
+      "league_name": "Serie A",
+      "league_country": "Italy",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 135,
+      "season": 2025,
+      "league_name": "Serie A",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:13.136434-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 499,
+      "team_name": "Atalanta",
+      "attack": 1.0978,
+      "defence": 0.914,
+      "n_fixtures": 15,
+      "competition_key": "api-football:135:2025",
+      "league_id": 135,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-09T09:30:00-08:00",
+      "window_end": "2026-05-22T11:45:00-07:00",
+      "league_mean_xg": 1.2479,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401898711",
+   "date": "2026-08-02T14:30Z",
+   "name": "Udinese at Trabzonspor",
+   "ratings": {
+    "home": {
+     "club": "Trabzonspor",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 203,
+      "roster_season": 2026,
+      "league_name": "Süper Lig",
+      "league_country": "Turkey",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 203,
+      "season": 2025,
+      "league_name": "Süper Lig",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 306,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:24.208216-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 998,
+      "team_name": "Trabzonspor",
+      "attack": 1.0001,
+      "defence": 0.9549,
+      "n_fixtures": 17,
+      "competition_key": "api-football:203:2025",
+      "league_id": 203,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-18T06:00:00-08:00",
+      "window_end": "2026-05-17T10:00:00-07:00",
+      "league_mean_xg": 1.311,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Udinese",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 135,
+      "roster_season": 2026,
+      "league_name": "Serie A",
+      "league_country": "Italy",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 135,
+      "season": 2025,
+      "league_name": "Serie A",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:13.136434-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 494,
+      "team_name": "Udinese",
+      "attack": 0.9514,
+      "defence": 1.0772,
+      "n_fixtures": 15,
+      "competition_key": "api-football:135:2025",
+      "league_id": 135,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-08T06:00:00-08:00",
+      "window_end": "2026-05-24T09:00:00-07:00",
+      "league_mean_xg": 1.2479,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401897751",
+   "date": "2026-08-02T16:00Z",
+   "name": "Wrexham at Sunderland",
+   "ratings": {
+    "home": {
+     "club": "Sunderland",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 39,
+      "roster_season": 2026,
+      "league_name": "Premier League",
+      "league_country": "England",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 39,
+      "season": 2025,
+      "league_name": "Premier League",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:49:39.828042-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 746,
+      "team_name": "Sunderland",
+      "attack": 0.9202,
+      "defence": 0.9717,
+      "n_fixtures": 15,
+      "competition_key": "api-football:39:2025",
+      "league_id": 39,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-02T12:00:00-08:00",
+      "window_end": "2026-05-24T08:00:00-07:00",
+      "league_mean_xg": 1.4337,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Wrexham",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 40,
+      "roster_season": 2026,
+      "league_name": "Championship",
+      "league_country": "England",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 40,
+      "season": 2025,
+      "league_name": "Championship",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 557,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:49:43.492057-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 1837,
+      "team_name": "Wrexham",
+      "attack": 0.9017,
+      "defence": 1.0491,
+      "n_fixtures": 12,
+      "competition_key": "api-football:40:2025",
+      "league_id": 40,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-28T07:00:00-08:00",
+      "window_end": "2026-05-02T04:30:00-07:00",
+      "league_mean_xg": 1.403,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401898687",
+   "date": "2026-08-02T18:00Z",
+   "name": "Stade Rennais at Galatasaray",
+   "ratings": {
+    "home": {
+     "club": "Galatasaray",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 203,
+      "roster_season": 2026,
+      "league_name": "Süper Lig",
+      "league_country": "Turkey",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 203,
+      "season": 2025,
+      "league_name": "Süper Lig",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 306,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:24.208216-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 645,
+      "team_name": "Galatasaray",
+      "attack": 1.228,
+      "defence": 0.8432,
+      "n_fixtures": 16,
+      "competition_key": "api-football:203:2025",
+      "league_id": 203,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-24T09:00:00-08:00",
+      "window_end": "2026-05-17T10:00:00-07:00",
+      "league_mean_xg": 1.311,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Stade Rennais",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 61,
+      "roster_season": 2026,
+      "league_name": "Ligue 1",
+      "league_country": "France",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 61,
+      "season": 2025,
+      "league_name": "Ligue 1",
+      "verdict": "xg_partial",
+      "measured_rate": 0.833,
+      "completed_fixtures_visible": 309,
+      "samples_taken": 6,
+      "samples_with_xg": 5,
+      "measured_at": "2026-07-29T16:49:50.849195-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 94,
+      "team_name": "Rennes",
+      "attack": 1.1122,
+      "defence": 1.0809,
+      "n_fixtures": 17,
+      "competition_key": "api-football:61:2025",
+      "league_id": 61,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-18T08:15:00-08:00",
+      "window_end": "2026-05-17T12:00:00-07:00",
+      "league_mean_xg": 1.4257,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401863533",
+   "date": "2026-08-02T20:00Z",
+   "name": "Leeds United at Liverpool",
+   "ratings": {
+    "home": {
+     "club": "Liverpool",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 39,
+      "roster_season": 2026,
+      "league_name": "Premier League",
+      "league_country": "England",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 39,
+      "season": 2025,
+      "league_name": "Premier League",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:49:39.828042-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 40,
+      "team_name": "Liverpool",
+      "attack": 1.056,
+      "defence": 1.0014,
+      "n_fixtures": 15,
+      "competition_key": "api-football:39:2025",
+      "league_id": 39,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-31T12:00:00-08:00",
+      "window_end": "2026-05-24T08:00:00-07:00",
+      "league_mean_xg": 1.4337,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Leeds United",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 39,
+      "roster_season": 2026,
+      "league_name": "Premier League",
+      "league_country": "England",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 39,
+      "season": 2025,
+      "league_name": "Premier League",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:49:39.828042-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 63,
+      "team_name": "Leeds",
+      "attack": 0.9887,
+      "defence": 1.0432,
+      "n_fixtures": 15,
+      "competition_key": "api-football:39:2025",
+      "league_id": 39,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-31T07:00:00-08:00",
+      "window_end": "2026-05-24T08:00:00-07:00",
+      "league_mean_xg": 1.4337,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": true,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401898014",
+   "date": "2026-08-04T18:00Z",
+   "name": "Almería at Al Nassr",
+   "ratings": {
+    "home": {
+     "club": "Al Nassr",
+     "rated": false,
+     "reason": "league_not_indexed",
+     "reason_words": "no xG data for this club's league",
+     "rating": null,
+     "resolution": "league_not_indexed"
+    },
+    "away": {
+     "club": "Almería",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 141,
+      "roster_season": 2026,
+      "league_name": "Segunda División",
+      "league_country": "Spain",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 141,
+      "season": 2025,
+      "league_name": "Segunda División",
+      "verdict": "xg_partial",
+      "measured_rate": 0.333,
+      "completed_fixtures_visible": 468,
+      "samples_taken": 6,
+      "samples_with_xg": 2,
+      "measured_at": "2026-07-29T16:50:20.505921-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 723,
+      "team_name": "Almeria",
+      "attack": 1.1172,
+      "defence": 1.0316,
+      "n_fixtures": 7,
+      "competition_key": "api-football:141:2025",
+      "league_id": 141,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-03-09T12:30:00-07:00",
+      "window_end": "2026-06-09T12:00:00-07:00",
+      "league_mean_xg": 1.4852,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401867951",
+   "date": "2026-08-04T18:00Z",
+   "name": "Bayern Munich at Jeju United",
+   "ratings": {
+    "home": {
+     "club": "Jeju United",
+     "rated": false,
+     "reason": "league_has_no_xg",
+     "reason_words": "no xG data for this club's league",
+     "rating": null,
+     "league": {
+      "league_id": 292,
+      "roster_season": 2026,
+      "league_name": "K League 1",
+      "league_country": "South-Korea",
+      "season": 2026
+     },
+     "coverage": {
+      "league_id": 292,
+      "season": 2026,
+      "league_name": "K League 1",
+      "verdict": "xg_absent",
+      "measured_rate": 0.0,
+      "completed_fixtures_visible": 120,
+      "samples_taken": 6,
+      "samples_with_xg": 0,
+      "measured_at": "2026-07-29T16:50:27.420631-07:00",
+      "fittable": false
+     }
+    },
+    "away": {
+     "club": "Bayern Munich",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 78,
+      "roster_season": 2026,
+      "league_name": "Bundesliga",
+      "league_country": "Germany",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 78,
+      "season": 2025,
+      "league_name": "Bundesliga",
+      "verdict": "xg_partial",
+      "measured_rate": 0.833,
+      "completed_fixtures_visible": 308,
+      "samples_taken": 6,
+      "samples_with_xg": 5,
+      "measured_at": "2026-07-29T16:49:54.592259-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 157,
+      "team_name": "Bayern München",
+      "attack": 1.3796,
+      "defence": 1.0192,
+      "n_fixtures": 16,
+      "competition_key": "api-football:78:2025",
+      "league_id": 78,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-24T06:30:00-08:00",
+      "window_end": "2026-05-16T06:30:00-07:00",
+      "league_mean_xg": 1.6736,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401886532",
+   "date": "2026-08-04T18:00Z",
+   "name": "AS Roma at Newport County",
+   "ratings": {
+    "home": {
+     "club": "Newport County",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 42,
+      "roster_season": 2026,
+      "league_name": "League Two",
+      "league_country": "England",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 42,
+      "season": 2025,
+      "league_name": "League Two",
+      "verdict": "xg_partial",
+      "measured_rate": 0.5,
+      "completed_fixtures_visible": 557,
+      "samples_taken": 6,
+      "samples_with_xg": 3,
+      "measured_at": "2026-07-29T16:49:47.169224-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 1367,
+      "team_name": "Newport County",
+      "attack": 1.0898,
+      "defence": 1.0124,
+      "n_fixtures": 10,
+      "competition_key": "api-football:42:2025",
+      "league_id": 42,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-03-07T07:00:00-08:00",
+      "window_end": "2026-05-02T07:00:00-07:00",
+      "league_mean_xg": 1.314,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "AS Roma",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 135,
+      "roster_season": 2026,
+      "league_name": "Serie A",
+      "league_country": "Italy",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 135,
+      "season": 2025,
+      "league_name": "Serie A",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:13.136434-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 497,
+      "team_name": "AS Roma",
+      "attack": 1.1812,
+      "defence": 0.8689,
+      "n_fixtures": 15,
+      "competition_key": "api-football:135:2025",
+      "league_id": 135,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-09T11:45:00-08:00",
+      "window_end": "2026-05-24T11:45:00-07:00",
+      "league_mean_xg": 1.2479,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401869428",
+   "date": "2026-08-05T11:00Z",
+   "name": "Internazionale at AC Milan",
+   "ratings": {
+    "home": {
+     "club": "AC Milan",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 135,
+      "roster_season": 2026,
+      "league_name": "Serie A",
+      "league_country": "Italy",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 135,
+      "season": 2025,
+      "league_name": "Serie A",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:13.136434-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 489,
+      "team_name": "AC Milan",
+      "attack": 1.071,
+      "defence": 0.9978,
+      "n_fixtures": 15,
+      "competition_key": "api-football:135:2025",
+      "league_id": 135,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-13T11:45:00-08:00",
+      "window_end": "2026-05-24T11:45:00-07:00",
+      "league_mean_xg": 1.2479,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Internazionale",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 135,
+      "roster_season": 2026,
+      "league_name": "Serie A",
+      "league_country": "Italy",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 135,
+      "season": 2025,
+      "league_name": "Serie A",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:13.136434-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 505,
+      "team_name": "Inter",
+      "attack": 1.2112,
+      "defence": 0.9651,
+      "n_fixtures": 15,
+      "competition_key": "api-football:135:2025",
+      "league_id": 135,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-08T09:00:00-08:00",
+      "window_end": "2026-05-23T09:00:00-07:00",
+      "league_mean_xg": 1.2479,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": true,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401871494",
+   "date": "2026-08-05T11:30Z",
+   "name": "Juventus at Chelsea",
+   "ratings": {
+    "home": {
+     "club": "Chelsea",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 39,
+      "roster_season": 2026,
+      "league_name": "Premier League",
+      "league_country": "England",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 39,
+      "season": 2025,
+      "league_name": "Premier League",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:49:39.828042-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 49,
+      "team_name": "Chelsea",
+      "attack": 1.0219,
+      "defence": 0.9809,
+      "n_fixtures": 15,
+      "competition_key": "api-football:39:2025",
+      "league_id": 39,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-31T09:30:00-08:00",
+      "window_end": "2026-05-24T08:00:00-07:00",
+      "league_mean_xg": 1.4337,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Juventus",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 135,
+      "roster_season": 2026,
+      "league_name": "Serie A",
+      "league_country": "Italy",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 135,
+      "season": 2025,
+      "league_name": "Serie A",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:13.136434-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 496,
+      "team_name": "Juventus",
+      "attack": 1.2421,
+      "defence": 0.8699,
+      "n_fixtures": 15,
+      "competition_key": "api-football:135:2025",
+      "league_id": 135,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-08T11:45:00-08:00",
+      "window_end": "2026-05-24T11:45:00-07:00",
+      "league_mean_xg": 1.2479,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401886451",
+   "date": "2026-08-05T18:00Z",
+   "name": "Paris Saint-Germain at Mallorca",
+   "ratings": {
+    "home": {
+     "club": "Mallorca",
+     "rated": false,
+     "reason": "insufficient_fixtures",
+     "reason_words": "not enough xG fixtures to rate this club",
+     "rating": null,
+     "league": {
+      "league_id": 141,
+      "roster_season": 2026,
+      "league_name": "Segunda División",
+      "league_country": "Spain",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 141,
+      "season": 2025,
+      "league_name": "Segunda División",
+      "verdict": "xg_partial",
+      "measured_rate": 0.333,
+      "completed_fixtures_visible": 468,
+      "samples_taken": 6,
+      "samples_with_xg": 2,
+      "measured_at": "2026-07-29T16:50:20.505921-07:00",
+      "fittable": true
+     }
+    },
+    "away": {
+     "club": "Paris Saint-Germain",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 61,
+      "roster_season": 2026,
+      "league_name": "Ligue 1",
+      "league_country": "France",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 61,
+      "season": 2025,
+      "league_name": "Ligue 1",
+      "verdict": "xg_partial",
+      "measured_rate": 0.833,
+      "completed_fixtures_visible": 309,
+      "samples_taken": 6,
+      "samples_with_xg": 5,
+      "measured_at": "2026-07-29T16:49:50.849195-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 85,
+      "team_name": "Paris Saint Germain",
+      "attack": 1.319,
+      "defence": 0.8565,
+      "n_fixtures": 16,
+      "competition_key": "api-football:61:2025",
+      "league_id": 61,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-23T11:00:00-08:00",
+      "window_end": "2026-05-17T12:00:00-07:00",
+      "league_mean_xg": 1.4257,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  },
+  {
+   "espn_event_id": "401867142",
+   "date": "2026-08-05T18:30Z",
+   "name": "Real Betis at Arsenal",
+   "ratings": {
+    "home": {
+     "club": "Arsenal",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 39,
+      "roster_season": 2026,
+      "league_name": "Premier League",
+      "league_country": "England",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 39,
+      "season": 2025,
+      "league_name": "Premier League",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:49:39.828042-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 42,
+      "team_name": "Arsenal",
+      "attack": 1.0932,
+      "defence": 0.7881,
+      "n_fixtures": 15,
+      "competition_key": "api-football:39:2025",
+      "league_id": 39,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-01-31T07:00:00-08:00",
+      "window_end": "2026-05-24T08:00:00-07:00",
+      "league_mean_xg": 1.4337,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "away": {
+     "club": "Real Betis",
+     "rated": true,
+     "reason": null,
+     "league": {
+      "league_id": 140,
+      "roster_season": 2026,
+      "league_name": "La Liga",
+      "league_country": "Spain",
+      "season": 2025
+     },
+     "coverage": {
+      "league_id": 140,
+      "season": 2025,
+      "league_name": "La Liga",
+      "verdict": "xg_available",
+      "measured_rate": 1.0,
+      "completed_fixtures_visible": 380,
+      "samples_taken": 6,
+      "samples_with_xg": 6,
+      "measured_at": "2026-07-29T16:50:16.799665-07:00",
+      "fittable": true
+     },
+     "rating": {
+      "provider_team_id": 543,
+      "team_name": "Real Betis",
+      "attack": 1.012,
+      "defence": 0.9641,
+      "n_fixtures": 15,
+      "competition_key": "api-football:140:2025",
+      "league_id": 140,
+      "season": 2025,
+      "source": "api-football",
+      "window_start": "2026-02-15T12:00:00-08:00",
+      "window_end": "2026-05-23T12:00:00-07:00",
+      "league_mean_xg": 1.3107,
+      "shrink_games": 6.0,
+      "half_life_days": 90.0,
+      "comparable_across_competitions": false
+     }
+    },
+    "same_competition": false,
+    "comparable": false,
+    "not_comparable_note": "Ratings from different leagues are fitted on different populations and different scales. They are shown side by side for context only.",
+    "forecast": null,
+    "forecast_available": false,
+    "forecast_unavailable_reason": "No match probability is derived from these ratings. Each is relative to its own league's average, so combining two of them would produce a number with no referent — and friendlies are structurally worthless as forecast evidence regardless.",
+    "attribution": "League-derived xG form: each club's expected-goals strength relative to its OWN league's average, fitted only on that league's fixtures. Two clubs' ratings come from different leagues and are NOT comparable to each other — no match probability is or can be derived from them."
+   }
+  }
+ ]
+}

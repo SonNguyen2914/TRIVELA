@@ -24,6 +24,20 @@ The ladder (evaluable rungs; M3+ await the inputs they need):
 
 Rolling-origin throughout: a fixture is predicted only from fixtures
 that kicked off before it — no leakage by construction.
+
+COMPETITION-KEYED since 2026-07-29 (backlog S-5). This module was
+MLS-only: it imported MLS's hyperparameters at module scope and read
+MLS's config constants inline, so no other league could be run up the
+ladder. Every function now takes an optional `LadderSpec` and DEFAULTS TO
+MLS, exactly as `runs.py` and `ingest.py` were generalized — so existing
+MLS call sites and their numbers are unchanged, and that identity is
+proven by a control (`tests/test_ladder_parity.py`) that runs the
+pre-refactor module out of the git object store beside this one and
+requires byte-identical reports.
+
+`src/live/model_mls.py` is deliberately NOT modified by that work: it is
+inside the MLS engine signature, so any source change there invalidates
+the live MLS approval. The MLS spec READS it.
 """
 from __future__ import annotations
 
@@ -39,6 +53,10 @@ from src.live.model_mls import HALF_LIFE_DAYS, MIN_GAMES, MODEL_NAME
 
 EVAL_VERSION = "model-eval-v1"
 APPROVAL_POLICY_VERSION = "shadow-approval-v1"
+# A ladder run over PRIOR-SEASON history is a strictly weaker instrument
+# than MLS's live-plane ladder, and gets its own policy name so no record
+# can present the two as the same decision. See `replay_approval_policy`.
+REPLAY_APPROVAL_POLICY_VERSION = "shadow-approval-replay-v1"
 MIN_SCORED_FOR_APPROVAL = 30
 GOAL_GRID = 15
 THREE = ("home_win", "draw", "away_win")
@@ -70,6 +88,306 @@ FUTURE_RUNGS = {
           "consumed once measured to help",
 }
 
+# The pairwise edges MLS reports, in MLS's order. Frozen here rather than
+# inline in evaluate_ladder so a league with fewer rungs can declare its
+# own set without perturbing this one.
+MLS_EDGE_PAIRS = (("M2", "M0"), ("M2", "M1"), ("M1", "M0"),
+                  ("M2C", "M2"), ("M2C", "M0"),
+                  ("M3", "M2C"), ("M3", "M0"))
+
+# A goals-only ladder: no xG rung, because for these leagues no
+# trustworthy team-level xG source exists in this stack (see
+# model_epl.py / model_ligamx.py docstrings). An M3 rung here would claim
+# a measurement that cannot be made.
+GOALS_ONLY_LADDER = {
+    "M0": {"use_ratings": False, "recency": False, "shrink": 0.0,
+           "desc": "league scoring + venue split"},
+    "M1": {"use_ratings": True, "recency": False, "shrink": 1.0,
+           "desc": "team ratings, equal-weighted, minimal pooling"},
+    "M2": {"use_ratings": True, "recency": True, "shrink": 24.0,
+           "desc": "+ recency + partial pooling"},
+    "M2C": {"use_ratings": True, "recency": True, "shrink": 24.0,
+            "calibrate": True,
+            "desc": "+ calibration (shrink the 3-way toward uniform)"},
+}
+GOALS_ONLY_EDGE_PAIRS = (("M2", "M0"), ("M2", "M1"), ("M1", "M0"),
+                         ("M2C", "M2"), ("M2C", "M0"))
+GOALS_ONLY_FUTURE_RUNGS = {
+    # CORRECTED 2026-07-29: this used to say no trustworthy team-level xG
+    # source EXISTS for these leagues. One does now — a paid API-Football key,
+    # with per-league coverage MEASURED rather than assumed (see
+    # src/live/apifootball.py). What the rung still waits on is fixture
+    # OVERLAP: the provider's xG history is the completed previous season while
+    # our live plane holds the current campaign, so the bridge is empty until
+    # this season generates completed fixtures. "Unavailable" would now be
+    # false; "measured, and waiting for overlap" is the truth, and
+    # apifootball.bridge_coverage reports which.
+    "M3": "provider xG ratings — a MEASURED xG source now exists for this "
+          "league (API-Football), but the bridge to our own fixtures is "
+          "empty until the current season generates completed fixtures; "
+          "apifootball.bridge_coverage reports the measured overlap",
+    "M4": "availability / lineup effects — no lineup capture yet",
+    "M5": "goalkeeper effects — no GK capture yet",
+}
+
+# The goals-only ladder PLUS the provider-xG rung, for a league that has both a
+# measured xG source and real overlap with our fixtures. Selected at call time
+# by LadderSpec.active_ladder() — never at import, which would make the ladder
+# a function of database state at module load.
+LEAGUE_XG_LADDER = {
+    **GOALS_ONLY_LADDER,
+    "M3": {"use_ratings": True, "recency": True, "shrink": 24.0,
+           "calibrate": True, "xg_alpha": 1.0,
+           "desc": "+ provider xG attack/defence ratings (API-Football, "
+                   "own lighter shrink — xG is far less noisy than goals)"},
+}
+LEAGUE_XG_EDGE_PAIRS = GOALS_ONLY_EDGE_PAIRS + (("M3", "M2C"), ("M3", "M0"))
+
+# (competition_slug -> API-Football league id) for the leagues whose xG this
+# stack can source. MLS is ABSENT deliberately: it keeps Sportec, and
+# apifootball refuses league 253 by name.
+DARK_LEAGUE_APIFOOTBALL_IDS = {
+    "epl-2026": 39,
+    "la-liga-2026": 140,
+    "liga-mx-2026": 262,
+}
+
+
+class LadderSpec:
+    """What one competition needs to be run up the ladder.
+
+    Hyperparameters are READ from the league's own model module at call
+    time (never copied here) so a spec cannot silently drift from the
+    model it claims to evaluate — the MLS spec in particular must reflect
+    `model_mls` exactly, since that module may not be edited.
+    """
+
+    def __init__(self, slug: str, model_module, ladder: dict,
+                 edge_pairs, future_rungs: dict,
+                 calibration_alpha_fn=None, xg_map_fn=None,
+                 corpus_version_fn=None, model_parameters_fn=None,
+                 label: str = "", xg_ladder: dict | None = None,
+                 xg_edge_pairs=None):
+        self.slug = slug
+        self.model = model_module
+        self.ladder = ladder
+        self.edge_pairs = tuple(edge_pairs)
+        self.future_rungs = future_rungs
+        self.label = label or slug
+        # config is read at call time, so an env flip needs no re-import
+        self._calibration_alpha_fn = calibration_alpha_fn
+        # None == this league has no provider xG (not "we didn't wire it")
+        self.xg_map_fn = xg_map_fn
+        self._corpus_version_fn = corpus_version_fn
+        self._model_parameters_fn = model_parameters_fn
+        # An OPTIONAL richer ladder, used only when this league's xG map is
+        # actually populated. MLS passes neither and is unaffected.
+        self.xg_ladder = xg_ladder
+        self.xg_edge_pairs = tuple(xg_edge_pairs or ())
+
+    # --- hyperparameters, read from the model module -------------------
+    @property
+    def model_name(self) -> str:
+        return self.model.MODEL_NAME
+
+    def half_life_days(self) -> float:
+        return self.model.HALF_LIFE_DAYS
+
+    def min_games(self) -> int:
+        return self.model.MIN_GAMES
+
+    def result_shrink(self) -> float:
+        return self.model.RESULT_SHRINK
+
+    def xg_shrink_default(self) -> float:
+        return float(getattr(self.model, "XG_SHRINK_GAMES", 0.0))
+
+    def calibration_alpha(self) -> float:
+        if self._calibration_alpha_fn is None:
+            return 0.0
+        return float(self._calibration_alpha_fn())
+
+    def calibrate(self, three: dict, alpha: float) -> dict:
+        return self.model.calibrate(three, alpha)
+
+    def completed(self, s, before=None):
+        return self.model._completed(s, before=before)
+
+    def xg_map(self) -> dict:
+        return self.xg_map_fn() if self.xg_map_fn else {}
+
+    def active_ladder(self) -> tuple[dict, tuple]:
+        """(ladder, edge_pairs) for THIS run.
+
+        MLS is returned untouched — its ladder and edge pairs are frozen, its
+        approval rests on them, and `tests/test_ladder_parity.py` requires the
+        report to stay byte-identical.
+
+        For a league carrying `xg_ladder`, the xG rung is included only when the
+        xG map is NON-EMPTY. That condition is the honest one: declaring an M3
+        rung whose map is empty would report a rung measured on nothing, while
+        omitting it when real xG is bridged would hide a measurement we can
+        actually make. The map is read once here, not per rung."""
+        if not self.xg_ladder or not self.xg_map_fn:
+            return self.ladder, self.edge_pairs
+        try:
+            if self.xg_map():
+                return self.xg_ladder, self.xg_edge_pairs
+        except Exception as exc:                 # never fail a ladder run on
+            print(f"[model_eval] xg map probe failed for "  # a provider read
+                  f"{self.slug}: {exc}")
+        return self.ladder, self.edge_pairs
+
+    def latest_corpus_version(self) -> str | None:
+        """The published corpus this league's approval can bind to. Only
+        MLS publishes one; for every other league this is honestly None
+        rather than borrowing MLS's."""
+        return (self._corpus_version_fn() if self._corpus_version_fn
+                else None)
+
+    def model_parameters(self) -> dict:
+        if self._model_parameters_fn is not None:
+            return self._model_parameters_fn()
+        return {
+            "model_version": self.model_name,
+            "engine_signature":
+                self.model.engine_signature()["signature_hash"],
+            "artifact_schema": getattr(
+                self.model, "INPUT_ARTIFACT_SCHEMA", None),
+            "parameters": {
+                "goals_shrink_games": getattr(
+                    self.model, "SHRINK_GAMES", None),
+                "half_life_days": self.half_life_days(),
+                "min_games": self.min_games(),
+                "result_shrink": self.result_shrink(),
+                "calibration_alpha": self.calibration_alpha(),
+            },
+            "parameter_provenance": (
+                "STARTING POINTS carried from MLS league play, NOT swept "
+                "on this league's own data unless the decision document "
+                "says otherwise"),
+        }
+
+
+def _mls_calibration_alpha() -> float:
+    import config
+    return config.MLS_CALIBRATION_ALPHA
+
+
+def _mls_xg_map() -> dict:
+    from src.live import mls_stats
+    return mls_stats.team_xg_map()
+
+
+def _mls_corpus_version() -> str | None:
+    from src.live import corpus as _c
+    return _c.latest_published_version()
+
+
+def _mls_model_parameters() -> dict:
+    from src.live import corpus as _c
+    return _c._model_parameters()
+
+
+def _mls_spec() -> LadderSpec:
+    from src.live import model_mls
+    return LadderSpec(
+        slug="mls-2026", model_module=model_mls, ladder=LADDER,
+        edge_pairs=MLS_EDGE_PAIRS, future_rungs=FUTURE_RUNGS,
+        calibration_alpha_fn=_mls_calibration_alpha,
+        xg_map_fn=_mls_xg_map,
+        corpus_version_fn=_mls_corpus_version,
+        model_parameters_fn=_mls_model_parameters,
+        label="MLS")
+
+
+MLS_LADDER_SPEC = _mls_spec()
+
+# The registry. A new league joins by ADDING A ROW — nothing else. That is
+# the load-bearing property for La Liga, which lives on `feat-la-liga`
+# (not yet rebased onto the EPL/Liga MX stack): when its module lands, one
+# entry here gives it the ladder, the replay and the approval path.
+#
+# (module path, config-constant prefix, alert label)
+_DARK_LEAGUE_REGISTRY = (
+    ("epl-2026", "src.live.model_epl", "EPL_CALIBRATION_ALPHA", "EPL"),
+    ("liga-mx-2026", "src.live.model_ligamx", "LIGAMX_CALIBRATION_ALPHA",
+     "LIGAMX"),
+    # La Liga: uncomment the row once src/live/model_laliga.py exists on
+    # this branch. Absent modules are skipped, not fatal, so this file
+    # stays importable on branches where a league has not landed yet.
+    ("la-liga-2026", "src.live.model_laliga", "LALIGA_CALIBRATION_ALPHA",
+     "LALIGA"),
+)
+
+
+def _apifootball_xg_map_fn(slug: str, league_id: int):
+    """A per-competition xG map reader, in the same shape MLS's Sportec reader
+    has. Returns {} when nothing bridges — which `active_ladder` treats as 'no
+    M3 rung', never as a rung measured on zeros."""
+    def _fn() -> dict:
+        from src.live import apifootball
+        return apifootball.bridge_fixture_xg(slug, league_id)
+    return _fn
+
+
+def _config_alpha_fn(name: str):
+    def _fn() -> float:
+        import config
+        return float(getattr(config, name, 0.0) or 0.0)
+    return _fn
+
+
+def _build_specs() -> dict:
+    import importlib
+    specs = {MLS_LADDER_SPEC.slug: MLS_LADDER_SPEC}
+    for slug, module_path, alpha_const, label in _DARK_LEAGUE_REGISTRY:
+        try:
+            mod = importlib.import_module(module_path)
+        except ImportError:
+            # the league's model module is not on this branch yet — the
+            # registry row is a declaration, not a promise
+            continue
+        apif_id = DARK_LEAGUE_APIFOOTBALL_IDS.get(slug)
+        specs[slug] = LadderSpec(
+            slug=slug, model_module=mod, ladder=GOALS_ONLY_LADDER,
+            edge_pairs=GOALS_ONLY_EDGE_PAIRS,
+            future_rungs=GOALS_ONLY_FUTURE_RUNGS,
+            calibration_alpha_fn=_config_alpha_fn(alpha_const),
+            # a MEASURED xG source, bridged onto our own fixtures. None where
+            # this stack has no id for the league — honestly absent, not wired
+            # to an empty stub.
+            xg_map_fn=(_apifootball_xg_map_fn(slug, apif_id)
+                       if apif_id else None),
+            xg_ladder=(LEAGUE_XG_LADDER if apif_id else None),
+            xg_edge_pairs=(LEAGUE_XG_EDGE_PAIRS if apif_id else None),
+            label=label)
+    return specs
+
+
+_SPECS: dict | None = None
+
+
+def ladder_specs() -> dict:
+    """{slug: LadderSpec} for every competition whose model module is
+    importable on this branch."""
+    global _SPECS
+    if _SPECS is None:
+        _SPECS = _build_specs()
+    return _SPECS
+
+
+def ladder_spec(slug: str | None = None) -> LadderSpec:
+    """Resolve a spec by slug; None means MLS (the default that keeps
+    every pre-existing call site meaning what it meant)."""
+    if slug is None:
+        return MLS_LADDER_SPEC
+    spec = ladder_specs().get(slug)
+    if spec is None:
+        raise KeyError(f"no ladder spec for competition {slug!r} "
+                       f"(known: {sorted(ladder_specs())})")
+    return spec
+
 
 def _utc(dt):
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
@@ -96,14 +414,18 @@ def analytic_3way(lam_h: float, lam_a: float) -> dict:
 
 
 def fit_variant(fixtures, as_of, cfg: dict,
-                xg_by_fixture: dict | None = None) -> dict | None:
+                xg_by_fixture: dict | None = None,
+                spec: LadderSpec | None = None) -> dict | None:
     """Ratings + league params under a ladder config. Pure function of
     its inputs; the walk-forward calls it with prior-only slices. Mirrors
-    model_mls.fit — including the xG-based rating blend (cfg['xg_alpha'])
-    so the M3 rung measures exactly the deployed feature."""
+    the league model's fit — including the xG-based rating blend
+    (cfg['xg_alpha']) so the M3 rung measures exactly the deployed
+    feature. `spec` defaults to MLS."""
     if not fixtures:
         return None
-    from src.live.model_mls import RESULT_SHRINK, XG_SHRINK_GAMES
+    spec = spec or MLS_LADDER_SPEC
+    half_life = spec.half_life_days()
+    RESULT_SHRINK = spec.result_shrink()
     # xG weight: an explicit cfg value (offline sweeps) wins; otherwise the
     # M3 rung tracks the deployed config so the ladder measures what ships
     xg_alpha = cfg.get("xg_alpha")
@@ -113,7 +435,7 @@ def fit_variant(fixtures, as_of, cfg: dict,
     xg_alpha = float(xg_alpha or 0.0)
     # xG carries its OWN, lighter prior than goals (see XG_SHRINK_GAMES);
     # a sweep may override it explicitly
-    xg_shrink = float(cfg.get("xg_shrink", XG_SHRINK_GAMES))
+    xg_shrink = float(cfg.get("xg_shrink", spec.xg_shrink_default()))
     gf, ga, wsum, games = {}, {}, {}, {}
     xgf, xga, xwsum = {}, {}, {}
     wins, draws, losses = {}, {}, {}
@@ -123,7 +445,7 @@ def fit_variant(fixtures, as_of, cfg: dict,
     for f in fixtures:
         if cfg["recency"]:
             days = (as_of - _utc(f.current_kickoff_utc)).total_seconds() / 86400
-            w = 0.5 ** (max(days, 0.0) / HALF_LIFE_DAYS)
+            w = 0.5 ** (max(days, 0.0) / half_life)
         else:
             w = 1.0
         if f.home_goals > f.away_goals:
@@ -188,14 +510,18 @@ def fit_variant(fixtures, as_of, cfg: dict,
             "calibrate": cfg.get("calibrate", False)}
 
 
-def predict_variant(model: dict, fixture) -> dict | None:
-    """Analytic 3-way for one fixture under a fitted variant."""
+def predict_variant(model: dict, fixture,
+                    spec: LadderSpec | None = None) -> dict | None:
+    """Analytic 3-way for one fixture under a fitted variant. `spec`
+    defaults to MLS."""
+    spec = spec or MLS_LADDER_SPEC
+    min_games = spec.min_games()
     lh_v, la_v = model["venue_home"], model["venue_away"]
     if model["use_ratings"]:
         h = model["ratings"].get(fixture.home_team_id)
         a = model["ratings"].get(fixture.away_team_id)
-        if h is None or a is None or h["games"] < MIN_GAMES \
-                or a["games"] < MIN_GAMES:
+        if h is None or a is None or h["games"] < min_games \
+                or a["games"] < min_games:
             return None
         lam_h = model["league"] * h["attack"] * a["defence"] * lh_v
         lam_a = model["league"] * a["attack"] * h["defence"] * la_v
@@ -205,9 +531,7 @@ def predict_variant(model: dict, fixture) -> dict | None:
         lam_a = model["league"] * la_v
     three = analytic_3way(lam_h, lam_a)
     if model.get("calibrate"):
-        import config
-        from src.live.model_mls import calibrate
-        three = calibrate(three, config.MLS_CALIBRATION_ALPHA)
+        three = spec.calibrate(three, spec.calibration_alpha())
     return three
 
 
@@ -233,31 +557,37 @@ def _score_fixture(p: dict, result: str) -> dict:
     }
 
 
-def evaluate_ladder(n_boot: int = 1000, seed: int = 12345) -> dict:
-    """Rolling-origin evaluation of every evaluable rung with analytic
-    scoring and match-cluster bootstrap CIs on the pairwise edges."""
-    if not plane_ready():
-        return {"error": "dormant"}
-    from src.live.model_mls import _completed
-    s = get_session()
-    try:
-        rows = _completed(s)
-    finally:
-        s.close()
-    # provider xG per fixture, loaded once (M3); rungs without xg_alpha
-    # ignore it. Keyed by fixture id, so slicing `rows` restricts it too.
-    from src.live import mls_stats
-    xg_map = mls_stats.team_xg_map()
-    # per-fixture per-variant scores (only fixtures every variant can
-    # predict, so the comparison is on identical ground)
+def score_rows(rows, spec: LadderSpec | None = None,
+               xg_by_fixture: dict | None = None,
+               prior_fn=None) -> tuple[list, list[dict]]:
+    """Rolling-origin per-fixture scores for every rung.
+
+    Returns `(keys, per_fixture)` — parallel lists, so a caller can PAIR
+    two different fitting policies on exactly the fixtures both could
+    predict. That is what the Liga MX split-season question needs: it
+    compares "ratings carry across the Apertura→Clausura boundary" with
+    "ratings reset at it", and an unpaired comparison would confound the
+    policy with a different (larger) scored sample.
+
+    `prior_fn(rows, i)` supplies the history slice used to predict
+    `rows[i]`; the default is `rows[:i]`, the plain rolling origin. It
+    exists so a segment-resetting policy can restrict history without a
+    second copy of this loop.
+    """
+    spec = spec or MLS_LADDER_SPEC
+    ladder, _pairs = spec.active_ladder()
+    xg_map = xg_by_fixture or {}
+    prior_fn = prior_fn or (lambda rs, i: rs[:i])
+    keys: list = []
     per_fixture: list[dict] = []
     for i, f in enumerate(rows):
-        prior, as_of = rows[:i], _utc(f.current_kickoff_utc)
+        prior, as_of = prior_fn(rows, i), _utc(f.current_kickoff_utc)
         preds = {}
         ok = True
-        for name, cfg in LADDER.items():
-            m = fit_variant(prior, as_of, cfg, xg_by_fixture=xg_map)
-            p = predict_variant(m, f) if m else None
+        for name, cfg in ladder.items():
+            m = fit_variant(prior, as_of, cfg, xg_by_fixture=xg_map,
+                            spec=spec)
+            p = predict_variant(m, f, spec=spec) if m else None
             if p is None:
                 ok = False
                 break
@@ -266,8 +596,32 @@ def evaluate_ladder(n_boot: int = 1000, seed: int = 12345) -> dict:
             continue
         result = ("home_win" if f.home_goals > f.away_goals else
                   "away_win" if f.away_goals > f.home_goals else "draw")
+        keys.append(getattr(f, "espn_event_id", None) or getattr(f, "id", i))
         per_fixture.append({name: _score_fixture(preds[name], result)
-                            for name in LADDER})
+                            for name in ladder})
+    return keys, per_fixture
+
+
+def ladder_from_fixtures(rows, spec: LadderSpec | None = None,
+                         n_boot: int = 1000, seed: int = 12345,
+                         xg_by_fixture: dict | None = None,
+                         prior_fn=None) -> dict:
+    """The ladder itself, over an ORDERED list of completed fixtures.
+
+    Extracted from `evaluate_ladder` so the same scoring, the same
+    rolling origin and the same match-cluster bootstrap serve both the
+    live-plane read and the prior-season replay — one instrument, two
+    input sources, rather than a second implementation that could drift.
+
+    `rows` must be sorted by kickoff ascending and carry
+    current_kickoff_utc / home_team_id / away_team_id / home_goals /
+    away_goals (plus `id` when an xG map is supplied).
+    """
+    spec = spec or MLS_LADDER_SPEC
+    ladder, edge_pairs = spec.active_ladder()
+    _keys, per_fixture = score_rows(rows, spec=spec,
+                                    xg_by_fixture=xg_by_fixture,
+                                    prior_fn=prior_fn)
     n = len(per_fixture)
     if n == 0:
         return {"n_scored": 0, "note": "no fixtures scorable by all rungs"}
@@ -280,14 +634,12 @@ def evaluate_ladder(n_boot: int = 1000, seed: int = 12345) -> dict:
         name: {"log_loss": round(mean(name, "log_loss", full), 4),
                "brier": round(mean(name, "brier", full), 4),
                "rps": round(mean(name, "rps", full), 4),
-               "desc": LADDER[name]["desc"]}
-        for name in LADDER}
+               "desc": ladder[name]["desc"]}
+        for name in ladder}
 
     # match-cluster bootstrap: resample fixtures with replacement
     rng = np.random.default_rng(seed)
-    pairs = [("M2", "M0"), ("M2", "M1"), ("M1", "M0"),
-             ("M2C", "M2"), ("M2C", "M0"),
-             ("M3", "M2C"), ("M3", "M0")]
+    pairs = [tuple(p) for p in edge_pairs]
     boot = {f"{a}_vs_{b}": [] for a, b in pairs}
     for _ in range(n_boot):
         idx = rng.integers(0, n, n)
@@ -312,8 +664,31 @@ def evaluate_ladder(n_boot: int = 1000, seed: int = 12345) -> dict:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "n_scored": n, "n_bootstrap": n_boot,
         "variants": variants, "edges": edges,
-        "future_rungs": FUTURE_RUNGS,
+        "future_rungs": spec.future_rungs,
     }
+
+
+def evaluate_ladder(n_boot: int = 1000, seed: int = 12345,
+                    spec: LadderSpec | None = None) -> dict:
+    """Rolling-origin evaluation of every evaluable rung with analytic
+    scoring and match-cluster bootstrap CIs on the pairwise edges, over
+    THIS competition's completed fixtures in the LIVE plane. `spec`
+    defaults to MLS, so every pre-existing call site is unchanged."""
+    if not plane_ready():
+        return {"error": "dormant"}
+    spec = spec or MLS_LADDER_SPEC
+    s = get_session()
+    try:
+        rows = spec.completed(s)
+    finally:
+        s.close()
+    # provider xG per fixture, loaded once (M3); rungs without xg_alpha
+    # ignore it. Keyed by fixture id, so slicing `rows` restricts it too.
+    # A league with no xG source supplies no map at all — which is the
+    # honest state, not a zero-filled one.
+    xg_map = spec.xg_map()
+    return ladder_from_fixtures(rows, spec=spec, n_boot=n_boot, seed=seed,
+                                xg_by_fixture=xg_map)
 
 
 def evaluate_deployed(n_sims: int | None = None, seed: int = 12345) -> dict:
@@ -396,23 +771,142 @@ def evaluate_deployed(n_sims: int | None = None, seed: int = 12345) -> dict:
     }
 
 
-def deployed_variant() -> str:
+def paired_edge(scores_a: list[dict], scores_b: list[dict], rung: str,
+                n_boot: int = 1000, seed: int = 12345,
+                metric: str = "log_loss") -> dict:
+    """A match-cluster bootstrap edge between TWO POLICIES on the SAME
+    fixtures — the paired counterpart of the pairwise rung edges.
+
+    `scores_a` and `scores_b` must be parallel: element j of each is the
+    same fixture scored under the two policies. Positive edge = policy A
+    has the LOWER loss, i.e. A is better, matching the sign convention of
+    the rung edges above.
+
+    Used for the Liga MX split-season question, where the two policies
+    differ only in whether ratings carry across the tournament boundary.
+    Pairing is what makes that comparison legitimate: the two policies
+    score DIFFERENT numbers of fixtures overall, so an unpaired interval
+    would mix the policy effect with a changed sample.
+    """
+    n = len(scores_a)
+    if n == 0 or n != len(scores_b):
+        return {"n": n, "error": "unpaired or empty score lists"}
+    a = np.array([s[rung][metric] for s in scores_a])
+    b = np.array([s[rung][metric] for s in scores_b])
+    diff = b - a
+    rng = np.random.default_rng(seed)
+    boot = np.array([float(np.mean(diff[rng.integers(0, n, n)]))
+                     for _ in range(n_boot)])
+    lo, hi = np.percentile(boot, [2.5, 97.5])
+    return {
+        "rung": rung, "metric": metric, "n_paired": n,
+        f"{metric}_a": round(float(np.mean(a)), 4),
+        f"{metric}_b": round(float(np.mean(b)), 4),
+        "delta": round(float(np.mean(diff)), 4),
+        "ci95": [round(float(lo), 4), round(float(hi), 4)],
+        "significant": bool(lo > 0 or hi < 0),
+        "n_bootstrap": n_boot,
+    }
+
+
+def replay_approval_policy(report: dict,
+                           spec: LadderSpec | None = None
+                           ) -> tuple[bool, str]:
+    """The shadow-approval decision for a PRIOR-SEASON REPLAY ladder.
+
+    Deliberately STRICTER than `shadow_approval_policy`, which governs
+    MLS's live-plane decision. That policy approves a model whose edge CI
+    spans zero, because shadow means "safe to collect prospective
+    evidence" and MLS's ladder reads the same competition-season the
+    approval licenses.
+
+    A prior-season replay does not. It reads a DIFFERENT season — a
+    different squad list, in two of these leagues a partly different set
+    of clubs entirely — so it is a weaker instrument, and it gets a
+    correspondingly higher bar: the M2 rung must actually BEAT its own M0
+    baseline on a point estimate, not merely fail to lose significantly.
+
+    A league whose M2 does not beat its M0 is REFUSED and stays dark.
+    That is a correct outcome of the evaluation, not a failure of it.
+    """
+    spec = spec or MLS_LADDER_SPEC
+    n = report.get("n_scored", 0)
+    if n < MIN_SCORED_FOR_APPROVAL:
+        return False, (f"insufficient scored sample (n={n} < "
+                       f"{MIN_SCORED_FOR_APPROVAL})")
+    e = (report.get("edges") or {}).get("M2_vs_M0") or {}
+    point = e.get("delta_log_loss")
+    if point is None:
+        return False, "no M2-vs-M0 edge computed"
+    if e.get("significant") and point < 0:
+        return False, (f"M2 is SIGNIFICANTLY WORSE than its own M0 "
+                       f"baseline on replay (edge {point}, "
+                       f"CI {e.get('ci95')}) — model stays dark")
+    if point <= 0:
+        return False, (f"M2 does not beat its M0 baseline on replay "
+                       f"(edge {point}, CI {e.get('ci95')}) — REPLAYED "
+                       f"evidence is weaker than MLS's live-plane ladder, "
+                       f"so a non-positive point estimate is refused "
+                       f"rather than read as 'within noise'. Model stays "
+                       f"dark.")
+    return True, (
+        f"M2 beats its own M0 baseline on REPLAYED prior-season history "
+        f"(edge {point}, CI {e.get('ci95')}, "
+        f"significant={e.get('significant')}) — safe to collect "
+        f"prospective evidence, NOT an established edge, and NOT "
+        f"comparable to a prospective result")
+
+
+def deployed_variant(spec: LadderSpec | None = None) -> str:
     """The ladder rung that matches the DEPLOYED model: M3 when xG ratings
     are on, else M2C when calibration is on, else M2. The approval
     decision evaluates THIS variant so the persisted edge reflects what
-    actually ships."""
+    actually ships.
+
+    `spec` defaults to MLS. For a league with no xG rung at all, M3 is
+    not merely off — it is absent from the ladder, so it can never be
+    selected here.
+
+    The xG gate differs by league, and deliberately: MLS's rung tracks
+    `MLS_XG_RATING_ALPHA` because that env flag is what ships in the MLS
+    engine, while a league-derived rung carries its own `xg_alpha` in the rung
+    config and is present in the ladder only when real xG actually bridged
+    (see `active_ladder`). Reading MLS's flag for another league would gate one
+    competition's rung on a different competition's deployment switch."""
     import config
-    if config.MLS_XG_RATING_ALPHA > 0:
-        return "M3"
-    return "M2C" if config.MLS_CALIBRATION_ALPHA > 0 else "M2"
+    spec = spec or MLS_LADDER_SPEC
+    ladder, _pairs = spec.active_ladder()
+    if "M3" in ladder:
+        if spec.slug == MLS_LADDER_SPEC.slug:
+            if config.MLS_XG_RATING_ALPHA > 0:
+                return "M3"
+        elif float(ladder["M3"].get("xg_alpha") or 0.0) > 0:
+            return "M3"
+    if "M2C" in ladder and spec.calibration_alpha() > 0:
+        return "M2C"
+    return "M2"
 
 
-def approval_record(report: dict, corpus_version: str | None = None) -> dict:
+def approval_record(report: dict, corpus_version: str | None = None,
+                    spec: LadderSpec | None = None,
+                    evidence: dict | None = None,
+                    rung: str | None = None) -> dict:
     """The model-approval decision record (V8.1 eval Phase 6). Shadow
     approval means 'safe to collect prospective evidence', explicitly
     NOT 'edge established' — and this record never grants a higher mode.
-    Evaluates the DEPLOYED variant (M3 when xG ratings are on)."""
-    dv = deployed_variant()
+    Evaluates the DEPLOYED variant (M3 when xG ratings are on).
+
+    `evidence` carries the evidence-class block for a decision computed
+    from something other than this competition's own live plane (the
+    prior-season replay). It is folded into the limitations so the
+    weakness travels with the decision rather than living in a report
+    nobody reads next to it.
+    """
+    spec = spec or MLS_LADDER_SPEC
+    # `rung` overrides the deployed variant. The replay path pins it to M2
+    # because the prior-season archive carries no provider xG, so an M3
+    # label there would claim a measurement that was never made.
+    dv = rung or deployed_variant(spec)
     m2 = (report.get("variants") or {}).get(dv, {})
     e = (report.get("edges") or {}).get(f"{dv}_vs_M0", {})
     limitations = [
@@ -432,8 +926,8 @@ def approval_record(report: dict, corpus_version: str | None = None) -> dict:
         "forecast quality only — market-relative and execution "
         "performance evaluated separately, after settlement",
     ]
-    return {
-        "model_version": MODEL_NAME,
+    rec = {
+        "model_version": spec.model_name,
         "corpus_version": corpus_version,
         "eval_version": report.get("eval_version"),
         "metrics": {"log_loss": m2.get("log_loss"),
@@ -447,6 +941,16 @@ def approval_record(report: dict, corpus_version: str | None = None) -> dict:
         "approved_by": "automated-eval",
         "approved_at": datetime.now(timezone.utc).isoformat(),
     }
+    if evidence:
+        # the evidence class leads the limitations, because it is the
+        # single most load-bearing caveat on a replay decision
+        rec["evidence"] = evidence
+        rec["limitations"] = [
+            f"EVIDENCE CLASS {evidence.get('evidence_class')}: "
+            f"{evidence.get('evidence_note')}",
+        ] + limitations
+        rec["evaluated_rung"] = dv
+    return rec
 
 
 def shadow_approval_policy(report: dict) -> tuple[bool, str]:
@@ -474,13 +978,13 @@ def shadow_approval_policy(report: dict) -> tuple[bool, str]:
                   "prospective evidence, NOT an established edge")
 
 
-def _data_cutoff() -> str | None:
+def _data_cutoff(spec: LadderSpec | None = None) -> str | None:
     """The kickoff of the most recent fixture that could inform this
     approval — the data boundary the decision was computed on."""
-    from src.live.model_mls import _completed
+    spec = spec or MLS_LADDER_SPEC
     s = get_session()
     try:
-        rows = _completed(s)
+        rows = spec.completed(s)
         return _utc(rows[-1].current_kickoff_utc).isoformat() if rows else None
     finally:
         s.close()
@@ -517,6 +1021,14 @@ def _decision_canonical(rec: dict) -> str:
         # V9.5 eval H6 — and covers what the ladder actually READ, so a
         # decision cannot silently imply it evaluated the corpus bytes
         "evaluation_source")}
+    # S-5: a REPLAY decision additionally binds its evidence class and the
+    # archive bytes it read. These keys are added ONLY when present, never
+    # as nulls — an unconditional key would change the canonical bytes of
+    # every existing MLS decision and so change its content hash, breaking
+    # the dedupe that makes those rows immutable.
+    for extra in ("evidence", "evaluated_rung"):
+        if rec.get(extra) is not None:
+            core[extra] = rec[extra]
     return _canonical(core)
 
 
@@ -524,13 +1036,14 @@ def _decision_content_hash(rec: dict) -> str:
     return hashlib.sha256(_decision_canonical(rec).encode()).hexdigest()
 
 
-def _active_decision():
+def _active_decision(spec: LadderSpec | None = None):
     """The newest APPROVED decision for this model, or None."""
+    spec = spec or MLS_LADDER_SPEC
     from src.live.models import ModelApprovalDecision
     s = get_session()
     try:
         return (s.query(ModelApprovalDecision)
-                .filter_by(model_version_name=MODEL_NAME, approved=True)
+                .filter_by(model_version_name=spec.model_name, approved=True)
                 .order_by(ModelApprovalDecision.id.desc()).first())
     finally:
         s.close()
@@ -538,7 +1051,16 @@ def _active_decision():
 
 def ensure_approval_decision(corpus_version: str | None = None,
                              n_boot: int = 1000, force: bool = False,
-                             allow_create: bool = True) -> dict:
+                             allow_create: bool = True,
+                             spec: LadderSpec | None = None,
+                             report: dict | None = None,
+                             policy=None,
+                             policy_version: str | None = None,
+                             evidence: dict | None = None,
+                             evaluation_source: str | None = None,
+                             evaluation_source_note: str | None = None,
+                             activation_route: str | None = None,
+                             rung: str | None = None) -> dict:
     """LOAD the active approval decision, or (only when none exists, or
     force=True) run the CI evaluator and persist a new IMMUTABLE one, then
     set approved_for_shadow FROM it (V9 eval F1/F10; V9.1 eval F8). Boot
@@ -552,16 +1074,40 @@ def ensure_approval_decision(corpus_version: str | None = None,
     corpus" binding never existed in practice. Resolving it here means
     the binding happens by default rather than by an operator remembering
     a version string; it stays null, honestly, until a corpus is
-    published."""
+    published.
+
+    COMPETITION-KEYED (S-5). `spec` defaults to MLS, so the MLS decision
+    path is unchanged. The optional arguments exist so a prior-season
+    REPLAY decision reuses this same machinery — the same immutability,
+    the same content hash, the same fail-closed boot — instead of a
+    parallel implementation:
+
+      `report`             a precomputed ladder report (the replay's),
+                           used INSTEAD of reading this competition's live
+                           plane. Supplying it is the only way a decision
+                           can be made from archive bytes.
+      `policy`             the approval predicate. Defaults to
+                           `shadow_approval_policy`; the replay path
+                           passes the stricter `replay_approval_policy`.
+      `policy_version`     names which of those decided, so no record is
+                           ambiguous about the bar it cleared.
+      `evidence`           the evidence-class block (REPLAYED + the
+                           archive sha256), covered by the content hash.
+      `evaluation_source`  what the ladder actually READ.
+    """
     if not plane_ready():
         return {"error": "dormant"}
-    from src.live import model_mls
+    spec = spec or MLS_LADDER_SPEC
+    model_mod = spec.model
+    policy = policy or shadow_approval_policy
+    policy_version = policy_version or APPROVAL_POLICY_VERSION
+    activation_route = activation_route or (
+        f"POST /api/admin/{spec.slug}/approval/activate")
     if corpus_version is None:
-        from src.live import corpus as _c
-        corpus_version = _c.latest_published_version()
-    current_engine = model_mls.engine_signature()["signature_hash"]
+        corpus_version = spec.latest_corpus_version()
+    current_engine = model_mod.engine_signature()["signature_hash"]
     if not force:
-        existing = _active_decision()
+        existing = _active_decision(spec)
         # load only a COMPLETE decision computed under the CURRENT engine
         # (V9.2): a model change (new engine signature) or a pre-V9.1.2 row
         # falls through so a fresh decision evaluates what actually ships —
@@ -594,19 +1140,22 @@ def ensure_approval_decision(corpus_version: str | None = None,
         # engine signature includes code_revision, that meant every
         # deploy quietly issued a fresh approval from whatever the
         # mutable database happened to hold.
-        model_mls.ensure_model_version(approved_for_shadow=False)
+        model_mod.ensure_model_version(approved_for_shadow=False)
         return {"approval_decision_missing": True, "approved": False,
                 "reason": ("no ACTIVE approval decision for the current "
-                           "engine/corpus — operator activation required "
-                           "(POST /api/admin/mls/approval/activate). "
+                           f"engine/corpus — operator activation required "
+                           f"({activation_route}). "
                            "Shadow runs stay refused until then."),
                 "fail_closed": True}
-    report = evaluate_ladder(n_boot=n_boot)
+    if report is None:
+        report = evaluate_ladder(n_boot=n_boot, spec=spec)
     if report.get("n_scored", 0) == 0:
         return {"error": report.get("note") or "no scorable fixtures"}
-    approved, reason = shadow_approval_policy(report)
-    rec = approval_record(report, corpus_version=corpus_version)
-    rec["policy_version"] = APPROVAL_POLICY_VERSION
+    approved, reason = policy(report) if policy is shadow_approval_policy \
+        else policy(report, spec)
+    rec = approval_record(report, corpus_version=corpus_version, spec=spec,
+                          evidence=evidence, rung=rung)
+    rec["policy_version"] = policy_version
     rec["approved"] = approved
     rec["decision_reason"] = reason
     rec["engine_signature"] = current_engine   # pins the decision to the
@@ -615,17 +1164,17 @@ def ensure_approval_decision(corpus_version: str | None = None,
     # data. Record the exact selected parameters, the engine, the data
     # cutoff, and the published corpus it is bound to (null until one is
     # published — which is itself disclosed rather than hidden).
-    from src.live import corpus as _corpus
-    rec["model_parameters"] = _corpus._model_parameters()
-    rec["data_cutoff"] = _data_cutoff()
+    rec["model_parameters"] = spec.model_parameters()
+    rec["data_cutoff"] = (evidence or {}).get("data_cutoff") \
+        or _data_cutoff(spec)
     rec["corpus_manifest_hash"] = _published_corpus_hash(corpus_version)
     # V9.5 eval H6: the corpus binding is a LABEL, not the data the
     # ladder read. evaluate_ladder() reads the mutable live database;
     # it does not load the published corpus bytes. Recording that
     # plainly inside the decision (and therefore inside its content
     # hash) stops the binding from overclaiming what it establishes.
-    rec["evaluation_source"] = "live_database"
-    rec["evaluation_source_note"] = (
+    rec["evaluation_source"] = evaluation_source or "live_database"
+    rec["evaluation_source_note"] = evaluation_source_note or (
         "the ladder evaluated CURRENT database state, not the published "
         "corpus bytes; corpus_version/corpus_manifest_hash record which "
         "corpus this decision is filed against, not what it computed from")
@@ -635,18 +1184,18 @@ def ensure_approval_decision(corpus_version: str | None = None,
     from src.live.models import ModelApprovalDecision, ModelVersion
     s = get_session()
     try:
-        mv = s.query(ModelVersion).filter_by(name=MODEL_NAME).first()
+        mv = s.query(ModelVersion).filter_by(name=spec.model_name).first()
         if mv is None:
             # create the row (unapproved) so the decision can reference it
-            model_mls.ensure_model_version(approved_for_shadow=False)
-            mv = s.query(ModelVersion).filter_by(name=MODEL_NAME).first()
+            model_mod.ensure_model_version(approved_for_shadow=False)
+            mv = s.query(ModelVersion).filter_by(name=spec.model_name).first()
         existing = (s.query(ModelApprovalDecision)
                     .filter_by(content_hash=chash).first())
         if existing is None:
             row = ModelApprovalDecision(
-                model_version_id=mv.id, model_version_name=MODEL_NAME,
+                model_version_id=mv.id, model_version_name=spec.model_name,
                 eval_version=report.get("eval_version"),
-                policy_version=APPROVAL_POLICY_VERSION,
+                policy_version=policy_version,
                 corpus_version=corpus_version,
                 approved_mode="shadow", approved=approved,
                 n_scored=report.get("n_scored"),
@@ -672,31 +1221,37 @@ def ensure_approval_decision(corpus_version: str | None = None,
     finally:
         s.close()
     # flip the model_version flag FROM the persisted decision
-    model_mls.ensure_model_version(approved_for_shadow=approved)
+    model_mod.ensure_model_version(approved_for_shadow=approved)
     return {"decision_id": decision_id, "approved": approved,
             "reason": reason, "content_hash": chash,
-            "policy_version": APPROVAL_POLICY_VERSION,
+            "policy_version": policy_version,
+            "model_version": spec.model_name,
+            "competition": spec.slug,
+            "evidence_class": (evidence or {}).get("evidence_class"),
             "n_scored": report.get("n_scored"),
             "edge_vs_baseline": rec["edge_vs_baseline"]}
 
 
-def latest_approved_decision_id() -> int | None:
-    """The newest APPROVED shadow decision id, stamped on each run so a
-    run points at the exact record that authorized it (V9 eval F10)."""
+def latest_approved_decision_id(spec: LadderSpec | None = None
+                                ) -> int | None:
+    """The newest APPROVED shadow decision id for THIS competition's
+    model, stamped on each run so a run points at the exact record that
+    authorized it (V9 eval F10)."""
     if not plane_ready():
         return None
+    spec = spec or MLS_LADDER_SPEC
     from src.live.models import ModelApprovalDecision
     s = get_session()
     try:
         row = (s.query(ModelApprovalDecision)
-               .filter_by(model_version_name=MODEL_NAME, approved=True)
+               .filter_by(model_version_name=spec.model_name, approved=True)
                .order_by(ModelApprovalDecision.id.desc()).first())
         return row.id if row else None
     finally:
         s.close()
 
 
-def current_approval_decision() -> dict:
+def current_approval_decision(spec: LadderSpec | None = None) -> dict:
     """The persisted approval decision the runtime operates under, read as
     STORED — never a recomputation (pre-slate evidence contract). Returns
     the immutable row's fields (incl. its own content hash) or
@@ -707,14 +1262,23 @@ def current_approval_decision() -> dict:
     published corpus. It was previously hardcoded None beside a comment
     saying no corpus existed yet; once one was published that comment
     became false and the endpoint reported an unbound approval that was
-    in fact bound."""
+    in fact bound.
+
+    SCOPED TO ONE MODEL (S-5). This query used to filter on `approved=True`
+    alone and take the newest row. With MLS the only approved model that
+    was harmless; the moment a second competition earns an approval it
+    becomes a cross-league leak — /api/mls/approval would report whichever
+    league was approved most recently. `spec` defaults to MLS, so the MLS
+    endpoint keeps returning the MLS decision and each league reads its
+    own."""
     if not plane_ready():
         return {"approval_decision_missing": True, "reason": "dormant"}
+    spec = spec or MLS_LADDER_SPEC
     from src.live.models import ModelApprovalDecision
     s = get_session()
     try:
         row = (s.query(ModelApprovalDecision)
-               .filter_by(approved=True)
+               .filter_by(model_version_name=spec.model_name, approved=True)
                .order_by(ModelApprovalDecision.id.desc()).first())
         if row is None:
             return {"approval_decision_missing": True}

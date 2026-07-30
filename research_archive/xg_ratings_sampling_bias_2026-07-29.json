@@ -1,0 +1,2063 @@
+{
+ "_what": "Why xG coverage must be sampled ACROSS a season, not from the most recent fixtures. Two probes of the same leagues on the same day, differing only in which completed fixtures were sampled.",
+ "_finding": "A most-recent-3 sample called Bundesliga, Primeira Liga and Ligue 1 'partial' and J1 'absent'. A 6-sample spread evenly across the same seasons showed Bundesliga/Primeira/Ligue 1 fully covered in every regular-season round, with the ONLY miss being the round labelled 'Final' — the promotion/relegation playoff, which sits in a distinct, later-created provider fixture-id block (154xxxx) and carries no xG. J1 is genuinely partial (4/6), missing one regular-season round and a '7th place' playoff. Reporting those three leagues as xG-less would have been wrong, and the error was entirely in the sampling.",
+ "_consequence": "apifootball.measure_coverage uses spread_sample() and stores sampling_method='spread_across_season'. It also records miss_rounds, so a partial verdict is attributable to a round rather than left as a bare percentage.",
+ "probed_utc": "2026-07-29",
+ "most_recent_3_sample": {
+  "epl": {
+   "league_id": 39,
+   "season": 2025,
+   "fixtures_visible": 380,
+   "completed_visible": 380,
+   "provider_errors": [],
+   "samples": [
+    {
+     "fixture_id": 1379342,
+     "kickoff": "2026-05-24T15:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 36,
+       "team": "Fulham",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.81",
+       "xg_value": 1.81
+      },
+      {
+       "team_id": 34,
+       "team": "Newcastle",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.31",
+       "xg_value": 0.31
+      }
+     ]
+    },
+    {
+     "fixture_id": 1379343,
+     "kickoff": "2026-05-24T15:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 40,
+       "team": "Liverpool",
+       "xg_type": "expected_goals",
+       "xg_raw": "3.04",
+       "xg_value": 3.04
+      },
+      {
+       "team_id": 55,
+       "team": "Brentford",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.56",
+       "xg_value": 1.56
+      }
+     ]
+    },
+    {
+     "fixture_id": 1379340,
+     "kickoff": "2026-05-24T15:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 44,
+       "team": "Burnley",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.98",
+       "xg_value": 0.98
+      },
+      {
+       "team_id": 39,
+       "team": "Wolves",
+       "xg_type": "expected_goals",
+       "xg_raw": "2.09",
+       "xg_value": 2.09
+      }
+     ]
+    }
+   ],
+   "samples_taken": 3,
+   "samples_with_both_values": 3,
+   "type_appears_without_value": false,
+   "verdict": "xg_available",
+   "label": "English Premier League"
+  },
+  "laliga": {
+   "league_id": 140,
+   "season": 2025,
+   "fixtures_visible": 380,
+   "completed_visible": 380,
+   "provider_errors": [],
+   "samples": [
+    {
+     "fixture_id": 1391198,
+     "kickoff": "2026-05-24T19:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 533,
+       "team": "Villarreal",
+       "xg_type": "expected_goals",
+       "xg_raw": "2.48",
+       "xg_value": 2.48
+      },
+      {
+       "team_id": 530,
+       "team": "Atletico Madrid",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.16",
+       "xg_value": 1.16
+      }
+     ]
+    },
+    {
+     "fixture_id": 1391197,
+     "kickoff": "2026-05-23T19:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 532,
+       "team": "Valencia",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.48",
+       "xg_value": 1.48
+      },
+      {
+       "team_id": 529,
+       "team": "Barcelona",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.52",
+       "xg_value": 1.52
+      }
+     ]
+    },
+    {
+     "fixture_id": 1391191,
+     "kickoff": "2026-05-23T19:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 538,
+       "team": "Celta Vigo",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.59",
+       "xg_value": 1.59
+      },
+      {
+       "team_id": 536,
+       "team": "Sevilla",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.80",
+       "xg_value": 0.8
+      }
+     ]
+    }
+   ],
+   "samples_taken": 3,
+   "samples_with_both_values": 3,
+   "type_appears_without_value": false,
+   "verdict": "xg_available",
+   "label": "Spanish LALIGA"
+  },
+  "ligamx": {
+   "league_id": 262,
+   "season": 2026,
+   "fixtures_visible": 153,
+   "completed_visible": 18,
+   "provider_errors": [],
+   "samples": [
+    {
+     "fixture_id": 1550911,
+     "kickoff": "2026-07-27T01:06:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 2292,
+       "team": "CF Pachuca",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.22",
+       "xg_value": 1.22
+      },
+      {
+       "team_id": 2290,
+       "team": "Club Queretaro",
+       "xg_type": "expected_goals",
+       "xg_raw": "2.07",
+       "xg_value": 2.07
+      }
+     ]
+    },
+    {
+     "fixture_id": 1550910,
+     "kickoff": "2026-07-26T23:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 2288,
+       "team": "Necaxa",
+       "xg_type": "expected_goals",
+       "xg_raw": "2.92",
+       "xg_value": 2.92
+      },
+      {
+       "team_id": 2282,
+       "team": "Monterrey",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.03",
+       "xg_value": 1.03
+      }
+     ]
+    },
+    {
+     "fixture_id": 1550905,
+     "kickoff": "2026-07-26T03:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 2279,
+       "team": "Tigres UANL",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.34",
+       "xg_value": 1.34
+      },
+      {
+       "team_id": 2314,
+       "team": "Atletico San Luis",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.50",
+       "xg_value": 0.5
+      }
+     ]
+    }
+   ],
+   "samples_taken": 3,
+   "samples_with_both_values": 3,
+   "type_appears_without_value": false,
+   "verdict": "xg_available",
+   "label": "Liga MX"
+  },
+  "mls": {
+   "league_id": 253,
+   "season": 2026,
+   "fixtures_visible": 510,
+   "completed_visible": 253,
+   "provider_errors": [],
+   "samples": [
+    {
+     "fixture_id": 1490359,
+     "kickoff": "2026-07-26T02:30:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 1596,
+       "team": "San Jose Earthquakes",
+       "xg_type": "expected_goals",
+       "xg_raw": "3.27",
+       "xg_value": 3.27
+      },
+      {
+       "team_id": 1605,
+       "team": "Los Angeles Galaxy",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.28",
+       "xg_value": 1.28
+      }
+     ]
+    },
+    {
+     "fixture_id": 1490358,
+     "kickoff": "2026-07-26T02:30:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 1616,
+       "team": "Los Angeles FC",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.38",
+       "xg_value": 1.38
+      },
+      {
+       "team_id": 1611,
+       "team": "Sporting Kansas City",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.24",
+       "xg_value": 0.24
+      }
+     ]
+    },
+    {
+     "fixture_id": 1490360,
+     "kickoff": "2026-07-26T02:30:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 1617,
+       "team": "Portland Timbers",
+       "xg_type": "expected_goals",
+       "xg_raw": "2.58",
+       "xg_value": 2.58
+      },
+      {
+       "team_id": 1606,
+       "team": "Real Salt Lake",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.15",
+       "xg_value": 0.15
+      }
+     ]
+    }
+   ],
+   "samples_taken": 3,
+   "samples_with_both_values": 3,
+   "type_appears_without_value": false,
+   "verdict": "xg_available",
+   "label": "Major League Soccer"
+  },
+  "championship": {
+   "league_id": 40,
+   "season": 2025,
+   "fixtures_visible": 558,
+   "completed_visible": 557,
+   "provider_errors": [],
+   "samples": [
+    {
+     "fixture_id": 1545715,
+     "kickoff": "2026-05-23T14:30:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 64,
+       "team": "Hull City",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.71",
+       "xg_value": 0.71
+      },
+      {
+       "team_id": 70,
+       "team": "Middlesbrough",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.78",
+       "xg_value": 0.78
+      }
+     ]
+    },
+    {
+     "fixture_id": 1543789,
+     "kickoff": "2026-05-12T19:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 41,
+       "team": "Southampton",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.99",
+       "xg_value": 1.99
+      },
+      {
+       "team_id": 70,
+       "team": "Middlesbrough",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.98",
+       "xg_value": 0.98
+      }
+     ]
+    },
+    {
+     "fixture_id": 1543788,
+     "kickoff": "2026-05-11T19:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 58,
+       "team": "Millwall",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.87",
+       "xg_value": 0.87
+      },
+      {
+       "team_id": 64,
+       "team": "Hull City",
+       "xg_type": "expected_goals",
+       "xg_raw": "2.12",
+       "xg_value": 2.12
+      }
+     ]
+    }
+   ],
+   "samples_taken": 3,
+   "samples_with_both_values": 3,
+   "type_appears_without_value": false,
+   "verdict": "xg_available",
+   "label": "EFL Championship"
+  },
+  "j1": {
+   "league_id": 98,
+   "season": 2026,
+   "fixtures_visible": 200,
+   "completed_visible": 200,
+   "provider_errors": [],
+   "samples": [
+    {
+     "fixture_id": 1546407,
+     "kickoff": "2026-06-06T10:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 0,
+     "both_teams_have_value": false,
+     "teams": [
+      {
+       "team_id": 294,
+       "team": "Kawasaki Frontale",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      },
+      {
+       "team_id": 282,
+       "team": "Sanfrecce Hiroshima",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      }
+     ]
+    },
+    {
+     "fixture_id": 1546406,
+     "kickoff": "2026-06-06T09:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 0,
+     "both_teams_have_value": false,
+     "teams": [
+      {
+       "team_id": 281,
+       "team": "Kashiwa Reysol",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      },
+      {
+       "team_id": 302,
+       "team": "Kyoto Sanga",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      }
+     ]
+    },
+    {
+     "fixture_id": 1546405,
+     "kickoff": "2026-06-06T08:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 0,
+     "both_teams_have_value": false,
+     "teams": [
+      {
+       "team_id": 296,
+       "team": "Yokohama F. Marinos",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      },
+      {
+       "team_id": 283,
+       "team": "Shimizu S-pulse",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      }
+     ]
+    }
+   ],
+   "samples_taken": 3,
+   "samples_with_both_values": 0,
+   "type_appears_without_value": true,
+   "verdict": "xg_absent",
+   "label": "J1 League"
+  },
+  "bundesliga": {
+   "league_id": 78,
+   "season": 2025,
+   "fixtures_visible": 308,
+   "completed_visible": 308,
+   "provider_errors": [],
+   "samples": [
+    {
+     "fixture_id": 1545418,
+     "kickoff": "2026-05-25T18:30:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 0,
+     "both_teams_have_value": false,
+     "teams": [
+      {
+       "team_id": 185,
+       "team": "SC Paderborn 07",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      },
+      {
+       "team_id": 161,
+       "team": "VfL Wolfsburg",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      }
+     ]
+    },
+    {
+     "fixture_id": 1545417,
+     "kickoff": "2026-05-21T18:30:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 0,
+     "both_teams_have_value": false,
+     "teams": [
+      {
+       "team_id": 161,
+       "team": "VfL Wolfsburg",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      },
+      {
+       "team_id": 185,
+       "team": "SC Paderborn 07",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      }
+     ]
+    },
+    {
+     "fixture_id": 1388606,
+     "kickoff": "2026-05-16T13:30:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 157,
+       "team": "Bayern München",
+       "xg_type": "expected_goals",
+       "xg_raw": "3.05",
+       "xg_value": 3.05
+      },
+      {
+       "team_id": 192,
+       "team": "1. FC Köln",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.98",
+       "xg_value": 0.98
+      }
+     ]
+    }
+   ],
+   "samples_taken": 3,
+   "samples_with_both_values": 1,
+   "type_appears_without_value": true,
+   "verdict": "xg_partial",
+   "label": "Bundesliga"
+  },
+  "primeira": {
+   "league_id": 94,
+   "season": 2025,
+   "fixtures_visible": 308,
+   "completed_visible": 308,
+   "provider_errors": [],
+   "samples": [
+    {
+     "fixture_id": 1545404,
+     "kickoff": "2026-05-28T19:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 0,
+     "both_teams_have_value": false,
+     "teams": [
+      {
+       "team_id": 4716,
+       "team": "Casa Pia",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      },
+      {
+       "team_id": 4799,
+       "team": "Torreense",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      }
+     ]
+    },
+    {
+     "fixture_id": 1545403,
+     "kickoff": "2026-05-20T17:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 0,
+     "both_teams_have_value": false,
+     "teams": [
+      {
+       "team_id": 4799,
+       "team": "Torreense",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      },
+      {
+       "team_id": 4716,
+       "team": "Casa Pia",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      }
+     ]
+    },
+    {
+     "fixture_id": 1396542,
+     "kickoff": "2026-05-16T19:30:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 228,
+       "team": "Sporting CP",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.65",
+       "xg_value": 1.65
+      },
+      {
+       "team_id": 762,
+       "team": "GIL Vicente",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.68",
+       "xg_value": 0.68
+      }
+     ]
+    }
+   ],
+   "samples_taken": 3,
+   "samples_with_both_values": 1,
+   "type_appears_without_value": true,
+   "verdict": "xg_partial",
+   "label": "Primeira Liga"
+  },
+  "eredivisie": {
+   "league_id": 88,
+   "season": 2025,
+   "fixtures_visible": 309,
+   "completed_visible": 309,
+   "provider_errors": [],
+   "samples": [
+    {
+     "fixture_id": 1546052,
+     "kickoff": "2026-05-24T10:15:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 194,
+       "team": "Ajax",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.47",
+       "xg_value": 1.47
+      },
+      {
+       "team_id": 207,
+       "team": "Utrecht",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.96",
+       "xg_value": 0.96
+      }
+     ]
+    },
+    {
+     "fixture_id": 1545412,
+     "kickoff": "2026-05-21T19:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 207,
+       "team": "Utrecht",
+       "xg_type": "expected_goals",
+       "xg_raw": "2.08",
+       "xg_value": 2.08
+      },
+      {
+       "team_id": 210,
+       "team": "Heerenveen",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.26",
+       "xg_value": 1.26
+      }
+     ]
+    },
+    {
+     "fixture_id": 1545411,
+     "kickoff": "2026-05-21T16:45:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 194,
+       "team": "Ajax",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.83",
+       "xg_value": 1.83
+      },
+      {
+       "team_id": 202,
+       "team": "Groningen",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.16",
+       "xg_value": 0.16
+      }
+     ]
+    }
+   ],
+   "samples_taken": 3,
+   "samples_with_both_values": 3,
+   "type_appears_without_value": false,
+   "verdict": "xg_available",
+   "label": "Eredivisie"
+  },
+  "seriea": {
+   "league_id": 135,
+   "season": 2025,
+   "fixtures_visible": 380,
+   "completed_visible": 380,
+   "provider_errors": [],
+   "samples": [
+    {
+     "fixture_id": 1378239,
+     "kickoff": "2026-05-24T18:45:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 489,
+       "team": "AC Milan",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.74",
+       "xg_value": 1.74
+      },
+      {
+       "team_id": 490,
+       "team": "Cagliari",
+       "xg_type": "expected_goals",
+       "xg_raw": "2.78",
+       "xg_value": 2.78
+      }
+     ]
+    },
+    {
+     "fixture_id": 1378242,
+     "kickoff": "2026-05-24T18:45:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 503,
+       "team": "Torino",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.85",
+       "xg_value": 0.85
+      },
+      {
+       "team_id": 496,
+       "team": "Juventus",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.92",
+       "xg_value": 1.92
+      }
+     ]
+    },
+    {
+     "fixture_id": 1378243,
+     "kickoff": "2026-05-24T18:45:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 504,
+       "team": "Hellas Verona",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.84",
+       "xg_value": 0.84
+      },
+      {
+       "team_id": 497,
+       "team": "AS Roma",
+       "xg_type": "expected_goals",
+       "xg_raw": "3.39",
+       "xg_value": 3.39
+      }
+     ]
+    }
+   ],
+   "samples_taken": 3,
+   "samples_with_both_values": 3,
+   "type_appears_without_value": false,
+   "verdict": "xg_available",
+   "label": "Serie A"
+  },
+  "ligue1": {
+   "league_id": 61,
+   "season": 2025,
+   "fixtures_visible": 310,
+   "completed_visible": 309,
+   "provider_errors": [],
+   "samples": [
+    {
+     "fixture_id": 1545409,
+     "kickoff": "2026-05-29T18:45:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 0,
+     "both_teams_have_value": false,
+     "teams": [
+      {
+       "team_id": 84,
+       "team": "Nice",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      },
+      {
+       "team_id": 1063,
+       "team": "Saint Etienne",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      }
+     ]
+    },
+    {
+     "fixture_id": 1545408,
+     "kickoff": "2026-05-26T18:45:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 0,
+     "both_teams_have_value": false,
+     "teams": [
+      {
+       "team_id": 1063,
+       "team": "Saint Etienne",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      },
+      {
+       "team_id": 84,
+       "team": "Nice",
+       "xg_type": "expected_goals",
+       "xg_raw": null,
+       "xg_value": null
+      }
+     ]
+    },
+    {
+     "fixture_id": 1387996,
+     "kickoff": "2026-05-17T19:00:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 79,
+       "team": "Lille",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.72",
+       "xg_value": 1.72
+      },
+      {
+       "team_id": 108,
+       "team": "Auxerre",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.54",
+       "xg_value": 0.54
+      }
+     ]
+    }
+   ],
+   "samples_taken": 3,
+   "samples_with_both_values": 1,
+   "type_appears_without_value": true,
+   "verdict": "xg_partial",
+   "label": "Ligue 1"
+  },
+  "brasileirao": {
+   "league_id": 71,
+   "season": 2026,
+   "fixtures_visible": 380,
+   "completed_visible": 199,
+   "provider_errors": [],
+   "samples": [
+    {
+     "fixture_id": 1492306,
+     "kickoff": "2026-07-26T22:30:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 121,
+       "team": "Palmeiras",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.79",
+       "xg_value": 1.79
+      },
+      {
+       "team_id": 1062,
+       "team": "Atletico-MG",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.99",
+       "xg_value": 1.99
+      }
+     ]
+    },
+    {
+     "fixture_id": 1492307,
+     "kickoff": "2026-07-26T22:30:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 1198,
+       "team": "Remo",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.73",
+       "xg_value": 0.73
+      },
+      {
+       "team_id": 136,
+       "team": "Vitoria",
+       "xg_type": "expected_goals",
+       "xg_raw": "1.31",
+       "xg_value": 1.31
+      }
+     ]
+    },
+    {
+     "fixture_id": 1492304,
+     "kickoff": "2026-07-26T21:30:00+00:00",
+     "teams_in_stats": 2,
+     "type_present_count": 2,
+     "value_present_count": 2,
+     "both_teams_have_value": true,
+     "teams": [
+      {
+       "team_id": 127,
+       "team": "Flamengo",
+       "xg_type": "expected_goals",
+       "xg_raw": "2.01",
+       "xg_value": 2.01
+      },
+      {
+       "team_id": 126,
+       "team": "Sao Paulo",
+       "xg_type": "expected_goals",
+       "xg_raw": "0.50",
+       "xg_value": 0.5
+      }
+     ]
+    }
+   ],
+   "samples_taken": 3,
+   "samples_with_both_values": 3,
+   "type_appears_without_value": false,
+   "verdict": "xg_available",
+   "label": "Brasileirao Serie A"
+  }
+ },
+ "spread_6_sample": {
+  "epl": {
+   "league_id": 39,
+   "season": 2025,
+   "completed_visible": 380,
+   "samples": [
+    {
+     "fixture_id": 1378969,
+     "kickoff": "2025-08-15",
+     "round": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Liverpool",
+       "raw": "2.21"
+      },
+      {
+       "team": "Bournemouth",
+       "raw": "1.70"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1379042,
+     "kickoff": "2025-10-18",
+     "round": "Regular Season - 8",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Fulham",
+       "raw": "0.44"
+      },
+      {
+       "team": "Arsenal",
+       "raw": "1.87"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1379121,
+     "kickoff": "2025-12-13",
+     "round": "Regular Season - 16",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Burnley",
+       "raw": "2.46"
+      },
+      {
+       "team": "Fulham",
+       "raw": "2.23"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1379191,
+     "kickoff": "2026-01-25",
+     "round": "Regular Season - 23",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Brentford",
+       "raw": "1.81"
+      },
+      {
+       "team": "Nottingham Forest",
+       "raw": "0.78"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1379273,
+     "kickoff": "2026-03-21",
+     "round": "Regular Season - 31",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Fulham",
+       "raw": "3.15"
+      },
+      {
+       "team": "Burnley",
+       "raw": "1.24"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1379346,
+     "kickoff": "2026-05-24",
+     "round": "Regular Season - 38",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Sunderland",
+       "raw": "1.84"
+      },
+      {
+       "team": "Chelsea",
+       "raw": "0.89"
+      }
+     ]
+    }
+   ],
+   "rate": 1.0,
+   "misses": [],
+   "verdict": "xg_available"
+  },
+  "laliga": {
+   "league_id": 140,
+   "season": 2025,
+   "completed_visible": 380,
+   "samples": [
+    {
+     "fixture_id": 1390824,
+     "kickoff": "2025-08-15",
+     "round": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Girona",
+       "raw": "0.56"
+      },
+      {
+       "team": "Rayo Vallecano",
+       "raw": "3.43"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1390898,
+     "kickoff": "2025-10-05",
+     "round": "Regular Season - 8",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Sevilla",
+       "raw": "2.80"
+      },
+      {
+       "team": "Barcelona",
+       "raw": "2.25"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1390977,
+     "kickoff": "2025-12-12",
+     "round": "Regular Season - 16",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Real Sociedad",
+       "raw": "0.95"
+      },
+      {
+       "team": "Girona",
+       "raw": "1.43"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1391048,
+     "kickoff": "2026-02-09",
+     "round": "Regular Season - 23",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Villarreal",
+       "raw": "0.76"
+      },
+      {
+       "team": "Espanyol",
+       "raw": "0.43"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1391120,
+     "kickoff": "2026-04-11",
+     "round": "Regular Season - 31",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Barcelona",
+       "raw": "2.81"
+      },
+      {
+       "team": "Espanyol",
+       "raw": "1.17"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1391198,
+     "kickoff": "2026-05-24",
+     "round": "Regular Season - 38",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Villarreal",
+       "raw": "2.48"
+      },
+      {
+       "team": "Atletico Madrid",
+       "raw": "1.16"
+      }
+     ]
+    }
+   ],
+   "rate": 1.0,
+   "misses": [],
+   "verdict": "xg_available"
+  },
+  "ligamx": {
+   "league_id": 262,
+   "season": 2026,
+   "completed_visible": 18,
+   "samples": [
+    {
+     "fixture_id": 1550894,
+     "kickoff": "2026-07-17",
+     "round": "Apertura - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Necaxa",
+       "raw": "2.39"
+      },
+      {
+       "team": "Atlante FC",
+       "raw": "0.60"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1550896,
+     "kickoff": "2026-07-18",
+     "round": "Apertura - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Atletico San Luis",
+       "raw": "1.25"
+      },
+      {
+       "team": "Cruz Azul",
+       "raw": "3.14"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1550900,
+     "kickoff": "2026-07-19",
+     "round": "Apertura - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Guadalajara Chivas",
+       "raw": "1.09"
+      },
+      {
+       "team": "Toluca",
+       "raw": "1.77"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1550904,
+     "kickoff": "2026-07-22",
+     "round": "Apertura - 2",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Toluca",
+       "raw": "1.21"
+      },
+      {
+       "team": "U.N.A.M. - Pumas",
+       "raw": "0.66"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1550905,
+     "kickoff": "2026-07-26",
+     "round": "Apertura - 2",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Tigres UANL",
+       "raw": "1.34"
+      },
+      {
+       "team": "Atletico San Luis",
+       "raw": "0.50"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1550911,
+     "kickoff": "2026-07-27",
+     "round": "Apertura - 2",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "CF Pachuca",
+       "raw": "1.22"
+      },
+      {
+       "team": "Club Queretaro",
+       "raw": "2.07"
+      }
+     ]
+    }
+   ],
+   "rate": 1.0,
+   "misses": [],
+   "verdict": "xg_available"
+  },
+  "mls": {
+   "league_id": 253,
+   "season": 2026,
+   "completed_visible": 253,
+   "samples": [
+    {
+     "fixture_id": 1490775,
+     "kickoff": "2026-02-21",
+     "round": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "St. Louis City",
+       "raw": "1.59"
+      },
+      {
+       "team": "Charlotte",
+       "raw": "0.59"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1490156,
+     "kickoff": "2026-03-15",
+     "round": "Regular Season - 4",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "FC Dallas",
+       "raw": "2.71"
+      },
+      {
+       "team": "San Diego",
+       "raw": "2.04"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1490207,
+     "kickoff": "2026-04-12",
+     "round": "Regular Season - 7",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "San Diego",
+       "raw": "1.57"
+      },
+      {
+       "team": "Minnesota United FC",
+       "raw": "2.17"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1490259,
+     "kickoff": "2026-05-02",
+     "round": "Regular Season - 11",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "New England Revolution",
+       "raw": "1.58"
+      },
+      {
+       "team": "Charlotte",
+       "raw": "1.10"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1490309,
+     "kickoff": "2026-05-18",
+     "round": "Regular Season - 14",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Nashville SC",
+       "raw": "0.63"
+      },
+      {
+       "team": "Los Angeles FC",
+       "raw": "2.14"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1490360,
+     "kickoff": "2026-07-26",
+     "round": "Regular Season - 17",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Portland Timbers",
+       "raw": "2.58"
+      },
+      {
+       "team": "Real Salt Lake",
+       "raw": "0.15"
+      }
+     ]
+    }
+   ],
+   "rate": 1.0,
+   "misses": [],
+   "verdict": "xg_available"
+  },
+  "bundesliga": {
+   "league_id": 78,
+   "season": 2025,
+   "completed_visible": 308,
+   "samples": [
+    {
+     "fixture_id": 1388308,
+     "kickoff": "2025-08-22",
+     "round": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Bayern München",
+       "raw": "1.72"
+      },
+      {
+       "team": "RB Leipzig",
+       "raw": "0.54"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1388364,
+     "kickoff": "2025-10-19",
+     "round": "Regular Season - 7",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "SC Freiburg",
+       "raw": "1.14"
+      },
+      {
+       "team": "Eintracht Frankfurt",
+       "raw": "0.89"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1388429,
+     "kickoff": "2025-12-14",
+     "round": "Regular Season - 14",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "SC Freiburg",
+       "raw": "1.50"
+      },
+      {
+       "team": "Borussia Dortmund",
+       "raw": "0.93"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1388494,
+     "kickoff": "2026-02-07",
+     "round": "Regular Season - 21",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "FC St. Pauli",
+       "raw": "1.95"
+      },
+      {
+       "team": "VfB Stuttgart",
+       "raw": "0.84"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1388556,
+     "kickoff": "2026-04-04",
+     "round": "Regular Season - 28",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "1899 Hoffenheim",
+       "raw": "1.16"
+      },
+      {
+       "team": "FSV Mainz 05",
+       "raw": "2.19"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1545418,
+     "kickoff": "2026-05-25",
+     "round": "Final",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both": false,
+     "teams": [
+      {
+       "team": "SC Paderborn 07",
+       "raw": null
+      },
+      {
+       "team": "VfL Wolfsburg",
+       "raw": null
+      }
+     ]
+    }
+   ],
+   "rate": 0.833,
+   "misses": [
+    {
+     "fixture_id": 1545418,
+     "kickoff": "2026-05-25",
+     "round": "Final"
+    }
+   ],
+   "verdict": "xg_partial"
+  },
+  "primeira": {
+   "league_id": 94,
+   "season": 2025,
+   "completed_visible": 308,
+   "samples": [
+    {
+     "fixture_id": 1396240,
+     "kickoff": "2025-08-08",
+     "round": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Casa Pia",
+       "raw": "0.43"
+      },
+      {
+       "team": "Sporting CP",
+       "raw": "2.85"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1396297,
+     "kickoff": "2025-09-28",
+     "round": "Regular Season - 7",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Famalicao",
+       "raw": "2.49"
+      },
+      {
+       "team": "Rio Ave",
+       "raw": "0.62"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1396360,
+     "kickoff": "2025-12-15",
+     "round": "Regular Season - 14",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Nacional",
+       "raw": "2.35"
+      },
+      {
+       "team": "Tondela",
+       "raw": "3.28"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1396425,
+     "kickoff": "2026-02-08",
+     "round": "Regular Season - 21",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Nacional",
+       "raw": "0.98"
+      },
+      {
+       "team": "Casa Pia",
+       "raw": "0.64"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1396486,
+     "kickoff": "2026-04-04",
+     "round": "Regular Season - 28",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Rio Ave",
+       "raw": "1.64"
+      },
+      {
+       "team": "Alverca",
+       "raw": "1.45"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1545404,
+     "kickoff": "2026-05-28",
+     "round": "Final",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both": false,
+     "teams": [
+      {
+       "team": "Casa Pia",
+       "raw": null
+      },
+      {
+       "team": "Torreense",
+       "raw": null
+      }
+     ]
+    }
+   ],
+   "rate": 0.833,
+   "misses": [
+    {
+     "fixture_id": 1545404,
+     "kickoff": "2026-05-28",
+     "round": "Final"
+    }
+   ],
+   "verdict": "xg_partial"
+  },
+  "ligue1": {
+   "league_id": 61,
+   "season": 2025,
+   "completed_visible": 309,
+   "samples": [
+    {
+     "fixture_id": 1387706,
+     "kickoff": "2025-08-15",
+     "round": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Rennes",
+       "raw": "1.47"
+      },
+      {
+       "team": "Marseille",
+       "raw": "1.71"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1387755,
+     "kickoff": "2025-10-05",
+     "round": "Regular Season - 7",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Lille",
+       "raw": "0.65"
+      },
+      {
+       "team": "Paris Saint Germain",
+       "raw": "1.50"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1387817,
+     "kickoff": "2025-11-30",
+     "round": "Regular Season - 14",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Lorient",
+       "raw": "2.38"
+      },
+      {
+       "team": "Nice",
+       "raw": "0.82"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1387878,
+     "kickoff": "2026-02-08",
+     "round": "Regular Season - 21",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Angers",
+       "raw": "1.03"
+      },
+      {
+       "team": "Toulouse",
+       "raw": "0.51"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1387941,
+     "kickoff": "2026-04-05",
+     "round": "Regular Season - 28",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Angers",
+       "raw": "0.29"
+      },
+      {
+       "team": "Lyon",
+       "raw": "0.73"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1545409,
+     "kickoff": "2026-05-29",
+     "round": "Final",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both": false,
+     "teams": [
+      {
+       "team": "Nice",
+       "raw": null
+      },
+      {
+       "team": "Saint Etienne",
+       "raw": null
+      }
+     ]
+    }
+   ],
+   "rate": 0.833,
+   "misses": [
+    {
+     "fixture_id": 1545409,
+     "kickoff": "2026-05-29",
+     "round": "Final"
+    }
+   ],
+   "verdict": "xg_partial"
+  },
+  "j1": {
+   "league_id": 98,
+   "season": 2026,
+   "completed_visible": 200,
+   "samples": [
+    {
+     "fixture_id": 1501295,
+     "kickoff": "2026-02-06",
+     "round": "Regular Season - 1",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "V-varen Nagasaki",
+       "raw": "1.88"
+      },
+      {
+       "team": "Sanfrecce Hiroshima",
+       "raw": "1.96"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1504689,
+     "kickoff": "2026-03-07",
+     "round": "Regular Season - 5",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "JEF United Chiba",
+       "raw": "1.84"
+      },
+      {
+       "team": "Kashiwa Reysol",
+       "raw": "3.01"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1504756,
+     "kickoff": "2026-04-01",
+     "round": "Regular Season - 11",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both": false,
+     "teams": [
+      {
+       "team": "Vissel Kobe",
+       "raw": null
+      },
+      {
+       "team": "Shimizu S-pulse",
+       "raw": null
+      }
+     ]
+    },
+    {
+     "fixture_id": 1504769,
+     "kickoff": "2026-04-29",
+     "round": "Regular Season - 13",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Shimizu S-pulse",
+       "raw": "0.57"
+      },
+      {
+       "team": "V-varen Nagasaki",
+       "raw": "1.30"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1504768,
+     "kickoff": "2026-05-13",
+     "round": "Regular Season - 12",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 2,
+     "both": true,
+     "teams": [
+      {
+       "team": "Vissel Kobe",
+       "raw": "1.45"
+      },
+      {
+       "team": "Kyoto Sanga",
+       "raw": "0.82"
+      }
+     ]
+    },
+    {
+     "fixture_id": 1546407,
+     "kickoff": "2026-06-06",
+     "round": "7th place",
+     "teams_in_stats": 2,
+     "type_present": 2,
+     "value_present": 0,
+     "both": false,
+     "teams": [
+      {
+       "team": "Kawasaki Frontale",
+       "raw": null
+      },
+      {
+       "team": "Sanfrecce Hiroshima",
+       "raw": null
+      }
+     ]
+    }
+   ],
+   "rate": 0.667,
+   "misses": [
+    {
+     "fixture_id": 1504756,
+     "kickoff": "2026-04-01",
+     "round": "Regular Season - 11"
+    },
+    {
+     "fixture_id": 1546407,
+     "kickoff": "2026-06-06",
+     "round": "7th place"
+    }
+   ],
+   "verdict": "xg_partial"
+  }
+ }
+}

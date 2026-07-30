@@ -450,6 +450,153 @@ def mls_t10_job() -> None:
         print(f"[mls-t10] error: {exc}")
 
 
+# === EPL shadow plane (additive block, 2026-07-28) =========================
+# Machinery parity with MLS, MODEL DARK: the run/lock jobs are wired but
+# refuse at the F3/F9 approval gates until epl-2026-v0 earns an approval
+# decision — which no code path here can create. Lazy imports as with
+# MLS: an EPL-plane failure must never take the scheduler down.
+
+def epl_boot() -> None:
+    """One-shot EPL boot: identity -> season ingest -> market discovery
+    -> DARK model registration. No approval is ever created."""
+    if not config.EPL_SHADOW_ENABLED:
+        return
+    try:
+        from src.live import epl_plane
+        epl_plane.boot()
+    except Exception as exc:
+        print(f"[epl-boot] FAILED: {exc}")
+
+
+def epl_window_job() -> None:
+    """Rolling EPL fixture refresh (reschedules, statuses, scores)."""
+    if not config.EPL_SHADOW_ENABLED:
+        return
+    try:
+        from src.live import epl_plane
+        epl_plane.refresh_window()
+    except Exception as exc:
+        print(f"[epl-window] error: {exc}")
+
+
+def epl_markets_job() -> None:
+    """Kalshi discovery/mapping + quote capture for EPL. Cheap while
+    the 26/27 listings are absent (empty event lists); the shared
+    per-request throttle in src.live.markets covers both leagues."""
+    if not config.EPL_SHADOW_ENABLED:
+        return
+    try:
+        from src.live import epl_plane
+        epl_plane.discover_and_map()
+        epl_plane.capture_quotes()
+    except Exception as exc:
+        print(f"[epl-markets] error: {exc}")
+
+
+def epl_runs_job() -> None:
+    """EPL shadow-run sweep. Refuses at the approval gate while the
+    model is dark — wired now so approval, once earned, needs no code
+    change to start collecting."""
+    if not config.EPL_SHADOW_ENABLED:
+        return
+    try:
+        from src.live import epl_plane
+        r = epl_plane.scheduled_runs()
+        if r.get("created"):
+            print(f"[epl-runs] {r}")
+    except Exception as exc:
+        print(f"[epl-runs] error: {exc}")
+
+
+def epl_t10_job() -> None:
+    """EPL T-10 lock sweep — same fail-closed gates as the run sweep."""
+    if not config.EPL_SHADOW_ENABLED:
+        return
+    try:
+        from src.live import epl_plane
+        r = epl_plane.t10_locks()
+        if r.get("locked"):
+            print(f"[epl-t10] {r}")
+    except Exception as exc:
+        print(f"[epl-t10] error: {exc}")
+# === end EPL block =========================================================
+
+
+# === Liga MX shadow plane (additive block, 2026-07-29) =====================
+# Machinery parity with MLS/EPL, MODEL DARK and the plane switch OFF BY
+# DEFAULT (LIGAMX_SHADOW_ENABLED=false): every job below is a no-op
+# until an operator flips the flag, and the run/lock jobs additionally
+# refuse at the F3/F9 approval gates — which no code path here can
+# satisfy. Lazy imports as with MLS: a Liga MX-plane failure must never
+# take the scheduler down.
+
+def ligamx_boot() -> None:
+    """One-shot Liga MX boot: identity -> season ingest -> market
+    discovery -> DARK model registration. No approval is ever created."""
+    if not config.LIGAMX_SHADOW_ENABLED:
+        return
+    try:
+        from src.live import ligamx_plane
+        ligamx_plane.boot()
+    except Exception as exc:
+        print(f"[ligamx-boot] FAILED: {exc}")
+
+
+def ligamx_window_job() -> None:
+    """Rolling Liga MX fixture refresh (reschedules, statuses, scores)."""
+    if not config.LIGAMX_SHADOW_ENABLED:
+        return
+    try:
+        from src.live import ligamx_plane
+        ligamx_plane.refresh_window()
+    except Exception as exc:
+        print(f"[ligamx-window] error: {exc}")
+
+
+def ligamx_markets_job() -> None:
+    """Kalshi discovery/mapping + quote capture for Liga MX. The
+    listings are OPEN (unlike EPL's at build time); the shared
+    per-request throttle in src.live.markets covers every league."""
+    if not config.LIGAMX_SHADOW_ENABLED:
+        return
+    try:
+        from src.live import ligamx_plane
+        ligamx_plane.discover_and_map()
+        ligamx_plane.capture_quotes()
+    except Exception as exc:
+        print(f"[ligamx-markets] error: {exc}")
+
+
+def ligamx_runs_job() -> None:
+    """Liga MX shadow-run sweep. Refuses at the approval gate while the
+    model is dark — wired now so approval, once earned, needs no code
+    change to start collecting."""
+    if not config.LIGAMX_SHADOW_ENABLED:
+        return
+    try:
+        from src.live import ligamx_plane
+        r = ligamx_plane.scheduled_runs()
+        if r.get("created"):
+            print(f"[ligamx-runs] {r}")
+    except Exception as exc:
+        print(f"[ligamx-runs] error: {exc}")
+
+
+def ligamx_t10_job() -> None:
+    """Liga MX T-10 lock sweep — same fail-closed gates as the run
+    sweep."""
+    if not config.LIGAMX_SHADOW_ENABLED:
+        return
+    try:
+        from src.live import ligamx_plane
+        r = ligamx_plane.t10_locks()
+        if r.get("locked"):
+            print(f"[ligamx-t10] {r}")
+    except Exception as exc:
+        print(f"[ligamx-t10] error: {exc}")
+# === end Liga MX block =====================================================
+
+
 def start_scheduler() -> BackgroundScheduler:
     scheduler = BackgroundScheduler(timezone="UTC")
     scheduler.add_job(hourly_predictions, "cron", minute=0, id="hourly")
@@ -506,4 +653,35 @@ def start_scheduler() -> BackgroundScheduler:
     # Live-plane boot is its OWN one-shot, never chained into the archive
     # boot_sequence: a live failure must not delay or break the archive.
     scheduler.add_job(mls_boot, "date", id="mls_boot")
+    # === EPL shadow plane (additive block, 2026-07-28) ====================
+    # Same registration pattern as MLS: unconditional add, instant no-op
+    # when EPL_SHADOW_ENABLED is off or the live DB is dormant. Run/lock
+    # sweeps additionally refuse at the approval gates (model dark).
+    scheduler.add_job(epl_window_job, "interval", minutes=15,
+                      id="epl_window", coalesce=True, max_instances=1)
+    scheduler.add_job(epl_markets_job, "interval",
+                      minutes=config.EPL_MARKETS_JOB_MINUTES,
+                      id="epl_markets", coalesce=True, max_instances=1)
+    scheduler.add_job(epl_runs_job, "interval", minutes=15,
+                      id="epl_runs", coalesce=True, max_instances=1)
+    scheduler.add_job(epl_t10_job, "interval", seconds=60,
+                      id="epl_t10", coalesce=True, max_instances=1)
+    scheduler.add_job(epl_boot, "date", id="epl_boot")
+    # === end EPL block ====================================================
+    # === Liga MX shadow plane (additive block, 2026-07-29) ================
+    # Same registration pattern as MLS/EPL: unconditional add, instant
+    # no-op while LIGAMX_SHADOW_ENABLED is off (the default) or the live
+    # DB is dormant. Run/lock sweeps additionally refuse at the approval
+    # gates (model dark).
+    scheduler.add_job(ligamx_window_job, "interval", minutes=15,
+                      id="ligamx_window", coalesce=True, max_instances=1)
+    scheduler.add_job(ligamx_markets_job, "interval",
+                      minutes=config.LIGAMX_MARKETS_JOB_MINUTES,
+                      id="ligamx_markets", coalesce=True, max_instances=1)
+    scheduler.add_job(ligamx_runs_job, "interval", minutes=15,
+                      id="ligamx_runs", coalesce=True, max_instances=1)
+    scheduler.add_job(ligamx_t10_job, "interval", seconds=60,
+                      id="ligamx_t10", coalesce=True, max_instances=1)
+    scheduler.add_job(ligamx_boot, "date", id="ligamx_boot")
+    # === end Liga MX block ================================================
     return scheduler

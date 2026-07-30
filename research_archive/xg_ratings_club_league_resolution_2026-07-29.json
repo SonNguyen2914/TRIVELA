@@ -1,0 +1,5565 @@
+{
+ "_what": "ESPN club.friendly clubs resolved to their DOMESTIC league. Two stages: discovery proposes candidate leagues, then league ROSTERS decide. Ambiguous and uncovered cases are stored as such — an ambiguous identity match fails explicitly and never picks a club.",
+ "_why_rosters": "the provider's own club->league answer mixes the real league with pre-season friendly tournaments ('Premier League - Summer Series' came back for Liverpool and Sunderland) and years-stale lower-tier registrations, and no field distinguishes them. Roster membership has no such ambiguity and costs one request per league instead of two per club.",
+ "resolved_utc": "2026-07-29T23:47:39.815467+00:00",
+ "espn_days": 8,
+ "fixtures": [
+  {
+   "espn_event_id": "401872736",
+   "date": "2026-07-29T10:00Z",
+   "name": "Borussia Dortmund at Cerezo Osaka",
+   "sides": [
+    {
+     "name": "Cerezo Osaka",
+     "abbrev": "CER",
+     "home_away": "home"
+    },
+    {
+     "name": "Borussia Dortmund",
+     "abbrev": "DOR",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401902669",
+   "date": "2026-07-29T18:30Z",
+   "name": "Newcastle United at Bristol City",
+   "sides": [
+    {
+     "name": "Bristol City",
+     "abbrev": "BRC",
+     "home_away": "home"
+    },
+    {
+     "name": "Newcastle United",
+     "abbrev": "NEW",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401896388",
+   "date": "2026-07-29T19:30Z",
+   "name": "Getafe at Atlético Madrid",
+   "sides": [
+    {
+     "name": "Atlético Madrid",
+     "abbrev": "ATM",
+     "home_away": "home"
+    },
+    {
+     "name": "Getafe",
+     "abbrev": "GET",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401863532",
+   "date": "2026-07-29T23:30Z",
+   "name": "Wrexham at Liverpool",
+   "sides": [
+    {
+     "name": "Liverpool",
+     "abbrev": "LIV",
+     "home_away": "home"
+    },
+    {
+     "name": "Wrexham",
+     "abbrev": "WXM",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401898691",
+   "date": "2026-07-30T15:30Z",
+   "name": "Al Sadd at Trabzonspor",
+   "sides": [
+    {
+     "name": "Trabzonspor",
+     "abbrev": "TRAB",
+     "home_away": "home"
+    },
+    {
+     "name": "Al Sadd",
+     "abbrev": "SAD",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401897750",
+   "date": "2026-07-30T23:30Z",
+   "name": "Leeds United at Sunderland",
+   "sides": [
+    {
+     "name": "Sunderland",
+     "abbrev": "SUN",
+     "home_away": "home"
+    },
+    {
+     "name": "Leeds United",
+     "abbrev": "LEE",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401887800",
+   "date": "2026-07-31T16:00Z",
+   "name": "Nice at Juventus",
+   "sides": [
+    {
+     "name": "Juventus",
+     "abbrev": "JUV",
+     "home_away": "home"
+    },
+    {
+     "name": "Nice",
+     "abbrev": "NICE",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401886550",
+   "date": "2026-07-31T18:45Z",
+   "name": "Barcelona at Birmingham City",
+   "sides": [
+    {
+     "name": "Birmingham City",
+     "abbrev": "BIR",
+     "home_away": "home"
+    },
+    {
+     "name": "Barcelona",
+     "abbrev": "BAR",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401872737",
+   "date": "2026-08-01T10:00Z",
+   "name": "Borussia Dortmund at FC Tokyo",
+   "sides": [
+    {
+     "name": "FC Tokyo",
+     "abbrev": "FCT",
+     "home_away": "home"
+    },
+    {
+     "name": "Borussia Dortmund",
+     "abbrev": "DOR",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401871493",
+   "date": "2026-08-01T11:30Z",
+   "name": "Internazionale at Manchester City",
+   "sides": [
+    {
+     "name": "Manchester City",
+     "abbrev": "MNC",
+     "home_away": "home"
+    },
+    {
+     "name": "Internazionale",
+     "abbrev": "INT",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401869198",
+   "date": "2026-08-01T13:00Z",
+   "name": "Atlético Madrid at Manchester United",
+   "sides": [
+    {
+     "name": "Manchester United",
+     "abbrev": "MAN",
+     "home_away": "home"
+    },
+    {
+     "name": "Atlético Madrid",
+     "abbrev": "ATM",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401886531",
+   "date": "2026-08-01T14:00Z",
+   "name": "AS Roma at Cardiff City",
+   "sides": [
+    {
+     "name": "Cardiff City",
+     "abbrev": "CAR",
+     "home_away": "home"
+    },
+    {
+     "name": "AS Roma",
+     "abbrev": "ROMA",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401888842",
+   "date": "2026-08-01T16:00Z",
+   "name": "Fiorentina at Real Madrid",
+   "sides": [
+    {
+     "name": "Real Madrid",
+     "abbrev": "RMA",
+     "home_away": "home"
+    },
+    {
+     "name": "Fiorentina",
+     "abbrev": "FIO",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401898015",
+   "date": "2026-08-01T17:00Z",
+   "name": "Al Nassr at Estrela",
+   "sides": [
+    {
+     "name": "Estrela",
+     "abbrev": "EST",
+     "home_away": "home"
+    },
+    {
+     "name": "Al Nassr",
+     "abbrev": "NSR",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401886553",
+   "date": "2026-08-01T18:00Z",
+   "name": "Arsenal at Girona",
+   "sides": [
+    {
+     "name": "Girona",
+     "abbrev": "GIR",
+     "home_away": "home"
+    },
+    {
+     "name": "Arsenal",
+     "abbrev": "ARS",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401886552",
+   "date": "2026-08-02T12:30Z",
+   "name": "Ajax Amsterdam at FC Volendam",
+   "sides": [
+    {
+     "name": "FC Volendam",
+     "abbrev": "VOL",
+     "home_away": "home"
+    },
+    {
+     "name": "Ajax Amsterdam",
+     "abbrev": "AJA",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401886551",
+   "date": "2026-08-02T13:00Z",
+   "name": "Atalanta at Feyenoord Rotterdam",
+   "sides": [
+    {
+     "name": "Feyenoord Rotterdam",
+     "abbrev": "FEY",
+     "home_away": "home"
+    },
+    {
+     "name": "Atalanta",
+     "abbrev": "ATA",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401898711",
+   "date": "2026-08-02T14:30Z",
+   "name": "Udinese at Trabzonspor",
+   "sides": [
+    {
+     "name": "Trabzonspor",
+     "abbrev": "TRAB",
+     "home_away": "home"
+    },
+    {
+     "name": "Udinese",
+     "abbrev": "UDI",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401897751",
+   "date": "2026-08-02T16:00Z",
+   "name": "Wrexham at Sunderland",
+   "sides": [
+    {
+     "name": "Sunderland",
+     "abbrev": "SUN",
+     "home_away": "home"
+    },
+    {
+     "name": "Wrexham",
+     "abbrev": "WXM",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401898687",
+   "date": "2026-08-02T18:00Z",
+   "name": "Stade Rennais at Galatasaray",
+   "sides": [
+    {
+     "name": "Galatasaray",
+     "abbrev": "GAL",
+     "home_away": "home"
+    },
+    {
+     "name": "Stade Rennais",
+     "abbrev": "REN",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401863533",
+   "date": "2026-08-02T20:00Z",
+   "name": "Leeds United at Liverpool",
+   "sides": [
+    {
+     "name": "Liverpool",
+     "abbrev": "LIV",
+     "home_away": "home"
+    },
+    {
+     "name": "Leeds United",
+     "abbrev": "LEE",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401898014",
+   "date": "2026-08-04T18:00Z",
+   "name": "Almería at Al Nassr",
+   "sides": [
+    {
+     "name": "Al Nassr",
+     "abbrev": "NSR",
+     "home_away": "home"
+    },
+    {
+     "name": "Almería",
+     "abbrev": "ALM",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401867951",
+   "date": "2026-08-04T18:00Z",
+   "name": "Bayern Munich at Jeju United",
+   "sides": [
+    {
+     "name": "Jeju United",
+     "abbrev": "JEJU",
+     "home_away": "home"
+    },
+    {
+     "name": "Bayern Munich",
+     "abbrev": "MUN",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401886532",
+   "date": "2026-08-04T18:00Z",
+   "name": "AS Roma at Newport County",
+   "sides": [
+    {
+     "name": "Newport County",
+     "abbrev": "NEW",
+     "home_away": "home"
+    },
+    {
+     "name": "AS Roma",
+     "abbrev": "ROMA",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401869428",
+   "date": "2026-08-05T11:00Z",
+   "name": "Internazionale at AC Milan",
+   "sides": [
+    {
+     "name": "AC Milan",
+     "abbrev": "MIL",
+     "home_away": "home"
+    },
+    {
+     "name": "Internazionale",
+     "abbrev": "INT",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401871494",
+   "date": "2026-08-05T11:30Z",
+   "name": "Juventus at Chelsea",
+   "sides": [
+    {
+     "name": "Chelsea",
+     "abbrev": "CHE",
+     "home_away": "home"
+    },
+    {
+     "name": "Juventus",
+     "abbrev": "JUV",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401886451",
+   "date": "2026-08-05T18:00Z",
+   "name": "Paris Saint-Germain at Mallorca",
+   "sides": [
+    {
+     "name": "Mallorca",
+     "abbrev": "MLL",
+     "home_away": "home"
+    },
+    {
+     "name": "Paris Saint-Germain",
+     "abbrev": "PSG",
+     "home_away": "away"
+    }
+   ]
+  },
+  {
+   "espn_event_id": "401867142",
+   "date": "2026-08-05T18:30Z",
+   "name": "Real Betis at Arsenal",
+   "sides": [
+    {
+     "name": "Arsenal",
+     "abbrev": "ARS",
+     "home_away": "home"
+    },
+    {
+     "name": "Real Betis",
+     "abbrev": "BET",
+     "home_away": "away"
+    }
+   ]
+  }
+ ],
+ "clubs_queried": [
+  "AC Milan",
+  "AS Roma",
+  "Ajax Amsterdam",
+  "Al Nassr",
+  "Al Sadd",
+  "Almería",
+  "Arsenal",
+  "Atalanta",
+  "Atlético Madrid",
+  "Barcelona",
+  "Bayern Munich",
+  "Birmingham City",
+  "Borussia Dortmund",
+  "Bristol City",
+  "Cardiff City",
+  "Cerezo Osaka",
+  "Chelsea",
+  "Estrela",
+  "FC Tokyo",
+  "FC Volendam",
+  "Feyenoord Rotterdam",
+  "Fiorentina",
+  "Galatasaray",
+  "Getafe",
+  "Girona",
+  "Internazionale",
+  "Jeju United",
+  "Juventus",
+  "Leeds United",
+  "Liverpool",
+  "Mallorca",
+  "Manchester City",
+  "Manchester United",
+  "Newcastle United",
+  "Newport County",
+  "Nice",
+  "Paris Saint-Germain",
+  "Real Betis",
+  "Real Madrid",
+  "Stade Rennais",
+  "Sunderland",
+  "Trabzonspor",
+  "Udinese",
+  "Wrexham"
+ ],
+ "requests_used": 117,
+ "rate_limit": {
+  "remaining_minute": "211",
+  "remaining_day": "6737",
+  "limit_day": "7500"
+ },
+ "resolution_counts": {
+  "resolved": 43,
+  "league_not_indexed": 1
+ },
+ "candidate_leagues": [
+  {
+   "league_id": 135,
+   "league_name": "Serie A",
+   "league_country": "Italy",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 492,
+   "league_name": "Tweede Divisie",
+   "league_country": "Netherlands",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 305,
+   "league_name": "Stars League",
+   "league_country": "Qatar",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 141,
+   "league_name": "Segunda División",
+   "league_country": "Spain",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 39,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 116,
+   "league_name": "Premier League",
+   "league_country": "Belarus",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 140,
+   "league_name": "La Liga",
+   "league_country": "Spain",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 242,
+   "league_name": "Liga Pro",
+   "league_country": "Ecuador",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 78,
+   "league_name": "Bundesliga",
+   "league_country": "Germany",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 40,
+   "league_name": "Championship",
+   "league_country": "England",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 98,
+   "league_name": "J1 League",
+   "league_country": "Japan",
+   "season": 2027,
+   "provider_current_season": 2027,
+   "seasons_visible": [
+    2027
+   ]
+  },
+  {
+   "league_id": 94,
+   "league_name": "Primeira Liga",
+   "league_country": "Portugal",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 89,
+   "league_name": "Eerste Divisie",
+   "league_country": "Netherlands",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 88,
+   "league_name": "Eredivisie",
+   "league_country": "Netherlands",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 203,
+   "league_name": "Süper Lig",
+   "league_country": "Turkey",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 844,
+   "league_name": "Ligue 1",
+   "league_country": "Congo",
+   "season": 2025,
+   "provider_current_season": 2025,
+   "seasons_visible": [
+    2025
+   ]
+  },
+  {
+   "league_id": 1219,
+   "league_name": "Copa Presidente",
+   "league_country": "El-Salvador",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 370,
+   "league_name": "Primera Division",
+   "league_country": "El-Salvador",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 292,
+   "league_name": "K League 1",
+   "league_country": "South-Korea",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 379,
+   "league_name": "Ligue Haïtienne",
+   "league_country": "Haiti",
+   "season": 2025,
+   "provider_current_season": 2025,
+   "seasons_visible": [
+    2025
+   ]
+  },
+  {
+   "league_id": 476,
+   "league_name": "Paulista - A2",
+   "league_country": "Brazil",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 42,
+   "league_name": "League Two",
+   "league_country": "England",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  },
+  {
+   "league_id": 61,
+   "league_name": "Ligue 1",
+   "league_country": "France",
+   "season": 2026,
+   "provider_current_season": 2026,
+   "seasons_visible": [
+    2026
+   ]
+  }
+ ],
+ "roster_meta": [
+  {
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "league_country": "Italy",
+   "clubs": 20
+  },
+  {
+   "league_id": 492,
+   "season": 2026,
+   "league_name": "Tweede Divisie",
+   "league_country": "Netherlands",
+   "clubs": 18
+  },
+  {
+   "league_id": 305,
+   "season": 2026,
+   "league_name": "Stars League",
+   "league_country": "Qatar",
+   "clubs": 12
+  },
+  {
+   "league_id": 141,
+   "season": 2026,
+   "league_name": "Segunda División",
+   "league_country": "Spain",
+   "clubs": 22
+  },
+  {
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "clubs": 20
+  },
+  {
+   "league_id": 116,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "Belarus",
+   "clubs": 16
+  },
+  {
+   "league_id": 140,
+   "season": 2026,
+   "league_name": "La Liga",
+   "league_country": "Spain",
+   "clubs": 20
+  },
+  {
+   "league_id": 242,
+   "season": 2026,
+   "league_name": "Liga Pro",
+   "league_country": "Ecuador",
+   "clubs": 16
+  },
+  {
+   "league_id": 78,
+   "season": 2026,
+   "league_name": "Bundesliga",
+   "league_country": "Germany",
+   "clubs": 18
+  },
+  {
+   "league_id": 40,
+   "season": 2026,
+   "league_name": "Championship",
+   "league_country": "England",
+   "clubs": 24
+  },
+  {
+   "league_id": 98,
+   "season": 2027,
+   "league_name": "J1 League",
+   "league_country": "Japan",
+   "clubs": 20
+  },
+  {
+   "league_id": 94,
+   "season": 2026,
+   "league_name": "Primeira Liga",
+   "league_country": "Portugal",
+   "clubs": 18
+  },
+  {
+   "league_id": 89,
+   "season": 2026,
+   "league_name": "Eerste Divisie",
+   "league_country": "Netherlands",
+   "clubs": 20
+  },
+  {
+   "league_id": 88,
+   "season": 2026,
+   "league_name": "Eredivisie",
+   "league_country": "Netherlands",
+   "clubs": 18
+  },
+  {
+   "league_id": 203,
+   "season": 2026,
+   "league_name": "Süper Lig",
+   "league_country": "Turkey",
+   "clubs": 18
+  },
+  {
+   "league_id": 844,
+   "season": 2025,
+   "league_name": "Ligue 1",
+   "league_country": "Congo",
+   "clubs": 16
+  },
+  {
+   "league_id": 1219,
+   "season": 2026,
+   "league_name": "Copa Presidente",
+   "league_country": "El-Salvador",
+   "clubs": 24
+  },
+  {
+   "league_id": 370,
+   "season": 2026,
+   "league_name": "Primera Division",
+   "league_country": "El-Salvador",
+   "clubs": 12
+  },
+  {
+   "league_id": 292,
+   "season": 2026,
+   "league_name": "K League 1",
+   "league_country": "South-Korea",
+   "clubs": 12
+  },
+  {
+   "league_id": 379,
+   "season": 2025,
+   "league_name": "Ligue Haïtienne",
+   "league_country": "Haiti",
+   "clubs": 13
+  },
+  {
+   "league_id": 476,
+   "season": 2026,
+   "league_name": "Paulista - A2",
+   "league_country": "Brazil",
+   "clubs": 16
+  },
+  {
+   "league_id": 42,
+   "season": 2026,
+   "league_name": "League Two",
+   "league_country": "England",
+   "clubs": 24
+  },
+  {
+   "league_id": 61,
+   "season": 2026,
+   "league_name": "Ligue 1",
+   "league_country": "France",
+   "clubs": 18
+  }
+ ],
+ "discovery": [
+  {
+   "query_name": "AC Milan",
+   "searched_as": "ac milan",
+   "candidates": [
+    {
+     "provider_team_id": 489,
+     "name": "AC Milan",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 1893,
+     "name": "AC Milan W",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 135,
+     "league_name": "Serie A",
+     "league_country": "Italy",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "AS Roma",
+   "searched_as": "as roma",
+   "candidates": [
+    {
+     "provider_team_id": 497,
+     "name": "AS Roma",
+     "country": null,
+     "tier": "exact"
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 135,
+     "league_name": "Serie A",
+     "league_country": "Italy",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Ajax Amsterdam",
+   "searched_as": "ajax amsterdam",
+   "candidates": [
+    {
+     "provider_team_id": 1252,
+     "name": "AFC Amsterdam",
+     "country": null,
+     "tier": "unique_containment"
+    },
+    {
+     "provider_team_id": 14268,
+     "name": "New Amsterdam",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 27399,
+     "name": "Amsterdamsche FC U21",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 492,
+     "league_name": "Tweede Divisie",
+     "league_country": "Netherlands",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ],
+   "retried_as": "amsterdam"
+  },
+  {
+   "query_name": "Al Nassr",
+   "searched_as": "al nassr",
+   "candidates": [
+    {
+     "provider_team_id": 24884,
+     "name": "Al Nassr W",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": []
+  },
+  {
+   "query_name": "Al Sadd",
+   "searched_as": "al sadd",
+   "candidates": [
+    {
+     "provider_team_id": 2895,
+     "name": "Al Sadd",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 2910,
+     "name": "Al Sadd B",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 305,
+     "league_name": "Stars League",
+     "league_country": "Qatar",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Almería",
+   "searched_as": "almeria",
+   "candidates": [
+    {
+     "provider_team_id": 723,
+     "name": "Almeria",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 9741,
+     "name": "Almería II",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 9753,
+     "name": "Polideportivo Almería",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 141,
+     "league_name": "Segunda División",
+     "league_country": "Spain",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Arsenal",
+   "searched_as": "arsenal",
+   "candidates": [
+    {
+     "provider_team_id": 42,
+     "name": "Arsenal",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 459,
+     "name": "Arsenal Sarandi",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 1077,
+     "name": "Arsenal Tula",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 1850,
+     "name": "Arsenal W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 3614,
+     "name": "Arsenal Kyiv",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 3742,
+     "name": "Arsenal Tivat",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 4403,
+     "name": "Arsenal",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 7189,
+     "name": "Arsenal U21",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7270,
+     "name": "Arsenal Česká Lípa",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 9155,
+     "name": "Arsenal Bila Tserkva",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 9218,
+     "name": "Arsenal Tula U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 9419,
+     "name": "Arsenal",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 12803,
+     "name": "Khimik-Arsenal",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 13884,
+     "name": "Berekum Arsenal",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15388,
+     "name": "Arsenal U18",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15631,
+     "name": "Arsenal U23",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 17720,
+     "name": "Arsenal Tula II",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 18660,
+     "name": "Arsenal Res.",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 21279,
+     "name": "Arizona Arsenal",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22371,
+     "name": "Arsenal U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23153,
+     "name": "Arsenal Res.",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23432,
+     "name": "Arsenal II",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23874,
+     "name": "Arizona Arsenal W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24669,
+     "name": "Atlético Arsenal",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 26077,
+     "name": "Volta II / Arsenal",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 39,
+     "league_name": "Premier League",
+     "league_country": "England",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    },
+    {
+     "league_id": 116,
+     "league_name": "Premier League",
+     "league_country": "Belarus",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Atalanta",
+   "searched_as": "atalanta",
+   "candidates": [
+    {
+     "provider_team_id": 499,
+     "name": "Atalanta",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 7883,
+     "name": "Atalanta U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22104,
+     "name": "Atalanta II",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24725,
+     "name": "Atalanta U20",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 135,
+     "league_name": "Serie A",
+     "league_country": "Italy",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Atlético Madrid",
+   "searched_as": "atletico madrid",
+   "candidates": [
+    {
+     "provider_team_id": 530,
+     "name": "Atletico Madrid",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 1910,
+     "name": "Atletico Madrid W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7884,
+     "name": "Atlético Madrid U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 9570,
+     "name": "Atlético Madrid II",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 140,
+     "league_name": "La Liga",
+     "league_country": "Spain",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Barcelona",
+   "searched_as": "barcelona",
+   "candidates": [
+    {
+     "provider_team_id": 529,
+     "name": "Barcelona",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 712,
+     "name": "Barcelona B",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 1152,
+     "name": "Barcelona SC",
+     "country": null,
+     "tier": "token_set"
+    },
+    {
+     "provider_team_id": 1918,
+     "name": "Barcelona W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7823,
+     "name": "Barcelona RO",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7885,
+     "name": "Barcelona U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15103,
+     "name": "Barcelona BA",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22579,
+     "name": "Barcelona SC W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23276,
+     "name": "Barcelona BA U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23571,
+     "name": "Barcelona EC",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23585,
+     "name": "Barcelona Copiapó",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 25555,
+     "name": "Barcelona Atlético",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 25961,
+     "name": "Barcelona RJ",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 140,
+     "league_name": "La Liga",
+     "league_country": "Spain",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    },
+    {
+     "league_id": 242,
+     "league_name": "Liga Pro",
+     "league_country": "Ecuador",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Bayern Munich",
+   "searched_as": "bayern munchen",
+   "candidates": [
+    {
+     "provider_team_id": 157,
+     "name": "Bayern München",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 4674,
+     "name": "Bayern München II",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7887,
+     "name": "Bayern München U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22295,
+     "name": "Bayern München II W",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 78,
+     "league_name": "Bundesliga",
+     "league_country": "Germany",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Birmingham City",
+   "searched_as": "birmingham city",
+   "candidates": [
+    {
+     "provider_team_id": 1845,
+     "name": "Birmingham City W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15640,
+     "name": "Birmingham City U23",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 17425,
+     "name": "Birmingham City U18",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 20078,
+     "name": "Birmingham City U21",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": []
+  },
+  {
+   "query_name": "Borussia Dortmund",
+   "searched_as": "borussia dortmund",
+   "candidates": [
+    {
+     "provider_team_id": 165,
+     "name": "Borussia Dortmund",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 7890,
+     "name": "Borussia Dortmund U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 9367,
+     "name": "Borussia Dortmund II",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 78,
+     "league_name": "Bundesliga",
+     "league_country": "Germany",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Bristol City",
+   "searched_as": "bristol city",
+   "candidates": [
+    {
+     "provider_team_id": 56,
+     "name": "Bristol City",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 1846,
+     "name": "Bristol City W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15641,
+     "name": "Bristol City U23",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 20080,
+     "name": "Bristol City U21",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23165,
+     "name": "Bristol City U18",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 40,
+     "league_name": "Championship",
+     "league_country": "England",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Cardiff City",
+   "searched_as": "cardiff city",
+   "candidates": [
+    {
+     "provider_team_id": 15412,
+     "name": "Cardiff City W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15642,
+     "name": "Cardiff City U23",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 20016,
+     "name": "Cardiff City U21",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23167,
+     "name": "Cardiff City U18",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": []
+  },
+  {
+   "query_name": "Cerezo Osaka",
+   "searched_as": "cerezo osaka",
+   "candidates": [
+    {
+     "provider_team_id": 291,
+     "name": "Cerezo Osaka",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 4316,
+     "name": "Cerezo Osaka U23",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22492,
+     "name": "Cerezo Osaka W",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 98,
+     "league_name": "J1 League",
+     "league_country": "Japan",
+     "season": 2027,
+     "provider_current_season": 2027,
+     "seasons_visible": [
+      2027
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Chelsea",
+   "searched_as": "chelsea",
+   "candidates": [
+    {
+     "provider_team_id": 49,
+     "name": "Chelsea",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 1853,
+     "name": "Chelsea W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7192,
+     "name": "Chelsea U21",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7892,
+     "name": "Chelsea U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 11918,
+     "name": "Chelsea U23",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 12244,
+     "name": "Berekum Chelsea",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15391,
+     "name": "Chelsea U18",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 25828,
+     "name": "Berekum Chelsea U18",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 39,
+     "league_name": "Premier League",
+     "league_country": "England",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Estrela",
+   "searched_as": "estrela",
+   "candidates": [
+    {
+     "provider_team_id": 4839,
+     "name": "Estrela Vendas Novas",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 12282,
+     "name": "Estrela do Norte",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15130,
+     "name": "Estrela",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 19824,
+     "name": "Estrela U23",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23278,
+     "name": "Estrela De Marco U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24536,
+     "name": "Estrela II",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24829,
+     "name": "Estrela Potiguar U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 25207,
+     "name": "Estrela PA U20",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 94,
+     "league_name": "Primeira Liga",
+     "league_country": "Portugal",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "FC Tokyo",
+   "searched_as": "fc tokyo",
+   "candidates": [
+    {
+     "provider_team_id": 292,
+     "name": "FC Tokyo",
+     "country": null,
+     "tier": "exact"
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 98,
+     "league_name": "J1 League",
+     "league_country": "Japan",
+     "season": 2027,
+     "provider_current_season": 2027,
+     "seasons_visible": [
+      2027
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "FC Volendam",
+   "searched_as": "fc volendam",
+   "candidates": [
+    {
+     "provider_team_id": 416,
+     "name": "FC Volendam",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 27376,
+     "name": "FC Volendam U19",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 89,
+     "league_name": "Eerste Divisie",
+     "league_country": "Netherlands",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Feyenoord Rotterdam",
+   "searched_as": "feyenoord rotterdam",
+   "candidates": [
+    {
+     "provider_team_id": 209,
+     "name": "Feyenoord",
+     "country": null,
+     "tier": "unique_containment"
+    },
+    {
+     "provider_team_id": 7981,
+     "name": "Feyenoord U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 14904,
+     "name": "Feyenoord U21",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15944,
+     "name": "Feyenoord U18",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 16853,
+     "name": "Feyenoord W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 17083,
+     "name": "SC Feyenoord",
+     "country": null,
+     "tier": "unique_containment"
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 88,
+     "league_name": "Eredivisie",
+     "league_country": "Netherlands",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ],
+   "retried_as": "feyenoord"
+  },
+  {
+   "query_name": "Fiorentina",
+   "searched_as": "fiorentina",
+   "candidates": [
+    {
+     "provider_team_id": 502,
+     "name": "Fiorentina",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 1880,
+     "name": "Fiorentina W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15665,
+     "name": "Fiorentina U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24731,
+     "name": "Fiorentina U20",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 135,
+     "league_name": "Serie A",
+     "league_country": "Italy",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Galatasaray",
+   "searched_as": "galatasaray",
+   "candidates": [
+    {
+     "provider_team_id": 645,
+     "name": "Galatasaray",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 7900,
+     "name": "Galatasaray U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23031,
+     "name": "Galatasaray U18",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24209,
+     "name": "Galatasaray W",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 203,
+     "league_name": "Süper Lig",
+     "league_country": "Turkey",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Getafe",
+   "searched_as": "getafe",
+   "candidates": [
+    {
+     "provider_team_id": 546,
+     "name": "Getafe",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 9572,
+     "name": "Getafe II",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 140,
+     "league_name": "La Liga",
+     "league_country": "Spain",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Girona",
+   "searched_as": "girona",
+   "candidates": [
+    {
+     "provider_team_id": 547,
+     "name": "Girona",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 15343,
+     "name": "Girona II",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24979,
+     "name": "Girona U19",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 141,
+     "league_name": "Segunda División",
+     "league_country": "Spain",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Internazionale",
+   "searched_as": "inter",
+   "candidates": [
+    {
+     "provider_team_id": 119,
+     "name": "Internacional",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 505,
+     "name": "Inter",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 1020,
+     "name": "Inter Zapresic",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 1134,
+     "name": "Internacional de Bogota",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 1164,
+     "name": "Inter Turku",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 1201,
+     "name": "Inter De Limeira",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 2180,
+     "name": "FC Winterthur",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 3342,
+     "name": "Inter Club d'Escaldes",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 3349,
+     "name": "Inter Club d'Escaldes II",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 3826,
+     "name": "Internacional RS W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 4203,
+     "name": "Geylang International",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 4448,
+     "name": "Inter de Grand-Goâve",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 4920,
+     "name": "Interclube",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 5579,
+     "name": "İnter Bakı",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 6800,
+     "name": "Inter Cherkessk",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 6873,
+     "name": "Internaţional Băleşti",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7474,
+     "name": "Inter Petrila",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7533,
+     "name": "Inter Milano W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7777,
+     "name": "Interporto",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7844,
+     "name": "Internacional SC",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7903,
+     "name": "Internazionale U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 8160,
+     "name": "Intercity",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 9005,
+     "name": "Winterton Rangers",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 9048,
+     "name": "Inter Nashville",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 9206,
+     "name": "Legirus Inter",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 9568,
+     "name": "Inter Miami",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 9573,
+     "name": "Internacional de Madrid",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 10051,
+     "name": "Inter Santa Maria",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 10143,
+     "name": "Internacional",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 10280,
+     "name": "Inter Miami II",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 10547,
+     "name": "Inter Bratislava",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 10716,
+     "name": "Internacional Tirana",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 10966,
+     "name": "Inter Moengotapoe",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 10973,
+     "name": "Scholars International",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 11730,
+     "name": "Inter CDF",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 12045,
+     "name": "Winterbourne United",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 12180,
+     "name": "Inter Star",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 12214,
+     "name": "FC Inter Wanica",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 12250,
+     "name": "Inter Allies",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 12585,
+     "name": "Stockholm Internazionale",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 12721,
+     "name": "Winterthur II",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 12793,
+     "name": "Inter Playa del Carmen",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 12794,
+     "name": "Inter Türkspor Kiel",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 12795,
+     "name": "International Leipzig",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 12962,
+     "name": "Internacional U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 13014,
+     "name": "Inter Limeira U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 14020,
+     "name": "Inter Willemstad",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 14221,
+     "name": "Inter Dobrich",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15158,
+     "name": "Houtem-Oplinter",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15214,
+     "name": "EV Internacional",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 16167,
+     "name": "Inter Nouakchott",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 16590,
+     "name": "Hope International",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 16791,
+     "name": "Inter Club",
+     "country": null,
+     "tier": "token_set"
+    },
+    {
+     "provider_team_id": 17051,
+     "name": "Internationale",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 17094,
+     "name": "Saalbach-Hinterglemm",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 17216,
+     "name": "Inter Aninoasa",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 17594,
+     "name": "Intergym",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 17598,
+     "name": "Inter Ibiza",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 17785,
+     "name": "Inter de Querétaro",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 17853,
+     "name": "Cittanova Interpiana",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 18517,
+     "name": "Inter Jyväskylä",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 18518,
+     "name": "Inter Turku II",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 18519,
+     "name": "Inter Turku O35",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 18778,
+     "name": "Quintero Unido",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 19177,
+     "name": "Inter Câmpulung",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 19700,
+     "name": "Oberwinter",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 19870,
+     "name": "Inter Litoral",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 20062,
+     "name": "Inter Bangkok",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 20270,
+     "name": "RSC Internacional",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 20274,
+     "name": "Inter Manacor",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 20758,
+     "name": "Inter de Minas U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 20795,
+     "name": "Inter Lions",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 20910,
+     "name": "Inter Vuosaari",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 20965,
+     "name": "Inter San Francisco",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 21530,
+     "name": "Internacional Podgorica",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 21574,
+     "name": "Inter Manila",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 21820,
+     "name": "Stormvogels Drieslinter",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22016,
+     "name": "Inter Soroca",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22337,
+     "name": "Inter Aly'aa Tel Aviv",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22478,
+     "name": "Inter Manantay",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22595,
+     "name": "Inter Kashi",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22836,
+     "name": "Inter de Bebedouro U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22940,
+     "name": "Internacional Palmira W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22982,
+     "name": "Inter Turku III",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23119,
+     "name": "Inter Gainesville",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23240,
+     "name": "Hope Internacional U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23323,
+     "name": "Internacional SC U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23326,
+     "name": "Internacional Palmira",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23576,
+     "name": "Inter de Bebedouro",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23714,
+     "name": "Inter Tartu",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24042,
+     "name": "Internacional PB U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24391,
+     "name": "Inter San Carlos",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24460,
+     "name": "LAC-Inter",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24483,
+     "name": "Internacional U17",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24499,
+     "name": "Inter 04",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24636,
+     "name": "Winterswijk",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24734,
+     "name": "Internazionale U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24825,
+     "name": "Hope Internacional",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24920,
+     "name": "Inter de Minas",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 25179,
+     "name": "Inter Sevilla",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 25224,
+     "name": "Internacional 2",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 25707,
+     "name": "Inter Club Pointe Noire",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 25795,
+     "name": "Hope Internacional U17",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 25831,
+     "name": "Internacional U18",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 25979,
+     "name": "Cleveland Internationals",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 26154,
+     "name": "Inter",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 26355,
+     "name": "Inter U23",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 26620,
+     "name": "Inter Club U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 26732,
+     "name": "Inter de Valdemoro",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 26814,
+     "name": "Inter Escaldes U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 26845,
+     "name": "Inter Sibiu",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 26925,
+     "name": "I2I International Soccer Academy W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 27535,
+     "name": "Interporto U17",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 27704,
+     "name": "FK Inter Nemencine",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 27954,
+     "name": "Interlaken",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 135,
+     "league_name": "Serie A",
+     "league_country": "Italy",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    },
+    {
+     "league_id": 844,
+     "league_name": "Ligue 1",
+     "league_country": "Congo",
+     "season": 2025,
+     "provider_current_season": 2025,
+     "seasons_visible": [
+      2025
+     ]
+    },
+    {
+     "league_id": 1219,
+     "league_name": "Copa Presidente",
+     "league_country": "El-Salvador",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    },
+    {
+     "league_id": 370,
+     "league_name": "Primera Division",
+     "league_country": "El-Salvador",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Jeju United",
+   "searched_as": "jeju united",
+   "candidates": [
+    {
+     "provider_team_id": 2761,
+     "name": "Jeju United FC",
+     "country": null,
+     "tier": "token_set"
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 292,
+     "league_name": "K League 1",
+     "league_country": "South-Korea",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Juventus",
+   "searched_as": "juventus",
+   "candidates": [
+    {
+     "provider_team_id": 496,
+     "name": "Juventus",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 1715,
+     "name": "Juventus U23",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 1886,
+     "name": "Juventus W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 2587,
+     "name": "Juventus Bucuresti",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 4406,
+     "name": "Juventus Sainte-Anne",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 4446,
+     "name": "Juventus",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 4643,
+     "name": "Juventus Managua",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 6652,
+     "name": "YF Juventus",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7904,
+     "name": "Juventus U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 8520,
+     "name": "Juventus Malchika",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 10019,
+     "name": "Juventus",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 12168,
+     "name": "Juventus Managua U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 12912,
+     "name": "Juventus SC",
+     "country": null,
+     "tier": "token_set"
+    },
+    {
+     "provider_team_id": 13021,
+     "name": "Juventus U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 13688,
+     "name": "Juventus Papus",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23517,
+     "name": "Canberra Juventus",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 23732,
+     "name": "Juventus CE U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24744,
+     "name": "Juventus U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 25251,
+     "name": "Juventus Huamachuco",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 25964,
+     "name": "Juventus RJ",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 26488,
+     "name": "Juventus FC Minas Novas",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 26593,
+     "name": "Juventus U21",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 27510,
+     "name": "Brunswick Juventus FC",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 135,
+     "league_name": "Serie A",
+     "league_country": "Italy",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    },
+    {
+     "league_id": 379,
+     "league_name": "Ligue Haïtienne",
+     "league_country": "Haiti",
+     "season": 2025,
+     "provider_current_season": 2025,
+     "seasons_visible": [
+      2025
+     ]
+    },
+    {
+     "league_id": 476,
+     "league_name": "Paulista - A2",
+     "league_country": "Brazil",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Leeds United",
+   "searched_as": "leeds united",
+   "candidates": [
+    {
+     "provider_team_id": 14430,
+     "name": "Leeds United U21",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15379,
+     "name": "Leeds United U18",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15635,
+     "name": "Leeds United U23",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": []
+  },
+  {
+   "query_name": "Liverpool",
+   "searched_as": "liverpool",
+   "candidates": [
+    {
+     "provider_team_id": 40,
+     "name": "Liverpool",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 1847,
+     "name": "Liverpool W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 2358,
+     "name": "Liverpool Montevideo",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7196,
+     "name": "Liverpool U21",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7630,
+     "name": "City of Liverpool",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7909,
+     "name": "Liverpool U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 8669,
+     "name": "AFC Liverpool",
+     "country": null,
+     "tier": "token_set"
+    },
+    {
+     "provider_team_id": 15380,
+     "name": "Liverpool U18",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15425,
+     "name": "Liverpool Feds W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15636,
+     "name": "Liverpool U23",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24347,
+     "name": "South Liverpool",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 39,
+     "league_name": "Premier League",
+     "league_country": "England",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Mallorca",
+   "searched_as": "mallorca",
+   "candidates": [
+    {
+     "provider_team_id": 798,
+     "name": "Mallorca",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 9783,
+     "name": "Mallorca II",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 141,
+     "league_name": "Segunda División",
+     "league_country": "Spain",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Manchester City",
+   "searched_as": "manchester city",
+   "candidates": [
+    {
+     "provider_team_id": 50,
+     "name": "Manchester City",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 1854,
+     "name": "Manchester City W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7197,
+     "name": "Manchester City U21",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7914,
+     "name": "Manchester City U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15381,
+     "name": "Manchester City U18",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15637,
+     "name": "Manchester City U23",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 39,
+     "league_name": "Premier League",
+     "league_country": "England",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Manchester United",
+   "searched_as": "manchester united",
+   "candidates": [
+    {
+     "provider_team_id": 33,
+     "name": "Manchester United",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 4898,
+     "name": "Manchester United W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7198,
+     "name": "Manchester United U21",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7960,
+     "name": "Manchester United U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15382,
+     "name": "Manchester United U18",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 39,
+     "league_name": "Premier League",
+     "league_country": "England",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Newcastle United",
+   "searched_as": "newcastle united",
+   "candidates": [
+    {
+     "provider_team_id": 7199,
+     "name": "Newcastle United U21",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 14737,
+     "name": "Newcastle United U23",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15384,
+     "name": "Newcastle United U18",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15515,
+     "name": "Newcastle United W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22373,
+     "name": "Newcastle United U19",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": []
+  },
+  {
+   "query_name": "Newport County",
+   "searched_as": "newport county",
+   "candidates": [
+    {
+     "provider_team_id": 1367,
+     "name": "Newport County",
+     "country": null,
+     "tier": "exact"
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 42,
+     "league_name": "League Two",
+     "league_country": "England",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Nice",
+   "searched_as": "nice",
+   "candidates": [
+    {
+     "provider_team_id": 84,
+     "name": "Nice",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 3482,
+     "name": "Chojniczanka Chojnice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 4283,
+     "name": "Slaven Živinice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 4880,
+     "name": "Cruzado Canicense",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 5377,
+     "name": "Grănicerul",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7294,
+     "name": "Heřmanice Slezská",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7300,
+     "name": "Hranice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7321,
+     "name": "Nová Včelnice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7326,
+     "name": "Olešnice u Bouzova",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7358,
+     "name": "Sokol Živanice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 9259,
+     "name": "Nice II",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 14058,
+     "name": "Malženice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 14583,
+     "name": "Flacăra M. Kogălniceanu",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 14612,
+     "name": "Selenicë",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 14955,
+     "name": "Dolné Vestenice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15025,
+     "name": "Podkonice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15064,
+     "name": "Tatran Chlebnice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 17493,
+     "name": "Tekstilac Ravnice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 17612,
+     "name": "Cenicero",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 19244,
+     "name": "Jesenice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 19424,
+     "name": "Dálnice Speřice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 19433,
+     "name": "Sokol Kateřinice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 19436,
+     "name": "Tatran Bohunice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 19655,
+     "name": "Bohunice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 19661,
+     "name": "Chojniczanka Chojnice II",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 20157,
+     "name": "Kresnice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 21499,
+     "name": "Strakonice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 21929,
+     "name": "Ludanice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 21984,
+     "name": "Spartak Průhonice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22420,
+     "name": "Nice U21",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22441,
+     "name": "La Fenice Amaranto",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24196,
+     "name": "Slavia Vejprnice",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24202,
+     "name": "Sokol Železnice",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 61,
+     "league_name": "Ligue 1",
+     "league_country": "France",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Paris Saint-Germain",
+   "searched_as": "paris saint germain",
+   "candidates": [
+    {
+     "provider_team_id": 85,
+     "name": "Paris Saint Germain",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 1667,
+     "name": "Paris Saint Germain W",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 61,
+     "league_name": "Ligue 1",
+     "league_country": "France",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Real Betis",
+   "searched_as": "real betis",
+   "candidates": [
+    {
+     "provider_team_id": 543,
+     "name": "Real Betis",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 1907,
+     "name": "Real Betis W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 9765,
+     "name": "Real Betis II",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 25195,
+     "name": "Real Betis U19",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 140,
+     "league_name": "La Liga",
+     "league_country": "Spain",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Real Madrid",
+   "searched_as": "real madrid",
+   "candidates": [
+    {
+     "provider_team_id": 541,
+     "name": "Real Madrid",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 7926,
+     "name": "Real Madrid U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 9575,
+     "name": "Real Madrid II",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15224,
+     "name": "Real Madrid W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22013,
+     "name": "Real Madrid U20",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22142,
+     "name": "Real Madrid III",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 26996,
+     "name": "Real Madrid U21",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 140,
+     "league_name": "La Liga",
+     "league_country": "Spain",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Stade Rennais",
+   "searched_as": "rennes",
+   "candidates": [
+    {
+     "provider_team_id": 94,
+     "name": "Rennes",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 3310,
+     "name": "TA Rennes",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 7936,
+     "name": "Stade Rennes U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 9249,
+     "name": "Rennes II",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 13594,
+     "name": "CPBB Rennes",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22730,
+     "name": "Chaponnay-Marennes",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 61,
+     "league_name": "Ligue 1",
+     "league_country": "France",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Sunderland",
+   "searched_as": "sunderland",
+   "candidates": [
+    {
+     "provider_team_id": 746,
+     "name": "Sunderland",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 1848,
+     "name": "Sunderland W",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 8959,
+     "name": "Sunderland RCA",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 8960,
+     "name": "Sunderland Ryhope CW",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 11915,
+     "name": "Sunderland U21",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 11927,
+     "name": "Sunderland U23",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 15386,
+     "name": "Sunderland U18",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22074,
+     "name": "Sunderland Res.",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 22649,
+     "name": "Sunderland West End",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 39,
+     "league_name": "Premier League",
+     "league_country": "England",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Trabzonspor",
+   "searched_as": "trabzonspor",
+   "candidates": [
+    {
+     "provider_team_id": 998,
+     "name": "Trabzonspor",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 17701,
+     "name": "Trabzonspor U19",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 203,
+     "league_name": "Süper Lig",
+     "league_country": "Turkey",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Udinese",
+   "searched_as": "udinese",
+   "candidates": [
+    {
+     "provider_team_id": 494,
+     "name": "Udinese",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 15684,
+     "name": "Udinese U19",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 24743,
+     "name": "Udinese U20",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 135,
+     "league_name": "Serie A",
+     "league_country": "Italy",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  },
+  {
+   "query_name": "Wrexham",
+   "searched_as": "wrexham",
+   "candidates": [
+    {
+     "provider_team_id": 1837,
+     "name": "Wrexham",
+     "country": null,
+     "tier": "exact"
+    },
+    {
+     "provider_team_id": 19881,
+     "name": "Wrexham Res.",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 25428,
+     "name": "Wrexham U18",
+     "country": null,
+     "tier": null
+    },
+    {
+     "provider_team_id": 27874,
+     "name": "Wrexham W",
+     "country": null,
+     "tier": null
+    }
+   ],
+   "leagues": [
+    {
+     "league_id": 40,
+     "league_name": "Championship",
+     "league_country": "England",
+     "season": 2026,
+     "provider_current_season": 2026,
+     "seasons_visible": [
+      2026
+     ]
+    }
+   ]
+  }
+ ],
+ "resolutions": [
+  {
+   "query_name": "AC Milan",
+   "resolution": "resolved",
+   "provider_team_id": 489,
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "league_country": "Italy",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Ajax Amsterdam",
+   "resolution": "resolved",
+   "provider_team_id": 194,
+   "league_id": 88,
+   "season": 2026,
+   "league_name": "Eredivisie",
+   "league_country": "Netherlands",
+   "match_tier": "slate_confirmed_league"
+  },
+  {
+   "query_name": "Al Nassr",
+   "resolution": "league_not_indexed",
+   "provider_team_id": null,
+   "league_id": null,
+   "season": null,
+   "league_name": null,
+   "league_country": null,
+   "match_tier": null
+  },
+  {
+   "query_name": "Al Sadd",
+   "resolution": "resolved",
+   "provider_team_id": 2895,
+   "league_id": 305,
+   "season": 2026,
+   "league_name": "Stars League",
+   "league_country": "Qatar",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Almería",
+   "resolution": "resolved",
+   "provider_team_id": 723,
+   "league_id": 141,
+   "season": 2026,
+   "league_name": "Segunda División",
+   "league_country": "Spain",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Arsenal",
+   "resolution": "resolved",
+   "provider_team_id": 42,
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "match_tier": "slate_confirmed_league"
+  },
+  {
+   "query_name": "AS Roma",
+   "resolution": "resolved",
+   "provider_team_id": 497,
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "league_country": "Italy",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Atalanta",
+   "resolution": "resolved",
+   "provider_team_id": 499,
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "league_country": "Italy",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Atlético Madrid",
+   "resolution": "resolved",
+   "provider_team_id": 530,
+   "league_id": 140,
+   "season": 2026,
+   "league_name": "La Liga",
+   "league_country": "Spain",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Barcelona",
+   "resolution": "resolved",
+   "provider_team_id": 529,
+   "league_id": 140,
+   "season": 2026,
+   "league_name": "La Liga",
+   "league_country": "Spain",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Bayern Munich",
+   "resolution": "resolved",
+   "provider_team_id": 157,
+   "league_id": 78,
+   "season": 2026,
+   "league_name": "Bundesliga",
+   "league_country": "Germany",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Birmingham City",
+   "resolution": "resolved",
+   "provider_team_id": 54,
+   "league_id": 40,
+   "season": 2026,
+   "league_name": "Championship",
+   "league_country": "England",
+   "match_tier": "unique_containment"
+  },
+  {
+   "query_name": "Borussia Dortmund",
+   "resolution": "resolved",
+   "provider_team_id": 165,
+   "league_id": 78,
+   "season": 2026,
+   "league_name": "Bundesliga",
+   "league_country": "Germany",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Bristol City",
+   "resolution": "resolved",
+   "provider_team_id": 56,
+   "league_id": 40,
+   "season": 2026,
+   "league_name": "Championship",
+   "league_country": "England",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Cardiff City",
+   "resolution": "resolved",
+   "provider_team_id": 43,
+   "league_id": 40,
+   "season": 2026,
+   "league_name": "Championship",
+   "league_country": "England",
+   "match_tier": "unique_containment"
+  },
+  {
+   "query_name": "Cerezo Osaka",
+   "resolution": "resolved",
+   "provider_team_id": 291,
+   "league_id": 98,
+   "season": 2027,
+   "league_name": "J1 League",
+   "league_country": "Japan",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Chelsea",
+   "resolution": "resolved",
+   "provider_team_id": 49,
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Estrela",
+   "resolution": "resolved",
+   "provider_team_id": 15130,
+   "league_id": 94,
+   "season": 2026,
+   "league_name": "Primeira Liga",
+   "league_country": "Portugal",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "FC Tokyo",
+   "resolution": "resolved",
+   "provider_team_id": 292,
+   "league_id": 98,
+   "season": 2027,
+   "league_name": "J1 League",
+   "league_country": "Japan",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "FC Volendam",
+   "resolution": "resolved",
+   "provider_team_id": 416,
+   "league_id": 89,
+   "season": 2026,
+   "league_name": "Eerste Divisie",
+   "league_country": "Netherlands",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Feyenoord Rotterdam",
+   "resolution": "resolved",
+   "provider_team_id": 209,
+   "league_id": 88,
+   "season": 2026,
+   "league_name": "Eredivisie",
+   "league_country": "Netherlands",
+   "match_tier": "unique_containment"
+  },
+  {
+   "query_name": "Fiorentina",
+   "resolution": "resolved",
+   "provider_team_id": 502,
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "league_country": "Italy",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Galatasaray",
+   "resolution": "resolved",
+   "provider_team_id": 645,
+   "league_id": 203,
+   "season": 2026,
+   "league_name": "Süper Lig",
+   "league_country": "Turkey",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Getafe",
+   "resolution": "resolved",
+   "provider_team_id": 546,
+   "league_id": 140,
+   "season": 2026,
+   "league_name": "La Liga",
+   "league_country": "Spain",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Girona",
+   "resolution": "resolved",
+   "provider_team_id": 547,
+   "league_id": 141,
+   "season": 2026,
+   "league_name": "Segunda División",
+   "league_country": "Spain",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Internazionale",
+   "resolution": "resolved",
+   "provider_team_id": 505,
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "league_country": "Italy",
+   "match_tier": "slate_confirmed_league"
+  },
+  {
+   "query_name": "Jeju United",
+   "resolution": "resolved",
+   "provider_team_id": 2761,
+   "league_id": 292,
+   "season": 2026,
+   "league_name": "K League 1",
+   "league_country": "South-Korea",
+   "match_tier": "token_set"
+  },
+  {
+   "query_name": "Juventus",
+   "resolution": "resolved",
+   "provider_team_id": 496,
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "league_country": "Italy",
+   "match_tier": "slate_confirmed_league"
+  },
+  {
+   "query_name": "Leeds United",
+   "resolution": "resolved",
+   "provider_team_id": 63,
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "match_tier": "unique_containment"
+  },
+  {
+   "query_name": "Liverpool",
+   "resolution": "resolved",
+   "provider_team_id": 40,
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Mallorca",
+   "resolution": "resolved",
+   "provider_team_id": 798,
+   "league_id": 141,
+   "season": 2026,
+   "league_name": "Segunda División",
+   "league_country": "Spain",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Manchester City",
+   "resolution": "resolved",
+   "provider_team_id": 50,
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Manchester United",
+   "resolution": "resolved",
+   "provider_team_id": 33,
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Newcastle United",
+   "resolution": "resolved",
+   "provider_team_id": 34,
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "match_tier": "unique_containment"
+  },
+  {
+   "query_name": "Newport County",
+   "resolution": "resolved",
+   "provider_team_id": 1367,
+   "league_id": 42,
+   "season": 2026,
+   "league_name": "League Two",
+   "league_country": "England",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Nice",
+   "resolution": "resolved",
+   "provider_team_id": 84,
+   "league_id": 61,
+   "season": 2026,
+   "league_name": "Ligue 1",
+   "league_country": "France",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Paris Saint-Germain",
+   "resolution": "resolved",
+   "provider_team_id": 85,
+   "league_id": 61,
+   "season": 2026,
+   "league_name": "Ligue 1",
+   "league_country": "France",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Real Betis",
+   "resolution": "resolved",
+   "provider_team_id": 543,
+   "league_id": 140,
+   "season": 2026,
+   "league_name": "La Liga",
+   "league_country": "Spain",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Real Madrid",
+   "resolution": "resolved",
+   "provider_team_id": 541,
+   "league_id": 140,
+   "season": 2026,
+   "league_name": "La Liga",
+   "league_country": "Spain",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Stade Rennais",
+   "resolution": "resolved",
+   "provider_team_id": 94,
+   "league_id": 61,
+   "season": 2026,
+   "league_name": "Ligue 1",
+   "league_country": "France",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Sunderland",
+   "resolution": "resolved",
+   "provider_team_id": 746,
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Trabzonspor",
+   "resolution": "resolved",
+   "provider_team_id": 998,
+   "league_id": 203,
+   "season": 2026,
+   "league_name": "Süper Lig",
+   "league_country": "Turkey",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Udinese",
+   "resolution": "resolved",
+   "provider_team_id": 494,
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "league_country": "Italy",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Wrexham",
+   "resolution": "resolved",
+   "provider_team_id": 1837,
+   "league_id": 40,
+   "season": 2026,
+   "league_name": "Championship",
+   "league_country": "England",
+   "match_tier": "exact"
+  }
+ ],
+ "detail": [
+  {
+   "query_name": "AC Milan",
+   "resolved_at": "2026-07-29T23:47:39.597918+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 489,
+     "provider_team_name": "AC Milan",
+     "league_id": 135,
+     "season": 2026,
+     "league_name": "Serie A",
+     "league_country": "Italy",
+     "country": "Italy",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 489,
+   "provider_team_name": "AC Milan",
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "league_country": "Italy",
+   "country": "Italy",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "AS Roma",
+   "resolved_at": "2026-07-29T23:47:39.599792+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 497,
+     "provider_team_name": "AS Roma",
+     "league_id": 135,
+     "season": 2026,
+     "league_name": "Serie A",
+     "league_country": "Italy",
+     "country": "Italy",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 497,
+   "provider_team_name": "AS Roma",
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "league_country": "Italy",
+   "country": "Italy",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Ajax Amsterdam",
+   "resolved_at": "2026-07-29T23:47:39.601314+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 1252,
+     "provider_team_name": "AFC Amsterdam",
+     "league_id": 492,
+     "season": 2026,
+     "league_name": "Tweede Divisie",
+     "league_country": "Netherlands",
+     "country": "Netherlands",
+     "match_tier": "unique_containment"
+    },
+    {
+     "provider_team_id": 194,
+     "provider_team_name": "Ajax",
+     "league_id": 88,
+     "season": 2026,
+     "league_name": "Eredivisie",
+     "league_country": "Netherlands",
+     "country": "Netherlands",
+     "match_tier": "unique_containment"
+    }
+   ],
+   "provider_team_id": 194,
+   "provider_team_name": "Ajax",
+   "league_id": 88,
+   "season": 2026,
+   "league_name": "Eredivisie",
+   "league_country": "Netherlands",
+   "country": "Netherlands",
+   "match_tier": "slate_confirmed_league",
+   "narrowed_from": [
+    {
+     "provider_team_id": 1252,
+     "league_id": 492,
+     "league_name": "Tweede Divisie",
+     "country": "Netherlands"
+    },
+    {
+     "provider_team_id": 194,
+     "league_id": 88,
+     "league_name": "Eredivisie",
+     "country": "Netherlands"
+    }
+   ]
+  },
+  {
+   "query_name": "Al Nassr",
+   "resolved_at": "2026-07-29T23:47:39.602585+00:00",
+   "resolution": "league_not_indexed",
+   "candidates": []
+  },
+  {
+   "query_name": "Al Sadd",
+   "resolved_at": "2026-07-29T23:47:39.603837+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 2895,
+     "provider_team_name": "Al Sadd",
+     "league_id": 305,
+     "season": 2026,
+     "league_name": "Stars League",
+     "league_country": "Qatar",
+     "country": "Qatar",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 2895,
+   "provider_team_name": "Al Sadd",
+   "league_id": 305,
+   "season": 2026,
+   "league_name": "Stars League",
+   "league_country": "Qatar",
+   "country": "Qatar",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Almería",
+   "resolved_at": "2026-07-29T23:47:39.605591+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 723,
+     "provider_team_name": "Almeria",
+     "league_id": 141,
+     "season": 2026,
+     "league_name": "Segunda División",
+     "league_country": "Spain",
+     "country": "Spain",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 723,
+   "provider_team_name": "Almeria",
+   "league_id": 141,
+   "season": 2026,
+   "league_name": "Segunda División",
+   "league_country": "Spain",
+   "country": "Spain",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Arsenal",
+   "resolved_at": "2026-07-29T23:47:39.606906+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 42,
+     "provider_team_name": "Arsenal",
+     "league_id": 39,
+     "season": 2026,
+     "league_name": "Premier League",
+     "league_country": "England",
+     "country": "England",
+     "match_tier": "exact"
+    },
+    {
+     "provider_team_id": 9419,
+     "provider_team_name": "Arsenal",
+     "league_id": 116,
+     "season": 2026,
+     "league_name": "Premier League",
+     "league_country": "Belarus",
+     "country": "Belarus",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 42,
+   "provider_team_name": "Arsenal",
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "country": "England",
+   "match_tier": "slate_confirmed_league",
+   "narrowed_from": [
+    {
+     "provider_team_id": 42,
+     "league_id": 39,
+     "league_name": "Premier League",
+     "country": "England"
+    },
+    {
+     "provider_team_id": 9419,
+     "league_id": 116,
+     "league_name": "Premier League",
+     "country": "Belarus"
+    }
+   ]
+  },
+  {
+   "query_name": "Atalanta",
+   "resolved_at": "2026-07-29T23:47:39.608208+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 499,
+     "provider_team_name": "Atalanta",
+     "league_id": 135,
+     "season": 2026,
+     "league_name": "Serie A",
+     "league_country": "Italy",
+     "country": "Italy",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 499,
+   "provider_team_name": "Atalanta",
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "league_country": "Italy",
+   "country": "Italy",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Atlético Madrid",
+   "resolved_at": "2026-07-29T23:47:39.609919+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 530,
+     "provider_team_name": "Atletico Madrid",
+     "league_id": 140,
+     "season": 2026,
+     "league_name": "La Liga",
+     "league_country": "Spain",
+     "country": "Spain",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 530,
+   "provider_team_name": "Atletico Madrid",
+   "league_id": 140,
+   "season": 2026,
+   "league_name": "La Liga",
+   "league_country": "Spain",
+   "country": "Spain",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Barcelona",
+   "resolved_at": "2026-07-29T23:47:39.611608+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 529,
+     "provider_team_name": "Barcelona",
+     "league_id": 140,
+     "season": 2026,
+     "league_name": "La Liga",
+     "league_country": "Spain",
+     "country": "Spain",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 529,
+   "provider_team_name": "Barcelona",
+   "league_id": 140,
+   "season": 2026,
+   "league_name": "La Liga",
+   "league_country": "Spain",
+   "country": "Spain",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Bayern Munich",
+   "resolved_at": "2026-07-29T23:47:39.614485+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 157,
+     "provider_team_name": "Bayern München",
+     "league_id": 78,
+     "season": 2026,
+     "league_name": "Bundesliga",
+     "league_country": "Germany",
+     "country": "Germany",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 157,
+   "provider_team_name": "Bayern München",
+   "league_id": 78,
+   "season": 2026,
+   "league_name": "Bundesliga",
+   "league_country": "Germany",
+   "country": "Germany",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Birmingham City",
+   "resolved_at": "2026-07-29T23:47:39.615936+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 54,
+     "provider_team_name": "Birmingham",
+     "league_id": 40,
+     "season": 2026,
+     "league_name": "Championship",
+     "league_country": "England",
+     "country": "England",
+     "match_tier": "unique_containment"
+    }
+   ],
+   "provider_team_id": 54,
+   "provider_team_name": "Birmingham",
+   "league_id": 40,
+   "season": 2026,
+   "league_name": "Championship",
+   "league_country": "England",
+   "country": "England",
+   "match_tier": "unique_containment"
+  },
+  {
+   "query_name": "Borussia Dortmund",
+   "resolved_at": "2026-07-29T23:47:39.617882+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 165,
+     "provider_team_name": "Borussia Dortmund",
+     "league_id": 78,
+     "season": 2026,
+     "league_name": "Bundesliga",
+     "league_country": "Germany",
+     "country": "Germany",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 165,
+   "provider_team_name": "Borussia Dortmund",
+   "league_id": 78,
+   "season": 2026,
+   "league_name": "Bundesliga",
+   "league_country": "Germany",
+   "country": "Germany",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Bristol City",
+   "resolved_at": "2026-07-29T23:47:39.619279+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 56,
+     "provider_team_name": "Bristol City",
+     "league_id": 40,
+     "season": 2026,
+     "league_name": "Championship",
+     "league_country": "England",
+     "country": "England",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 56,
+   "provider_team_name": "Bristol City",
+   "league_id": 40,
+   "season": 2026,
+   "league_name": "Championship",
+   "league_country": "England",
+   "country": "England",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Cardiff City",
+   "resolved_at": "2026-07-29T23:47:39.620657+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 43,
+     "provider_team_name": "Cardiff",
+     "league_id": 40,
+     "season": 2026,
+     "league_name": "Championship",
+     "league_country": "England",
+     "country": "Wales",
+     "match_tier": "unique_containment"
+    }
+   ],
+   "provider_team_id": 43,
+   "provider_team_name": "Cardiff",
+   "league_id": 40,
+   "season": 2026,
+   "league_name": "Championship",
+   "league_country": "England",
+   "country": "Wales",
+   "match_tier": "unique_containment"
+  },
+  {
+   "query_name": "Cerezo Osaka",
+   "resolved_at": "2026-07-29T23:47:39.622110+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 291,
+     "provider_team_name": "Cerezo Osaka",
+     "league_id": 98,
+     "season": 2027,
+     "league_name": "J1 League",
+     "league_country": "Japan",
+     "country": "Japan",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 291,
+   "provider_team_name": "Cerezo Osaka",
+   "league_id": 98,
+   "season": 2027,
+   "league_name": "J1 League",
+   "league_country": "Japan",
+   "country": "Japan",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Chelsea",
+   "resolved_at": "2026-07-29T23:47:39.623889+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 49,
+     "provider_team_name": "Chelsea",
+     "league_id": 39,
+     "season": 2026,
+     "league_name": "Premier League",
+     "league_country": "England",
+     "country": "England",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 49,
+   "provider_team_name": "Chelsea",
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "country": "England",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Estrela",
+   "resolved_at": "2026-07-29T23:47:39.625143+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 15130,
+     "provider_team_name": "Estrela",
+     "league_id": 94,
+     "season": 2026,
+     "league_name": "Primeira Liga",
+     "league_country": "Portugal",
+     "country": "Portugal",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 15130,
+   "provider_team_name": "Estrela",
+   "league_id": 94,
+   "season": 2026,
+   "league_name": "Primeira Liga",
+   "league_country": "Portugal",
+   "country": "Portugal",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "FC Tokyo",
+   "resolved_at": "2026-07-29T23:47:39.626400+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 292,
+     "provider_team_name": "FC Tokyo",
+     "league_id": 98,
+     "season": 2027,
+     "league_name": "J1 League",
+     "league_country": "Japan",
+     "country": "Japan",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 292,
+   "provider_team_name": "FC Tokyo",
+   "league_id": 98,
+   "season": 2027,
+   "league_name": "J1 League",
+   "league_country": "Japan",
+   "country": "Japan",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "FC Volendam",
+   "resolved_at": "2026-07-29T23:47:39.627758+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 416,
+     "provider_team_name": "FC Volendam",
+     "league_id": 89,
+     "season": 2026,
+     "league_name": "Eerste Divisie",
+     "league_country": "Netherlands",
+     "country": "Netherlands",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 416,
+   "provider_team_name": "FC Volendam",
+   "league_id": 89,
+   "season": 2026,
+   "league_name": "Eerste Divisie",
+   "league_country": "Netherlands",
+   "country": "Netherlands",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Feyenoord Rotterdam",
+   "resolved_at": "2026-07-29T23:47:39.629787+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 209,
+     "provider_team_name": "Feyenoord",
+     "league_id": 88,
+     "season": 2026,
+     "league_name": "Eredivisie",
+     "league_country": "Netherlands",
+     "country": "Netherlands",
+     "match_tier": "unique_containment"
+    }
+   ],
+   "provider_team_id": 209,
+   "provider_team_name": "Feyenoord",
+   "league_id": 88,
+   "season": 2026,
+   "league_name": "Eredivisie",
+   "league_country": "Netherlands",
+   "country": "Netherlands",
+   "match_tier": "unique_containment"
+  },
+  {
+   "query_name": "Fiorentina",
+   "resolved_at": "2026-07-29T23:47:39.631188+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 502,
+     "provider_team_name": "Fiorentina",
+     "league_id": 135,
+     "season": 2026,
+     "league_name": "Serie A",
+     "league_country": "Italy",
+     "country": "Italy",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 502,
+   "provider_team_name": "Fiorentina",
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "league_country": "Italy",
+   "country": "Italy",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Galatasaray",
+   "resolved_at": "2026-07-29T23:47:39.632579+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 645,
+     "provider_team_name": "Galatasaray",
+     "league_id": 203,
+     "season": 2026,
+     "league_name": "Süper Lig",
+     "league_country": "Turkey",
+     "country": "Turkey",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 645,
+   "provider_team_name": "Galatasaray",
+   "league_id": 203,
+   "season": 2026,
+   "league_name": "Süper Lig",
+   "league_country": "Turkey",
+   "country": "Turkey",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Getafe",
+   "resolved_at": "2026-07-29T23:47:39.633871+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 546,
+     "provider_team_name": "Getafe",
+     "league_id": 140,
+     "season": 2026,
+     "league_name": "La Liga",
+     "league_country": "Spain",
+     "country": "Spain",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 546,
+   "provider_team_name": "Getafe",
+   "league_id": 140,
+   "season": 2026,
+   "league_name": "La Liga",
+   "league_country": "Spain",
+   "country": "Spain",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Girona",
+   "resolved_at": "2026-07-29T23:47:39.635425+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 547,
+     "provider_team_name": "Girona",
+     "league_id": 141,
+     "season": 2026,
+     "league_name": "Segunda División",
+     "league_country": "Spain",
+     "country": "Spain",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 547,
+   "provider_team_name": "Girona",
+   "league_id": 141,
+   "season": 2026,
+   "league_name": "Segunda División",
+   "league_country": "Spain",
+   "country": "Spain",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Internazionale",
+   "resolved_at": "2026-07-29T23:47:39.638122+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 505,
+     "provider_team_name": "Inter",
+     "league_id": 135,
+     "season": 2026,
+     "league_name": "Serie A",
+     "league_country": "Italy",
+     "country": "Italy",
+     "match_tier": "exact"
+    },
+    {
+     "provider_team_id": 26154,
+     "provider_team_name": "Inter",
+     "league_id": 1219,
+     "season": 2026,
+     "league_name": "Copa Presidente",
+     "league_country": "El-Salvador",
+     "country": "El-Salvador",
+     "match_tier": "exact"
+    },
+    {
+     "provider_team_id": 26154,
+     "provider_team_name": "Inter",
+     "league_id": 370,
+     "season": 2026,
+     "league_name": "Primera Division",
+     "league_country": "El-Salvador",
+     "country": "El-Salvador",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 505,
+   "provider_team_name": "Inter",
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "league_country": "Italy",
+   "country": "Italy",
+   "match_tier": "slate_confirmed_league",
+   "narrowed_from": [
+    {
+     "provider_team_id": 505,
+     "league_id": 135,
+     "league_name": "Serie A",
+     "country": "Italy"
+    },
+    {
+     "provider_team_id": 26154,
+     "league_id": 1219,
+     "league_name": "Copa Presidente",
+     "country": "El-Salvador"
+    },
+    {
+     "provider_team_id": 26154,
+     "league_id": 370,
+     "league_name": "Primera Division",
+     "country": "El-Salvador"
+    }
+   ]
+  },
+  {
+   "query_name": "Jeju United",
+   "resolved_at": "2026-07-29T23:47:39.639481+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 2761,
+     "provider_team_name": "Jeju United FC",
+     "league_id": 292,
+     "season": 2026,
+     "league_name": "K League 1",
+     "league_country": "South-Korea",
+     "country": "South-Korea",
+     "match_tier": "token_set"
+    }
+   ],
+   "provider_team_id": 2761,
+   "provider_team_name": "Jeju United FC",
+   "league_id": 292,
+   "season": 2026,
+   "league_name": "K League 1",
+   "league_country": "South-Korea",
+   "country": "South-Korea",
+   "match_tier": "token_set"
+  },
+  {
+   "query_name": "Juventus",
+   "resolved_at": "2026-07-29T23:47:39.640716+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 496,
+     "provider_team_name": "Juventus",
+     "league_id": 135,
+     "season": 2026,
+     "league_name": "Serie A",
+     "league_country": "Italy",
+     "country": "Italy",
+     "match_tier": "exact"
+    },
+    {
+     "provider_team_id": 4446,
+     "provider_team_name": "Juventus",
+     "league_id": 379,
+     "season": 2025,
+     "league_name": "Ligue Haïtienne",
+     "league_country": "Haiti",
+     "country": "Haiti",
+     "match_tier": "exact"
+    },
+    {
+     "provider_team_id": 10019,
+     "provider_team_name": "Juventus",
+     "league_id": 476,
+     "season": 2026,
+     "league_name": "Paulista - A2",
+     "league_country": "Brazil",
+     "country": "Brazil",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 496,
+   "provider_team_name": "Juventus",
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "league_country": "Italy",
+   "country": "Italy",
+   "match_tier": "slate_confirmed_league",
+   "narrowed_from": [
+    {
+     "provider_team_id": 496,
+     "league_id": 135,
+     "league_name": "Serie A",
+     "country": "Italy"
+    },
+    {
+     "provider_team_id": 4446,
+     "league_id": 379,
+     "league_name": "Ligue Haïtienne",
+     "country": "Haiti"
+    },
+    {
+     "provider_team_id": 10019,
+     "league_id": 476,
+     "league_name": "Paulista - A2",
+     "country": "Brazil"
+    }
+   ]
+  },
+  {
+   "query_name": "Leeds United",
+   "resolved_at": "2026-07-29T23:47:39.642505+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 63,
+     "provider_team_name": "Leeds",
+     "league_id": 39,
+     "season": 2026,
+     "league_name": "Premier League",
+     "league_country": "England",
+     "country": "England",
+     "match_tier": "unique_containment"
+    }
+   ],
+   "provider_team_id": 63,
+   "provider_team_name": "Leeds",
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "country": "England",
+   "match_tier": "unique_containment"
+  },
+  {
+   "query_name": "Liverpool",
+   "resolved_at": "2026-07-29T23:47:39.643810+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 40,
+     "provider_team_name": "Liverpool",
+     "league_id": 39,
+     "season": 2026,
+     "league_name": "Premier League",
+     "league_country": "England",
+     "country": "England",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 40,
+   "provider_team_name": "Liverpool",
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "country": "England",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Mallorca",
+   "resolved_at": "2026-07-29T23:47:39.645076+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 798,
+     "provider_team_name": "Mallorca",
+     "league_id": 141,
+     "season": 2026,
+     "league_name": "Segunda División",
+     "league_country": "Spain",
+     "country": "Spain",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 798,
+   "provider_team_name": "Mallorca",
+   "league_id": 141,
+   "season": 2026,
+   "league_name": "Segunda División",
+   "league_country": "Spain",
+   "country": "Spain",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Manchester City",
+   "resolved_at": "2026-07-29T23:47:39.646528+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 50,
+     "provider_team_name": "Manchester City",
+     "league_id": 39,
+     "season": 2026,
+     "league_name": "Premier League",
+     "league_country": "England",
+     "country": "England",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 50,
+   "provider_team_name": "Manchester City",
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "country": "England",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Manchester United",
+   "resolved_at": "2026-07-29T23:47:39.648519+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 33,
+     "provider_team_name": "Manchester United",
+     "league_id": 39,
+     "season": 2026,
+     "league_name": "Premier League",
+     "league_country": "England",
+     "country": "England",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 33,
+   "provider_team_name": "Manchester United",
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "country": "England",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Newcastle United",
+   "resolved_at": "2026-07-29T23:47:39.650038+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 34,
+     "provider_team_name": "Newcastle",
+     "league_id": 39,
+     "season": 2026,
+     "league_name": "Premier League",
+     "league_country": "England",
+     "country": "England",
+     "match_tier": "unique_containment"
+    }
+   ],
+   "provider_team_id": 34,
+   "provider_team_name": "Newcastle",
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "country": "England",
+   "match_tier": "unique_containment"
+  },
+  {
+   "query_name": "Newport County",
+   "resolved_at": "2026-07-29T23:47:39.651471+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 1367,
+     "provider_team_name": "Newport County",
+     "league_id": 42,
+     "season": 2026,
+     "league_name": "League Two",
+     "league_country": "England",
+     "country": "Wales",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 1367,
+   "provider_team_name": "Newport County",
+   "league_id": 42,
+   "season": 2026,
+   "league_name": "League Two",
+   "league_country": "England",
+   "country": "Wales",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Nice",
+   "resolved_at": "2026-07-29T23:47:39.652642+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 84,
+     "provider_team_name": "Nice",
+     "league_id": 61,
+     "season": 2026,
+     "league_name": "Ligue 1",
+     "league_country": "France",
+     "country": "France",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 84,
+   "provider_team_name": "Nice",
+   "league_id": 61,
+   "season": 2026,
+   "league_name": "Ligue 1",
+   "league_country": "France",
+   "country": "France",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Paris Saint-Germain",
+   "resolved_at": "2026-07-29T23:47:39.654715+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 85,
+     "provider_team_name": "Paris Saint Germain",
+     "league_id": 61,
+     "season": 2026,
+     "league_name": "Ligue 1",
+     "league_country": "France",
+     "country": "France",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 85,
+   "provider_team_name": "Paris Saint Germain",
+   "league_id": 61,
+   "season": 2026,
+   "league_name": "Ligue 1",
+   "league_country": "France",
+   "country": "France",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Real Betis",
+   "resolved_at": "2026-07-29T23:47:39.656135+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 543,
+     "provider_team_name": "Real Betis",
+     "league_id": 140,
+     "season": 2026,
+     "league_name": "La Liga",
+     "league_country": "Spain",
+     "country": "Spain",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 543,
+   "provider_team_name": "Real Betis",
+   "league_id": 140,
+   "season": 2026,
+   "league_name": "La Liga",
+   "league_country": "Spain",
+   "country": "Spain",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Real Madrid",
+   "resolved_at": "2026-07-29T23:47:39.657567+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 541,
+     "provider_team_name": "Real Madrid",
+     "league_id": 140,
+     "season": 2026,
+     "league_name": "La Liga",
+     "league_country": "Spain",
+     "country": "Spain",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 541,
+   "provider_team_name": "Real Madrid",
+   "league_id": 140,
+   "season": 2026,
+   "league_name": "La Liga",
+   "league_country": "Spain",
+   "country": "Spain",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Stade Rennais",
+   "resolved_at": "2026-07-29T23:47:39.660736+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 94,
+     "provider_team_name": "Rennes",
+     "league_id": 61,
+     "season": 2026,
+     "league_name": "Ligue 1",
+     "league_country": "France",
+     "country": "France",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 94,
+   "provider_team_name": "Rennes",
+   "league_id": 61,
+   "season": 2026,
+   "league_name": "Ligue 1",
+   "league_country": "France",
+   "country": "France",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Sunderland",
+   "resolved_at": "2026-07-29T23:47:39.662065+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 746,
+     "provider_team_name": "Sunderland",
+     "league_id": 39,
+     "season": 2026,
+     "league_name": "Premier League",
+     "league_country": "England",
+     "country": "England",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 746,
+   "provider_team_name": "Sunderland",
+   "league_id": 39,
+   "season": 2026,
+   "league_name": "Premier League",
+   "league_country": "England",
+   "country": "England",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Trabzonspor",
+   "resolved_at": "2026-07-29T23:47:39.663421+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 998,
+     "provider_team_name": "Trabzonspor",
+     "league_id": 203,
+     "season": 2026,
+     "league_name": "Süper Lig",
+     "league_country": "Turkey",
+     "country": "Turkey",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 998,
+   "provider_team_name": "Trabzonspor",
+   "league_id": 203,
+   "season": 2026,
+   "league_name": "Süper Lig",
+   "league_country": "Turkey",
+   "country": "Turkey",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Udinese",
+   "resolved_at": "2026-07-29T23:47:39.664660+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 494,
+     "provider_team_name": "Udinese",
+     "league_id": 135,
+     "season": 2026,
+     "league_name": "Serie A",
+     "league_country": "Italy",
+     "country": "Italy",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 494,
+   "provider_team_name": "Udinese",
+   "league_id": 135,
+   "season": 2026,
+   "league_name": "Serie A",
+   "league_country": "Italy",
+   "country": "Italy",
+   "match_tier": "exact"
+  },
+  {
+   "query_name": "Wrexham",
+   "resolved_at": "2026-07-29T23:47:39.666637+00:00",
+   "resolution": "resolved",
+   "candidates": [
+    {
+     "provider_team_id": 1837,
+     "provider_team_name": "Wrexham",
+     "league_id": 40,
+     "season": 2026,
+     "league_name": "Championship",
+     "league_country": "England",
+     "country": "Wales",
+     "match_tier": "exact"
+    }
+   ],
+   "provider_team_id": 1837,
+   "provider_team_name": "Wrexham",
+   "league_id": 40,
+   "season": 2026,
+   "league_name": "Championship",
+   "league_country": "England",
+   "country": "Wales",
+   "match_tier": "exact"
+  }
+ ]
+}

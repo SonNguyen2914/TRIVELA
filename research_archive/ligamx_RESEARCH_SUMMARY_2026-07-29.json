@@ -1,0 +1,57 @@
+{
+  "captured_at": "2026-07-29T00:00:00Z",
+  "purpose": "Provider ground truth for the Liga MX build (feat-liga-mx), archived BEFORE any push per repo standard.",
+  "espn": {
+    "league_slug": "mex.1",
+    "league_name": "Mexican Liga BBVA MX",
+    "clubs": 18,
+    "in_season": true,
+    "split_season_structure": {
+      "season_year": 2026,
+      "season_display": "2026-27 Liga BBVA MX",
+      "season_span": "2026-06-01 .. 2027-06-01 (covers Apertura 2026 AND Clausura 2027)",
+      "current_type": {"id": "1", "name": "Torneo Apertura", "abbreviation": "2026 Liga MX Apertura", "slug_on_events": "torneo-apertura"},
+      "season_types_observed": "Torneo Apertura (hasStandings=true) followed by Apertura play-in phases (7th-vs-8th, 9th-vs-10th, 8th-seed game) and Liguilla rounds (quarterfinals, semifinals, ...), each hasStandings=false — see ligamx_espn_standings_2026-07-29.json seasons[0].types",
+      "standings_children": "one child PER TOURNAMENT, named with the tournament ('2026 Torneo Apertura', 18 entries, 2 matchdays played at probe time); standings.name='overall', seasonDisplayName='2026-27 Liga BBVA MX'",
+      "scoreboard_events_carry": "season {year, type, slug:'torneo-apertura'} per event; team-schedule events carry seasonType {id, name, abbreviation}"
+    },
+    "team_schedule_endpoint": "mex.1/teams/{id}/schedule serves the CURRENT tournament: bare = played (2 events for GDL), fixture=true = upcoming (15 events) — same split as usa.1/eng.1, so src/live/ingest.py works unchanged",
+    "summary_endpoint": "mex.1/summary?event= carries EVERY STAT_ORDER boxscore key plus passing/crossing/tackling extras, lastFiveGames, seasonseries (h2h), keyEvents, rosters (21 players/side: starter flag, formationPlace, jersey, subbedIn/Out, per-player stats incl. goals/assists/shots/cards/saves), and per-category leaders",
+    "player_stats": "roster per-player stat names: appearances, foulsCommitted, foulsSuffered, goalAssists, goalsConceded, offsides, ownGoals, redCards, saves, shotsFaced, shotsOnTarget, subIns, totalGoals, totalShots — NO xG",
+    "xg": "per-player expectedGoals / expectedGoalsConceded appear ONLY on the single leader per category in the leaders block; NO team-level match xG anywhere in the summary",
+    "non_ascii": "club displayNames carry Spanish accents (América, Atlético de San Luis, León, Querétaro) and so do player names (Efraín Álvarez) — end-to-end non-ASCII handling required",
+    "relegation_note": "Mazatlán is NOT in the 2026-27 mex.1 club list; Atlante (espn id 226) replaced it"
+  },
+  "official_liga_mx_api": {
+    "verdict": "NO_USABLE_PUBLIC_CONTRACT — see ligamx_official_api_probe_2026-07-29.json",
+    "consequence": "ESPN mex.1 is the club+player stats source; goals-only model; no scraping"
+  },
+  "kalshi": {
+    "game_series": "KXLIGAMXGAME (exists: GET /series 200; fee_type quadratic — see ligamx_kalshi_series_KXLIGAMXGAME_2026-07-29.json)",
+    "open_events_at_probe": 9,
+    "historical_events": 221,
+    "grammar": "IDENTICAL to KXMLSGAME: {SERIES}-{YYMONDD}{HOMECODE}{AWAYCODE} event tickers (dates US-Eastern; verified 26JUL31PUECDG = ESPN 2026-08-01T01:00Z Guadalajara at Puebla), ' vs ' titles home-first, market tails = team code / TIE",
+    "family_series_verified_live": {
+      "KXLIGAMXTOTAL": "6 open markets on PUECDG; tail n = over (n-1).5 (tail 2 titled 'Over 1.5 goals scored')",
+      "KXLIGAMXBTTS": "tail BTTS",
+      "KXLIGAMXSPREAD": "tail {CODE}{n} = wins by more than (n-0.5) ('PUE2' titled 'Puebla wins by more than 1.5 goals')",
+      "KXLIGAMXTEAMTOTAL": "tail {CODE}{n} = team over (n-1).5",
+      "KXLIGAMXSCORE": "30 markets; tail {HOME}{h}{AWAY}{a} home-first ('PUE1CDG2' = 'CD Guadalajara wins 2-1')",
+      "KXLIGAMXFTTS": "tails {CODE} / NONE",
+      "KXLIGAMX1H": "team/TIE tails (market-only, as MLS)",
+      "KXLIGAMX1HTOTAL": "digit tails (market-only)",
+      "KXLIGAMX1HSPREAD": "{CODE}{n} tails (market-only)",
+      "KXLIGAMX1HBTTS": "tail BTTS (market-only)",
+      "KXLIGAMXMOV": "series EXISTS but 0 open events at probe time",
+      "KXLIGAMXCUP": "does NOT exist (404) — no futures series, none invented"
+    },
+    "team_codes_observed": "PUE CDG ASL TIJ JUA PUM QUE TIG ATL MON LEO PAC CRA ALA AME SLA TOL NCX (note: Kalshi ATL = Atlas while ESPN abbrev ATL = Atlante — mapping is by TITLE NAMES via curated bridges, never by code equality)",
+    "title_sides_observed_25_26_and_open": "36 distinct across 221 events — America, CF America, Atlante, Atlas, Atlas FC, Atletico San Luis, San Luis, CD Guadalajara, Guadalajara, CF Cruz Azul, Cruz Azul, CF Monterrey, Monterrey, CF Pachuca, Pachuca, Club Leon, Leon, Club Necaxa, Necaxa, Club Puebla, Puebla, Club Santos Laguna, Santos Laguna, Club Tijuana de Caliente, Tijuana de Caliente, Deportivo Toluca FC, Toluca, FC Juarez, Juarez, Mazatlan, Mazatlan FC, Pumas UNAM, Queretaro, Queretaro FC, Tigres, Tigres UANL (Kalshi titles are ASCII — accents stripped)",
+    "bridge_curation": "every side maps to a current ESPN club except Mazatlan/Mazatlan FC (relegated — deliberately absent from bridges)"
+  },
+  "competition_identity_decision": {
+    "slug": "liga-mx-2026",
+    "rationale": "Matches ESPN's season year 2026 (= the 2026-27 cycle: Apertura 2026 + its Liguilla + Clausura 2027 + its Liguilla). The shared ingest machinery (per-team schedules + dated scoreboards) serves the whole mex.1 season with no tournament filter hook, so a per-tournament slug would silently absorb the other tournament's fixtures the day Clausura schedules appear; scoping the competition to the full ESPN season is the honest boundary that needs no third refactor of shared code. The TOURNAMENT is recorded everywhere it matters: per-event 'tournament' field on scoreboard/schedule cards, per-table tournament label on standings (derived from ESPN's own child name), and the current tournament on /api/ligamx/status — all derived from provider data, never hardcoded.",
+    "rejected_alternative": "liga-mx-apertura-2026 (per-tournament slug) — cleaner tournament identity but requires tournament filtering inside shared ingest (a third parallel refactor of src/live/ingest.py, against the build's isolation constraint) and a new competition row + reseed every six months."
+  }
+}

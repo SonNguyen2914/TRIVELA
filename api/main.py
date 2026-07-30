@@ -66,6 +66,16 @@ _EXPENSIVE_PREFIXES = (
     "/api/mls/corpus",         # full-corpus assembly / download
     "/api/mls/audit",          # per-lock replay + hash recomputation
 )
+# Same cost class as /api/mls/model-eval (rolling-origin ladder +
+# bootstrap over 300-510 fixtures), but the competition is a PATH
+# PARAMETER, so a startswith prefix cannot cover them without repeating
+# the league registry here. These are matched as substrings instead, which
+# rate-limits every competition's replay routes from one entry.
+_EXPENSIVE_CONTAINS = (
+    "/replay-ladder",
+    "/replay-approval",
+    "/split-season",
+)
 
 
 def _admin_ok(request) -> bool:
@@ -110,8 +120,9 @@ async def _public_guard(request, call_next):
                            "mutations require operator credentials"},
                 status_code=403)
     if config.RATE_LIMIT_SECONDS > 0:      # <=0 disables (tests, dev)
-        for prefix in _EXPENSIVE_PREFIXES:
-            if path.startswith(prefix):
+        buckets = [p for p in _EXPENSIVE_PREFIXES if path.startswith(p)]
+        buckets += [m for m in _EXPENSIVE_CONTAINS if m in path]
+        for prefix in buckets:
                 now = _t.monotonic()
                 last = _rate_last.get(prefix)
                 if last is not None and now - last < config.RATE_LIMIT_SECONDS:
@@ -989,6 +1000,112 @@ def mls_admin_bind_corpus(request: Request,
             "generated_at": utcnow().isoformat()}
 
 
+# --- prior-season REPLAY ladders (backlog S-5) -----------------------------
+# One generalized surface per competition, replacing what would otherwise
+# be three copies of the MLS approval routes. The read paths are public and
+# compute nothing durable; the ONE write path is operator-gated and is the
+# only way a replay approval can ever be created.
+#
+# Fail-closed by construction: ladder_replay.ensure_replay_approval
+# defaults allow_create=False, and this route is the sole caller that
+# passes True. Nothing on a boot path, a scheduler path or a public read
+# path can mint an approval.
+
+@app.get("/api/{competition}/replay-ladder")
+def competition_replay_ladder(competition: str,
+                              n_boot: int = Query(1000),
+                              segment_mode: str = Query("per_segment")):
+    """This competition's PRIOR-SEASON REPLAY ladder — REPLAYED evidence,
+    never MEASURED, and not comparable to any prospective result. Public
+    read-only; computes from archived bytes and persists nothing."""
+    from src.live import ladder_replay
+    if competition not in ladder_replay.REPLAY_SOURCES:
+        raise HTTPException(404, "no replay source for this competition")
+    if segment_mode not in ("per_segment", "span"):
+        raise HTTPException(422, "segment_mode must be per_segment or span")
+    try:
+        return ladder_replay.run_replay(
+            competition, n_boot=max(1, min(n_boot, 5000)),
+            segment_mode=segment_mode)
+    except KeyError:
+        # registered league whose model module is not on this branch (La
+        # Liga). Say so plainly rather than reporting a generic outage —
+        # "the history is archived and gated, the model is not here yet"
+        # is a different fact from "this endpoint is broken".
+        raise HTTPException(
+            409, f"{competition} has archived prior-season history but no "
+                 f"model module on this deployment — the ladder cannot run "
+                 f"until it lands")
+    except Exception as exc:
+        print(f"[replay] ladder failed for {competition}: {exc}")
+        raise HTTPException(503, "replay ladder unavailable")
+
+
+@app.get("/api/{competition}/replay-approval/preview")
+def competition_replay_approval_preview(competition: str,
+                                        n_boot: int = Query(1000)):
+    """What the REPLAY approval policy WOULD decide, persisting nothing —
+    so the decision is inspectable before any operator acts on it."""
+    from src.live import ladder_replay
+    if competition not in ladder_replay.REPLAY_SOURCES:
+        raise HTTPException(404, "no replay source for this competition")
+    try:
+        return ladder_replay.approval_preview(
+            competition, n_boot=max(1, min(n_boot, 5000)))
+    except Exception as exc:
+        print(f"[replay] preview failed for {competition}: {exc}")
+        raise HTTPException(503, "replay approval preview unavailable")
+
+
+@app.post("/api/admin/{competition}/replay-approval/activate")
+def competition_activate_replay_approval(competition: str, request: Request,
+                                         n_boot: int = Query(1000)):
+    """Operator-only: EXPLICITLY activate a shadow approval for this
+    competition from its prior-season REPLAY ladder.
+
+    The same governance as MLS's activation route (V9.5 eval H6): boot
+    never creates an approval, this is the only path that does, and the
+    decision it writes records its own weakness — policy_version
+    `shadow-approval-replay-v1` (a stricter bar than the live policy),
+    evidence class REPLAYED, and the archive path + sha256 the ladder
+    actually read, all covered by the decision's content hash.
+
+    Refuses MLS: that model's approval is earned on its own live plane,
+    and a replay must never mint a second decision under the same model
+    name."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import ladder_replay
+    if competition not in ladder_replay.REPLAY_SOURCES:
+        raise HTTPException(404, "no replay source for this competition")
+    if competition in ladder_replay.APPROVAL_FORBIDDEN:
+        raise HTTPException(
+            409, ladder_replay.APPROVAL_FORBIDDEN[competition])
+    res = ladder_replay.ensure_replay_approval(
+        competition, n_boot=max(1, min(n_boot, 5000)),
+        allow_create=True, force=True)
+    return {**res, "activated_by": "operator",
+            "evidence_class": ladder_replay.EVIDENCE_CLASS,
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/{competition}/split-season")
+def competition_split_season(competition: str, n_boot: int = Query(1000)):
+    """The split-season verdict for a league whose season divides into two
+    tournaments (Liga MX). Reports the confounded raw comparison, the
+    no-team-information M0 control, and the difference-in-differences the
+    verdict actually rests on."""
+    from src.live import ladder_replay
+    if competition not in ladder_replay.REPLAY_SOURCES:
+        raise HTTPException(404, "no replay source for this competition")
+    try:
+        return ladder_replay.split_season_verdict(
+            competition, n_boot=max(1, min(n_boot, 5000)))
+    except Exception as exc:
+        print(f"[replay] split-season failed for {competition}: {exc}")
+        raise HTTPException(503, "split-season verdict unavailable")
+
+
 @app.get("/api/mls/replay/{run_id}")
 def mls_replay(run_id: str):
     """Independent reproducibility check: replay a run from its stored
@@ -1018,6 +1135,389 @@ def mls_odds():
     return {"odds": odds, "shadow": True,
             "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
             "generated_at": utcnow().isoformat()}
+
+
+# === EPL (epl-2026) — additive block, 2026-07-28 ===========================
+# Read-only mirrors of the /api/mls data reads, keyed by the epl-2026
+# competition. MODEL DARK: /api/epl/odds serves an empty board and
+# /api/epl/approval states the unapproved reality until an approval
+# decision is earned via the evaluation ladder — nothing here can mint
+# one. No admin/mutation routes are added for EPL in this phase.
+
+@app.get("/api/epl/scoreboard")
+def epl_scoreboard(date: str | None = Query(None, pattern=r"^\d{8}$")):
+    from src import epl
+    return {"fixtures": epl.scoreboard(date),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/epl/schedule")
+def epl_schedule(days: int = Query(7, ge=1, le=14)):
+    from src import epl
+    return {"fixtures": epl.schedule(days),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/epl/standings")
+def epl_standings():
+    """Single league table. EXPLICITLY EMPTY preseason: ESPN serves 20
+    all-zero rows ranked alphabetically before a ball is kicked, and
+    rendering that would fabricate an order (research_archive/epl/).
+    `tables` is [] until at least one club has played."""
+    from src import epl
+    return {"tables": epl.standings(),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/epl/markets")
+def epl_markets():
+    """Open EPL game books. Empty until Kalshi lists 2026-27 events —
+    see /api/epl/markets/discovery for the live probe. No futures
+    section: no EPL winner-futures series was found under any probed
+    name (research_archive/epl/), and none is invented."""
+    from src import epl
+    return {"games": epl.game_books(),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/epl/markets/discovery")
+def epl_markets_discovery():
+    """The Kalshi discovery probe: does the CONFIGURED series exist,
+    does it serve open 26/27 events yet, and how many upcoming fixtures
+    remain unmapped. The honest market-readiness answer, cached 300s."""
+    from src.epl import _cached as _epl_cached
+    try:
+        from src.live import epl_plane
+        return _epl_cached("discovery", 300,
+                           epl_plane.discovery_status) or {}
+    except Exception as exc:
+        print(f"[epl] discovery status failed: {exc}")
+        raise HTTPException(503, "discovery status unavailable")
+
+
+@app.get("/api/epl/match/{event_id}")
+def epl_match(event_id: str):
+    from src import epl
+    if not event_id.isdigit() or len(event_id) > 12:
+        raise HTTPException(404, "unknown event")
+    out = epl.match_summary(event_id)
+    if out is None:
+        raise HTTPException(502, "summary unavailable")
+    book = None
+    books = []
+    try:
+        books = epl.find_all_books(
+            out.get("date"),
+            (out.get("home") or {}).get("name") or "",
+            (out.get("away") or {}).get("name") or "")
+        book = next((f for f in books if f.get("key") == "winner"), None)
+    except Exception as exc:            # the hub must not die on the book
+        print(f"[epl] book match failed for {event_id}: {exc}")
+    model = None
+    try:                                # nor on the live plane
+        from src.live import epl_plane
+        model = epl_plane.model_for_event(event_id)
+    except Exception as exc:
+        print(f"[epl] model section failed for {event_id}: {exc}")
+    lineup = None
+    try:                # nor on the lineup view (display context only)
+        from src.live import lineup_view
+        raw = epl.raw_summary(event_id)
+        if raw:
+            lineup = lineup_view.build(raw)
+    except Exception as exc:
+        print(f"[epl] lineup section failed for {event_id}: {exc}")
+    return {"match": out, "book": book, "books": books, "model": model,
+            "lineups": lineup, "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/epl/odds")
+def epl_odds():
+    """The EPL shadow odds board. EMPTY while epl-2026-v0 is dark (no
+    approval decision exists; runs are structurally refused) — the
+    response says so explicitly rather than serving a zero that could
+    read as a forecast."""
+    odds = []
+    try:
+        from src.live import epl_plane
+        odds = epl_plane.latest_odds()
+    except Exception as exc:
+        print(f"[epl] odds board failed: {exc}")
+    return {"odds": odds, "shadow": True,
+            "model_dark": len(odds) == 0,
+            "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/epl/approval")
+def epl_approval():
+    """The epl-2026-v0 approval state: DARK. Load-only (V9.5 H6 —
+    nothing on a request path may create or activate an approval)."""
+    try:
+        from src.live import epl_plane
+        return epl_plane.approval_status()
+    except Exception as exc:
+        print(f"[epl] approval failed: {exc}")
+        raise HTTPException(503, "approval unavailable")
+# === end EPL block =========================================================
+
+
+# === Liga MX (liga-mx-2026) — additive block, 2026-07-29 ===================
+# Read-only mirrors of the /api/mls data reads, keyed by the liga-mx-2026
+# competition. The Kalshi markets are OPEN (live-verified 2026-07-29) but
+# the MODEL IS DARK: /api/ligamx/odds serves an empty board and
+# /api/ligamx/approval states the unapproved reality until an approval
+# decision is earned via the evaluation ladder — nothing here can mint
+# one. SPLIT SEASONS: standings and status responses carry the tournament
+# (Apertura/Clausura) label, derived from ESPN's own data. No
+# admin/mutation routes are added for Liga MX in this phase.
+
+@app.get("/api/ligamx/scoreboard")
+def ligamx_scoreboard(date: str | None = Query(None, pattern=r"^\d{8}$")):
+    from src import ligamx
+    return {"fixtures": ligamx.scoreboard(date),
+            "tournament": ligamx.current_tournament(),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/ligamx/schedule")
+def ligamx_schedule(days: int = Query(7, ge=1, le=14)):
+    from src import ligamx
+    return {"fixtures": ligamx.schedule(days),
+            "tournament": ligamx.current_tournament(),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/ligamx/standings")
+def ligamx_standings():
+    """One table PER TOURNAMENT (Apertura/Clausura are separate
+    competitions with separate tables — never merged), each labelled
+    with ESPN's own tournament name. A tournament that has not produced
+    a single result is EXPLICITLY ABSENT: ESPN ships complete all-zero
+    rows ranked alphabetically preseason, and rendering that would
+    fabricate an order (the EPL lesson, research_archive/epl/)."""
+    from src import ligamx
+    return {"tables": ligamx.standings(),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/ligamx/markets")
+def ligamx_markets():
+    """Open Liga MX game books — LIVE (9 open Apertura events at build
+    time); see /api/ligamx/markets/discovery for the probe. No futures
+    section: KXLIGAMXCUP does not exist (404 on 2026-07-29,
+    research_archive/ligamx_kalshi_family_series_probe_2026-07-29.json),
+    and none is invented."""
+    from src import ligamx
+    return {"games": ligamx.game_books(),
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/ligamx/markets/discovery")
+def ligamx_markets_discovery():
+    """The Kalshi discovery probe: does the CONFIGURED series exist,
+    how many open events does it serve, and how many upcoming fixtures
+    remain unmapped. The honest market-readiness answer, cached 300s."""
+    from src.ligamx import _cached as _ligamx_cached
+    try:
+        from src.live import ligamx_plane
+        return _ligamx_cached("discovery", 300,
+                              ligamx_plane.discovery_status) or {}
+    except Exception as exc:
+        print(f"[ligamx] discovery status failed: {exc}")
+        raise HTTPException(503, "discovery status unavailable")
+
+
+@app.get("/api/ligamx/match/{event_id}")
+def ligamx_match(event_id: str):
+    from src import ligamx
+    if not event_id.isdigit() or len(event_id) > 12:
+        raise HTTPException(404, "unknown event")
+    out = ligamx.match_summary(event_id)
+    if out is None:
+        raise HTTPException(502, "summary unavailable")
+    book = None
+    books = []
+    try:
+        books = ligamx.find_all_books(
+            out.get("date"),
+            (out.get("home") or {}).get("name") or "",
+            (out.get("away") or {}).get("name") or "")
+        book = next((f for f in books if f.get("key") == "winner"), None)
+    except Exception as exc:            # the hub must not die on the book
+        print(f"[ligamx] book match failed for {event_id}: {exc}")
+    model = None
+    try:                                # nor on the live plane
+        from src.live import ligamx_plane
+        model = ligamx_plane.model_for_event(event_id)
+    except Exception as exc:
+        print(f"[ligamx] model section failed for {event_id}: {exc}")
+    lineup = None
+    try:                # nor on the lineup view (display context only)
+        from src.live import lineup_view
+        raw = ligamx.raw_summary(event_id)
+        if raw:
+            lineup = lineup_view.build(raw)
+    except Exception as exc:
+        print(f"[ligamx] lineup section failed for {event_id}: {exc}")
+    return {"match": out, "book": book, "books": books, "model": model,
+            "lineups": lineup, "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/ligamx/odds")
+def ligamx_odds():
+    """The Liga MX shadow odds board. EMPTY while liga-mx-2026-v0 is
+    dark (no approval decision exists; runs are structurally refused) —
+    the response says so explicitly rather than serving a zero that
+    could read as a forecast."""
+    odds = []
+    try:
+        from src.live import ligamx_plane
+        odds = ligamx_plane.latest_odds()
+    except Exception as exc:
+        print(f"[ligamx] odds board failed: {exc}")
+    return {"odds": odds, "shadow": True,
+            "model_dark": len(odds) == 0,
+            "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
+            "generated_at": utcnow().isoformat()}
+
+
+@app.get("/api/ligamx/approval")
+def ligamx_approval():
+    """The liga-mx-2026-v0 approval state: DARK. Load-only (V9.5 H6 —
+    nothing on a request path may create or activate an approval)."""
+    try:
+        from src.live import ligamx_plane
+        return ligamx_plane.approval_status()
+    except Exception as exc:
+        print(f"[ligamx] approval failed: {exc}")
+        raise HTTPException(503, "approval unavailable")
+
+
+@app.get("/api/ligamx/status")
+def ligamx_status():
+    """One honest page of what this competition IS right now: the
+    tournament ESPN is serving (split-season identity), the dark model
+    contract, the goals-only/no-xG verdict, and the plane switch state.
+    Everything here is derived or configured — nothing asserted."""
+    from src import ligamx
+    tournament = None
+    try:
+        tournament = ligamx.current_tournament()
+    except Exception as exc:
+        print(f"[ligamx] tournament read failed: {exc}")
+    return {
+        "competition": "liga-mx-2026",
+        "competition_note": ("liga-mx-2026 spans the ESPN season year: "
+                             "Apertura 2026 + Clausura 2027 + both "
+                             "Liguillas; the current tournament is "
+                             "derived from provider data"),
+        "tournament": tournament,
+        "shadow_enabled": config.LIGAMX_SHADOW_ENABLED,
+        "model": {
+            "name": "liga-mx-2026-v0",
+            "mode": "dark",
+            "goals_only": True,
+            "xg_source": None,
+            "xg_note": ("no trustworthy public xG source exists for "
+                        "Liga MX (ESPN mex.1 carries no team-level "
+                        "match xG; the official ligamx.net surface has "
+                        "no public contract) — the model is goals-only "
+                        "and says so"),
+        },
+        "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
+        "generated_at": utcnow().isoformat(),
+    }
+# === end Liga MX block =====================================================
+
+
+# --- league-derived xG ratings ---------------------------------------------
+# Read-only. Nothing here prices, predicts or forecasts anything, and there is
+# no admin/ingest route: spending a shared provider quota is an operator action
+# run from scripts/ingest_league_xg.py, not something a public GET can trigger.
+
+
+@app.get("/api/xg/summary")
+def xg_summary():
+    """What this surface can and cannot say: the MEASURED per-league xG
+    coverage table, the ingest census, and any retroactive provider
+    corrections detected.
+
+    The coverage table is the interesting part — API-Football's documentation
+    is 403-walled, so this measurement is the only coverage documentation that
+    exists for it. Every row carries the date it was measured and whether the
+    hollow form (statistic type present, value null) was seen."""
+    from src.mls import _cached
+
+    def _run():
+        from src.live import xg_ratings
+        return xg_ratings.summary()
+    try:
+        return _cached("xg_summary", 300, _run) or {}
+    except Exception as exc:
+        print(f"[xg] summary failed: {exc}")
+        raise HTTPException(503, "xg summary unavailable")
+
+
+@app.get("/api/xg/league/{league_id}")
+def xg_league(league_id: int):
+    """One league's fitted club ratings, or the named reason there are none.
+
+    Ratings are relative to THIS league's own mean and carry no meaning
+    outside it — `comparable_across_competitions` is False on every row."""
+    from src.live import xg_ratings
+    try:
+        out = xg_ratings.league_ratings(league_id)
+    except Exception as exc:
+        print(f"[xg] league {league_id} failed: {exc}")
+        raise HTTPException(503, "league ratings unavailable")
+    return {
+        "league_id": league_id,
+        "season": out.get("season"),
+        "competition_key": out.get("scope"),
+        "coverage": out.get("coverage"),
+        "refused_reason": out.get("refused_reason"),
+        "league_mean_xg": out.get("league_mean_xg"),
+        "n_team_matches": out.get("n_team_matches"),
+        "ratings": [r.as_dict() for r in (out.get("ratings") or {}).values()],
+        "unrated_clubs": out.get("refused") or {},
+        "attribution": xg_ratings.RATINGS_ATTRIBUTION,
+    }
+
+
+@app.get("/api/xg/friendlies")
+def xg_friendlies(days: int = Query(1, ge=1, le=8)):
+    """Each club-friendly fixture with BOTH clubs' league-derived xG ratings,
+    or a named refusal per club — never a blank and never a zero.
+
+    `forecast` is always null and `forecast_available` always false. Two clubs'
+    ratings are fitted in different leagues against different means, so no
+    match probability is or can be derived from them; the payload says so in
+    `not_comparable_note` and `forecast_unavailable_reason` rather than leaving
+    a consumer to infer it.
+
+    Fixtures come from ESPN's club.friendly feed (free, unmetered). No
+    API-Football request is made by this route — ratings are read from the
+    stored observations, so a page load never spends provider quota."""
+    from src.mls import _cached
+
+    def _run():
+        from src.live import xg_ratings
+        rows = xg_ratings.friendly_fixture_ratings(days=days)
+        return rows
+    try:
+        rows = _cached(f"xg_friendlies:{days}", 120, _run)
+    except Exception as exc:
+        print(f"[xg] friendlies failed: {exc}")
+        raise HTTPException(503, "friendlies xg unavailable")
+    from src.live import xg_ratings
+    return {
+        "fixtures": rows or [],
+        "comparable": False,
+        "not_comparable_note": xg_ratings.NOT_COMPARABLE_NOTE,
+        "attribution": xg_ratings.RATINGS_ATTRIBUTION,
+        "generated_at": utcnow().isoformat(),
+    }
 
 
 @app.get("/api/ready")

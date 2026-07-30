@@ -386,6 +386,85 @@ DISCORD_DETAIL_WEBHOOK_URL = os.getenv(
 # Minutes between periodic in-play live briefs on the detail channel.
 NARRATOR_INTERVAL_MINUTES = int(os.getenv("NARRATOR_INTERVAL_MINUTES", "5"))
 
+# === EPL (epl-2026) — additive block, 2026-07-28 ==========================
+# Premier League machinery parity. The MODEL IS DARK: nothing here can
+# approve it, and no odds render until an approval decision is earned
+# through the evaluation ladder on real 2026-27 data.
+
+# Master switch for the EPL shadow-plane jobs (ingest, market discovery,
+# quote capture, run sweeps). Same fail-safe parser as the MLS flag;
+# with the model dark the run sweeps refuse regardless of this switch.
+EPL_SHADOW_ENABLED = _parse_flag(
+    os.getenv("EPL_SHADOW_ENABLED"), True, "EPL_SHADOW_ENABLED")
+
+# The Kalshi game series is CONFIG, not fact: KXEPLGAME is verified to
+# exist as a series (387 events in 25/26, research_archive/epl/) but had
+# ZERO open 2026-27 events on 2026-07-28. The discovery probe
+# (/api/epl/markets/discovery) reports its live status.
+EPL_KALSHI_GAME_SERIES = os.getenv("EPL_KALSHI_GAME_SERIES",
+                                   "KXEPLGAME").strip()
+
+# EPL goal-rate dispersion. UNMEASURED for the EPL — 0.0 carries the
+# closest measured precedent (MLS league play swept to 0.0 on 162
+# fixtures; WC26's 0.30 was tournament data). Must be re-swept on real
+# 2026-27 data before any approval evaluation; until then it only
+# affects backtests/tests, since the dark model produces no runs.
+EPL_GOAL_DISPERSION_CV = float(os.getenv("EPL_GOAL_DISPERSION_CV", "0.0"))
+
+# 3-way calibration toward uniform. 0.0 = raw simulation: MLS's 0.25
+# was MEASURED on MLS data and does not transfer by assumption. Swept
+# alongside dispersion before any approval.
+EPL_CALIBRATION_ALPHA = float(os.getenv("EPL_CALIBRATION_ALPHA", "0.0"))
+
+# Kalshi discovery cadence for EPL. Slower than MLS's 10min while the
+# series has no open events (11 family sweeps per pass; this repo has
+# been burned by Kalshi 429s) — tighten once 26/27 listings appear.
+EPL_MARKETS_JOB_MINUTES = int(os.getenv("EPL_MARKETS_JOB_MINUTES", "30"))
+# === end EPL block =========================================================
+
+# === Liga MX (liga-mx-2026) — additive block, 2026-07-29 ===================
+# Mexican Liga BBVA MX machinery parity. IN SEASON (Apertura 2026) with
+# OPEN Kalshi markets — but the MODEL IS DARK: nothing here can approve
+# it, and no odds render until an approval decision is earned through
+# the evaluation ladder.
+
+# Master switch for the Liga MX shadow-plane jobs (ingest, market
+# discovery, quote capture, run sweeps). DEFAULT FALSE — unlike the MLS
+# and EPL flags — so shipping this build changes nothing at boot until
+# an operator turns the plane on deliberately. With the model dark the
+# run/lock sweeps refuse regardless of this switch.
+LIGAMX_SHADOW_ENABLED = _parse_flag(
+    os.getenv("LIGAMX_SHADOW_ENABLED"), False, "LIGAMX_SHADOW_ENABLED")
+
+# The Kalshi game series, verified LIVE 2026-07-29: KXLIGAMXGAME exists
+# with 9 open Apertura events and 221 historical events, exact KXMLSGAME
+# grammar (research_archive/ligamx_kalshi_*_2026-07-29.json). Still
+# config, and the discovery probe (/api/ligamx/markets/discovery)
+# reports its live status.
+LIGAMX_KALSHI_GAME_SERIES = os.getenv("LIGAMX_KALSHI_GAME_SERIES",
+                                      "KXLIGAMXGAME").strip()
+
+# Liga MX goal-rate dispersion. UNMEASURED — 0.0 carries the closest
+# measured precedent (MLS league play swept to 0.0 on 162 fixtures).
+# Must be re-swept on real Liga MX data before any approval evaluation;
+# until then it only affects backtests/tests (the dark model produces
+# no runs).
+LIGAMX_GOAL_DISPERSION_CV = float(
+    os.getenv("LIGAMX_GOAL_DISPERSION_CV", "0.0"))
+
+# 3-way calibration toward uniform. 0.0 = raw simulation: MLS's 0.25
+# was MEASURED on MLS data and does not transfer by assumption.
+LIGAMX_CALIBRATION_ALPHA = float(
+    os.getenv("LIGAMX_CALIBRATION_ALPHA", "0.0"))
+
+# Kalshi discovery cadence. The listings are OPEN (unlike EPL's) but the
+# plane is off by default and money is locked; 30min is plenty for
+# discovery+capture while dark, and respects the 429 history (11 family
+# sweeps per pass). Tighten deliberately if the plane is ever activated.
+LIGAMX_MARKETS_JOB_MINUTES = int(
+    os.getenv("LIGAMX_MARKETS_JOB_MINUTES", "30"))
+# === end Liga MX block =====================================================
+
 # --- live-plane volume headroom -------------------------------------------
 # Railway's own volume alerts are Teams/Pro-only, so the platform CANNOT
 # warn before the disk fills. It filled once (2026-07-25) and every
@@ -404,3 +483,62 @@ STORAGE_ALERT_PCT = float(os.getenv("STORAGE_ALERT_PCT", "70"))
 # is not urgent-by-the-minute, and an hourly repeat is noise.
 STORAGE_ALERT_COOLDOWN_MINUTES = int(
     os.getenv("STORAGE_ALERT_COOLDOWN_MINUTES", "360"))
+
+
+# --- league-derived xG via API-Football ------------------------------------
+# A paid API-Football key fills the xG gap for leagues with no free
+# team-level xG source. MLS is deliberately NOT one of them: it already has
+# real Sportec xG, free, with a measured effect, and it is inside the MLS
+# engine signature — so MLS keeps Sportec and this provider is never allowed
+# to supply it.
+#
+# The key is a SECRET: it is read from the environment, or from
+# ~/.apifootball_key when that file is owner-only. It is never logged, never
+# placed in a path or query string, and redacted out of provider error text.
+APIFOOTBALL_BASE = os.getenv("APIFOOTBALL_BASE",
+                             "https://v3.football.api-sports.io")
+# Dark by default. Ingestion is an explicit operator action, exactly like the
+# other league planes — a deploy must not silently start spending quota.
+APIFOOTBALL_XG_ENABLED = os.getenv(
+    "APIFOOTBALL_XG_ENABLED", "false").lower() == "true"
+# Plan limits measured on the live key 2026-07-29: 300 requests/minute,
+# 7500/day (Pro). The delay keeps a full-season ingest inside the per-minute
+# limit with headroom; the budget is a per-process ceiling that aborts rather
+# than spending someone else's quota.
+APIFOOTBALL_REQUEST_DELAY_SECONDS = float(
+    os.getenv("APIFOOTBALL_REQUEST_DELAY_SECONDS", "0.25"))
+APIFOOTBALL_REQUEST_BUDGET = int(
+    os.getenv("APIFOOTBALL_REQUEST_BUDGET", "3000"))
+APIFOOTBALL_TIMEOUT_SECONDS = float(
+    os.getenv("APIFOOTBALL_TIMEOUT_SECONDS", "20"))
+# 429 backoff: the provider's per-minute window is 60s, so one full window is
+# the honest wait. Two attempts, never a tight retry loop.
+APIFOOTBALL_BACKOFF_SECONDS = float(
+    os.getenv("APIFOOTBALL_BACKOFF_SECONDS", "60"))
+APIFOOTBALL_MAX_RETRIES = int(os.getenv("APIFOOTBALL_MAX_RETRIES", "1"))
+# Refresh cadence for the rolling xG top-up, in minutes. Config, not a
+# constant, because the right cadence depends on how many leagues are on.
+APIFOOTBALL_XG_JOB_MINUTES = int(
+    os.getenv("APIFOOTBALL_XG_JOB_MINUTES", "720"))
+# How long a measured coverage verdict stands before it is re-probed.
+APIFOOTBALL_COVERAGE_TTL_DAYS = int(
+    os.getenv("APIFOOTBALL_COVERAGE_TTL_DAYS", "30"))
+# Fixtures sampled per league when measuring coverage, spread evenly across
+# the season. A most-recent-N sample is BIASED: the newest completed fixtures
+# on a split-year league are the promotion/relegation playoff block, which
+# carries no xG, and that alone made three fully-covered leagues read
+# 'partial' on 2026-07-29.
+APIFOOTBALL_COVERAGE_SAMPLES = int(
+    os.getenv("APIFOOTBALL_COVERAGE_SAMPLES", "6"))
+
+# xG rating shrinkage for league-derived ratings. A STARTING POINT carried
+# from MLS (model_mls.XG_SHRINK_GAMES, swept on 162 MLS fixtures to a clean
+# interior optimum at k=4-6), NOT swept on any of these leagues' own data.
+# Nothing prices off these ratings, so the parameter is a display choice
+# until someone measures it — which is why the provenance is stated here
+# rather than implied.
+LEAGUE_XG_SHRINK_GAMES = float(os.getenv("LEAGUE_XG_SHRINK_GAMES", "6.0"))
+# A club needs this many xG-carrying fixtures before it is rated at all.
+# Below it the surface says 'not enough fixtures', never a number: mirrors
+# model_mls.MIN_GAMES rather than inventing a second standard.
+LEAGUE_XG_MIN_FIXTURES = int(os.getenv("LEAGUE_XG_MIN_FIXTURES", "5"))

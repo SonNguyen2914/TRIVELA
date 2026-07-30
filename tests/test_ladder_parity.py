@@ -1,0 +1,322 @@
+"""THE CONTROL for the competition-keyed ladder refactor.
+
+`src/live/model_eval.py` was MLS-only: it imported HALF_LIFE_DAYS,
+MIN_GAMES and MODEL_NAME straight from `src.live.model_mls` and read
+MLS's config constants inline. Making it competition-keyed touches the
+exact code path that computes the number MLS's live shadow approval rests
+on, and `model_mls.py` may not be modified at all (it is inside the MLS
+engine signature — any source change invalidates the live approval).
+
+So the refactor needs a control, not a claim. This module loads the
+PRE-REFACTOR `model_eval.py` out of the git object store, side by side
+with the working-tree version, feeds BOTH the identical synthetic MLS
+fixture set, and requires their ladder reports to be byte-identical.
+
+What makes this a real comparison rather than a tautology:
+  - the old module is read from git (`BASE_REF`), so it cannot drift with
+    the working tree;
+  - `test_the_control_can_fail` proves the harness DETECTS a difference,
+    by perturbing one MLS hyperparameter and requiring the comparison to
+    go red. A parity test that cannot fail is not evidence.
+
+Byte-identity is over the full report dict with only `generated_at`
+removed (wall clock), serialized with sorted keys — so a changed metric,
+a changed CI bound, a renamed rung or an ADDED key all fail.
+"""
+from __future__ import annotations
+
+import importlib.util
+import json
+import subprocess
+import sys
+from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
+
+import pytest
+
+UTC = timezone.utc
+
+# the commit the refactor started from — the ladder as MLS's live approval
+# knows it. Read from git, never from the working tree.
+BASE_REF = "origin/feat-liga-mx"
+BASE_PATH = "src/live/model_eval.py"
+
+
+def _load_base_module(tmp_path):
+    """Import the pre-refactor model_eval under its own module name."""
+    try:
+        src = subprocess.run(
+            ["git", "show", f"{BASE_REF}:{BASE_PATH}"],
+            capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError) as exc:  # pragma: no cover
+        pytest.skip(f"git unavailable: {exc}")
+    if src.returncode != 0:
+        pytest.skip(f"base ref {BASE_REF} unavailable: {src.stderr.strip()}")
+    path = tmp_path / "model_eval_base.py"
+    path.write_text(src.stdout)
+    spec = importlib.util.spec_from_file_location(
+        "_model_eval_base", str(path))
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["_model_eval_base"] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def synthetic_mls_fixtures(n: int = 90, teams: int = 10):
+    """A deterministic, DB-free fixture set with the attributes both
+    ladder versions read: kickoff, the two team ids, the two goal counts,
+    a row id and a provider event id.
+
+    Deliberately NOT random: a fixed arithmetic pattern gives every team
+    a distinct scoring profile, so the rungs that use team information
+    (M1/M2/M2C/M3) genuinely diverge from M0 and the comparison exercises
+    the ratings path rather than a degenerate one.
+    """
+    start = datetime(2026, 3, 1, tzinfo=UTC)
+    rows = []
+    for i in range(n):
+        h = i % teams
+        a = (i // teams + 1 + h) % teams
+        if a == h:
+            a = (h + 1) % teams
+        rows.append(SimpleNamespace(
+            id=1000 + i,
+            espn_event_id=str(700000 + i),
+            current_kickoff_utc=start + timedelta(days=2 * i),
+            home_team_id=100 + h,
+            away_team_id=100 + a,
+            # a stable pattern: lower-indexed teams score more
+            home_goals=(h + i) % 4,
+            away_goals=(a + 1) % 3,
+        ))
+    return rows
+
+
+def _canon(report: dict) -> str:
+    """The comparable bytes: everything but the wall clock."""
+    trimmed = {k: v for k, v in report.items() if k != "generated_at"}
+    return json.dumps(trimmed, sort_keys=True, ensure_ascii=False,
+                      separators=(",", ":"))
+
+
+def _run(module, rows, monkeypatch, xg_map=None, **kwargs):
+    """Run `module.evaluate_ladder` against `rows` with no database.
+
+    Both versions read the plane through the same three seams — the
+    module-level `plane_ready`, `model_mls._completed`, and
+    `mls_stats.team_xg_map` — so patching those drives old and new
+    identically without either one touching a database.
+    """
+    from src.live import mls_stats, model_mls
+    monkeypatch.setattr(module, "plane_ready", lambda: True)
+    monkeypatch.setattr(model_mls, "_completed", lambda s, before=None: rows)
+    monkeypatch.setattr(mls_stats, "team_xg_map", lambda: xg_map or {})
+    monkeypatch.setattr(module, "get_session", lambda: SimpleNamespace(
+        close=lambda: None))
+    return module.evaluate_ladder(n_boot=200, seed=4242, **kwargs)
+
+
+class TestMlsLadderByteIdentity:
+    """The refactor must not move MLS's number by one digit."""
+
+    def test_mls_ladder_report_is_byte_identical_to_pre_refactor(
+            self, tmp_path, monkeypatch):
+        from src.live import model_eval as new_mod
+        base_mod = _load_base_module(tmp_path)
+        rows = synthetic_mls_fixtures()
+
+        before = _run(base_mod, rows, monkeypatch)
+        after = _run(new_mod, rows, monkeypatch)
+
+        assert before.get("n_scored", 0) > 0, \
+            "the control scored nothing — it would pass vacuously"
+        assert _canon(before) == _canon(after)
+
+    def test_byte_identical_with_provider_xg_supplied(
+            self, tmp_path, monkeypatch):
+        """The plain parity run supplies no xG, which leaves M3 numerically
+        equal to M2C and the whole xG indirection untested — the refactor
+        moved XG_SHRINK_GAMES behind `spec.xg_shrink_default()`, so it
+        needs its own control with a populated map."""
+        from src.live import model_eval as new_mod
+        base_mod = _load_base_module(tmp_path)
+        rows = synthetic_mls_fixtures()
+        # a deterministic xG map keyed by row id, deliberately NOT equal to
+        # the goal counts so the xG rung diverges from the goals rungs
+        xg = {}
+        for i, f in enumerate(rows):
+            xg[f.id] = {
+                "home": {"xg": 0.7 + (i % 5) * 0.31,
+                         "xg_against": 0.5 + (i % 3) * 0.44},
+                "away": {"xg": 0.5 + (i % 3) * 0.44,
+                         "xg_against": 0.7 + (i % 5) * 0.31},
+            }
+        before = _run(base_mod, rows, monkeypatch, xg_map=xg)
+        after = _run(new_mod, rows, monkeypatch, xg_map=xg)
+        assert before.get("n_scored", 0) > 0
+        # the map must actually have moved M3 off M2C, or this control is
+        # testing nothing
+        assert (before["variants"]["M3"]["log_loss"]
+                != before["variants"]["M2C"]["log_loss"]), \
+            "xG map did not reach the M3 rung — control is vacuous"
+        assert _canon(before) == _canon(after)
+
+    def test_default_spec_is_mls_when_nothing_is_passed(
+            self, tmp_path, monkeypatch):
+        """Calling the refactored ladder with an EXPLICIT MLS spec must
+        equal calling it with no spec at all — that default is what keeps
+        every existing MLS call site meaning what it meant."""
+        from src.live import model_eval as new_mod
+        rows = synthetic_mls_fixtures()
+        implicit = _run(new_mod, rows, monkeypatch)
+        explicit = _run(new_mod, rows, monkeypatch,
+                        spec=new_mod.MLS_LADDER_SPEC)
+        assert _canon(implicit) == _canon(explicit)
+
+    def test_the_control_can_fail(self, tmp_path, monkeypatch):
+        """PROOF the parity check is load-bearing.
+
+        Perturb one MLS hyperparameter the ladder reads (the recency
+        half-life) and the byte comparison must go RED. If this passes,
+        every other assertion in this class is worthless.
+        """
+        from src.live import model_eval as new_mod
+        from src.live import model_mls
+        base_mod = _load_base_module(tmp_path)
+        rows = synthetic_mls_fixtures()
+
+        before = _run(base_mod, rows, monkeypatch)
+        monkeypatch.setattr(model_mls, "HALF_LIFE_DAYS", 30.0)
+        # the refactored ladder reads the half-life THROUGH the spec at
+        # call time, so the patched value reaches it
+        after = _run(new_mod, rows, monkeypatch)
+        assert _canon(before) != _canon(after), \
+            "the parity harness cannot detect a changed hyperparameter"
+
+
+class TestMlsDecisionHashUnchanged:
+    """The refactor must not move an existing MLS decision's content hash.
+
+    Those rows are immutable and deduped BY that hash; changing the
+    canonical bytes would orphan every decision on record — including the
+    one the live shadow approval rests on. The replay work needed to add
+    `evidence` and `evaluated_rung` to the hashed core, so they are added
+    ONLY when present rather than as nulls, and this is the check on that.
+    """
+
+    def _mls_rec(self):
+        return {
+            "model_version": "mls-2026-v0",
+            "eval_version": "model-eval-v1",
+            "policy_version": "shadow-approval-v1",
+            "corpus_version": None, "approved_mode": "shadow",
+            "approved": True, "metrics": {"log_loss": 1.07},
+            "edge_vs_baseline": {"delta_log_loss": 0.0078,
+                                 "ci95": [-0.0126, 0.0282],
+                                 "significant": False},
+            "decision_reason": "edge within/above noise vs baseline",
+            "engine_signature": "d18f8bf0", "model_parameters": {"k": 24},
+            "data_cutoff": "2026-07-25T00:00:00+00:00",
+            "corpus_manifest_hash": None,
+            "evaluation_source": "live_database",
+        }
+
+    def test_a_live_decision_hashes_identically_before_and_after(
+            self, tmp_path):
+        from src.live import model_eval as new_mod
+        base_mod = _load_base_module(tmp_path)
+        rec = self._mls_rec()
+        assert (base_mod._decision_canonical(rec)
+                == new_mod._decision_canonical(rec))
+        assert (base_mod._decision_content_hash(rec)
+                == new_mod._decision_content_hash(rec))
+
+    def test_a_replay_decision_hash_DOES_cover_its_evidence(self):
+        """The other half: when the evidence block IS present it must be
+        inside the hash, or a decision could have its evidence class
+        rewritten without detection."""
+        from src.live import model_eval as new_mod
+        rec = self._mls_rec()
+        replay = {**rec, "evidence": {"evidence_class": "REPLAYED"},
+                  "evaluated_rung": "M2"}
+        tampered = {**replay,
+                    "evidence": {"evidence_class": "MEASURED"}}
+        assert (new_mod._decision_content_hash(rec)
+                != new_mod._decision_content_hash(replay))
+        assert (new_mod._decision_content_hash(replay)
+                != new_mod._decision_content_hash(tampered))
+
+
+class TestSpecRegistry:
+    def test_mls_spec_reports_model_mls_constants_unmodified(self):
+        """The MLS spec must READ model_mls, never restate it: a copied
+        constant would silently diverge the day model_mls changed."""
+        from src.live import model_eval, model_mls
+        spec = model_eval.MLS_LADDER_SPEC
+        assert spec.half_life_days() == model_mls.HALF_LIFE_DAYS
+        assert spec.min_games() == model_mls.MIN_GAMES
+        assert spec.result_shrink() == model_mls.RESULT_SHRINK
+        assert spec.model_name == model_mls.MODEL_NAME
+
+    def test_every_registered_spec_resolves(self):
+        from src.live import model_eval
+        specs = model_eval.ladder_specs()
+        assert "mls-2026" in specs
+        for slug, spec in specs.items():
+            assert spec.slug == slug
+            assert spec.model_name
+            assert spec.ladder, f"{slug} has no rungs"
+            assert "M0" in spec.ladder and "M2" in spec.ladder
+
+    def test_dark_leagues_never_claim_an_xg_rung_without_bridged_xg(self):
+        """PREMISE UPDATED 2026-07-29, and the change is deliberate.
+
+        This test used to assert `xg_map_fn is None` for the dark leagues,
+        because at the time NO team-level xG source existed for them in this
+        stack — that None WAS the encoding of 'no source'. A measured source
+        exists now (a paid API-Football key, per-league coverage measured
+        rather than assumed), so the old assertion would pin the code to a fact
+        that is no longer true.
+
+        What it protected is still protected, and more directly: the defect to
+        prevent is a ladder ADVERTISING an M3 rung when no xG has actually
+        bridged onto our fixtures — a rung 'measured' on nothing. So the
+        invariant is now asserted on `active_ladder()`, which is what a run
+        consumes:
+
+          - the base ladder still carries no M3 rung;
+          - with an EMPTY xG map, the active ladder is goals-only;
+          - with a POPULATED map, the M3 rung appears (proving the wiring is
+            real rather than decorative)."""
+        from src.live import model_eval
+        specs = model_eval.ladder_specs()
+        for slug in ("epl-2026", "liga-mx-2026"):
+            assert slug in specs, f"{slug} not registered"
+            spec = specs[slug]
+            assert "M3" not in spec.ladder
+            # empty map -> no M3, whatever the spec is wired with
+            spec.xg_map_fn = lambda: {}
+            ladder, pairs = spec.active_ladder()
+            assert "M3" not in ladder, slug
+            assert all("M3" not in p for p in pairs), slug
+            # populated map -> the rung becomes available and is measured
+            spec.xg_map_fn = lambda: {1: {"home": {"xg": 1.2,
+                                                   "xg_against": 0.8},
+                                          "away": {"xg": 0.8,
+                                                   "xg_against": 1.2}}}
+            ladder, pairs = spec.active_ladder()
+            assert "M3" in ladder, slug
+            assert float(ladder["M3"]["xg_alpha"]) > 0
+            assert ("M3", "M2C") in pairs
+
+    def test_mls_ladder_is_unaffected_by_the_league_xg_wiring(self):
+        """MLS keeps Sportec and its ladder is frozen: its approval rests on
+        those rungs. It must carry no league-xG ladder at all, so no provider
+        read can alter what MLS evaluates."""
+        from src.live import model_eval
+        spec = model_eval.MLS_LADDER_SPEC
+        assert spec.xg_ladder is None
+        assert spec.xg_edge_pairs == ()
+        ladder, pairs = spec.active_ladder()
+        assert ladder is spec.ladder
+        assert pairs == spec.edge_pairs
