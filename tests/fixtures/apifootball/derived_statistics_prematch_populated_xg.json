@@ -1,0 +1,183 @@
+{
+ "_provenance": {
+  "kind": "DERIVED",
+  "note": "The RECORDED completed-fixture statistics payload (statistics:mls:1490359, real xG 3.27 / 1.28), used in the tests against the RECORDED not-started fixture object. The payload is real captured traffic; the pairing is constructed, because the live plan populated no pre-match xG — which is the good news, and also why this fixture has to be constructed to prove the check fires at all.",
+  "proves": "CHECK 4 returns CRITICAL_FAIL and names target leakage"
+ },
+ "payload": {
+  "get": "fixtures/statistics",
+  "parameters": {
+   "fixture": "1490359"
+  },
+  "errors": [],
+  "results": 2,
+  "paging": {
+   "current": 1,
+   "total": 1
+  },
+  "response": [
+   {
+    "team": {
+     "id": 1596,
+     "name": "San Jose Earthquakes",
+     "logo": "https://media.api-sports.io/football/teams/1596.png"
+    },
+    "statistics": [
+     {
+      "type": "Shots on Goal",
+      "value": 5
+     },
+     {
+      "type": "Shots off Goal",
+      "value": 12
+     },
+     {
+      "type": "Total Shots",
+      "value": 20
+     },
+     {
+      "type": "Blocked Shots",
+      "value": 3
+     },
+     {
+      "type": "Shots insidebox",
+      "value": 17
+     },
+     {
+      "type": "Shots outsidebox",
+      "value": 3
+     },
+     {
+      "type": "Fouls",
+      "value": 14
+     },
+     {
+      "type": "Corner Kicks",
+      "value": 6
+     },
+     {
+      "type": "Offsides",
+      "value": 0
+     },
+     {
+      "type": "Ball Possession",
+      "value": "58%"
+     },
+     {
+      "type": "Yellow Cards",
+      "value": 4
+     },
+     {
+      "type": "Red Cards",
+      "value": null
+     },
+     {
+      "type": "Goalkeeper Saves",
+      "value": 1
+     },
+     {
+      "type": "Total passes",
+      "value": 453
+     },
+     {
+      "type": "Passes accurate",
+      "value": 376
+     },
+     {
+      "type": "Passes %",
+      "value": "83%"
+     },
+     {
+      "type": "expected_goals",
+      "value": "3.27"
+     },
+     {
+      "type": "goals_prevented",
+      "value": "1.49"
+     }
+    ]
+   },
+   {
+    "team": {
+     "id": 1605,
+     "name": "Los Angeles Galaxy",
+     "logo": "https://media.api-sports.io/football/teams/1605.png"
+    },
+    "statistics": [
+     {
+      "type": "Shots on Goal",
+      "value": 2
+     },
+     {
+      "type": "Shots off Goal",
+      "value": 3
+     },
+     {
+      "type": "Total Shots",
+      "value": 9
+     },
+     {
+      "type": "Blocked Shots",
+      "value": 4
+     },
+     {
+      "type": "Shots insidebox",
+      "value": 7
+     },
+     {
+      "type": "Shots outsidebox",
+      "value": 2
+     },
+     {
+      "type": "Fouls",
+      "value": 16
+     },
+     {
+      "type": "Corner Kicks",
+      "value": 6
+     },
+     {
+      "type": "Offsides",
+      "value": 1
+     },
+     {
+      "type": "Ball Possession",
+      "value": "42%"
+     },
+     {
+      "type": "Yellow Cards",
+      "value": 3
+     },
+     {
+      "type": "Red Cards",
+      "value": null
+     },
+     {
+      "type": "Goalkeeper Saves",
+      "value": 4
+     },
+     {
+      "type": "Total passes",
+      "value": 336
+     },
+     {
+      "type": "Passes accurate",
+      "value": 252
+     },
+     {
+      "type": "Passes %",
+      "value": "75%"
+     },
+     {
+      "type": "expected_goals",
+      "value": "1.28"
+     },
+     {
+      "type": "goals_prevented",
+      "value": "1.49"
+     }
+    ]
+   }
+  ]
+ }
+}

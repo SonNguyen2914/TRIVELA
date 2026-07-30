@@ -1,0 +1,243 @@
+{
+ "_what": "INTEGRITY INCIDENT: the frozen ESPN reference roster was edited AFTER the pre-registered run had been measured, in a way that turned that run's CHECK 3 FAIL into a PASS, and the pre-registered archive was overwritten in place.",
+ "_why_this_file_exists": "The pre-registered archive itself was overwritten, so the tampered run would otherwise be the only surviving record under the canonical filename. Deleting the tampered evidence would be its own version of the same mistake. This is the durable record; the tampered 4 MB archive itself was NOT committed because every response body in it is identical to the pre-registered archive's — only the CHECK 3 numbers derived from the edited roster differ, and those are reproduced in full below.",
+ "detected_utc": "2026-07-29",
+ "detected_how": "An untracked file 'apifootball_verification_2026-07-29_RUN1_PREAMENDMENT.json' appeared in the worktree that this agent did not write. Structural diff against the canonical archive showed a different run_utc, a different espn_reference.sha256, and CHECK 3 flipping from FAIL to PASS.",
+ "what_changed": {
+  "roster_file": "scripts/apifootball_espn_roster.json",
+  "aliases_inserted_after_the_data_was_seen": {
+   "mls": {
+    "DC United": "D.C. United"
+   },
+   "ligamx": {
+    "U.N.A.M. - Pumas": "Pumas UNAM"
+   }
+  },
+  "note": "These are precisely and only the two team names that failed to resolve in the pre-registered run. An alias table edited to contain the exact strings that just failed is the definition of tuning the instrument to the data.",
+  "roster_sha256_before": "1c0f01745bcb72ff8621abdb9cf6420b0180f8400bff631817dbb15b26ab8a3c",
+  "roster_sha256_after_tuning": "6c9ce7b73128231a5f1e5eadc7fc7752acbb5c2686b3afbbbc85d160e4ae30fd",
+  "rule_broken": "scripts/apifootball_espn_roster.json's own _amendment_rule, and docs/APIFOOTBALL-TRIAL.md section 4: a change after a real run is a post-registration amendment, must be recorded, and does not retroactively turn a FAIL into a PASS."
+ },
+ "effect_on_the_verdict": {
+  "pre_registered_run": {
+   "run_utc": "2026-07-29T23:08:01.090351+00:00",
+   "verdict": "DROP",
+   "exit_code": 1,
+   "criteria_fingerprint": "493393bac7efd620c4b8d169288e39f6aa36902b00ea8655b5ccf1f2a82a3086",
+   "roster_sha256": "1c0f01745bcb72ff8621abdb9cf6420b0180f8400bff631817dbb15b26ab8a3c",
+   "check3_rosters": {
+    "epl": {
+     "status": "PASS",
+     "resolved": 20,
+     "of": 20,
+     "rate": 1.0,
+     "tiers": {
+      "exact": 14,
+      "alias": 6,
+      "token_set": 0,
+      "containment": 0,
+      "unresolved": 0,
+      "ambiguous": 0
+     },
+     "unresolved": []
+    },
+    "laliga": {
+     "status": "PASS",
+     "resolved": 20,
+     "of": 20,
+     "rate": 1.0,
+     "tiers": {
+      "exact": 20,
+      "alias": 0,
+      "token_set": 0,
+      "containment": 0,
+      "unresolved": 0,
+      "ambiguous": 0
+     },
+     "unresolved": []
+    },
+    "ligamx": {
+     "status": "PASS",
+     "resolved": 17,
+     "of": 18,
+     "rate": 0.9444444444444444,
+     "tiers": {
+      "exact": 14,
+      "alias": 3,
+      "token_set": 0,
+      "containment": 0,
+      "unresolved": 1,
+      "ambiguous": 0
+     },
+     "unresolved": [
+      "U.N.A.M. - Pumas"
+     ]
+    },
+    "mls": {
+     "status": "FAIL",
+     "resolved": 29,
+     "of": 30,
+     "rate": 0.9666666666666667,
+     "tiers": {
+      "exact": 26,
+      "alias": 3,
+      "token_set": 0,
+      "containment": 0,
+      "unresolved": 1,
+      "ambiguous": 0
+     },
+     "unresolved": [
+      "DC United"
+     ]
+    }
+   }
+  },
+  "run_on_the_tuned_roster": {
+   "run_utc": "2026-07-29T23:08:55.097816+00:00",
+   "verdict": "KEEP",
+   "exit_code": 0,
+   "criteria_fingerprint": "493393bac7efd620c4b8d169288e39f6aa36902b00ea8655b5ccf1f2a82a3086",
+   "roster_sha256": "6c9ce7b73128231a5f1e5eadc7fc7752acbb5c2686b3afbbbc85d160e4ae30fd",
+   "check3_rosters": {
+    "epl": {
+     "status": "PASS",
+     "resolved": 20,
+     "of": 20,
+     "rate": 1.0,
+     "tiers": {
+      "exact": 14,
+      "alias": 6,
+      "token_set": 0,
+      "containment": 0,
+      "unresolved": 0,
+      "ambiguous": 0
+     },
+     "unresolved": []
+    },
+    "laliga": {
+     "status": "PASS",
+     "resolved": 20,
+     "of": 20,
+     "rate": 1.0,
+     "tiers": {
+      "exact": 20,
+      "alias": 0,
+      "token_set": 0,
+      "containment": 0,
+      "unresolved": 0,
+      "ambiguous": 0
+     },
+     "unresolved": []
+    },
+    "ligamx": {
+     "status": "PASS",
+     "resolved": 18,
+     "of": 18,
+     "rate": 1.0,
+     "tiers": {
+      "exact": 14,
+      "alias": 4,
+      "token_set": 0,
+      "containment": 0,
+      "unresolved": 0,
+      "ambiguous": 0
+     },
+     "unresolved": []
+    },
+    "mls": {
+     "status": "PASS",
+     "resolved": 30,
+     "of": 30,
+     "rate": 1.0,
+     "tiers": {
+      "exact": 26,
+      "alias": 4,
+      "token_set": 0,
+      "containment": 0,
+      "unresolved": 0,
+      "ambiguous": 0
+     },
+     "unresolved": []
+    }
+   },
+   "note": "Same criteria fingerprint as the pre-registered run — the CRITERIA guard could not catch this, because the roster is a separate file the fingerprint did not cover. That gap is the real defect and is now closed by ROSTER_FINGERPRINT."
+  },
+  "superseded_amended_run": {
+   "run_utc": "2026-07-29T23:12:08.625410+00:00",
+   "verdict": "KEEP",
+   "criteria_fingerprint": "7b7106b0342d2c5d951aa98196432ddb054d2a9c1492fa7277468b537eb79ba8",
+   "roster_sha256": "6c9ce7b73128231a5f1e5eadc7fc7752acbb5c2686b3afbbbc85d160e4ae30fd",
+   "note": "This agent's own amendment-A1 run, launched while the tuned roster was still on disk. Its KEEP therefore cannot be attributed to amendment A1 alone, so it is discarded rather than reported, and A1 was re-measured against the restored roster.",
+   "check3_rosters": {
+    "epl": {
+     "status": "PASS",
+     "resolved": 20,
+     "of": 20,
+     "rate": 1.0,
+     "tiers": {
+      "exact": 14,
+      "alias": 6,
+      "token_set": 0,
+      "containment": 0,
+      "unresolved": 0,
+      "ambiguous": 0
+     },
+     "unresolved": []
+    },
+    "laliga": {
+     "status": "PASS",
+     "resolved": 20,
+     "of": 20,
+     "rate": 1.0,
+     "tiers": {
+      "exact": 20,
+      "alias": 0,
+      "token_set": 0,
+      "containment": 0,
+      "unresolved": 0,
+      "ambiguous": 0
+     },
+     "unresolved": []
+    },
+    "ligamx": {
+     "status": "PASS",
+     "resolved": 18,
+     "of": 18,
+     "rate": 1.0,
+     "tiers": {
+      "exact": 14,
+      "alias": 4,
+      "token_set": 0,
+      "containment": 0,
+      "unresolved": 0,
+      "ambiguous": 0
+     },
+     "unresolved": []
+    },
+    "mls": {
+     "status": "PASS",
+     "resolved": 30,
+     "of": 30,
+     "rate": 1.0,
+     "tiers": {
+      "exact": 27,
+      "alias": 3,
+      "token_set": 0,
+      "containment": 0,
+      "unresolved": 0,
+      "ambiguous": 0
+     },
+     "unresolved": []
+    }
+   }
+  }
+ },
+ "remediation": [
+  "Both inserted aliases removed; the roster now hashes to 1c0f01745bcb72ff8621abdb9cf6420b0180f8400bff631817dbb15b26ab8a3c, byte-identical to what the pre-registered run recorded. That hash match is the proof the restoration is exact and that the two aliases were the only difference.",
+  "The pre-registered DROP archive restored to the canonical filename.",
+  "archive_path() now refuses to overwrite an existing dated archive, so a re-run can no longer destroy an earlier run's evidence in place.",
+  "ROSTER_FINGERPRINT added to the harness: the roster's sha256 is asserted against a literal committed in scripts/verify_apifootball.py, so editing the frozen reference halts the harness until the literal is updated too — which puts the edit in the diff, the same mechanism CRITERIA_FINGERPRINT already provided for the thresholds.",
+  "Amendment A1 re-measured against the restored roster."
+ ],
+ "what_this_does_not_establish": "Who made the edit. Another process wrote to this worktree while it was in use, which AGENTS.md sections 7 and 8.1 forbid; the aliases are individually correct mappings and the edit looks well-intentioned. The point is not the intent, it is that a well-intentioned edit to a frozen reference silently converted a DROP into a KEEP, unrecorded, and overwrote the evidence that would have shown it."
+}
