@@ -8,9 +8,13 @@ discovery, quote-capture and T-10 lock code serves both competitions,
 keyed by slug.
 
 State of the world this module is honest about:
-  - Kalshi's KXEPLGAME series exists (387 events in 25/26) but has ZERO
-    open 2026-27 events as of 2026-07-28. discovery_status() reports
-    the live probe result instead of anyone asserting readiness.
+  - Kalshi's KXEPLGAME series exists (387 events in 25/26) and lists NO
+    2026-27 fixture as of 2026-07-28. Note what the archive actually
+    shows: a `status=open` probe returned TEN events, all dated 26MAY24
+    — the settled final matchday of 2025-26. "Open" is not "current" at
+    this venue, so discovery_status() reports the raw provider count AND
+    how many of those events fall inside the fixture horizon, instead of
+    letting ten settled events read as ten live markets.
   - epl-2026-v0 is DARK: unapproved, no approval decision, so the runs
     machinery refuses every run and lock (F3/F9 fail-closed). The
     surfaces show explicit no-prediction states until approval is
@@ -93,8 +97,12 @@ def seed_teams() -> dict:
 
 
 def ingest_season() -> dict:
-    return ingest.ingest_season_schedules(competition_slug=EPL_SLUG,
-                                          espn_league=ESPN_LEAGUE)
+    """Season ingest PINNED to the configured season, refusing any event
+    that belongs to another one (the 2026-27 assertion)."""
+    return ingest.ingest_season_schedules(
+        competition_slug=EPL_SLUG, espn_league=ESPN_LEAGUE,
+        expected_season_year=config.EPL_SEASON_YEAR,
+        expected_season_label=config.EPL_SEASON_LABEL)
 
 
 def refresh_window() -> dict:
@@ -138,15 +146,30 @@ def discovery_status() -> dict:
     ACTUALLY serves right now, plus the local mapped/unmapped state.
 
     The series ticker is config with a live probe, never an assertion:
-    `series_exists` is Kalshi's own answer (GET /series/{ticker}), and
-    `open_events` counts what the events endpoint returns today. As of
-    2026-07-28 that is exists=True, open_events=0 — the 26/27 listings
-    have not appeared, and every surface says so instead of pretending.
+    `series_exists` is Kalshi's own answer (GET /series/{ticker}),
+    `open_events` is the raw count the events endpoint returns for
+    status=open, and `open_events_in_horizon` is how many of those are
+    actually near a fixture date.
+
+    Both numbers are reported because the first one lies. Archived
+    2026-07-28: status=open returned TEN KXEPLGAME events and every one
+    was dated 26MAY24 — the settled last matchday of 2025-26. Reporting
+    only `open_events` would have said "10 open EPL markets" about a
+    series with no current listings at all.
     """
     import requests as _rq
+    from src.epl import MATCH_FAMILIES
     game = config.EPL_KALSHI_GAME_SERIES
     out: dict = {"game_series": game, "series_exists": None,
-                 "open_events": None, "probed_at":
+                 "open_events": None,
+                 "season": config.EPL_SEASON_LABEL,
+                 # the caveat travels WITH the data: these families' 26/27
+                 # listing behaviour and ticker-tail grammar have never
+                 # been observed, only their series definitions
+                 "family_grammar_status": config.EPL_FAMILY_GRAMMAR_STATUS,
+                 "unverified_families": [sr for _k, sr, _l in MATCH_FAMILIES
+                                         if sr != game],
+                 "probed_at":
                  datetime.now(timezone.utc).isoformat()}
     try:
         r = _rq.get(f"{markets.KALSHI}/series/{game}", timeout=10)
@@ -158,7 +181,14 @@ def discovery_status() -> dict:
                     params={"series_ticker": game, "status": "open",
                             "limit": 100}, timeout=10)
         d.raise_for_status()
-        out["open_events"] = len(d.json().get("events") or [])
+        evs = d.json().get("events") or []
+        out["open_events"] = len(evs)
+        from src.epl import events_in_horizon
+        out["open_events_in_horizon"] = len(events_in_horizon(evs))
+        out["open_status_note"] = (
+            "status=open is not status=current at this venue — the "
+            "2026-07-28 archive shows 10 'open' KXEPLGAME events, all "
+            "settled 2025-26 fixtures")
     except _rq.RequestException as exc:
         out["events_probe_error"] = str(exc)[:120]
 

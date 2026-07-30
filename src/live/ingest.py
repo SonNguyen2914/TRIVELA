@@ -145,16 +145,46 @@ def _upsert_fixture(s, f: dict, observed_at,
     return False, changed
 
 
+def _event_season_year(ev: dict) -> int | None:
+    """The season an ESPN schedule EVENT belongs to.
+
+    Verified 2026-07-29 against eng.1 team 359
+    (research_archive/epl/espn_team_schedule_359_*.json): the request's
+    `season` parameter IS honoured for the events, but the payload's
+    TOP-LEVEL `season` block reports the CURRENT season regardless —
+    `?season=2025` returned 2025-26 events under a top-level block still
+    saying "2026-27 English Premier League". So the per-EVENT block is
+    the only field that means what a season assertion needs it to mean.
+    """
+    y = ((ev.get("season") or {}).get("year"))
+    try:
+        return int(y)
+    except (TypeError, ValueError):
+        return None
+
+
 def ingest_season_schedules(competition_slug: str = "mls-2026",
-                            espn_league: str = "usa.1") -> dict:
+                            espn_league: str = "usa.1",
+                            expected_season_year: int | None = None,
+                            expected_season_label: str | None = None
+                            ) -> dict:
     """Full-season ingest via each club's schedule endpoint (one call per
     club) — fixtures past AND future, with final scores. The history
-    substrate for ratings, backtests, and settlement."""
+    substrate for ratings, backtests, and settlement.
+
+    When `expected_season_year` is given the request is PINNED to it and
+    every event is VALIDATED against it: an event from another season is
+    refused, counted, and reported as an explicit `error`, never
+    ingested. Without the pin the provider's idea of "current" silently
+    decides which season the ratings are fitted on — and ESPN's own
+    top-level season block cannot be used for the check (see
+    `_event_season_year`)."""
     if not plane_ready():
         return {"skipped": "dormant"}
     from src.live.models import Team
     s = get_session()
     created = updated = 0
+    rejected: dict[str, int] = {}
     try:
         teams = s.query(Team).filter_by(
             competition_slug=competition_slug).all()
@@ -167,6 +197,8 @@ def ingest_season_schedules(competition_slug: str = "mls-2026",
             # Both halves are needed: history feeds the model, the
             # future feeds the slate.
             for params in ({}, {"fixture": "true"}):
+                if expected_season_year is not None:
+                    params = dict(params, season=str(expected_season_year))
                 try:
                     r = requests.get(
                         SCHEDULE_URL.format(league=espn_league,
@@ -179,8 +211,25 @@ def ingest_season_schedules(competition_slug: str = "mls-2026",
                     continue
                 now = _now()
                 _observe(s, f"teams/{t.espn_id}/schedule"
-                            + ("?fixture=true" if params else ""), payload)
+                            + ("?fixture=true" if params.get("fixture")
+                               else "")
+                            + (f"&season={expected_season_year}"
+                               if expected_season_year is not None else ""),
+                         payload)
                 for ev in payload.get("events") or []:
+                    if expected_season_year is not None:
+                        got = _event_season_year(ev)
+                        if got != expected_season_year:
+                            key = ("season_unknown" if got is None
+                                   else f"season_{got}")
+                            rejected[key] = rejected.get(key, 0) + 1
+                            continue
+                        label = (ev.get("season") or {}).get("displayName")
+                        if (expected_season_label and label
+                                and expected_season_label not in label):
+                            rejected["season_label_mismatch"] = rejected.get(
+                                "season_label_mismatch", 0) + 1
+                            continue
                     f = _event_to_fields(ev)
                     if not f:
                         continue
@@ -191,7 +240,19 @@ def ingest_season_schedules(competition_slug: str = "mls-2026",
                 s.commit()
         total = s.query(Fixture).filter_by(
             competition_slug=competition_slug).count()
-        return {"fixtures": total, "created": created, "updated": updated}
+        out = {"fixtures": total, "created": created, "updated": updated,
+               "season_pinned": expected_season_year,
+               "season_label": expected_season_label}
+        if rejected:
+            # an explicit FAILURE, not a footnote: fixtures from another
+            # season would silently become training data for this one
+            out["season_rejected"] = rejected
+            out["error"] = (
+                f"provider season mismatch for {competition_slug}: "
+                f"expected {expected_season_label or expected_season_year}, "
+                f"refused {sum(rejected.values())} event(s) {rejected}")
+            print(f"[ingest] {out['error']}")
+        return out
     except Exception as exc:
         s.rollback()
         print(f"[ingest] season ingest failed: {exc}")

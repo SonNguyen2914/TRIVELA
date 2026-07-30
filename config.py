@@ -398,11 +398,41 @@ EPL_SHADOW_ENABLED = _parse_flag(
     os.getenv("EPL_SHADOW_ENABLED"), True, "EPL_SHADOW_ENABLED")
 
 # The Kalshi game series is CONFIG, not fact: KXEPLGAME is verified to
-# exist as a series (387 events in 25/26, research_archive/epl/) but had
-# ZERO open 2026-27 events on 2026-07-28. The discovery probe
-# (/api/epl/markets/discovery) reports its live status.
+# exist as a series (387 events in 25/26, research_archive/epl/) and had
+# NO 2026-27 fixture listed on 2026-07-28. Precisely: the archived
+# status=open probe returned TEN events, every one dated 26MAY24 — the
+# settled last matchday of 2025-26. "Open" is not "current" here. The
+# discovery probe (/api/epl/markets/discovery) reports both the raw
+# provider count and how many fall inside the fixture horizon.
 EPL_KALSHI_GAME_SERIES = os.getenv("EPL_KALSHI_GAME_SERIES",
                                    "KXEPLGAME").strip()
+
+# The season the EPL plane is PINNED to. ESPN's schedule endpoint honours
+# ?season=<year> for the events it returns, so ingestion asks for this one
+# explicitly and refuses any event that belongs to another
+# (src/live/ingest.py). Without the pin the provider's idea of "current"
+# silently decides which season the ratings are fitted on.
+#
+# Do NOT validate against the payload's top-level `season` block: verified
+# 2026-07-29 (research_archive/epl/espn_team_schedule_359_season2025_*.json)
+# it reports the CURRENT season no matter which one was requested — a
+# request for 2025 returned 2025-26 events under a block still labelled
+# "2026-27 English Premier League". The per-EVENT season block is the only
+# one that means what the assertion needs.
+EPL_SEASON_YEAR = int(os.getenv("EPL_SEASON_YEAR", "2026"))
+EPL_SEASON_LABEL = os.getenv("EPL_SEASON_LABEL", "2026-27").strip()
+
+# The per-match Kalshi families other than the game series ship as
+# PROVIDER-UNVERIFIED config. Their series DEFINITIONS were probed and
+# exist (research_archive/epl/kalshi_series_KXEPL*.json, 2026-07-28), but
+# nothing has been observed about (a) whether they list per-match markets
+# for 2026-27 at all or (b) whether their ticker-TAIL grammar matches the
+# MLS families the parser was written against. KXEPLMOV does not exist.
+# Until real listings appear these families contribute zero rows, and
+# src.epl.model_key_for maps an unparseable tail to None (market-only),
+# never to a guessed model key. Surfaced at /api/epl/markets/discovery so
+# the caveat travels with the data instead of living only in a comment.
+EPL_FAMILY_GRAMMAR_STATUS = "provider-unverified"
 
 # EPL goal-rate dispersion. UNMEASURED for the EPL — 0.0 carries the
 # closest measured precedent (MLS league play swept to 0.0 on 162

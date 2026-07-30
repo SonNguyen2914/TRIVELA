@@ -44,11 +44,18 @@ def verify_hashes(corpus_dir, manifest) -> list[str]:
         body = json.dumps(data, sort_keys=True, ensure_ascii=False)
         if hashlib.sha256(body.encode()).hexdigest() != meta["sha256"]:
             problems.append(f"file hash mismatch: {name}")
-    core = json.dumps({"files": manifest["files"],
-                       "counts": manifest["counts"],
-                       "corpus_version": manifest["corpus_version"],
-                       "schema_version": manifest["schema_version"]},
-                      sort_keys=True)
+    # `competition_slug` joined the hashed core when the corpus became
+    # competition-scoped (EPL P0-2): two leagues can export identical
+    # counts and file hashes, and a manifest that did not commit to WHICH
+    # competition it described could not tell them apart. Absent on
+    # corpora published before the scoping, which still verify.
+    core_fields = {"files": manifest["files"],
+                   "counts": manifest["counts"],
+                   "corpus_version": manifest["corpus_version"],
+                   "schema_version": manifest["schema_version"]}
+    if "competition_slug" in manifest:
+        core_fields["competition_slug"] = manifest["competition_slug"]
+    core = json.dumps(core_fields, sort_keys=True)
     if hashlib.sha256(core.encode()).hexdigest() != manifest["manifest_hash"]:
         problems.append("manifest_hash mismatch")
     return problems

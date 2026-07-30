@@ -23,6 +23,7 @@ import os
 from datetime import datetime, timezone
 
 from src.live import audit as live_audit
+from src.live import competitions
 from src.live.journal import public_bet_projection
 from src.live.db import get_session, plane_ready
 from src.live.models import (Competition, CorpusExport, Fixture,
@@ -91,38 +92,66 @@ def _now():
     return datetime.now(timezone.utc)
 
 
-def _model_parameters() -> dict:
+def _model_parameters(competition_slug: str | None = None) -> dict:
     """The exact deployed model configuration + what each constant was
     SELECTED AGAINST (V9.3 eval F7/F10). A corpus that omits this cannot
     regenerate the model-development result, and an approval that omits it
-    cannot say what it approved."""
+    cannot say what it approved.
+
+    Competition-keyed (EPL P0-2): an EPL corpus that published the MLS
+    xG constants would describe a model that does not exist — epl-2026-v0
+    is goals-only because no EPL xG source does."""
     import config
 
-    from src.live import model_mls
-    return {
-        "model_version": model_mls.MODEL_NAME,
-        "engine_signature": model_mls.engine_signature()["signature_hash"],
-        "artifact_schema": model_mls.INPUT_ARTIFACT_SCHEMA,
-        "parameters": {
+    slug = competition_slug or competitions.DEFAULT_SLUG
+    model_mod = competitions.model_module(slug)
+    selection = {
+        "method": "rolling-origin walk-forward, match-cluster bootstrap",
+        "sample": "the season's completed top-division fixtures",
+        "primary_metric": "3-way log loss vs the M0 league/venue baseline",
+        "limitation": ("hyperparameters were swept on THIS sample, so "
+                       "the reported interval is conditional on the "
+                       "selected model and excludes model-selection "
+                       "uncertainty (V9.3 eval F8)"),
+    }
+    if slug == competitions.MLS_SLUG:
+        parameters = {
             "xg_rating_alpha": config.MLS_XG_RATING_ALPHA,
-            "xg_shrink_games": model_mls.XG_SHRINK_GAMES,
-            "goals_shrink_games": model_mls.SHRINK_GAMES,
-            "half_life_days": model_mls.HALF_LIFE_DAYS,
-            "min_games": model_mls.MIN_GAMES,
+            "xg_shrink_games": model_mod.XG_SHRINK_GAMES,
+            "goals_shrink_games": model_mod.SHRINK_GAMES,
+            "half_life_days": model_mod.HALF_LIFE_DAYS,
+            "min_games": model_mod.MIN_GAMES,
             "calibration_alpha": config.MLS_CALIBRATION_ALPHA,
             "mls_goal_dispersion_cv": config.MLS_GOAL_DISPERSION_CV,
             "wc26_goal_dispersion_cv": config.GOAL_DISPERSION_CV,
             "n_simulations": config.N_SIMULATIONS,
-        },
-        "selection_protocol": {
-            "method": "rolling-origin walk-forward, match-cluster bootstrap",
-            "sample": "the season's completed top-division fixtures",
-            "primary_metric": "3-way log loss vs the M0 league/venue baseline",
-            "limitation": ("hyperparameters were swept on THIS sample, so "
-                           "the reported interval is conditional on the "
-                           "selected model and excludes model-selection "
-                           "uncertainty (V9.3 eval F8)"),
-        },
+        }
+    else:
+        # goals-only competitions: no xG knob is published because none
+        # exists (research_archive/epl/RESEARCH_SUMMARY_2026-07-28.json)
+        parameters = {
+            "xg_source": None,
+            "goals_shrink_games": model_mod.SHRINK_GAMES,
+            "half_life_days": model_mod.HALF_LIFE_DAYS,
+            "min_games": model_mod.MIN_GAMES,
+            "calibration_alpha": config.EPL_CALIBRATION_ALPHA,
+            "goal_dispersion_cv": config.EPL_GOAL_DISPERSION_CV,
+            "n_simulations": config.N_SIMULATIONS,
+        }
+        selection = {
+            **selection,
+            "limitation": ("epl-2026-v0 is UNAPPROVED and its constants "
+                           "are carried from the closest measured "
+                           "precedent (MLS league play), not swept on EPL "
+                           "data — no EPL selection protocol has been run"),
+        }
+    return {
+        "competition_slug": slug,
+        "model_version": model_mod.MODEL_NAME,
+        "engine_signature": model_mod.engine_signature()["signature_hash"],
+        "artifact_schema": model_mod.INPUT_ARTIFACT_SCHEMA,
+        "parameters": parameters,
+        "selection_protocol": selection,
     }
 
 
@@ -162,15 +191,26 @@ def _book_observations(s, depth) -> list:
             .filter(SourceObservation.id.in_(ids)).all())
 
 
-def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
-    """Read the live plane into an in-memory, self-contained bundle +
-    manifest. Deterministic for a given DB state (manifest_hash covers
-    data, not timestamps)."""
+def build_corpus(version: str = "mls-shadow-2026-v1",
+                 competition_slug: str | None = None) -> dict:
+    """Read ONE competition's live-plane state into an in-memory,
+    self-contained bundle + manifest. Deterministic for a given DB state
+    (manifest_hash covers data, not timestamps).
+
+    Competition-SCOPED throughout (EPL P0-2). Nine sections used to be
+    whole-table dumps — aliases, model versions, approval decisions,
+    registry sweeps, players, paper contexts, signals, fills and the
+    official stats tables — so a second competition's rows landed inside
+    the MLS corpus and changed its manifest hash. The scoping rule is
+    closure, not just a filter: a section is narrowed to this
+    competition AND to anything an exported row references, so every id
+    in the bundle still resolves inside the bundle."""
     if not plane_ready():
         return {"skipped": "dormant"}
+    comp = competition_slug or competitions.DEFAULT_SLUG
+    model_name = competitions.model_name(comp)   # unknown slug -> raise
     s = get_session()
     try:
-        comp = "mls-2026"
         fixtures = s.query(Fixture).filter_by(
             competition_slug=comp).all()
         fixture_ids = {f.id for f in fixtures}
@@ -202,6 +242,38 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
         lineup_ids = {ln.id for ln in lineups}
         lineup_entries = [le for le in s.query(LineupEntry).all()
                           if le.lineup_snapshot_id in lineup_ids]
+        teams = s.query(Team).filter_by(competition_slug=comp).all()
+        team_ids = {t.id for t in teams}
+        # model versions: this competition's, PLUS any version an
+        # exported run points at, so model_version_id always resolves
+        mv_ids = {r.model_version_id for r in runs if r.model_version_id}
+        model_versions = [m for m in s.query(ModelVersion).all()
+                          if m.name == model_name or m.id in mv_ids]
+        mv_names = {m.name for m in model_versions}
+        # approval decisions: same closure rule via the runs' references
+        dec_ids = {r.model_approval_decision_id for r in runs
+                   if r.model_approval_decision_id}
+        decisions = [d for d in s.query(ModelApprovalDecision).all()
+                     if d.model_version_name in mv_names or d.id in dec_ids]
+        # players: this competition's, PLUS anyone an exported lineup
+        # references (a player row is keyed by provider id, not league,
+        # so a shared athlete must still resolve)
+        referenced_players = {le.player_id for le in lineup_entries
+                              if le.player_id}
+        for ln in lineups:
+            for pid in (ln.home_gk_player_id, ln.away_gk_player_id):
+                if pid:
+                    referenced_players.add(pid)
+        players = [p for p in s.query(Player).all()
+                   if p.competition_slug == comp
+                   or p.id in referenced_players]
+        paper_signals = [g for g in s.query(PaperSignal).all()
+                         if g.prediction_run_id in run_ids]
+        signal_ids = {g.id for g in paper_signals}
+        paper_fills = [f for f in s.query(PaperFill).all()
+                       if f.paper_signal_id in signal_ids]
+        paper_contexts = [c for c in s.query(PaperEvaluationContext).all()
+                          if c.prediction_run_id in run_ids]
         # journal-P1 F9: the journal scopes to THIS competition like
         # everything else — a second league's entries stay out
         journal_bets = (s.query(PersonalBet)
@@ -235,14 +307,14 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
 
         sections = {
             "competitions.json": [_dump(x) for x in
-                                  s.query(Competition).all()],
-            "teams.json": [_dump(x) for x in s.query(Team).filter_by(
-                competition_slug=comp).all()],
+                                  s.query(Competition)
+                                  .filter_by(slug=comp).all()],
+            "teams.json": [_dump(x) for x in teams],
             "team_aliases.json": [_dump(x) for x in
-                                  s.query(TeamAlias).all()],
+                                  s.query(TeamAlias).all()
+                                  if x.team_id in team_ids],
             "fixtures.json": [_dump(x) for x in fixtures],
-            "model_versions.json": [_dump(x) for x in
-                                    s.query(ModelVersion).all()],
+            "model_versions.json": [_dump(x) for x in model_versions],
             "model_input_artifacts.json": [
                 _dump(x) for x in s.query(ModelInputArtifact).all()
                 if x.id in artifact_ids],
@@ -279,19 +351,29 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             # evaluated against, so a reader can verify that a paper
             # decision was a pure function of frozen inputs
             "paper_evaluation_contexts.json": [
-                _dump(x) for x in s.query(PaperEvaluationContext).all()],
-            "players.json": [_dump(x) for x in s.query(Player).all()],
+                _dump(x) for x in paper_contexts],
+            "players.json": [_dump(x) for x in players],
             "lineup_snapshots.json": [_dump(x) for x in lineups],
             "lineup_entries.json": [_dump(x) for x in lineup_entries],
             # paper trading — signals (incl. rejections) + fills, so the
             # execution-strategy metrics reproduce from the corpus too
-            "paper_signals.json": [_dump(x) for x in
-                                   s.query(PaperSignal).all()],
-            "paper_fills.json": [_dump(x) for x in
-                                 s.query(PaperFill).all()],
+            "paper_signals.json": [_dump(x) for x in paper_signals],
+            "paper_fills.json": [_dump(x) for x in paper_fills],
             # audit carries missed_locks + failed_snapshots = the
-            # anti-survivorship-bias record
-            "audit.json": live_audit.lock_audit(),
+            # anti-survivorship-bias record. Its wall-clock
+            # `generated_at` is dropped here: this module promises that
+            # "the same database state exports to the same
+            # manifest_hash", and an embedded generation timestamp broke
+            # that promise on every single export — two back-to-back
+            # builds of an UNCHANGED database produced different
+            # manifest hashes (found by the EPL P0-2 acceptance test).
+            # The audit's own content_hash already excludes it, the
+            # manifest carries created_at/db_cutoff, and the retained
+            # hash still proves the body's integrity.
+            "audit.json": {k: v for k, v in
+                           live_audit.lock_audit(
+                               competition_slug=comp).items()
+                           if k != "generated_at"},
             # --- RESEARCH plane (V9.3 eval F10) ---------------------------
             # The run-replay sections above let a reader reproduce a FINAL
             # run. They do not let anyone regenerate the model-DEVELOPMENT
@@ -299,16 +381,22 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
             # These objects close that gap, so the corpus is self-contained
             # for the research claim and not just the prediction claim.
             "model_approval_decisions.json": [
-                _dump(x) for x in s.query(ModelApprovalDecision).all()],
+                _dump(x) for x in decisions],
             "registry_discovery.json": [
-                _dump(x) for x in s.query(RegistryDiscovery).all()],
+                _dump(x) for x in s.query(RegistryDiscovery)
+                .filter_by(competition_slug=comp).all()],
+            # MLS-specific provider tables: scoped by fixture, so they are
+            # empty for a competition with no such feed rather than
+            # exporting another league's rows
             "mls_team_match_stats.json": [
-                _dump(x) for x in s.query(MlsTeamMatchStat).all()],
+                _dump(x) for x in s.query(MlsTeamMatchStat).all()
+                if x.fixture_id in fixture_ids],
             "mls_player_match_stats.json": [
-                _dump(x) for x in s.query(MlsPlayerMatchStat).all()],
+                _dump(x) for x in s.query(MlsPlayerMatchStat).all()
+                if x.fixture_id in fixture_ids],
             # the exact parameters the deployed model was selected with,
             # so a reader can re-run the sweeps rather than trust them
-            "model_parameters.json": _model_parameters(),
+            "model_parameters.json": _model_parameters(comp),
         }
         files = {}
         for name, data in sections.items():
@@ -359,6 +447,7 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
         manifest = {
             "corpus_version": version,
             "schema_version": CORPUS_SCHEMA,
+            "competition_slug": comp,
             "created_at": _now().isoformat(),
             "db_cutoff": _now().isoformat(),
             "backend_revision": _GIT_REV,
@@ -371,6 +460,7 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
         # hash over DATA (file hashes + counts), NOT the timestamps
         core = json.dumps({"files": files, "counts": counts,
                            "corpus_version": version,
+                           "competition_slug": comp,
                            "schema_version": CORPUS_SCHEMA},
                           sort_keys=True)
         manifest["manifest_hash"] = hashlib.sha256(
@@ -380,7 +470,8 @@ def build_corpus(version: str = "mls-shadow-2026-v1") -> dict:
         s.close()
 
 
-def publish_corpus(version: str) -> dict:
+def publish_corpus(version: str,
+                   competition_slug: str | None = None) -> dict:
     """Freeze the current corpus as an IMMUTABLE published version (V9
     eval F3). build_corpus reads live state, so its bytes drift as the
     database grows — meaning the same version LABEL rebuilt on each call
@@ -391,7 +482,7 @@ def publish_corpus(version: str) -> dict:
     publish is corrected by a deliberate migration, not a runtime flag."""
     if not plane_ready():
         return {"skipped": "dormant"}
-    bundle = build_corpus(version)
+    bundle = build_corpus(version, competition_slug=competition_slug)
     if "manifest" not in bundle:
         return bundle
     manifest = bundle["manifest"]
@@ -467,11 +558,12 @@ def get_published(version: str, full: bool = False) -> dict | None:
 
 
 def export_corpus(out_dir: str,
-                  version: str = "mls-shadow-2026-v1") -> dict:
+                  version: str = "mls-shadow-2026-v1",
+                  competition_slug: str | None = None) -> dict:
     """Write the corpus to a directory (one JSON file per section +
     manifest.json). Refuses to overwrite an existing directory —
     published versions are immutable. Returns the manifest."""
-    bundle = build_corpus(version)
+    bundle = build_corpus(version, competition_slug=competition_slug)
     if "manifest" not in bundle:
         return bundle
     if os.path.exists(out_dir) and os.listdir(out_dir):
