@@ -1330,6 +1330,63 @@ class TestControls:
             "KXARGPREMDIVGAME", "KXARGPREMDIVGAME-26JUL29CCTUC", m, prev,
             NOW) is None
 
+    def test_the_cycle_report_column_is_bounded(self):
+        """An unbounded per-cycle blob written forever is the growth
+        pattern that filled the production volume on 2026-07-25. A
+        truncation must record itself and keep the audit-relevant
+        scalars."""
+        big = {"ran": True, "candidates": 4000, "requests": 9,
+               "conditioning_states": {al.CONDITIONING_OBSERVED: 4000},
+               "joins": {f"KXBRASILEIROGAME-26JUL29EV{i:05d}":
+                         al.JOIN_NO_MATCH for i in range(4000)}}
+        blob = hunter._capped_live_stats_json(big)
+        assert len(blob.encode("utf-8")) <= hunter.LIVE_STATS_JSON_MAX_BYTES
+        doc = json.loads(blob)
+        assert doc["truncated"]["dropped_keys"] == ["joins"]
+        assert doc["truncated"]["full_bytes"] > (
+            hunter.LIVE_STATS_JSON_MAX_BYTES)
+        # a histogram survives where per-event rows cannot, so a truncated
+        # cycle still says how many joins refused
+        assert doc["truncated"]["join_status_counts"] == {
+            al.JOIN_NO_MATCH: 4000}
+        assert doc["candidates"] == 4000        # scalars kept
+
+    def test_a_small_report_is_stored_whole(self):
+        """CONTROL: the cap must not truncate the normal case."""
+        small = {"ran": True, "candidates": 1, "requests": 3,
+                 "joins": {"KXBRASILEIROGAME-26JUL29INTFLA": "resolved"}}
+        doc = json.loads(hunter._capped_live_stats_json(small))
+        assert "truncated" not in doc
+        assert doc["joins"]
+
+    def test_the_cycle_row_actually_uses_the_capped_helper(self):
+        """The two tests above exercise the HELPER. That is not the same
+        claim as "the column is capped": a call site that goes back to a
+        raw json.dumps would leave both of them green while the column
+        grew without limit. Verified by controlled experiment — removing
+        the cap at the call site did NOT turn them red — so the binding is
+        asserted statically here, where it can be.
+        """
+        src = open(os.path.join(REPO_ROOT, "src", "live", "hunter.py"),
+                   encoding="utf-8").read()
+        tree = ast.parse(src)
+        assigned = []
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.keyword):
+                continue
+            if node.arg != "live_stats_json":
+                continue
+            fn = getattr(node.value, "func", None)
+            name = (fn.id if isinstance(fn, ast.Name)
+                    else fn.attr if isinstance(fn, ast.Attribute)
+                    else None)
+            assigned.append(name)
+        assert assigned, "no live_stats_json assignment found on the row"
+        assert all(n == "_capped_live_stats_json" for n in assigned), (
+            "the cycle row's live_stats_json must go through the capped "
+            f"helper; found {assigned}. An uncapped per-cycle blob written "
+            "every cycle forever is what filled the volume on 2026-07-25")
+
     def test_the_reading_store_is_bounded(self):
         """CONTROL-adjacent: persisting every reading is the growth
         pattern that filled the production volume on 2026-07-25."""

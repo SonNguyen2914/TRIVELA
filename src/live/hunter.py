@@ -1037,6 +1037,46 @@ def enrich_overreactions(s, findings: list[dict],
     return report
 
 
+# One cycle's live-stats report, bounded. The report carries one join
+# status per candidate event, so it grows with the slate; an unbounded
+# per-cycle blob written every cycle forever is exactly the shape that
+# filled the production volume on 2026-07-25 (source_observation payloads
+# with no reader). 8 KB matches the observation payload cap already in
+# use, and a truncation SAYS SO rather than silently losing the tail.
+LIVE_STATS_JSON_MAX_BYTES = 8 * 1024
+
+
+def _capped_live_stats_json(report: dict) -> str:
+    blob = json.dumps(report, sort_keys=True, default=str)
+    if len(blob.encode("utf-8")) <= LIVE_STATS_JSON_MAX_BYTES:
+        return blob
+    # keep the scalars that make the cycle auditable, drop the per-event
+    # detail, and record that the drop happened
+    slim = {k: v for k, v in report.items()
+            if k not in ("joins", "budget", "reading_errors")}
+    slim["truncated"] = {
+        "reason": (f"the full report exceeded "
+                   f"{LIVE_STATS_JSON_MAX_BYTES} bytes and the per-event "
+                   "join detail was dropped to bound this column"),
+        "full_bytes": len(blob.encode("utf-8")),
+        "dropped_keys": [k for k in ("joins", "budget", "reading_errors")
+                         if k in report],
+        "join_status_counts": _count_statuses(report.get("joins") or {}),
+    }
+    out = json.dumps(slim, sort_keys=True, default=str)
+    return out[:LIVE_STATS_JSON_MAX_BYTES]
+
+
+def _count_statuses(joins: dict) -> dict:
+    """A histogram survives truncation where per-event rows cannot — so a
+    truncated cycle still says how many joins resolved and how many
+    refused, rather than going silent about it."""
+    out: dict = {}
+    for status in joins.values():
+        out[str(status)] = out.get(str(status), 0) + 1
+    return out
+
+
 def _update_pair_store(m: dict, captured_at: datetime) -> None:
     tick = m.get("ticker")
     if not tick:
@@ -2029,8 +2069,11 @@ def scan_cycle() -> dict:
                 # problem came from, and they have different limits
                 live_stats_request_count=counter.get(
                     "live_stats_requests", 0),
-                live_stats_json=json.dumps(live_stats_report,
-                                           sort_keys=True, default=str),
+                # CAPPED: this grows with the candidate count (one join
+                # status per event), and an uncapped per-cycle blob is the
+                # growth pattern that filled the production volume on
+                # 2026-07-25. A truncation records itself.
+                live_stats_json=_capped_live_stats_json(live_stats_report),
                 roster_size=len(series_all),
                 active_series=len(active_now),
                 discovery_at=_roster["at"],
