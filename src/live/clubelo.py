@@ -133,6 +133,23 @@ def day_ranking(day: str) -> dict:
     return out
 
 
+_idx_cache: tuple[int, dict, list] | None = None
+
+
+def _indexes(table: dict):
+    """(normalised-name map, (tokens, key) list), computed once per table —
+    both were previously rebuilt on EVERY lookup. See the same fix in
+    worldclubratings._token_index for the cost that carried."""
+    global _idx_cache
+    key = id(table)
+    if _idx_cache and _idx_cache[0] == key:
+        return _idx_cache[1], _idx_cache[2]
+    by_norm = {_norm(k): k for k in table}
+    index = [(t, k) for k, t in ((k, _tokens(k)) for k in table) if t]
+    _idx_cache = (key, by_norm, index)
+    return by_norm, index
+
+
 def lookup(name: str, day: str) -> dict | None:
     """Resolve one club name to its Elo row, or None.
 
@@ -155,7 +172,7 @@ def lookup(name: str, day: str) -> dict | None:
     # and no tier below may be allowed to bridge the gap
     if _is_non_senior(name):
         return None
-    by_norm = {_norm(k): k for k in table}
+    by_norm, index = _indexes(table)
     n = _norm(name)
     if n in by_norm:
         return {**table[by_norm[n]], "match_tier": "exact"}
@@ -164,10 +181,10 @@ def lookup(name: str, day: str) -> dict | None:
         return {**table[alias], "match_tier": "alias"}
     want = _tokens(name)
     if want:
-        ts = [k for k in table if _tokens(k) == want]
+        ts = [k for toks, k in index if toks == want]
         if len(ts) == 1:
             return {**table[ts[0]], "match_tier": "token_set"}
-        uc = [k for k in table if _tokens(k) and _tokens(k) < want]
+        uc = [k for toks, k in index if toks < want]
         if len(uc) == 1:
             return {**table[uc[0]], "match_tier": "unique_containment"}
     return None
