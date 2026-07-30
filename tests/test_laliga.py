@@ -598,6 +598,50 @@ class TestShadowCountScoping:
         assert out["xg_source"] is None
         assert out["kalshi"]["coverage_verified"] is False
         assert out["counts"]["shadow_ready"] is False
+        # dark is DERIVED here, so it must agree with the approval facts
+        # printed beneath it in the same payload
+        assert out["counts"]["approval_decision_present"] is False
+        assert "no approval decision exists" in out["model_dark_note"]
+
+    def test_status_model_dark_is_derived_not_asserted(
+            self, dual_session, monkeypatch):
+        """La Liga's copy of the 2026-07-30 /api/ligamx/status defect:
+        model_dark and model_dark_note were hardcoded to the dark state,
+        so an approved La Liga model would have been reported dark right
+        beside counts.approval_decision_present=true in the SAME dict.
+        Latent when found (La Liga is genuinely unapproved) — fixed with
+        Liga MX's live instance rather than left to fire later."""
+        import hashlib as _h
+
+        from src.live import model_laliga
+        from src.live.models import ModelApprovalDecision, ModelVersion
+
+        monkeypatch.setattr(
+            laliga, "series_probe",
+            lambda: {"series": "KXLALIGAGAME", "series_exists": True,
+                     "open_events": 0, "coverage_verified": False})
+
+        model_laliga.ensure_model_version()
+        mv = dual_session.query(ModelVersion).filter_by(
+            name=model_laliga.MODEL_NAME).one()
+        mv.approved_for_shadow = True
+        doc = '{"model":"laliga-2026-v0","note":"test-only approval"}'
+        dec = ModelApprovalDecision(
+            model_version_id=mv.id,
+            model_version_name=model_laliga.MODEL_NAME,
+            approved_mode="shadow", approved=True,
+            policy_version="shadow-approval-replay-v1",
+            decision_document=doc,
+            content_hash=_h.sha256(doc.encode()).hexdigest())
+        dual_session.add(dec)
+        dual_session.commit()
+
+        out = laliga_live.shadow_status()
+        assert out["counts"]["approval_decision_present"] is True
+        assert out["counts"]["model_approved_for_shadow"] is True
+        assert out["model_dark"] is False
+        assert "no approval decision exists" not in out["model_dark_note"]
+        assert "approved model-approval decision" in out["model_dark_note"]
 
 
 class TestEndpoints:

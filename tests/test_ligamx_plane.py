@@ -490,6 +490,64 @@ class TestLigamxModelIsDark:
         assert "UNAPPROVED" not in st["note"]
         assert str(dec.id) in st["note"]
 
+    def test_status_endpoint_model_mode_tracks_a_real_decision(
+            self, ligamx_session, monkeypatch):
+        """Regression guard for the SECOND instance of the 724ef54 shape,
+        found on 2026-07-30: /api/ligamx/approval read decision 214
+        correctly while /api/ligamx/status (handler in api/main.py) kept
+        reporting model.mode "dark" from a literal seeded at dict
+        initialization. An operator comparing the two summaries for the
+        same competition got opposite answers.
+
+        This asserts the ENDPOINT, not just approval_status(), because
+        approval_status() was already right — the route was the liar."""
+        import hashlib as _h
+
+        from fastapi.testclient import TestClient
+
+        from api.main import app
+        from src import ligamx as ligamx_data
+        from src.live.models import ModelApprovalDecision
+
+        monkeypatch.setattr(ligamx_data, "current_tournament",
+                            lambda: {"name": "Torneo Apertura"})
+
+        with TestClient(app) as c:
+            dark = c.get("/api/ligamx/status").json()
+        # unapproved: dark is the CORRECT answer, and must still be given
+        assert dark["model"]["mode"] == "dark"
+        assert dark["model"]["approved_for_shadow"] is False
+
+        model_ligamx.ensure_model_version(approved_for_shadow=True)
+        mv = ligamx_session.query(ModelVersion).filter_by(
+            name=model_ligamx.MODEL_NAME).one()
+        doc = ('{"model":"liga-mx-2026-v0","mode":"shadow",'
+               '"note":"test-only approval"}')
+        dec = ModelApprovalDecision(
+            model_version_id=mv.id,
+            model_version_name=model_ligamx.MODEL_NAME,
+            approved_mode="shadow", approved=True,
+            policy_version="shadow-approval-replay-v1",
+            decision_document=doc,
+            content_hash=_h.sha256(doc.encode()).hexdigest(),
+            created_at=datetime.now(UTC) - timedelta(hours=1))
+        ligamx_session.add(dec)
+        ligamx_session.commit()
+
+        with TestClient(app) as c:
+            live = c.get("/api/ligamx/status").json()
+        # the summary endpoint must not contradict the approval endpoint
+        assert live["model"]["mode"] == "approved_decision_present"
+        assert live["model"]["mode"] == (
+            ligamx_plane.approval_status()["mode"])
+        assert live["model"]["approval_decision_id"] == dec.id
+        assert live["model"]["approved_for_shadow"] is True
+        # money is NOT what this field means, and never was
+        assert live["real_money_signals"] is False
+        # the xG verdict is about data availability, not approval
+        assert live["model"]["goals_only"] is True
+        assert live["model"]["xg_source"] is None
+
     def test_no_ligamx_xg_knob_exists(self):
         """The xG gap is documented, not papered over: no Liga MX
         analogue of MLS_XG_RATING_ALPHA exists anywhere in config, and
