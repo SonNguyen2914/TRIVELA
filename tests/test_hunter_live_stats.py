@@ -509,8 +509,12 @@ class TestLiveXgCannotReachALockedArtifact:
         up.current_kickoff_utc = datetime.now(UTC) + timedelta(minutes=9)
         live_session.commit()
         snap = helper._fake_snapshot(live_session, up.id)
+        # **kw tolerates the `spec` kwarg the competition-keyed live plane
+        # added on 2026-07-30 (this branch predates it). Widening a test
+        # DOUBLE's signature is not weakening the assertion — the sentinel
+        # sweep below is unchanged and is what this test exists for.
         monkeypatch.setattr(markets, "capture_lock_snapshot",
-                            lambda fixture_id: snap)
+                            lambda fixture_id, **kw: snap)
         import src.alerts as alerts
         monkeypatch.setattr(alerts, "send_alert", lambda msg, **kw: {})
         import src.live.lineups as lineups_mod
