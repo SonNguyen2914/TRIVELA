@@ -466,6 +466,11 @@ def parse_fixture(row: object) -> dict | None:
         # vs Al Sadd in Yemen); frequently "World" on a friendly, which
         # disambiguates nothing and correctly leaves the pair refused.
         "league_country": lg.get("country"),
+        # the competition round, verbatim. Load-bearing for cup
+        # competitions: a 2nd-qualifying-round tie and a league-stage match
+        # are not the same kind of fixture, and flattening them hides that
+        # most of a Conference League season IS qualifying.
+        "round": lg.get("round"),
         # crest comes free in the same payload; venue is frequently
         # {id: None, name: None, city: None} on this feed, so it is
         # reported as ABSENT rather than as an empty string
