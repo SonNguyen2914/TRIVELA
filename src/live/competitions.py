@@ -25,6 +25,7 @@ import importlib
 
 MLS_SLUG = "mls-2026"
 EPL_SLUG = "epl-2026"
+LALIGA_SLUG = "la-liga-2026"
 
 # MLS is the default because every pre-existing call site meant MLS.
 DEFAULT_SLUG = MLS_SLUG
@@ -41,6 +42,17 @@ _REGISTRY: dict[str, dict] = {
         "model_module": "src.live.model_epl",
         "espn_league": "eng.1",
         "enabled_flag": "EPL_SHADOW_ENABLED",
+    },
+    # La Liga. `LALIGA_SHADOW_ENABLED` defaults FALSE (config.py), unlike
+    # the other two — registering the slug does not start the plane, it
+    # only stops the shared machinery from serving MLS when asked for
+    # La Liga. laliga-2026-v0 is DARK: no approval decision exists, so
+    # runs and locks refuse at the F3/F9 gates regardless of the flag.
+    LALIGA_SLUG: {
+        "label": "LALIGA",
+        "model_module": "src.live.model_laliga",
+        "espn_league": "esp.1",
+        "enabled_flag": "LALIGA_SHADOW_ENABLED",
     },
 }
 

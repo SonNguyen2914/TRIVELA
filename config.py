@@ -173,6 +173,13 @@ LIVE_SIGNAL_MIN_DIFF = float(os.getenv("LIVE_SIGNAL_MIN_DIFF", "0.08"))
 LIVE_SIGNAL_COOLDOWN_SECONDS = int(os.getenv("LIVE_SIGNAL_COOLDOWN_SECONDS", "180"))
 LIVE_SIGNAL_POLL_SECONDS = int(os.getenv("LIVE_SIGNAL_POLL_SECONDS", "30"))
 
+# The MLS position analyser's cadence (src/live/analyser.py). Minutes, not
+# seconds, and deliberately so: its inputs are the live plane's captured
+# quotes, which mls_markets_job refreshes every 10 minutes. Polling faster
+# than the capture cadence re-reads an identical book. Raise the capture
+# rate first if these reads ever need to be fresher than this.
+MLS_ANALYSER_POLL_MINUTES = int(os.getenv("MLS_ANALYSER_POLL_MINUTES", "5"))
+
 # EASY-WIN alerts scan EVERY open in-play book (not just watched ones): the
 # live model must call it near-certain, the price must still leave a real
 # payout, and the gap must show the market hasn't fully caught up yet.
@@ -451,6 +458,27 @@ EPL_CALIBRATION_ALPHA = float(os.getenv("EPL_CALIBRATION_ALPHA", "0.0"))
 # been burned by Kalshi 429s) — tighten once 26/27 listings appear.
 EPL_MARKETS_JOB_MINUTES = int(os.getenv("EPL_MARKETS_JOB_MINUTES", "30"))
 # === end EPL block =========================================================
+# --- La Liga (la-liga-2026) — BEGIN additive block -------------------------
+# Season 2026-27 starts Aug 15. The Kalshi series PREFIX was verified to
+# exist on 2026-07-28 (series endpoint; 383 historical 2025-26 events)
+# but had ZERO open events that day, so 2026-27 market COVERAGE is
+# unverified — the tickers stay config, discovery reports the honest
+# unmapped state, and nothing is hardcoded as fact. See
+# research_archive/laliga_provider_research_2026-07-28.json.
+LALIGA_KALSHI_SERIES_PREFIX = os.getenv(
+    "LALIGA_KALSHI_SERIES_PREFIX", "KXLALIGA").strip()
+# The annual season-winner futures series (title "LA LIGA", verified to
+# exist 2026-07-28; KXLALIGACUP / KXLALIGAWINNER 404).
+LALIGA_KALSHI_FUTURES_SERIES = os.getenv(
+    "LALIGA_KALSHI_FUTURES_SERIES", "KXLALIGA").strip()
+# La Liga shadow collection defaults OFF — fail-closed for a new
+# competition whose market coverage is unverified and whose model has
+# no approval decision (boot is fail-closed on approval, so flipping
+# this alone still produces no runs and no locks; it only enables the
+# ingest/discovery jobs). Turning it on is an operator decision.
+LALIGA_SHADOW_ENABLED = _parse_flag(
+    os.getenv("LALIGA_SHADOW_ENABLED"), False, "LALIGA_SHADOW_ENABLED")
+# --- La Liga — END additive block ------------------------------------------
 
 # === Liga MX (liga-mx-2026) — additive block, 2026-07-29 ===================
 # Mexican Liga BBVA MX machinery parity. IN SEASON (Apertura 2026) with
@@ -711,3 +739,19 @@ LEAGUE_XG_SHRINK_GAMES = float(os.getenv("LEAGUE_XG_SHRINK_GAMES", "6.0"))
 # Below it the surface says 'not enough fixtures', never a number: mirrors
 # model_mls.MIN_GAMES rather than inventing a second standard.
 LEAGUE_XG_MIN_FIXTURES = int(os.getenv("LEAGUE_XG_MIN_FIXTURES", "5"))
+
+# === Team playstyle vectors (team_style) — additive block, 2026-07-29 ======
+# Partial-pooling weight, in games, for a style axis shrunk toward its own
+# league-season mean. Defaults to the league xG value on purpose: the whole
+# claim is that style is fitted with the SAME recency/shrinkage discipline as
+# the ratings, so the starting point is carried rather than reinvented. It is
+# a separate knob because the axes are on different scales from an xG ratio
+# (a percentage, two shares, two counts) and may eventually want their own
+# sweep. NOT swept on style data — nothing prices off these vectors.
+TEAM_STYLE_SHRINK_GAMES = float(os.getenv("TEAM_STYLE_SHRINK_GAMES", "6.0"))
+# A team needs this many fixtures CARRYING A GIVEN AXIS before it is placed on
+# that axis. Applied per axis, not per team: a team can be placed on shot
+# location and refused on possession in the same league-season, because the
+# provider's coverage of the two statistics is not the same. Below the floor
+# the surface says 'not enough fixtures', never a number.
+TEAM_STYLE_MIN_FIXTURES = int(os.getenv("TEAM_STYLE_MIN_FIXTURES", "5"))

@@ -362,6 +362,70 @@ def mls_stats_job() -> None:
         print(f"[mls-bridge] error: {exc}")
 
 
+# --- La Liga shadow plane — BEGIN additive block ---------------------------
+# Same lazy-import isolation as the MLS jobs. Every job is an instant
+# no-op while LALIGA_SHADOW_ENABLED is off (the default) or the live DB
+# is dormant. The model is DARK — the runs/t10 jobs exist so the
+# pipeline is complete the day an operator enables the flag AND a
+# La Liga ladder earns an approval; until then they refuse at the
+# per-model gates.
+
+def laliga_boot() -> None:
+    try:
+        from src.live import laliga_live
+        laliga_live.boot()
+    except Exception as exc:
+        print(f"[laliga-boot] error: {exc}")
+
+
+def laliga_window_job() -> None:
+    """Rolling La Liga fixture refresh (reschedules, statuses, scores)."""
+    if not config.LALIGA_SHADOW_ENABLED:
+        return
+    try:
+        from src.live import laliga_live
+        laliga_live.refresh_window()
+    except Exception as exc:
+        print(f"[laliga-window] error: {exc}")
+
+
+def laliga_markets_job() -> None:
+    """Kalshi discovery/mapping + quote capture for La Liga."""
+    if not config.LALIGA_SHADOW_ENABLED:
+        return
+    try:
+        from src.live import laliga_live
+        laliga_live.discover_and_map()
+        laliga_live.capture_quotes()
+    except Exception as exc:
+        print(f"[laliga-markets] error: {exc}")
+
+
+def laliga_runs_job() -> None:
+    if not config.LALIGA_SHADOW_ENABLED:
+        return
+    try:
+        from src.live import laliga_live
+        r = laliga_live.scheduled_runs()
+        if r.get("created"):
+            print(f"[laliga-runs] {r}")
+    except Exception as exc:
+        print(f"[laliga-runs] error: {exc}")
+
+
+def laliga_t10_job() -> None:
+    if not config.LALIGA_SHADOW_ENABLED:
+        return
+    try:
+        from src.live import laliga_live
+        r = laliga_live.t10_locks()
+        if r.get("locked"):
+            print(f"[laliga-t10] {r}")
+    except Exception as exc:
+        print(f"[laliga-t10] error: {exc}")
+# --- La Liga shadow plane — END additive block -----------------------------
+
+
 # --- readiness watch -----------------------------------------------------
 # Since the V9.5 remediations, boot FAILS CLOSED on approval: a deploy
 # leaves the model unapproved and shadow runs refused until an operator
@@ -459,6 +523,30 @@ def hunter_job() -> None:
             print(f"[hunter] {r}")
     except Exception as exc:
         print(f"[hunter] cycle error: {exc}")
+
+
+def mls_live_analyser_job() -> None:
+    """The position tracker, repointed at the MLS live plane.
+
+    `live_signals_job` above stays on the WC26 archive plane on purpose —
+    its BUY/SELL and EASY-WIN scans need an in-play model probability and
+    MLS has none (see `src/live_signals` module docstring). This job runs
+    the half that does not: hold-vs-cash-out reads on the positions Son
+    actually holds, alerted under an MLS title. Instant no-op when the
+    live plane is dormant."""
+    try:
+        from src.live import analyser
+        r = analyser.evaluate_mls_positions(alert=True)
+        if r.get("dormant"):
+            return
+        # counts always with their denominator: how many fixtures were
+        # considered, how many had a priced book, how many positions the
+        # analyser could actually read.
+        if r["positions"]:
+            print(f"[mls-analyser] {r['positions']} position read(s) over "
+                  f"{r['priced']}/{r['fixtures']} priced fixtures")
+    except Exception as exc:
+        print(f"[mls-analyser] pass error: {exc}")
 
 
 def mls_t10_job() -> None:
@@ -673,6 +761,13 @@ def start_scheduler() -> BackgroundScheduler:
     scheduler.add_job(hunter_job, "interval",
                       minutes=config.HUNTER_POLL_MINUTES,
                       id="hunter", coalesce=True, max_instances=1)
+    # Position reads on MLS fixtures. Cadence is deliberately tied to the
+    # market job's: the analyser can only be as fresh as the newest
+    # captured quote, and mls_markets_job captures every 10 minutes, so
+    # polling faster than that re-reads the same book and buys nothing.
+    scheduler.add_job(mls_live_analyser_job, "interval",
+                      minutes=config.MLS_ANALYSER_POLL_MINUTES,
+                      id="mls_analyser", coalesce=True, max_instances=1)
     # The one thing no other alert covers: shadow collection stopped and
     # nobody noticed. Every other alert fires on MLS events, so silence
     # reads as a quiet evening rather than as a halt.
@@ -712,4 +807,17 @@ def start_scheduler() -> BackgroundScheduler:
                       id="ligamx_t10", coalesce=True, max_instances=1)
     scheduler.add_job(ligamx_boot, "date", id="ligamx_boot")
     # === end Liga MX block ================================================
+    # --- La Liga — BEGIN additive block ------------------------------------
+    # Registered unconditionally like the MLS jobs; each is an instant
+    # no-op while LALIGA_SHADOW_ENABLED is off (the default).
+    scheduler.add_job(laliga_window_job, "interval", minutes=15,
+                      id="laliga_window", coalesce=True, max_instances=1)
+    scheduler.add_job(laliga_markets_job, "interval", minutes=10,
+                      id="laliga_markets", coalesce=True, max_instances=1)
+    scheduler.add_job(laliga_runs_job, "interval", minutes=15,
+                      id="laliga_runs", coalesce=True, max_instances=1)
+    scheduler.add_job(laliga_t10_job, "interval", seconds=60,
+                      id="laliga_t10", coalesce=True, max_instances=1)
+    scheduler.add_job(laliga_boot, "date", id="laliga_boot")
+    # --- La Liga — END additive block ----------------------------------------
     return scheduler
