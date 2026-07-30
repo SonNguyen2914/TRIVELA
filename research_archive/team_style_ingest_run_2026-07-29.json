@@ -1,0 +1,138 @@
+{
+ "_what": "append-only per-fixture RAW playstyle inputs. A re-read returning the same values writes nothing; a re-read returning DIFFERENT values inserts a second row, so a retroactive provider correction is visible rather than silently applied.",
+ "_cost_note": "one request per fixture on fixtures/statistics — the SAME endpoint the xG ingest already paid for. That ingest kept one of the eighteen statistic types the response carries and discarded the rest, so these axes had to be bought twice.",
+ "ingested_utc": "2026-07-30T01:36:46.932029+00:00",
+ "requests_used": 1100,
+ "rate_limit": {
+  "remaining_minute": "212",
+  "remaining_day": "5523",
+  "limit_day": "7500"
+ },
+ "results": [
+  {
+   "slug": "epl-2026",
+   "source": "api-football",
+   "league_id": 39,
+   "season": 2025,
+   "completed_fixtures": 380,
+   "requests_used": 381,
+   "rate_limit": {
+    "remaining_minute": "181",
+    "remaining_day": "6255",
+    "limit_day": "7500"
+   },
+   "counts": {
+    "written": 760,
+    "unchanged": 0,
+    "corrected": 0,
+    "skipped_existing": 0,
+    "no_stats": 0,
+    "one_sided": 0,
+    "fetch_failed": 0
+   },
+   "read_at": "2026-07-30T01:28:00.530978+00:00"
+  },
+  {
+   "slug": "la-liga-2026",
+   "source": "api-football",
+   "league_id": 140,
+   "season": 2025,
+   "completed_fixtures": 380,
+   "requests_used": 762,
+   "rate_limit": {
+    "remaining_minute": "187",
+    "remaining_day": "5874",
+    "limit_day": "7500"
+   },
+   "counts": {
+    "written": 760,
+    "unchanged": 0,
+    "corrected": 0,
+    "skipped_existing": 0,
+    "no_stats": 0,
+    "one_sided": 0,
+    "fetch_failed": 0
+   },
+   "read_at": "2026-07-30T01:30:56.703280+00:00"
+  },
+  {
+   "slug": "liga-mx-2026",
+   "source": "api-football",
+   "league_id": 262,
+   "season": 2025,
+   "completed_fixtures": 337,
+   "requests_used": 1100,
+   "rate_limit": {
+    "remaining_minute": "212",
+    "remaining_day": "5523",
+    "limit_day": "7500"
+   },
+   "counts": {
+    "written": 674,
+    "unchanged": 0,
+    "corrected": 0,
+    "skipped_existing": 0,
+    "no_stats": 0,
+    "one_sided": 0,
+    "fetch_failed": 0
+   },
+   "read_at": "2026-07-30T01:33:52.112035+00:00"
+  }
+ ],
+ "census": {
+  "leagues": [
+   {
+    "source": "api-football",
+    "league_id": 39,
+    "season": 2025,
+    "rows": 760,
+    "fixtures": 380,
+    "teams": 20,
+    "usable_rows_per_axis": {
+     "ball_dominance": 760,
+     "shot_location": 760,
+     "chance_quality": 760,
+     "defensive_line_height": 718,
+     "defensive_load": 756,
+     "verticality": 718
+    }
+   },
+   {
+    "source": "api-football",
+    "league_id": 140,
+    "season": 2025,
+    "rows": 760,
+    "fixtures": 380,
+    "teams": 20,
+    "usable_rows_per_axis": {
+     "ball_dominance": 760,
+     "shot_location": 760,
+     "chance_quality": 760,
+     "defensive_line_height": 724,
+     "defensive_load": 754,
+     "verticality": 724
+    }
+   },
+   {
+    "source": "api-football",
+    "league_id": 262,
+    "season": 2025,
+    "rows": 674,
+    "fixtures": 337,
+    "teams": 18,
+    "usable_rows_per_axis": {
+     "ball_dominance": 674,
+     "shot_location": 674,
+     "chance_quality": 418,
+     "defensive_line_height": 636,
+     "defensive_load": 672,
+     "verticality": 636
+    }
+   }
+  ]
+ },
+ "retroactive_corrections": {
+  "triples_with_multiple_readings": 0,
+  "detail": []
+ }
+}

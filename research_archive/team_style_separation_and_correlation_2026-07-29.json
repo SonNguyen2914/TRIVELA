@@ -1,0 +1,5786 @@
+{
+ "_what": "per-league playstyle axis SEPARATION (spread and standard deviation) and the axis CORRELATION matrix, over a full season of each league's own fixtures.",
+ "_why": "five axes were pre-registered from a 40-fixture EPL look. Whether they separate, and whether they stay independent, over a full season in every league is a MEASUREMENT — this is it. An axis that does not separate in a league is reported as such rather than shipped because five was the plan.",
+ "_label_policy": "no label appears in any computed field. Every vector carries a display_label rendered through DisplayLabel.for_display(), the single sanctioned exit; the label is never an input.",
+ "generated_utc": "2026-07-30T01:37:12.143224+00:00",
+ "collinear_abs_r": 0.8,
+ "pre_registered_axes": [
+  "ball_dominance",
+  "shot_location",
+  "chance_quality",
+  "defensive_line_height",
+  "defensive_load"
+ ],
+ "candidate_axes": [
+  "verticality"
+ ],
+ "source_axes": {
+  "api-football": [
+   "ball_dominance",
+   "shot_location",
+   "chance_quality",
+   "defensive_line_height",
+   "defensive_load",
+   "verticality"
+  ],
+  "sportec": [
+   "shot_location",
+   "chance_quality"
+  ]
+ },
+ "parameters": {
+  "shrink_games": 6.0,
+  "half_life_days": 90.0,
+  "min_fixtures": 5,
+  "collinear_abs_r": 0.8,
+  "provenance": "shrink and half-life are STARTING POINTS carried from the league xG ratings (which carried them from MLS league play), NOT swept on style data. Nothing prices off these vectors — the rung that would test them is BACKLOG S-10, unfitted."
+ },
+ "leagues": [
+  {
+   "slug": "mls-2026",
+   "label": "Major League Soccer",
+   "source": "sportec",
+   "measured": false,
+   "why_not": "MLS style comes from Sportec, which publishes shots inside/outside box and xG but NO possession, NO offsides and NO goalkeeper saves. Three of the five axes are structurally unavailable, not merely unmeasured.",
+   "axes_this_source_can_carry": [
+    "shot_location",
+    "chance_quality"
+   ],
+   "axes_this_source_cannot_carry": [
+    "ball_dominance",
+    "defensive_line_height",
+    "defensive_load",
+    "verticality"
+   ]
+  },
+  {
+   "slug": "epl-2026",
+   "label": "Premier League",
+   "measured": true,
+   "scope": "api-football:39:2025",
+   "n_team_matches": 760,
+   "n_teams": 20,
+   "axes_available": [
+    "ball_dominance",
+    "chance_quality",
+    "defensive_line_height",
+    "defensive_load",
+    "shot_location",
+    "verticality"
+   ],
+   "axes_not_in_source": [],
+   "league_moments": {
+    "ball_dominance": {
+     "mean": 50.00000000000011,
+     "sd": 3.364876143978532
+    },
+    "shot_location": {
+     "mean": 0.6721727977850969,
+     "sd": 0.02803135993339552
+    },
+    "chance_quality": {
+     "mean": 0.11102229146664859,
+     "sd": 0.00807621113655375
+    },
+    "defensive_line_height": {
+     "mean": 1.5858074537523321,
+     "sd": 0.3893955260966129
+    },
+    "defensive_load": {
+     "mean": 2.8622018927516932,
+     "sd": 0.2629865844571296
+    },
+    "verticality": {
+     "mean": 1.5858074537523321,
+     "sd": 0.1556186474577002
+    }
+   },
+   "separation": {
+    "competition_key": "api-football:39:2025",
+    "n_team_matches": 760,
+    "axes": {
+     "ball_dominance": {
+      "axis": "ball_dominance",
+      "human": "ball dominance",
+      "candidate": false,
+      "n_teams": 20,
+      "raw_min": 41.2399,
+      "raw_max": 61.6601,
+      "raw_spread": 20.4202,
+      "raw_sd": 5.5198,
+      "shrunk_sd": 3.3649,
+      "min_team": "Wolves",
+      "max_team": "Manchester City",
+      "separates": true,
+      "refused_reason": null
+     },
+     "shot_location": {
+      "axis": "shot_location",
+      "human": "shot location",
+      "candidate": false,
+      "n_teams": 20,
+      "raw_min": 0.5771,
+      "raw_max": 0.744,
+      "raw_spread": 0.1669,
+      "raw_sd": 0.046,
+      "shrunk_sd": 0.028,
+      "min_team": "Bournemouth",
+      "max_team": "Brentford",
+      "separates": true,
+      "refused_reason": null
+     },
+     "chance_quality": {
+      "axis": "chance_quality",
+      "human": "chance quality",
+      "candidate": false,
+      "n_teams": 20,
+      "raw_min": 0.088,
+      "raw_max": 0.1441,
+      "raw_spread": 0.0561,
+      "raw_sd": 0.0133,
+      "shrunk_sd": 0.0081,
+      "min_team": "Burnley",
+      "max_team": "Brentford",
+      "separates": true,
+      "refused_reason": null
+     },
+     "defensive_line_height": {
+      "axis": "defensive_line_height",
+      "human": "defensive line height",
+      "candidate": false,
+      "n_teams": 20,
+      "raw_min": 0.6903,
+      "raw_max": 3.0598,
+      "raw_spread": 2.3696,
+      "raw_sd": 0.648,
+      "shrunk_sd": 0.3894,
+      "min_team": "Arsenal",
+      "max_team": "Manchester City",
+      "separates": true,
+      "refused_reason": null
+     },
+     "defensive_load": {
+      "axis": "defensive_load",
+      "human": "defensive load",
+      "candidate": false,
+      "n_teams": 20,
+      "raw_min": 1.6846,
+      "raw_max": 3.6198,
+      "raw_spread": 1.9352,
+      "raw_sd": 0.4327,
+      "shrunk_sd": 0.263,
+      "min_team": "Arsenal",
+      "max_team": "Burnley",
+      "separates": true,
+      "refused_reason": null
+     },
+     "verticality": {
+      "axis": "verticality",
+      "human": "verticality",
+      "candidate": true,
+      "n_teams": 20,
+      "raw_min": 1.0924,
+      "raw_max": 2.0064,
+      "raw_spread": 0.914,
+      "raw_sd": 0.2599,
+      "shrunk_sd": 0.1556,
+      "min_team": "Manchester City",
+      "max_team": "Liverpool",
+      "separates": true,
+      "refused_reason": null
+     }
+    }
+   },
+   "correlation": {
+    "competition_key": "api-football:39:2025",
+    "threshold_abs_r": 0.8,
+    "axes": [
+     "ball_dominance",
+     "shot_location",
+     "chance_quality",
+     "defensive_line_height",
+     "defensive_load",
+     "verticality"
+    ],
+    "pairs": [
+     {
+      "a": "ball_dominance",
+      "b": "shot_location",
+      "n_teams": 20,
+      "r": -0.022
+     },
+     {
+      "a": "ball_dominance",
+      "b": "chance_quality",
+      "n_teams": 20,
+      "r": 0.1869
+     },
+     {
+      "a": "ball_dominance",
+      "b": "defensive_line_height",
+      "n_teams": 20,
+      "r": 0.5147
+     },
+     {
+      "a": "ball_dominance",
+      "b": "defensive_load",
+      "n_teams": 20,
+      "r": -0.4315
+     },
+     {
+      "a": "ball_dominance",
+      "b": "verticality",
+      "n_teams": 20,
+      "r": -0.1233
+     },
+     {
+      "a": "shot_location",
+      "b": "chance_quality",
+      "n_teams": 20,
+      "r": 0.4179
+     },
+     {
+      "a": "shot_location",
+      "b": "defensive_line_height",
+      "n_teams": 20,
+      "r": -0.1054
+     },
+     {
+      "a": "shot_location",
+      "b": "defensive_load",
+      "n_teams": 20,
+      "r": -0.2956
+     },
+     {
+      "a": "shot_location",
+      "b": "verticality",
+      "n_teams": 20,
+      "r": 0.1036
+     },
+     {
+      "a": "chance_quality",
+      "b": "defensive_line_height",
+      "n_teams": 20,
+      "r": -0.2341
+     },
+     {
+      "a": "chance_quality",
+      "b": "defensive_load",
+      "n_teams": 20,
+      "r": -0.0197
+     },
+     {
+      "a": "chance_quality",
+      "b": "verticality",
+      "n_teams": 20,
+      "r": 0.1632
+     },
+     {
+      "a": "defensive_line_height",
+      "b": "defensive_load",
+      "n_teams": 20,
+      "r": -0.0829
+     },
+     {
+      "a": "defensive_line_height",
+      "b": "verticality",
+      "n_teams": 20,
+      "r": -0.5216
+     },
+     {
+      "a": "defensive_load",
+      "b": "verticality",
+      "n_teams": 20,
+      "r": -0.1922
+     }
+    ],
+    "flagged": [],
+    "note": "r is computed on teams' raw axis values, pairwise-complete; n_teams is the denominator behind each coefficient. A flag is a finding to report, never a licence to merge two axes."
+   },
+   "vectors": {
+    "33": {
+     "provider_team_id": 33,
+     "team_name": "Manchester United",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 0.0725,
+       "raw": 50.3945,
+       "shrunk": 50.2404,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.3526,
+       "raw": 0.6564,
+       "shrunk": 0.6625,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.0168,
+       "raw": 0.1106,
+       "shrunk": 0.1108,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 0.0345,
+       "raw": 1.5968,
+       "shrunk": 1.5924,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 37,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.6276,
+       "raw": 2.5919,
+       "shrunk": 2.6975,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -1.5843,
+       "raw": 1.1788,
+       "shrunk": 1.3412,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 37,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-17T08:30:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "keeps the ball ahead",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "34": {
+     "provider_team_id": 34,
+     "team_name": "Newcastle",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 0.4576,
+       "raw": 52.5229,
+       "shrunk": 51.5359,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.7631,
+       "raw": 0.6374,
+       "shrunk": 0.651,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.5415,
+       "raw": 0.118,
+       "shrunk": 0.1153,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.4575,
+       "raw": 1.2665,
+       "shrunk": 1.4008,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 33,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.9455,
+       "raw": 3.2712,
+       "shrunk": 3.1112,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.5703,
+       "raw": 1.4359,
+       "shrunk": 1.499,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 33,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-16T04:30:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "keeper under siege",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "35": {
+     "provider_team_id": 35,
+     "team_name": "Bournemouth",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 0.0178,
+       "raw": 50.0926,
+       "shrunk": 50.0563,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -2.0733,
+       "raw": 0.5771,
+       "shrunk": 0.6143,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.7965,
+       "raw": 0.1214,
+       "shrunk": 0.1173,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.4724,
+       "raw": 1.269,
+       "shrunk": 1.395,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 37,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.1476,
+       "raw": 2.7984,
+       "shrunk": 2.8237,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 37,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.9548,
+       "raw": 1.8357,
+       "shrunk": 1.7363,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 37,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-15T12:00:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "shoots from distance, plays runners beyond the line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "36": {
+     "provider_team_id": 36,
+     "team_name": "Fulham",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 0.3807,
+       "raw": 52.0985,
+       "shrunk": 51.2775,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.2102,
+       "raw": 0.6629,
+       "shrunk": 0.6665,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.9197,
+       "raw": 0.0986,
+       "shrunk": 0.1035,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 1.5988,
+       "raw": 2.5973,
+       "shrunk": 2.2015,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.4647,
+       "raw": 2.6602,
+       "shrunk": 2.7403,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 37,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.3974,
+       "raw": 1.6905,
+       "shrunk": 1.6496,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-16T07:00:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "many, poor chances, high defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "39": {
+     "provider_team_id": 39,
+     "team_name": "Wolves",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -1.578,
+       "raw": 41.2399,
+       "shrunk": 44.6866,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.6106,
+       "raw": 0.6444,
+       "shrunk": 0.6553,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -1.1238,
+       "raw": 0.0959,
+       "shrunk": 0.1018,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.6241,
+       "raw": 1.1676,
+       "shrunk": 1.3359,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 36,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.5804,
+       "raw": 3.1144,
+       "shrunk": 3.0152,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.1667,
+       "raw": 1.5456,
+       "shrunk": 1.5618,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 36,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-16T09:30:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "cedes the ball, many, poor chances",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "40": {
+     "provider_team_id": 40,
+     "team_name": "Liverpool",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 1.4197,
+       "raw": 57.8417,
+       "shrunk": 54.7734,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.4205,
+       "raw": 0.6532,
+       "shrunk": 0.6606,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.6266,
+       "raw": 0.1025,
+       "shrunk": 0.1058,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 0.3822,
+       "raw": 1.8222,
+       "shrunk": 1.7278,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 36,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.1608,
+       "raw": 2.9328,
+       "shrunk": 2.9048,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 37,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 1.6109,
+       "raw": 2.0064,
+       "shrunk": 1.8384,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 36,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-15T12:00:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "dominates the ball, plays runners beyond the line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "42": {
+     "provider_team_id": 42,
+     "team_name": "Arsenal",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 0.9441,
+       "raw": 55.2262,
+       "shrunk": 53.173,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.9947,
+       "raw": 0.7185,
+       "shrunk": 0.7003,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.6407,
+       "raw": 0.1194,
+       "shrunk": 0.1161,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -1.2915,
+       "raw": 0.6903,
+       "shrunk": 1.076,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 33,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -2.7198,
+       "raw": 1.6846,
+       "shrunk": 2.1473,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 1.4812,
+       "raw": 1.9941,
+       "shrunk": 1.8182,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 33,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-17T08:30:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "dominates the ball, works the ball into the box, deep defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "44": {
+     "provider_team_id": 44,
+     "team_name": "Burnley",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -1.0826,
+       "raw": 44.006,
+       "shrunk": 46.3533,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -1.5273,
+       "raw": 0.6022,
+       "shrunk": 0.6296,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -1.7186,
+       "raw": 0.088,
+       "shrunk": 0.097,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.3363,
+       "raw": 1.3593,
+       "shrunk": 1.448,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 1.7378,
+       "raw": 3.6198,
+       "shrunk": 3.3195,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 37,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.8753,
+       "raw": 1.365,
+       "shrunk": 1.4515,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-16T07:00:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "cedes the ball, shoots from distance, many, poor chances",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "45": {
+     "provider_team_id": 45,
+     "team_name": "Everton",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -1.1491,
+       "raw": 43.6464,
+       "shrunk": 46.1297,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.4945,
+       "raw": 0.6953,
+       "shrunk": 0.6863,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.0594,
+       "raw": 0.1116,
+       "shrunk": 0.1114,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.8547,
+       "raw": 0.9857,
+       "shrunk": 1.2461,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 33,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.8351,
+       "raw": 2.5022,
+       "shrunk": 2.6429,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.5861,
+       "raw": 1.7503,
+       "shrunk": 1.6789,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 33,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-18T12:00:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "cedes the ball, deep defensive line, keeper untroubled",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "47": {
+     "provider_team_id": 47,
+     "team_name": "Tottenham",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 0.0146,
+       "raw": 50.0746,
+       "shrunk": 50.0455,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.5732,
+       "raw": 0.6989,
+       "shrunk": 0.6885,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -1.433,
+       "raw": 0.0918,
+       "shrunk": 0.0993,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 0.3065,
+       "raw": 1.7823,
+       "shrunk": 1.6983,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 35,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -1.6287,
+       "raw": 2.16,
+       "shrunk": 2.4342,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.0184,
+       "raw": 1.5841,
+       "shrunk": 1.5849,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 35,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-16T07:00:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "many, poor chances, keeper untroubled",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "48": {
+     "provider_team_id": 48,
+     "team_name": "West Ham",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -1.3817,
+       "raw": 42.3568,
+       "shrunk": 45.347,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 1.4802,
+       "raw": 0.7407,
+       "shrunk": 0.7139,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.4943,
+       "raw": 0.1174,
+       "shrunk": 0.1149,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.675,
+       "raw": 1.1291,
+       "shrunk": 1.3161,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 35,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 1.1349,
+       "raw": 3.353,
+       "shrunk": 3.161,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.7483,
+       "raw": 1.7862,
+       "shrunk": 1.7042,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 35,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-16T07:00:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "cedes the ball, works the ball into the box, keeper under siege",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "49": {
+     "provider_team_id": 49,
+     "team_name": "Chelsea",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 1.2092,
+       "raw": 56.6789,
+       "shrunk": 54.0652,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.7588,
+       "raw": 0.6376,
+       "shrunk": 0.6511,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 1.0094,
+       "raw": 0.1242,
+       "shrunk": 0.1191,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.1435,
+       "raw": 1.4773,
+       "shrunk": 1.5231,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 33,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.2614,
+       "raw": 2.9757,
+       "shrunk": 2.9313,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.8003,
+       "raw": 1.8045,
+       "shrunk": 1.7123,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 33,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-17T06:00:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "dominates the ball, few, good chances, plays runners beyond the line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "50": {
+     "provider_team_id": 50,
+     "team_name": "Manchester City",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 2.128,
+       "raw": 61.6601,
+       "shrunk": 57.1566,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.8041,
+       "raw": 0.7093,
+       "shrunk": 0.695,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.0832,
+       "raw": 0.1119,
+       "shrunk": 0.1116,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 2.3409,
+       "raw": 3.0598,
+       "shrunk": 2.4905,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -1.1573,
+       "raw": 2.3668,
+       "shrunk": 2.5582,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -1.9582,
+       "raw": 1.0924,
+       "shrunk": 1.283,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-16T09:30:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "dominates the ball, works the ball into the box, high defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "51": {
+     "provider_team_id": 51,
+     "team_name": "Brighton",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 1.0984,
+       "raw": 56.0699,
+       "shrunk": 53.6923,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.4698,
+       "raw": 0.6942,
+       "shrunk": 0.6856,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.3402,
+       "raw": 0.1153,
+       "shrunk": 0.1137,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 0.1607,
+       "raw": 1.6774,
+       "shrunk": 1.6416,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.0899,
+       "raw": 2.8239,
+       "shrunk": 2.8389,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.4369,
+       "raw": 1.4772,
+       "shrunk": 1.5197,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-16T07:00:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "dominates the ball",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "52": {
+     "provider_team_id": 52,
+     "team_name": "Crystal Palace",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.5735,
+       "raw": 46.852,
+       "shrunk": 48.0666,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 1.5217,
+       "raw": 0.742,
+       "shrunk": 0.7151,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 1.305,
+       "raw": 0.128,
+       "shrunk": 0.1214,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.2413,
+       "raw": 1.4212,
+       "shrunk": 1.485,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 37,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.2377,
+       "raw": 2.9645,
+       "shrunk": 2.925,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.9601,
+       "raw": 1.8329,
+       "shrunk": 1.7371,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 37,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-17T06:00:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "works the ball into the box, few, good chances, plays runners beyond the line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "55": {
+     "provider_team_id": 55,
+     "team_name": "Brentford",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.2356,
+       "raw": 48.692,
+       "shrunk": 49.2034,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 1.5514,
+       "raw": 0.744,
+       "shrunk": 0.7159,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 2.5115,
+       "raw": 0.1441,
+       "shrunk": 0.1312,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.9074,
+       "raw": 0.9831,
+       "shrunk": 1.2256,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 36,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.8281,
+       "raw": 3.2203,
+       "shrunk": 3.0803,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.546,
+       "raw": 1.4468,
+       "shrunk": 1.5027,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 36,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-17T06:00:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "works the ball into the box, few, good chances, deep defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "63": {
+     "provider_team_id": 63,
+     "team_name": "Leeds",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.7597,
+       "raw": 45.7942,
+       "shrunk": 47.44,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.2164,
+       "raw": 0.6825,
+       "shrunk": 0.6785,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.2512,
+       "raw": 0.1142,
+       "shrunk": 0.1129,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 0.9089,
+       "raw": 2.1578,
+       "shrunk": 1.9329,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 37,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.2023,
+       "raw": 2.9501,
+       "shrunk": 2.9157,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.0268,
+       "raw": 1.5821,
+       "shrunk": 1.5835,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 37,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-18T12:00:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "high defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "65": {
+     "provider_team_id": 65,
+     "team_name": "Nottingham Forest",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.9046,
+       "raw": 44.9972,
+       "shrunk": 46.9524,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.8729,
+       "raw": 0.6324,
+       "shrunk": 0.648,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.7145,
+       "raw": 0.1014,
+       "shrunk": 0.1051,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -1.079,
+       "raw": 0.8766,
+       "shrunk": 1.1588,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 36,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.4823,
+       "raw": 3.0709,
+       "shrunk": 2.9894,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.6464,
+       "raw": 1.7561,
+       "shrunk": 1.6883,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 36,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-17T06:00:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "cedes the ball, shoots from distance, deep defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "66": {
+     "provider_team_id": 66,
+     "team_name": "Aston Villa",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 0.6175,
+       "raw": 53.4058,
+       "shrunk": 52.074,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -1.0352,
+       "raw": 0.6249,
+       "shrunk": 0.6434,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.5355,
+       "raw": 0.1037,
+       "shrunk": 0.1066,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 2.1074,
+       "raw": 2.9331,
+       "shrunk": 2.3996,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 37,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.6514,
+       "raw": 3.144,
+       "shrunk": 3.0338,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -1.8072,
+       "raw": 1.1234,
+       "shrunk": 1.3065,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 37,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-16T04:30:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "shoots from distance, high defensive line, keeps the ball ahead",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "746": {
+     "provider_team_id": 746,
+     "team_name": "Sunderland",
+     "competition_key": "api-football:39:2025",
+     "source": "api-football",
+     "league_id": 39,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.6952,
+       "raw": 46.1513,
+       "shrunk": 47.6569,
+       "league_mean": 50.0,
+       "league_sd": 3.3649,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.5185,
+       "raw": 0.6965,
+       "shrunk": 0.687,
+       "league_mean": 0.6722,
+       "league_sd": 0.028,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.9446,
+       "raw": 0.0983,
+       "shrunk": 0.1033,
+       "league_mean": 0.111,
+       "league_sd": 0.0081,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.7574,
+       "raw": 1.075,
+       "shrunk": 1.284,
+       "league_mean": 1.5858,
+       "league_sd": 0.3894,
+       "n_obs": 35,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.4478,
+       "raw": 3.0561,
+       "shrunk": 2.9803,
+       "league_mean": 2.8622,
+       "league_sd": 0.263,
+       "n_obs": 38,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.1952,
+       "raw": 1.5376,
+       "shrunk": 1.5573,
+       "league_mean": 1.5858,
+       "league_sd": 0.1556,
+       "n_obs": 35,
+       "competition_key": "api-football:39:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-16T07:00:00-07:00",
+     "window_end": "2026-05-24T08:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "many, poor chances",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    }
+   }
+  },
+  {
+   "slug": "la-liga-2026",
+   "label": "La Liga",
+   "measured": true,
+   "scope": "api-football:140:2025",
+   "n_team_matches": 760,
+   "n_teams": 20,
+   "axes_available": [
+    "ball_dominance",
+    "chance_quality",
+    "defensive_line_height",
+    "defensive_load",
+    "shot_location",
+    "verticality"
+   ],
+   "axes_not_in_source": [],
+   "league_moments": {
+    "ball_dominance": {
+     "mean": 50.00000000000006,
+     "sd": 3.8767283015339555
+    },
+    "shot_location": {
+     "mean": 0.6493739438302175,
+     "sd": 0.028550753931635257
+    },
+    "chance_quality": {
+     "mean": 0.10726369813992308,
+     "sd": 0.008838160978897145
+    },
+    "defensive_line_height": {
+     "mean": 1.981097267866942,
+     "sd": 0.4841589816211384
+    },
+    "defensive_load": {
+     "mean": 3.00621454875941,
+     "sd": 0.24846449923054872
+    },
+    "verticality": {
+     "mean": 1.981097267866942,
+     "sd": 0.23758509889430338
+    }
+   },
+   "separation": {
+    "competition_key": "api-football:140:2025",
+    "n_team_matches": 760,
+    "axes": {
+     "ball_dominance": {
+      "axis": "ball_dominance",
+      "human": "ball dominance",
+      "candidate": false,
+      "n_teams": 20,
+      "raw_min": 40.0599,
+      "raw_max": 68.8507,
+      "raw_spread": 28.7908,
+      "raw_sd": 6.235,
+      "shrunk_sd": 3.8767,
+      "min_team": "Getafe",
+      "max_team": "Barcelona",
+      "separates": true,
+      "refused_reason": null
+     },
+     "shot_location": {
+      "axis": "shot_location",
+      "human": "shot location",
+      "candidate": false,
+      "n_teams": 20,
+      "raw_min": 0.5478,
+      "raw_max": 0.7114,
+      "raw_spread": 0.1636,
+      "raw_sd": 0.0458,
+      "shrunk_sd": 0.0286,
+      "min_team": "Rayo Vallecano",
+      "max_team": "Villarreal",
+      "separates": true,
+      "refused_reason": null
+     },
+     "chance_quality": {
+      "axis": "chance_quality",
+      "human": "chance quality",
+      "candidate": false,
+      "n_teams": 20,
+      "raw_min": 0.0847,
+      "raw_max": 0.1407,
+      "raw_spread": 0.056,
+      "raw_sd": 0.0142,
+      "shrunk_sd": 0.0088,
+      "min_team": "Sevilla",
+      "max_team": "Celta Vigo",
+      "separates": true,
+      "refused_reason": null
+     },
+     "defensive_line_height": {
+      "axis": "defensive_line_height",
+      "human": "defensive line height",
+      "candidate": false,
+      "n_teams": 20,
+      "raw_min": 0.7581,
+      "raw_max": 3.7944,
+      "raw_spread": 3.0362,
+      "raw_sd": 0.7856,
+      "shrunk_sd": 0.4842,
+      "min_team": "Sevilla",
+      "max_team": "Barcelona",
+      "separates": true,
+      "refused_reason": null
+     },
+     "defensive_load": {
+      "axis": "defensive_load",
+      "human": "defensive load",
+      "candidate": false,
+      "n_teams": 20,
+      "raw_min": 2.3153,
+      "raw_max": 3.8074,
+      "raw_spread": 1.492,
+      "raw_sd": 0.4019,
+      "shrunk_sd": 0.2485,
+      "min_team": "Sevilla",
+      "max_team": "Espanyol",
+      "separates": true,
+      "refused_reason": null
+     },
+     "verticality": {
+      "axis": "verticality",
+      "human": "verticality",
+      "candidate": true,
+      "n_teams": 20,
+      "raw_min": 1.2845,
+      "raw_max": 2.5893,
+      "raw_spread": 1.3049,
+      "raw_sd": 0.3873,
+      "shrunk_sd": 0.2376,
+      "min_team": "Levante",
+      "max_team": "Sevilla",
+      "separates": true,
+      "refused_reason": null
+     }
+    }
+   },
+   "correlation": {
+    "competition_key": "api-football:140:2025",
+    "threshold_abs_r": 0.8,
+    "axes": [
+     "ball_dominance",
+     "shot_location",
+     "chance_quality",
+     "defensive_line_height",
+     "defensive_load",
+     "verticality"
+    ],
+    "pairs": [
+     {
+      "a": "ball_dominance",
+      "b": "shot_location",
+      "n_teams": 20,
+      "r": 0.1647
+     },
+     {
+      "a": "ball_dominance",
+      "b": "chance_quality",
+      "n_teams": 20,
+      "r": 0.3734
+     },
+     {
+      "a": "ball_dominance",
+      "b": "defensive_line_height",
+      "n_teams": 20,
+      "r": 0.1452
+     },
+     {
+      "a": "ball_dominance",
+      "b": "defensive_load",
+      "n_teams": 20,
+      "r": -0.3866
+     },
+     {
+      "a": "ball_dominance",
+      "b": "verticality",
+      "n_teams": 20,
+      "r": 0.2009
+     },
+     {
+      "a": "shot_location",
+      "b": "chance_quality",
+      "n_teams": 20,
+      "r": 0.3982
+     },
+     {
+      "a": "shot_location",
+      "b": "defensive_line_height",
+      "n_teams": 20,
+      "r": 0.2321
+     },
+     {
+      "a": "shot_location",
+      "b": "defensive_load",
+      "n_teams": 20,
+      "r": -0.3225
+     },
+     {
+      "a": "shot_location",
+      "b": "verticality",
+      "n_teams": 20,
+      "r": -0.3733
+     },
+     {
+      "a": "chance_quality",
+      "b": "defensive_line_height",
+      "n_teams": 20,
+      "r": 0.1509
+     },
+     {
+      "a": "chance_quality",
+      "b": "defensive_load",
+      "n_teams": 20,
+      "r": -0.1586
+     },
+     {
+      "a": "chance_quality",
+      "b": "verticality",
+      "n_teams": 20,
+      "r": 0.0337
+     },
+     {
+      "a": "defensive_line_height",
+      "b": "defensive_load",
+      "n_teams": 20,
+      "r": -0.0144
+     },
+     {
+      "a": "defensive_line_height",
+      "b": "verticality",
+      "n_teams": 20,
+      "r": -0.2755
+     },
+     {
+      "a": "defensive_load",
+      "b": "verticality",
+      "n_teams": 20,
+      "r": -0.1732
+     }
+    ],
+    "flagged": [],
+    "note": "r is computed on teams' raw axis values, pairwise-complete; n_teams is the denominator behind each coefficient. A flag is a finding to report, never a licence to merge two axes."
+   },
+   "vectors": {
+    "529": {
+     "provider_team_id": 529,
+     "team_name": "Barcelona",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 3.0181,
+       "raw": 68.8507,
+       "shrunk": 61.7063,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.8264,
+       "raw": 0.6886,
+       "shrunk": 0.6737,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 1.3809,
+       "raw": 0.1268,
+       "shrunk": 0.1194,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 2.3324,
+       "raw": 3.7944,
+       "shrunk": 3.1071,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -1.4185,
+       "raw": 2.4398,
+       "shrunk": 2.6544,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.5588,
+       "raw": 2.194,
+       "shrunk": 2.1133,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-16T10:30:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "dominates the ball, works the ball into the box, few, good chances",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "530": {
+     "provider_team_id": 530,
+     "team_name": "Atletico Madrid",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 0.3155,
+       "raw": 51.9794,
+       "shrunk": 51.2288,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 1.0289,
+       "raw": 0.6979,
+       "shrunk": 0.6795,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.7969,
+       "raw": 0.1185,
+       "shrunk": 0.1142,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.248,
+       "raw": 1.7796,
+       "shrunk": 1.8578,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 36,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.0642,
+       "raw": 2.9816,
+       "shrunk": 2.991,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.3914,
+       "raw": 2.1322,
+       "shrunk": 2.0736,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 36,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-17T12:30:00-07:00",
+     "window_end": "2026-05-24T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "works the ball into the box",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "531": {
+     "provider_team_id": 531,
+     "team_name": "Athletic Club",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.3711,
+       "raw": 47.692,
+       "shrunk": 48.5672,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.9292,
+       "raw": 0.6933,
+       "shrunk": 0.6767,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.9872,
+       "raw": 0.0931,
+       "shrunk": 0.0985,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 1.7474,
+       "raw": 3.3643,
+       "shrunk": 2.8239,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.7632,
+       "raw": 2.7019,
+       "shrunk": 2.8173,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -1.1799,
+       "raw": 1.5201,
+       "shrunk": 1.7002,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-17T10:30:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "works the ball into the box, many, poor chances, high defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "532": {
+     "provider_team_id": 532,
+     "team_name": "Valencia",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.5717,
+       "raw": 46.4481,
+       "shrunk": 47.7897,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.0292,
+       "raw": 0.6519,
+       "shrunk": 0.651,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.342,
+       "raw": 0.112,
+       "shrunk": 0.1102,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 0.9163,
+       "raw": 2.6954,
+       "shrunk": 2.4215,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.4875,
+       "raw": 2.8103,
+       "shrunk": 2.8858,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.0596,
+       "raw": 1.9573,
+       "shrunk": 1.9664,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-16T12:30:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "high defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "533": {
+     "provider_team_id": 533,
+     "team_name": "Villarreal",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.8002,
+       "raw": 45.0471,
+       "shrunk": 46.9039,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 1.3312,
+       "raw": 0.7114,
+       "shrunk": 0.6881,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 1.6474,
+       "raw": 0.1305,
+       "shrunk": 0.1218,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.4695,
+       "raw": 1.603,
+       "shrunk": 1.7506,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 34,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.1277,
+       "raw": 2.9565,
+       "shrunk": 2.9752,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -1.0574,
+       "raw": 1.5682,
+       "shrunk": 1.7293,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 34,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-15T12:30:00-07:00",
+     "window_end": "2026-05-24T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "cedes the ball, works the ball into the box, few, good chances",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "536": {
+     "provider_team_id": 536,
+     "team_name": "Sevilla",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.235,
+       "raw": 48.5468,
+       "shrunk": 49.095,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -1.4463,
+       "raw": 0.5843,
+       "shrunk": 0.6088,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -1.5835,
+       "raw": 0.0847,
+       "shrunk": 0.0932,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -1.5589,
+       "raw": 0.7581,
+       "shrunk": 1.2231,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -1.7345,
+       "raw": 2.3153,
+       "shrunk": 2.5759,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 1.5891,
+       "raw": 2.5893,
+       "shrunk": 2.3581,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-17T10:30:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "shoots from distance, many, poor chances, deep defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "538": {
+     "provider_team_id": 538,
+     "team_name": "Celta Vigo",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.008,
+       "raw": 49.9596,
+       "shrunk": 49.9749,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.5189,
+       "raw": 0.6744,
+       "shrunk": 0.665,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 2.3587,
+       "raw": 0.1407,
+       "shrunk": 0.1281,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.052,
+       "raw": 1.9345,
+       "shrunk": 1.9527,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 35,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.0517,
+       "raw": 2.9867,
+       "shrunk": 2.9941,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.5922,
+       "raw": 2.211,
+       "shrunk": 2.1212,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 35,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-17T08:00:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "few, good chances",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "539": {
+     "provider_team_id": 539,
+     "team_name": "Levante",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.9887,
+       "raw": 43.8755,
+       "shrunk": 46.1728,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.6943,
+       "raw": 0.6189,
+       "shrunk": 0.6303,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.0513,
+       "raw": 0.1064,
+       "shrunk": 0.1068,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 0.1111,
+       "raw": 2.0624,
+       "shrunk": 2.0317,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.7387,
+       "raw": 3.301,
+       "shrunk": 3.1904,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -1.8213,
+       "raw": 1.2845,
+       "shrunk": 1.5478,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-16T12:30:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "cedes the ball, keeps the ball ahead",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "540": {
+     "provider_team_id": 540,
+     "team_name": "Espanyol",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -1.1704,
+       "raw": 42.7205,
+       "shrunk": 45.4684,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.6671,
+       "raw": 0.62,
+       "shrunk": 0.6311,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.8687,
+       "raw": 0.0948,
+       "shrunk": 0.0995,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.1872,
+       "raw": 1.8282,
+       "shrunk": 1.8873,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 36,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 2.0044,
+       "raw": 3.8074,
+       "shrunk": 3.5049,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.5728,
+       "raw": 2.202,
+       "shrunk": 2.1166,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 36,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-17T12:30:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "cedes the ball, many, poor chances, keeper under siege",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "541": {
+     "provider_team_id": 541,
+     "team_name": "Real Madrid",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 1.5208,
+       "raw": 59.5046,
+       "shrunk": 55.9016,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.0687,
+       "raw": 0.6538,
+       "shrunk": 0.6521,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.3601,
+       "raw": 0.1123,
+       "shrunk": 0.1104,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -1.1522,
+       "raw": 1.0626,
+       "shrunk": 1.42,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 35,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -1.4773,
+       "raw": 2.4162,
+       "shrunk": 2.6398,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 1.4345,
+       "raw": 2.5381,
+       "shrunk": 2.3214,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 35,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-19T12:00:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "dominates the ball, deep defensive line, keeper untroubled",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "542": {
+     "provider_team_id": 542,
+     "team_name": "Alaves",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.6938,
+       "raw": 45.685,
+       "shrunk": 47.3163,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.0194,
+       "raw": 0.6497,
+       "shrunk": 0.6496,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.2649,
+       "raw": 0.1034,
+       "shrunk": 0.1049,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.5217,
+       "raw": 1.5501,
+       "shrunk": 1.7253,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 34,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.8631,
+       "raw": 2.6546,
+       "shrunk": 2.7924,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.2767,
+       "raw": 2.091,
+       "shrunk": 2.0463,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 34,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-16T12:30:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "keeper untroubled",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "543": {
+     "provider_team_id": 543,
+     "team_name": "Real Betis",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 0.0221,
+       "raw": 50.1475,
+       "shrunk": 50.0917,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -1.8196,
+       "raw": 0.5671,
+       "shrunk": 0.5982,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.3495,
+       "raw": 0.1022,
+       "shrunk": 0.1041,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 1.5012,
+       "raw": 3.1446,
+       "shrunk": 2.7047,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 1.643,
+       "raw": 3.6761,
+       "shrunk": 3.4151,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.5744,
+       "raw": 1.7608,
+       "shrunk": 1.8441,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-18T12:00:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "shoots from distance, high defensive line, keeper under siege",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "546": {
+     "provider_team_id": 546,
+     "team_name": "Getafe",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -1.5975,
+       "raw": 40.0599,
+       "shrunk": 43.8127,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.2007,
+       "raw": 0.6414,
+       "shrunk": 0.6444,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -1.1316,
+       "raw": 0.0911,
+       "shrunk": 0.0972,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 1.0504,
+       "raw": 2.7929,
+       "shrunk": 2.4864,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.039,
+       "raw": 3.0229,
+       "shrunk": 3.0166,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.8446,
+       "raw": 2.3026,
+       "shrunk": 2.1812,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-17T08:00:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "cedes the ball, many, poor chances, high defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "547": {
+     "provider_team_id": 547,
+     "team_name": "Girona",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 0.3655,
+       "raw": 52.2861,
+       "shrunk": 51.4226,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.171,
+       "raw": 0.6428,
+       "shrunk": 0.6453,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.0494,
+       "raw": 0.1079,
+       "shrunk": 0.1076,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.7064,
+       "raw": 1.4263,
+       "shrunk": 1.6359,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.4582,
+       "raw": 3.1937,
+       "shrunk": 3.1208,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.4331,
+       "raw": 1.8149,
+       "shrunk": 1.8777,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-15T10:00:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "league-typical",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "548": {
+     "provider_team_id": 548,
+     "team_name": "Real Sociedad",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 0.3087,
+       "raw": 51.9332,
+       "shrunk": 51.2027,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.617,
+       "raw": 0.6223,
+       "shrunk": 0.6325,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 1.1006,
+       "raw": 0.1228,
+       "shrunk": 0.1169,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.187,
+       "raw": 1.8286,
+       "shrunk": 1.8873,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.4659,
+       "raw": 3.1934,
+       "shrunk": 3.1227,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 1.4798,
+       "raw": 2.5519,
+       "shrunk": 2.3321,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-16T12:30:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "few, good chances, plays runners beyond the line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "718": {
+     "provider_team_id": 718,
+     "team_name": "Oviedo",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.3959,
+       "raw": 47.5493,
+       "shrunk": 48.4709,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.0597,
+       "raw": 0.6479,
+       "shrunk": 0.6484,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -1.0035,
+       "raw": 0.093,
+       "shrunk": 0.0983,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.8269,
+       "raw": 1.3051,
+       "shrunk": 1.5775,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 35,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 1.6062,
+       "raw": 3.6615,
+       "shrunk": 3.406,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.5333,
+       "raw": 2.1924,
+       "shrunk": 2.1073,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 35,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-15T12:30:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "many, poor chances, deep defensive line, keeper under siege",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "727": {
+     "provider_team_id": 727,
+     "team_name": "Osasuna",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.2651,
+       "raw": 48.3565,
+       "shrunk": 48.978,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 1.1879,
+       "raw": 0.7051,
+       "shrunk": 0.6841,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.6083,
+       "raw": 0.0985,
+       "shrunk": 0.1018,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.2119,
+       "raw": 1.8054,
+       "shrunk": 1.8753,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 34,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.0832,
+       "raw": 3.041,
+       "shrunk": 3.0276,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -1.0762,
+       "raw": 1.5556,
+       "shrunk": 1.7249,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 34,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-19T12:00:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "works the ball into the box, keeps the ball ahead",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "728": {
+     "provider_team_id": 728,
+     "team_name": "Rayo Vallecano",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 0.4746,
+       "raw": 52.9569,
+       "shrunk": 51.8458,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -2.2467,
+       "raw": 0.5478,
+       "shrunk": 0.586,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.7056,
+       "raw": 0.0972,
+       "shrunk": 0.101,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -1.2859,
+       "raw": 0.9626,
+       "shrunk": 1.3553,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.4949,
+       "raw": 3.2043,
+       "shrunk": 3.1299,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.4476,
+       "raw": 2.1533,
+       "shrunk": 2.0869,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 37,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-15T10:00:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "shoots from distance, deep defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "797": {
+     "provider_team_id": 797,
+     "team_name": "Elche",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 1.1197,
+       "raw": 56.9906,
+       "shrunk": 54.3466,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 1.1869,
+       "raw": 0.7051,
+       "shrunk": 0.684,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.3336,
+       "raw": 0.1024,
+       "shrunk": 0.1043,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.1256,
+       "raw": 1.8761,
+       "shrunk": 1.9171,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 36,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.2449,
+       "raw": 3.1052,
+       "shrunk": 3.0677,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -1.0049,
+       "raw": 1.5885,
+       "shrunk": 1.7418,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 36,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-18T12:00:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "dominates the ball, works the ball into the box, keeps the ball ahead",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "798": {
+     "provider_team_id": 798,
+     "team_name": "Mallorca",
+     "competition_key": "api-football:140:2025",
+     "source": "api-football",
+     "league_id": 140,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.0477,
+       "raw": 49.7122,
+       "shrunk": 49.821,
+       "league_mean": 50.0,
+       "league_sd": 3.8767,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.8347,
+       "raw": 0.6889,
+       "shrunk": 0.674,
+       "league_mean": 0.6494,
+       "league_sd": 0.0286,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.1483,
+       "raw": 0.1051,
+       "shrunk": 0.1059,
+       "league_mean": 0.1073,
+       "league_sd": 0.0088,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.1255,
+       "raw": 1.8753,
+       "shrunk": 1.9171,
+       "league_mean": 1.9811,
+       "league_sd": 0.4842,
+       "n_obs": 35,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.7908,
+       "raw": 2.6914,
+       "shrunk": 2.8104,
+       "league_mean": 3.0062,
+       "league_sd": 0.2485,
+       "n_obs": 38,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -1.5138,
+       "raw": 1.3855,
+       "shrunk": 1.6209,
+       "league_mean": 1.9811,
+       "league_sd": 0.2376,
+       "n_obs": 35,
+       "competition_key": "api-football:140:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-08-16T10:30:00-07:00",
+     "window_end": "2026-05-23T12:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "works the ball into the box, keeps the ball ahead",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    }
+   }
+  },
+  {
+   "slug": "liga-mx-2026",
+   "label": "Liga MX",
+   "measured": true,
+   "scope": "api-football:262:2025",
+   "n_team_matches": 674,
+   "n_teams": 18,
+   "axes_available": [
+    "ball_dominance",
+    "chance_quality",
+    "defensive_line_height",
+    "defensive_load",
+    "shot_location",
+    "verticality"
+   ],
+   "axes_not_in_source": [],
+   "league_moments": {
+    "ball_dominance": {
+     "mean": 50.00000000000001,
+     "sd": 3.3490320097359194
+    },
+    "shot_location": {
+     "mean": 0.5702169581458256,
+     "sd": 0.023378822175534983
+    },
+    "chance_quality": {
+     "mean": 0.09479891927263755,
+     "sd": 0.00819641529105874
+    },
+    "defensive_line_height": {
+     "mean": 1.6087468378963008,
+     "sd": 0.23167995514968628
+    },
+    "defensive_load": {
+     "mean": 3.0930630741479495,
+     "sd": 0.3277233291196767
+    },
+    "verticality": {
+     "mean": 1.6087468378963008,
+     "sd": 0.21997631075047844
+    }
+   },
+   "separation": {
+    "competition_key": "api-football:262:2025",
+    "n_team_matches": 674,
+    "axes": {
+     "ball_dominance": {
+      "axis": "ball_dominance",
+      "human": "ball dominance",
+      "candidate": false,
+      "n_teams": 18,
+      "raw_min": 36.4239,
+      "raw_max": 58.5922,
+      "raw_spread": 22.1682,
+      "raw_sd": 5.831,
+      "shrunk_sd": 3.349,
+      "min_team": "Club Queretaro",
+      "max_team": "Toluca",
+      "separates": true,
+      "refused_reason": null
+     },
+     "shot_location": {
+      "axis": "shot_location",
+      "human": "shot location",
+      "candidate": false,
+      "n_teams": 18,
+      "raw_min": 0.5272,
+      "raw_max": 0.6781,
+      "raw_spread": 0.1509,
+      "raw_sd": 0.0409,
+      "shrunk_sd": 0.0234,
+      "min_team": "Toluca",
+      "max_team": "Atletico San Luis",
+      "separates": true,
+      "refused_reason": null
+     },
+     "chance_quality": {
+      "axis": "chance_quality",
+      "human": "chance quality",
+      "candidate": false,
+      "n_teams": 18,
+      "raw_min": 0.0687,
+      "raw_max": 0.1265,
+      "raw_spread": 0.0578,
+      "raw_sd": 0.0161,
+      "shrunk_sd": 0.0082,
+      "min_team": "Puebla",
+      "max_team": "Santos Laguna",
+      "separates": true,
+      "refused_reason": null
+     },
+     "defensive_line_height": {
+      "axis": "defensive_line_height",
+      "human": "defensive line height",
+      "candidate": false,
+      "n_teams": 18,
+      "raw_min": 0.7488,
+      "raw_max": 2.4033,
+      "raw_spread": 1.6545,
+      "raw_sd": 0.4143,
+      "shrunk_sd": 0.2317,
+      "min_team": "Atlas",
+      "max_team": "Monterrey",
+      "separates": true,
+      "refused_reason": null
+     },
+     "defensive_load": {
+      "axis": "defensive_load",
+      "human": "defensive load",
+      "candidate": false,
+      "n_teams": 18,
+      "raw_min": 2.2139,
+      "raw_max": 4.4785,
+      "raw_spread": 2.2647,
+      "raw_sd": 0.5625,
+      "shrunk_sd": 0.3277,
+      "min_team": "Club America",
+      "max_team": "Mazatlán",
+      "separates": true,
+      "refused_reason": null
+     },
+     "verticality": {
+      "axis": "verticality",
+      "human": "verticality",
+      "candidate": true,
+      "n_teams": 18,
+      "raw_min": 1.0202,
+      "raw_max": 2.2986,
+      "raw_spread": 1.2784,
+      "raw_sd": 0.3887,
+      "shrunk_sd": 0.22,
+      "min_team": "Puebla",
+      "max_team": "Club Queretaro",
+      "separates": true,
+      "refused_reason": null
+     }
+    }
+   },
+   "correlation": {
+    "competition_key": "api-football:262:2025",
+    "threshold_abs_r": 0.8,
+    "axes": [
+     "ball_dominance",
+     "shot_location",
+     "chance_quality",
+     "defensive_line_height",
+     "defensive_load",
+     "verticality"
+    ],
+    "pairs": [
+     {
+      "a": "ball_dominance",
+      "b": "shot_location",
+      "n_teams": 18,
+      "r": -0.3226
+     },
+     {
+      "a": "ball_dominance",
+      "b": "chance_quality",
+      "n_teams": 18,
+      "r": -0.3589
+     },
+     {
+      "a": "ball_dominance",
+      "b": "defensive_line_height",
+      "n_teams": 18,
+      "r": -0.0634
+     },
+     {
+      "a": "ball_dominance",
+      "b": "defensive_load",
+      "n_teams": 18,
+      "r": -0.553
+     },
+     {
+      "a": "ball_dominance",
+      "b": "verticality",
+      "n_teams": 18,
+      "r": -0.1364
+     },
+     {
+      "a": "shot_location",
+      "b": "chance_quality",
+      "n_teams": 18,
+      "r": 0.5884
+     },
+     {
+      "a": "shot_location",
+      "b": "defensive_line_height",
+      "n_teams": 18,
+      "r": 0.4037
+     },
+     {
+      "a": "shot_location",
+      "b": "defensive_load",
+      "n_teams": 18,
+      "r": 0.5284
+     },
+     {
+      "a": "shot_location",
+      "b": "verticality",
+      "n_teams": 18,
+      "r": -0.2019
+     },
+     {
+      "a": "chance_quality",
+      "b": "defensive_line_height",
+      "n_teams": 18,
+      "r": 0.2699
+     },
+     {
+      "a": "chance_quality",
+      "b": "defensive_load",
+      "n_teams": 18,
+      "r": 0.505
+     },
+     {
+      "a": "chance_quality",
+      "b": "verticality",
+      "n_teams": 18,
+      "r": 0.1879
+     },
+     {
+      "a": "defensive_line_height",
+      "b": "defensive_load",
+      "n_teams": 18,
+      "r": 0.3338
+     },
+     {
+      "a": "defensive_line_height",
+      "b": "verticality",
+      "n_teams": 18,
+      "r": -0.4105
+     },
+     {
+      "a": "defensive_load",
+      "b": "verticality",
+      "n_teams": 18,
+      "r": -0.0672
+     }
+    ],
+    "flagged": [],
+    "note": "r is computed on teams' raw axis values, pairwise-complete; n_teams is the denominator behind each coefficient. A flag is a finding to report, never a licence to merge two axes."
+   },
+   "vectors": {
+    "2278": {
+     "provider_team_id": 2278,
+     "team_name": "Guadalajara Chivas",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 1.5855,
+       "raw": 58.3613,
+       "shrunk": 55.1756,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 40,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.0728,
+       "raw": 0.5715,
+       "shrunk": 0.571,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 40,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.1651,
+       "raw": 0.0933,
+       "shrunk": 0.094,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 25,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.7079,
+       "raw": 1.3473,
+       "shrunk": 1.4484,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 38,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.8424,
+       "raw": 2.6667,
+       "shrunk": 2.8301,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 39,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 1.3254,
+       "raw": 2.0753,
+       "shrunk": 1.8949,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 38,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 40,
+     "window_start": "2025-07-19T18:00:00-07:00",
+     "window_end": "2026-05-16T18:07:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "dominates the ball, keeper untroubled, plays runners beyond the line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "2279": {
+     "provider_team_id": 2279,
+     "team_name": "Tigres UANL",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 0.7713,
+       "raw": 54.0359,
+       "shrunk": 52.4489,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 42,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 1.3659,
+       "raw": 0.6269,
+       "shrunk": 0.6046,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 42,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.1386,
+       "raw": 0.0937,
+       "shrunk": 0.0942,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 28,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 0.8931,
+       "raw": 1.9598,
+       "shrunk": 1.8193,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 40,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.5152,
+       "raw": 2.8364,
+       "shrunk": 2.9373,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 42,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.2959,
+       "raw": 1.4912,
+       "shrunk": 1.5383,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 40,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 42,
+     "window_start": "2025-07-19T18:00:00-07:00",
+     "window_end": "2026-05-09T18:07:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "works the ball into the box, high defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "2280": {
+     "provider_team_id": 2280,
+     "team_name": "Club Tijuana",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.5779,
+       "raw": 46.3055,
+       "shrunk": 47.9304,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 37,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.8771,
+       "raw": 0.538,
+       "shrunk": 0.5522,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 37,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.5064,
+       "raw": 0.1042,
+       "shrunk": 0.0995,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 23,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.8321,
+       "raw": 1.2638,
+       "shrunk": 1.4196,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.5618,
+       "raw": 3.4451,
+       "shrunk": 3.2902,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 37,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 1.162,
+       "raw": 2.065,
+       "shrunk": 1.859,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 37,
+     "window_start": "2025-07-11T20:05:00-07:00",
+     "window_end": "2026-04-25T18:07:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "shoots from distance, deep defensive line, plays runners beyond the line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "2281": {
+     "provider_team_id": 2281,
+     "team_name": "Toluca",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 1.595,
+       "raw": 58.5922,
+       "shrunk": 55.2076,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 42,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -1.2203,
+       "raw": 0.5272,
+       "shrunk": 0.5442,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 42,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.5494,
+       "raw": 0.0876,
+       "shrunk": 0.0908,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 28,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.2231,
+       "raw": 1.5286,
+       "shrunk": 1.5607,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 40,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.553,
+       "raw": 2.8156,
+       "shrunk": 2.9249,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 42,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.6806,
+       "raw": 1.8495,
+       "shrunk": 1.7531,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 40,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 42,
+     "window_start": "2025-07-12T18:00:00-07:00",
+     "window_end": "2026-05-10T16:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "dominates the ball, shoots from distance",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "2282": {
+     "provider_team_id": 2282,
+     "team_name": "Monterrey",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 0.9694,
+       "raw": 55.4966,
+       "shrunk": 53.1124,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 38,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.9526,
+       "raw": 0.5353,
+       "shrunk": 0.5504,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 38,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -1.218,
+       "raw": 0.0758,
+       "shrunk": 0.0853,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 23,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 1.8934,
+       "raw": 2.4033,
+       "shrunk": 2.0511,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 37,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.5749,
+       "raw": 2.7834,
+       "shrunk": 2.9177,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 38,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.9444,
+       "raw": 1.2259,
+       "shrunk": 1.3956,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 37,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-07-13T16:00:00-07:00",
+     "window_end": "2026-04-26T16:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "dominates the ball, shoots from distance, many, poor chances",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "2283": {
+     "provider_team_id": 2283,
+     "team_name": "Atlas",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.5317,
+       "raw": 46.6915,
+       "shrunk": 48.085,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 36,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.2853,
+       "raw": 0.586,
+       "shrunk": 0.5794,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 36,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -1.128,
+       "raw": 0.0783,
+       "shrunk": 0.0861,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 23,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -2.1511,
+       "raw": 0.7488,
+       "shrunk": 1.114,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 35,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.1607,
+       "raw": 3.2066,
+       "shrunk": 3.1588,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 36,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.611,
+       "raw": 1.833,
+       "shrunk": 1.7378,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 35,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 36,
+     "window_start": "2025-07-11T18:00:00-07:00",
+     "window_end": "2026-05-09T20:15:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "many, poor chances, deep defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "2285": {
+     "provider_team_id": 2285,
+     "team_name": "Santos Laguna",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.6632,
+       "raw": 45.6849,
+       "shrunk": 47.6448,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 1.3553,
+       "raw": 0.6328,
+       "shrunk": 0.6044,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 1.7589,
+       "raw": 0.1265,
+       "shrunk": 0.1097,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 19,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 1.4432,
+       "raw": 2.2543,
+       "shrunk": 1.9467,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 32,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 1.3582,
+       "raw": 3.9326,
+       "shrunk": 3.5513,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.6987,
+       "raw": 1.892,
+       "shrunk": 1.7571,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 32,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 34,
+     "window_start": "2025-07-12T18:00:00-07:00",
+     "window_end": "2026-04-26T16:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "works the ball into the box, few, good chances, high defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "2286": {
+     "provider_team_id": 2286,
+     "team_name": "U.N.A.M. - Pumas",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.0608,
+       "raw": 49.473,
+       "shrunk": 49.6622,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 41,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.8216,
+       "raw": 0.6041,
+       "shrunk": 0.5919,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 41,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 1.9763,
+       "raw": 0.1224,
+       "shrunk": 0.1115,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 28,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 0.3253,
+       "raw": 1.7333,
+       "shrunk": 1.6877,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 40,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 1.4478,
+       "raw": 3.8538,
+       "shrunk": 3.5806,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 41,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.899,
+       "raw": 1.2886,
+       "shrunk": 1.4056,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 40,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 41,
+     "window_start": "2025-07-12T18:00:00-07:00",
+     "window_end": "2026-05-24T18:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "works the ball into the box, few, good chances, keeper under siege",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "2287": {
+     "provider_team_id": 2287,
+     "team_name": "Club America",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 1.2947,
+       "raw": 57.1474,
+       "shrunk": 54.2018,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 38,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.9415,
+       "raw": 0.537,
+       "shrunk": 0.5507,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 38,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.0324,
+       "raw": 0.0962,
+       "shrunk": 0.0956,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 25,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -1.2206,
+       "raw": 1.1259,
+       "shrunk": 1.3296,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 36,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -1.6104,
+       "raw": 2.2139,
+       "shrunk": 2.5784,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 37,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.9236,
+       "raw": 1.248,
+       "shrunk": 1.4002,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 36,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-07-11T20:00:00-07:00",
+     "window_end": "2026-05-10T18:15:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "dominates the ball, shoots from distance, deep defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "2288": {
+     "provider_team_id": 2288,
+     "team_name": "Necaxa",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.1355,
+       "raw": 48.9213,
+       "shrunk": 49.4122,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.1712,
+       "raw": 0.5674,
+       "shrunk": 0.5687,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.8008,
+       "raw": 0.0821,
+       "shrunk": 0.0887,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 20,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.109,
+       "raw": 1.5672,
+       "shrunk": 1.5871,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 30,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.0876,
+       "raw": 3.1698,
+       "shrunk": 3.1349,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -1.0468,
+       "raw": 1.1558,
+       "shrunk": 1.3731,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 30,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 34,
+     "window_start": "2025-07-12T18:00:00-07:00",
+     "window_end": "2026-04-26T18:05:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "many, poor chances, keeps the ball ahead",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "2289": {
+     "provider_team_id": 2289,
+     "team_name": "Leon",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 0.7281,
+       "raw": 54.2167,
+       "shrunk": 52.3044,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.7445,
+       "raw": 0.5429,
+       "shrunk": 0.5553,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.7718,
+       "raw": 0.0824,
+       "shrunk": 0.089,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 19,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.8861,
+       "raw": 1.2284,
+       "shrunk": 1.4071,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 31,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.4257,
+       "raw": 3.3723,
+       "shrunk": 3.2457,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.0348,
+       "raw": 1.5842,
+       "shrunk": 1.5957,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 31,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 34,
+     "window_start": "2025-07-13T18:00:00-07:00",
+     "window_end": "2026-04-25T18:05:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "deep defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "2290": {
+     "provider_team_id": 2290,
+     "team_name": "Club Queretaro",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -2.1874,
+       "raw": 36.4239,
+       "shrunk": 42.5402,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.1332,
+       "raw": 0.5691,
+       "shrunk": 0.5696,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.6814,
+       "raw": 0.1075,
+       "shrunk": 0.1009,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 20,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.8787,
+       "raw": 1.2404,
+       "shrunk": 1.4088,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 32,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.1335,
+       "raw": 3.0373,
+       "shrunk": 3.0624,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 1.7269,
+       "raw": 2.2986,
+       "shrunk": 1.9832,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 32,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 34,
+     "window_start": "2025-07-11T20:05:00-07:00",
+     "window_end": "2026-04-24T20:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "cedes the ball, deep defensive line, plays runners beyond the line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "2291": {
+     "provider_team_id": 2291,
+     "team_name": "Puebla",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.5471,
+       "raw": 46.3886,
+       "shrunk": 48.0336,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.3947,
+       "raw": 0.5578,
+       "shrunk": 0.5635,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -1.5456,
+       "raw": 0.0687,
+       "shrunk": 0.0826,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 19,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 0.2828,
+       "raw": 1.7417,
+       "shrunk": 1.6779,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 30,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.1382,
+       "raw": 3.2003,
+       "shrunk": 3.1514,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -1.3668,
+       "raw": 1.0202,
+       "shrunk": 1.3027,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 30,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 34,
+     "window_start": "2025-07-11T18:00:00-07:00",
+     "window_end": "2026-04-24T20:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "many, poor chances, keeps the ball ahead",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "2292": {
+     "provider_team_id": 2292,
+     "team_name": "CF Pachuca",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.7,
+       "raw": 45.9841,
+       "shrunk": 47.5215,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 40,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -1.0719,
+       "raw": 0.5336,
+       "shrunk": 0.5476,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 40,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.7915,
+       "raw": 0.0842,
+       "shrunk": 0.0888,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 25,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 0.3663,
+       "raw": 1.7532,
+       "shrunk": 1.6973,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 38,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.8368,
+       "raw": 2.6699,
+       "shrunk": 2.8319,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 40,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.4789,
+       "raw": 1.4281,
+       "shrunk": 1.498,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 38,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 40,
+     "window_start": "2025-07-13T16:00:00-07:00",
+     "window_end": "2026-05-17T18:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "shoots from distance, keeper untroubled",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "2295": {
+     "provider_team_id": 2295,
+     "team_name": "Cruz Azul",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": 0.5722,
+       "raw": 52.7382,
+       "shrunk": 51.7821,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 44,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": -0.9595,
+       "raw": 0.5396,
+       "shrunk": 0.5503,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 44,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": -0.5762,
+       "raw": 0.0878,
+       "shrunk": 0.0906,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 29,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": -0.542,
+       "raw": 1.4189,
+       "shrunk": 1.4868,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 42,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -1.7055,
+       "raw": 2.2543,
+       "shrunk": 2.5472,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 44,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 1.6643,
+       "raw": 2.1704,
+       "shrunk": 1.9695,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 42,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 44,
+     "window_start": "2025-07-12T20:05:00-07:00",
+     "window_end": "2026-05-24T18:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "shoots from distance, keeper untroubled, plays runners beyond the line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "2298": {
+     "provider_team_id": 2298,
+     "team_name": "FC Juarez",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.2912,
+       "raw": 48.0486,
+       "shrunk": 48.8906,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 38,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.6594,
+       "raw": 0.6017,
+       "shrunk": 0.5881,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 38,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 1.1689,
+       "raw": 0.1146,
+       "shrunk": 0.1049,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 24,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 0.4779,
+       "raw": 1.8116,
+       "shrunk": 1.7231,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 37,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": -0.3361,
+       "raw": 2.9223,
+       "shrunk": 2.996,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 38,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -0.8079,
+       "raw": 1.2839,
+       "shrunk": 1.4256,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 37,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 38,
+     "window_start": "2025-07-11T20:00:00-07:00",
+     "window_end": "2026-04-25T20:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "few, good chances, keeps the ball ahead",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "2314": {
+     "provider_team_id": 2314,
+     "team_name": "Atletico San Luis",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -0.4221,
+       "raw": 47.1623,
+       "shrunk": 48.4522,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 2.4106,
+       "raw": 0.6781,
+       "shrunk": 0.6291,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.7271,
+       "raw": 0.1081,
+       "shrunk": 0.1013,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 21,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 0.8427,
+       "raw": 1.9816,
+       "shrunk": 1.8076,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 32,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 0.6641,
+       "raw": 3.5161,
+       "shrunk": 3.3238,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": -1.1499,
+       "raw": 1.1244,
+       "shrunk": 1.3504,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 32,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 34,
+     "window_start": "2025-07-13T18:00:00-07:00",
+     "window_end": "2026-04-25T20:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "works the ball into the box, high defensive line, keeps the ball ahead",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    },
+    "14002": {
+     "provider_team_id": 14002,
+     "team_name": "Mazatlán",
+     "competition_key": "api-football:262:2025",
+     "source": "api-football",
+     "league_id": 262,
+     "season": 2025,
+     "axes": {
+      "ball_dominance": {
+       "axis": "ball_dominance",
+       "z": -1.3994,
+       "raw": 41.1523,
+       "shrunk": 45.1791,
+       "league_mean": 50.0,
+       "league_sd": 3.349,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "shot_location": {
+       "axis": "shot_location",
+       "z": 0.6412,
+       "raw": 0.6023,
+       "shrunk": 0.5877,
+       "league_mean": 0.5702,
+       "league_sd": 0.0234,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "chance_quality": {
+       "axis": "chance_quality",
+       "z": 0.8337,
+       "raw": 0.1106,
+       "shrunk": 0.1021,
+       "league_mean": 0.0948,
+       "league_sd": 0.0082,
+       "n_obs": 19,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_line_height": {
+       "axis": "defensive_line_height",
+       "z": 1.026,
+       "raw": 2.0577,
+       "shrunk": 1.8501,
+       "league_mean": 1.6087,
+       "league_sd": 0.2317,
+       "n_obs": 32,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "defensive_load": {
+       "axis": "defensive_load",
+       "z": 2.2636,
+       "raw": 4.4785,
+       "shrunk": 3.848,
+       "league_mean": 3.0931,
+       "league_sd": 0.3277,
+       "n_obs": 34,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      },
+      "verticality": {
+       "axis": "verticality",
+       "z": 0.0791,
+       "raw": 1.6311,
+       "shrunk": 1.6208,
+       "league_mean": 1.6087,
+       "league_sd": 0.22,
+       "n_obs": 32,
+       "competition_key": "api-football:262:2025",
+       "comparable_across_competitions": false
+      }
+     },
+     "refused": {},
+     "n_fixtures": 34,
+     "window_start": "2025-07-12T20:05:00-07:00",
+     "window_end": "2026-04-25T16:00:00-07:00",
+     "shrink_games": 6.0,
+     "half_life_days": 90.0,
+     "display_label": "cedes the ball, few, good chances, high defensive line",
+     "label_is_display_only": true,
+     "comparable_across_competitions": false,
+     "attribution": "Playstyle coordinates: each axis is standardised WITHIN this league-season against that league's own distribution, so a value describes a team relative to its own league and nothing else. Two teams' vectors from different leagues are NOT comparable, and no match probability is or can be derived from these numbers."
+    }
+   }
+  }
+ ]
+}

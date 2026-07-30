@@ -31,11 +31,34 @@ for carrying five numbers rather than one. From that 40-fixture EPL look:
   - West Ham at 41% possession has a HIGHER inside-shot share (0.78) than
     Manchester City at 75% (0.75).
 
-Possession says almost nothing about how a team creates. Whether that
-independence survives a full season, in every league, is a MEASUREMENT
-(`correlation_report`) rather than an assumption — and where two axes
-correlate above `COLLINEAR_ABS_R` in a league, that report says so and flags
-that they may be one axis there.
+WHAT THE FULL SEASON THEN SAID (EPL/La Liga 380 fixtures each, Liga MX 337,
+measured 2026-07-29 and archived as `team_style_separation_and_correlation_
+2026-07-29.json`). The pilot figures above are LEFT AS WRITTEN because they
+are what was registered; this paragraph records how they held up, which is a
+different thing from editing them.
+
+  - The GENERAL claim held, and more strongly than the anecdotes did:
+    ball_dominance x shot_location came back r = -0.02 in the EPL over a full
+    season. Possession and how a team creates are very nearly orthogonal
+    there. (+0.16 La Liga, -0.32 Liga MX.)
+  - Anecdote 2 SURVIVED almost unchanged: West Ham 42.4% possession / 0.741
+    inside share vs Manchester City 61.7% / 0.709.
+  - Anecdote 1's MAGNITUDE DID NOT. Over the full season Leeds and Forest are
+    still nearly identical on possession (45.8 vs 45.0) but their chance
+    quality is 0.114 vs 0.101 — a 1.13x gap, not 2.3x. A 40-fixture sample of
+    a 380-fixture season gives each team about four matches, so per-team
+    extremes in the pilot were substantially noise, and EVERY axis's pilot
+    spread was wider than its full-season spread (possession 33.5 -> 20.4,
+    xG/shot 0.096 -> 0.056, GK saves 3.9 -> 1.9). The pilot overstated
+    separation by roughly 1.3x-2x per axis and named a different extreme team
+    on four of the five.
+
+The lesson is kept in the source deliberately: a small sample flatters an
+axis, so `separation_report` reports the n behind every figure and
+`correlation_report` reports the team count behind every coefficient. Where
+two axes correlate above `COLLINEAR_ABS_R` in a league, that report says so
+and flags that they may be one axis there — a flag to report, never a licence
+to merge.
 
 COORDINATES ARE THE REPRESENTATION. LABELS ARE A RENDERING.
 ==========================================================
