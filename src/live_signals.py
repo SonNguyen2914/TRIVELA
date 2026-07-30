@@ -26,6 +26,23 @@ These are deliberate, narrow exceptions to the "live edge is informational
 only" rule — explicit pings Son asked for, never a board-wide TAKE
 resurrection. Model-only rows (Kalshi book closed) can't fire — there is
 nothing to buy or sell.
+
+SCOPE (Jul 28): this module stays on the WC26 archive plane and is NOT
+repointed at MLS. Both scans below compare a LIVE model probability to a
+live price, and `live_model_probability` comes from `live_auto`, which
+re-simulates the remainder of a match in progress. The MLS live plane has
+no in-play model — `src/live/model_mls.py` predicts from pre-match ratings
+only — so there is nothing to put on the model side of `_decide` or
+`_decide_easy`. Substituting the pre-match probability would not be a
+repointing: against a market that already knows the score it manufactures
+enormous fake divergences (a side 2-0 down still priced at its pre-match
+number would read as a screaming BUY), and every one of them would fire.
+
+What IS repointed lives in `src/live/analyser.py`: the position tracker,
+which needs no in-play model for its cash-out side. Giving MLS a real
+in-play model is a modelling change owed an evaluation — and it would
+touch the engine signature, invalidating the shadow approval (AGENTS.md
+§12) — so it is Son's decision, not an agent's.
 """
 from __future__ import annotations
 
