@@ -49,6 +49,69 @@ MLS_RUNS_SPEC = CompetitionRunsSpec(
     market_spec=markets.MLS_SPEC, label="MLS", expected_teams=30)
 
 
+def empty_board_reason(spec: CompetitionRunsSpec | None = None,
+                       horizon_hours: float = 168.0) -> dict:
+    """Why THIS competition's odds board is empty, for any competition.
+
+    `approved_no_runs` is several different situations wearing one label,
+    and telling them apart IS the diagnosis:
+
+      insufficient_team_history  the sweep runs and `_raw` refuses every
+                                 club, because none clears MIN_GAMES.
+                                 Liga MX, live on 2026-07-30: approved,
+                                 mapped, enabled, 18 clubs known, 0 rated,
+                                 max 2 games played — and none of that was
+                                 visible from the board.
+      no_fixtures_in_horizon     nothing to price. EPL, the same day: its
+                                 first fixture is 2026-08-21, 22 days out,
+                                 while the sweep looks 168h ahead.
+      no_completed_fixtures      nothing fitted at all.
+      ok                         history and fixtures both present, so an
+                                 empty board is NOT explained by either
+                                 and deserves a real look.
+
+    Read-only and cheap: one fit over already-ingested rows plus one
+    fixture count. Nothing here writes, prices, or spends provider quota.
+    """
+    spec = spec or MLS_RUNS_SPEC
+    if not plane_ready():
+        return {"state": "dormant"}
+    min_games = getattr(spec.model, "MIN_GAMES", None)
+    out: dict = {"min_games": min_games, "horizon_hours": horizon_hours}
+    s = get_session()
+    try:
+        cutoff = _now() + timedelta(hours=horizon_hours)
+        upcoming = 0
+        for f in (s.query(Fixture)
+                  .filter_by(competition_slug=spec.slug, status="pre").all()):
+            if f.current_kickoff_utc is None:
+                continue
+            ko = _utc(f.current_kickoff_utc)
+            if _now() <= ko <= cutoff:
+                upcoming += 1
+        out["fixtures_in_horizon"] = upcoming
+    finally:
+        s.close()
+
+    model = spec.model.current_model()
+    if model is None:
+        out["state"] = "no_completed_fixtures"
+        out["clubs_rated"] = 0
+        return out
+    games = [r["games"] for r in model["ratings"].values()]
+    rated = [g for g in games if min_games is None or g >= min_games]
+    out.update({"clubs_known": len(games), "clubs_rated": len(rated),
+                "max_games_seen": max(games) if games else 0,
+                "n_fixtures_fitted": model["n_fixtures"]})
+    if not rated:
+        out["state"] = "insufficient_team_history"
+    elif not out["fixtures_in_horizon"]:
+        out["state"] = "no_fixtures_in_horizon"
+    else:
+        out["state"] = "ok"
+    return out
+
+
 def _now():
     return datetime.now(timezone.utc)
 

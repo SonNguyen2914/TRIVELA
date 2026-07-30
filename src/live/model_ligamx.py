@@ -155,33 +155,6 @@ def fit(fixtures, as_of) -> dict | None:
     }
 
 
-def history_census() -> dict:
-    """How many clubs currently clear the MIN_GAMES history floor.
-
-    Exists because "approved, but no runs" does not distinguish two very
-    different states: the sweep has not fired yet, versus the sweep fires
-    and `_raw` refuses EVERY club because none has enough completed
-    matches. Liga MX was in the second state on 2026-07-30 — approved,
-    mapped, enabled, and silently producing nothing, because the Apertura
-    it is named for was two rounds old. A reader could not tell that from
-    the odds board, so the board now says it."""
-    if not plane_ready():
-        return {"state": "dormant"}
-    model = current_model()
-    if model is None:
-        return {"state": "no_completed_fixtures", "min_games": MIN_GAMES,
-                "clubs_rated": 0}
-    games = [r["games"] for r in model["ratings"].values()]
-    rated = [g for g in games if g >= MIN_GAMES]
-    return {
-        "state": "ok" if rated else "insufficient_team_history",
-        "min_games": MIN_GAMES,
-        "clubs_known": len(games),
-        "clubs_rated": len(rated),
-        "max_games_seen": max(games) if games else 0,
-        "n_fixtures_fitted": model["n_fixtures"],
-    }
-
 
 def _raw(team_id: int, model: dict, venue: str) -> dict | None:
     r = model["ratings"].get(team_id)
