@@ -1053,6 +1053,63 @@ class TestBudget:
         assert rep["requests"] == 3
         assert rep["fixtures_read"] == 1
 
+    def test_two_legs_of_one_event_do_not_see_each_others_reading(
+            self, live_session, monkeypatch):
+        """REGRESSION. `remember_reading` used to run inside the candidate
+        loop, so the second leg of an event read the FIRST leg's
+        just-stored reading as its "previous" and produced an xG window
+        delta of 0.0 — a fabricated "nothing happened in this window",
+        from differencing a reading against itself.
+
+        The honest answer on a first sighting is "unavailable", and that
+        is what both legs must report.
+        """
+        _canned(monkeypatch, {
+            "fixtures/statistics": _stats_payload(),
+            "fixtures/events": _events_payload(SUBST),
+            "fixtures": _live_payload(),
+        })
+        legs = ["KXARGPREMDIVGAME-26JUL29CCTUC-CC",
+                "KXARGPREMDIVGAME-26JUL29CCTUC-TUC"]
+        a = _overreaction_finding(market=legs[0])
+        b = _overreaction_finding(market=legs[1])
+        hunter.enrich_overreactions(live_session, [a, b],
+                                    {a["event_ticker"]: legs}, NOW)
+        for f in (a, b):
+            delta = f["legs"]["live_xg_variant"]["xg_window_delta"]
+            assert delta["available"] is False, (
+                "a reading differenced against itself must never be "
+                "reported as a real window delta")
+            assert "first reading" in delta["reason"]
+
+    def test_a_second_cycle_does_see_the_first_cycles_reading(
+            self, live_session, monkeypatch):
+        """The converse control: across two CYCLES the delta must appear,
+        or the fix above would have simply disabled the feature."""
+        # BOTH legs: the join needs two team codes, and one leg alone
+        # correctly refuses for want of them
+        legs = ["KXARGPREMDIVGAME-26JUL29CCTUC-CC",
+                "KXARGPREMDIVGAME-26JUL29CCTUC-TUC"]
+        _canned(monkeypatch, {
+            "fixtures/statistics": _stats_payload(xg_a="0.40", xg_b="0.20"),
+            "fixtures/events": _events_payload(SUBST),
+            "fixtures": _live_payload()})
+        first = _overreaction_finding(market=legs[0])
+        hunter.enrich_overreactions(live_session, [first],
+                                    {first["event_ticker"]: legs}, NOW)
+        _canned(monkeypatch, {
+            "fixtures/statistics": _stats_payload(xg_a="1.28", xg_b="0.53"),
+            "fixtures/events": _events_payload(SUBST),
+            "fixtures": _live_payload()})
+        second = _overreaction_finding(market=legs[0])
+        hunter.enrich_overreactions(live_session, [second],
+                                    {second["event_ticker"]: legs},
+                                    NOW + timedelta(minutes=12))
+        delta = second["legs"]["live_xg_variant"]["xg_window_delta"]
+        assert delta["per_team"], "the second cycle must have a delta"
+        assert {x["team_id"]: x["xg_delta"]
+                for x in delta["per_team"]} == {101: 0.88, 202: 0.33}
+
     def test_a_cached_absence_spends_nothing_and_says_it_is_cached(
             self, live_session, monkeypatch):
         al.record_coverage(

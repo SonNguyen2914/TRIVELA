@@ -981,6 +981,9 @@ def resolve_fixture(series: str, market_tickers: list[str],
     fx = hits[0]
     out["status"] = JOIN_RESOLVED
     out["fixture_id"] = fx["fixture_id"]
+    # carried so the coverage upsert does not have to reach back into the
+    # index and index [0] into a list that may be empty
+    out["league_country"] = fx.get("league_country")
     out["home_name"] = fx["home_name"]
     out["away_name"] = fx["away_name"]
     out["home_id"] = fx["home_id"]

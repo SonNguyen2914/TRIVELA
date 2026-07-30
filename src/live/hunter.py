@@ -949,6 +949,14 @@ def enrich_overreactions(s, findings: list[dict],
     joins: dict[str, dict] = {}
     readings: dict[str, dict] = {}
     states: dict[str, int] = {}
+    # This cycle's readings are stored only AFTER the loop, and the
+    # PREVIOUS one is snapshotted per fixture on first sight. Storing
+    # inside the loop was wrong: two legs of one event are two candidates
+    # on ONE fixture, so the second would read the first's just-stored
+    # reading as its "previous" and compute an xG window delta of zero —
+    # a fabricated "nothing happened in this window", from comparing a
+    # reading with itself.
+    prev_readings: dict[str, dict | None] = {}
     for f in candidates:
         ev = f.get("event_ticker") or ""
         if ev not in joins:
@@ -959,6 +967,8 @@ def enrich_overreactions(s, findings: list[dict],
         reading = None
         if join.get("status") == apifootball_live.JOIN_RESOLVED:
             fid = str(join.get("fixture_id"))
+            if fid not in prev_readings:
+                prev_readings[fid] = apifootball_live.previous_reading(fid)
             if fid in readings:
                 reading = readings[fid]
             elif apifootball_live.coverage_is_fresh_absent(
@@ -980,10 +990,9 @@ def enrich_overreactions(s, findings: list[dict],
                     readings[fid] = reading
                     try:
                         apifootball_live.record_coverage(
-                            s, join.get("league_id"), join.get("league_name"),
-                            index.get("by_league", {}).get(
-                                join.get("league_id"), [{}])[0].get(
-                                    "league_country"),
+                            s, join.get("league_id"),
+                            join.get("league_name"),
+                            join.get("league_country"),
                             reading, join.get("elapsed"), now)
                     except Exception as exc:
                         # coverage bookkeeping must never cost a finding
@@ -1003,7 +1012,7 @@ def enrich_overreactions(s, findings: list[dict],
         f["legs"]["live_xg_variant"] = (
             apifootball_live.live_xg_characterisation(
                 reading, join,
-                apifootball_live.previous_reading(join.get("fixture_id"))))
+                prev_readings.get(str(join.get("fixture_id")))))
         f["legs"]["signal_precedence"] = (
             "PRIMARY = the market-anchored capture_pair arithmetic above, "
             "model-free. SECONDARY = live_xg_variant, a characterisation "
@@ -1014,8 +1023,11 @@ def enrich_overreactions(s, findings: list[dict],
         f["legs"]["conditioning_states_available"] = (
             list(apifootball_live.CONDITIONING_STATES))
         states[cond["state"]] = states.get(cond["state"], 0) + 1
-        if reading is not None:
-            apifootball_live.remember_reading(join.get("fixture_id"), reading)
+
+    # AFTER the loop, so no candidate in this cycle can see another
+    # candidate's reading of the same fixture as its "previous"
+    for fid, reading in readings.items():
+        apifootball_live.remember_reading(fid, reading)
 
     report["conditioning_states"] = states
     report["joins"] = {ev: j.get("status") for ev, j in joins.items()}
