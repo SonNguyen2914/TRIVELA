@@ -58,13 +58,26 @@ def _espn_released(n_home=11, n_away=11):
 
 
 # API-Football's measured friendly shape: a NON-EMPTY array whose side
-# objects carry no formation and no startXI.
+# objects carry no formation and no startXI. Taken from fixture 1567753
+# (Derby v Valencia, FT) and re-probed on 2026-07-30 in the SAME run as a
+# contradicting 12-fixture sample: this shape reproduced exactly while
+# those 12 returned no array at all. The provider is inconsistent PER
+# FIXTURE and BOTH shapes are live, so this constant is a real recorded
+# response rather than a defensive hypothetical.
+# Evidence: research_archive/
+# team_news_friendly_lineup_disagreement_2026-07-30.json
 APIF_EMPTY_CONTAINERS = [
-    {"team": {"id": 1, "name": "Derby"}, "formation": None,
+    {"team": {"id": 69, "name": "Derby"}, "formation": None,
      "startXI": [], "substitutes": []},
-    {"team": {"id": 2, "name": "Valencia"}, "formation": None,
+    {"team": {"id": 532, "name": "Valencia"}, "formation": None,
      "startXI": [], "substitutes": []},
 ]
+
+# The OTHER live shape, from the contradicting sample (Estrela v
+# Portimonense 1604675, Palermo v Iraklis 1583479, Saint Etienne v Lausanne
+# 1583475, and three more — all FT): no array at all. Two different provider
+# shapes that must reach the SAME honest answer.
+APIF_NO_ARRAY: list = []
 
 APIF_INJURIES = [
     {"player": {"id": 501, "name": "Star Striker", "type": "Missing Fixture",
@@ -634,3 +647,64 @@ class TestProviderDuplicationIsVisibleNotAbsorbed:
         assert out["absences"]["stored_records"] == 2     # distinct
         assert "double-count" in out["absences"][
             "_record_count_vs_stored_records"]
+
+
+class TestBothLiveFriendlyShapesReachTheSameAnswer:
+    """API-Football is inconsistent per fixture, and it is SETTLED.
+
+    Two independent samples of completed friendlies disagreed: 4 of 5
+    fixtures returned a non-empty array of empty side objects, while 12
+    different fixtures returned no array at all. Re-probing both samples in
+    one run on one key at one moment reproduced BOTH — all 5 of the first
+    exactly, all 6 resolvable of the second empty. So the provider carries
+    side objects for some friendly fixtures and nothing for others.
+
+    Neither reading was wrong; neither generalised. What matters for this
+    module is that the two shapes cannot be allowed to produce different
+    conclusions, because which one a fixture returns is not predictable.
+
+    Evidence: research_archive/
+    team_news_friendly_lineup_disagreement_2026-07-30.json
+    """
+
+    def test_no_array_and_empty_containers_agree_on_not_released(self):
+        no_array = team_news.apifootball_lineup_states(APIF_NO_ARRAY)
+        containers = team_news.apifootball_lineup_states(
+            APIF_EMPTY_CONTAINERS)
+        for side in ("home", "away"):
+            assert no_array[side]["released"] is False
+            assert containers[side]["released"] is False
+            assert no_array[side]["named"] == 0
+            assert containers[side]["named"] == 0
+
+    def test_the_two_shapes_stay_distinguishable_as_evidence(self):
+        """Same conclusion, DIFFERENT provenance. no_coverage and
+        not_released must not be merged just because neither licenses a
+        starting-XI claim: one says the provider has nothing for this
+        fixture, the other that it has a record with no XI in it. Merging
+        them would have hidden the inconsistency that took two samples and
+        a joint re-probe to establish."""
+        no_array = team_news.apifootball_lineup_states(APIF_NO_ARRAY)
+        containers = team_news.apifootball_lineup_states(
+            APIF_EMPTY_CONTAINERS)
+        assert team_news._lineup_state_word(
+            no_array["home"]["container_present"],
+            no_array["home"]["released"]) == "no_coverage"
+        assert team_news._lineup_state_word(
+            containers["home"]["container_present"],
+            containers["home"]["released"]) == "not_released"
+
+    def test_neither_shape_ever_yields_a_named_player(self, live_session):
+        """Across all 11 fixtures probed in both samples, API-Football
+        returned zero named players. Whichever shape arrives, no absence
+        claim and no XI claim may follow."""
+        for ref, items in (("777300", APIF_NO_ARRAY),
+                           ("777301", APIF_EMPTY_CONTAINERS)):
+            team_news.capture_league_lineup(ref, items=items)
+            out = team_news.fixture_news(ref)
+            prov = out["lineup"]["by_provider"].get("apifootball")
+            if prov:                      # no_array stores no side rows
+                for v in prov["sides"].values():
+                    assert v["released"] is False
+                    assert (v["named_count"] or 0) == 0
+            assert out["absences"]["records"] == []

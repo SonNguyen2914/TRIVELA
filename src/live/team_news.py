@@ -36,10 +36,26 @@ Measured 2026-07-30 (research_archive/team_news_coverage_2026-07-30*.json):
 
   API-Football  LEAGUE lineups. 0 results more than an hour before
                 kickoff; populated once a match is under way. Injuries
-                exist for MLS and fill up toward kickoff. Liga MX
-                injuries measured EMPTY even on completed fixtures.
+                exist for MLS and fill up toward kickoff.
   ESPN          FRIENDLY lineups, via club.friendly/summary -> rosters.
                 Real XIs with formations, live and after full time.
+
+INJURY COVERAGE IS PER-LEAGUE, ON THE SAME KEY, IN THE SAME MINUTE. This
+is a sharper statement than "Liga MX has no coverage", and it is the one
+the evidence supports:
+
+  MLS      fixture 1490361 returned 26 records (13 distinct players) at
+           T-46.8h, and a completed fixture returned 16.
+  Liga MX  EMPTY on 3 of 3 upcoming fixtures AND empty on a completed
+           fixture — so it is not a timing artefact.
+
+Same PRO key, same run, adjacent requests. The endpoint is therefore
+populated for one league and not the other, which is a fact about
+API-Football's data, not about our plan or our calling code. It matters
+operationally because Son's live slate is MLS and his newest league is
+Liga MX: the league he is adding is the one this feed says nothing about,
+so a Liga MX fixture will show an EMPTY absence block, and that must be
+read as "the provider lists none", never as "nobody is injured".
 
 `provider` is part of the identity of every lineup row on purpose. An
 undifferentiated "lineup" with the source lost makes a coverage number
@@ -53,9 +69,28 @@ providers ship present-but-empty containers:
 
   API-Football  4 of 5 completed friendlies returned a NON-EMPTY lineup
                 array whose side objects carried formation=None and
-                startXI=0.
-  ESPN          Atletico Madrid v Getafe at FT returned rosters=2 with
-                named=0 on both sides.
+                startXI=0. Fixture ids 1598551, 1604642, 1567753, 1567752;
+                1502103 returned no array.
+  ESPN          Atletico Madrid v Getafe at FT (event 401896388) returned
+                rosters=2 with named=0 on both sides.
+
+API-FOOTBALL IS INCONSISTENT PER FIXTURE, and that is settled evidence
+rather than one sample. A second, independent reading of 12 DIFFERENT
+completed friendlies found 12/12 returning NO ARRAY AT ALL, contradicting
+the reading above. Both samples were then re-probed in ONE run, on ONE
+key, at ONE moment (research_archive/
+team_news_friendly_lineup_disagreement_2026-07-30.json): all 5 fixtures of
+the first sample reproduced EXACTLY, and all 6 resolvable fixtures of the
+second returned an empty array. The provider genuinely carries side
+objects for some friendly fixtures and nothing for others. Neither sample
+generalised; either one alone would have produced a confident wrong
+description of the endpoint.
+
+What did NOT differ: across all 11 fixtures probed, in both samples,
+API-Football returned ZERO NAMED PLAYERS. The emptiness was never in
+dispute — only its shape. Both shapes have live cases behind them, so
+neither branch of the counting logic is speculative; ESPN is nonetheless
+the only source here that actually yields a friendly XI.
 
 Counting arrays reports coverage that does not exist. So release is
 decided by counting NAMED PLAYERS at the leaves, and a present-but-empty
