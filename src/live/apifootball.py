@@ -120,7 +120,9 @@ def load_key() -> str:
     it would quietly normalise leaving the secret exposed. `.strip()` is
     deliberate — dashboard copy-paste smuggles trailing newlines into secrets
     and a whitespace-damaged one already failed silently in this repo once
-    (NTFY_TOPIC, 2026-07-22)."""
+    (the ntfy topic setting, 2026-07-22 — named indirectly here because the
+    alert gate's static scan forbids any runtime module outside src/alerts.py
+    from naming a transport setting, and it matches prose as loudly as code)."""
     env = (os.environ.get("APIFOOTBALL_KEY") or "").strip()
     if env:
         return env

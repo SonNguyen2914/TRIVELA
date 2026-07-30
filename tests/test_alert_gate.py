@@ -341,10 +341,16 @@ class TestOperationalTelemetryStillDispatches:
         reading his own instrument, and OPERATIONAL is honest for it.
 
         If the friend is ever given channel access, this call site becomes
-        a model signal and must be refused while the money lock is on."""
+        a model signal and must be refused while the money lock is on.
+
+        The league name was a literal "MLS" until the competition-keyed
+        merge of 2026-07-30 parameterized it to {spec.label}, so the lock
+        record now reads correctly for EPL, La Liga and Liga MX too. The
+        assertion follows the source; what it GUARDS is unchanged — the
+        odds still travel and the class is still OPERATIONAL."""
         src = open(os.path.join(REPO_ROOT, "src", "live", "runs.py"),
                    encoding="utf-8").read()
-        assert "PAPER · MLS T-10 lock" in src
+        assert "PAPER · {spec.label} T-10 lock" in src
         assert "raw_probability for c in o" in src
         assert "dispatch_class=OPERATIONAL" in src
 
