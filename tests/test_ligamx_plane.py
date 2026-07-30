@@ -348,6 +348,83 @@ def _seed_ligamx_history(s, upcoming_in_hours: float = 20.0):
     return up
 
 
+class TestHistoryFloorIsVisible:
+    """The state that was invisible in production on 2026-07-30.
+
+    Liga MX was approved, enabled and fully mapped, and the odds board
+    served `[]` with a bare `model_dark: true`. Nothing distinguished
+    "the sweep has not fired" from what was actually happening: the sweep
+    fired every 15 minutes and `_raw` refused every club, because the
+    Apertura the slug is named for was two rounds old and no club had
+    MIN_GAMES completed matches. These tests make that state legible."""
+
+    def test_census_names_the_history_floor_when_clubs_are_too_new(
+            self, ligamx_session):
+        """Two rounds played — under the floor — must report
+        insufficient_team_history, not a reassuring empty."""
+        identity.seed_league_teams(
+            "liga-mx-2026", ligamx_plane.ESPN_TEAMS_URL,
+            ligamx_plane.KALSHI_BRIDGES, espn_teams=CANNED_LIGAMX)
+        teams = [t.id for t in ligamx_session.query(Team)
+                 .filter_by(competition_slug="liga-mx-2026")]
+        now = datetime.now(UTC)
+        for i, (a, b) in enumerate(((0, 1), (2, 3))):
+            ligamx_session.add(Fixture(
+                competition_slug="liga-mx-2026", espn_event_id=f"thin{i}",
+                home_team_id=teams[a], away_team_id=teams[b],
+                current_kickoff_utc=now - timedelta(days=2 + i),
+                original_kickoff_utc=now - timedelta(days=2 + i),
+                status="post", home_goals=1, away_goals=0))
+        ligamx_session.commit()
+
+        c = model_ligamx.history_census()
+        assert c["state"] == "insufficient_team_history"
+        assert c["clubs_rated"] == 0
+        assert c["min_games"] == model_ligamx.MIN_GAMES
+        assert c["max_games_seen"] < model_ligamx.MIN_GAMES
+
+    def test_census_reports_ok_once_the_floor_is_cleared(
+            self, ligamx_session):
+        """The CONTROL. Without it, `insufficient_team_history` above
+        could be what this function always says."""
+        _seed_ligamx_history(ligamx_session)
+        c = model_ligamx.history_census()
+        assert c["state"] == "ok"
+        assert c["clubs_rated"] > 0
+        assert c["max_games_seen"] >= model_ligamx.MIN_GAMES
+
+    def test_history_ingest_pins_the_previous_season(self):
+        """The fix for the empty board: pull the season BEFORE the one
+        this slug is named for. Pinned, because an unpinned ingest lets
+        the provider's idea of 'current' decide, which is what left every
+        club under the floor. Measured on ESPN 2026-07-30: season=2025
+        returns 40 completed fixtures for Guadalajara."""
+        seen = {}
+
+        def _fake(**kw):
+            seen.update(kw)
+            return {"created": 0}
+
+        orig = ingest.ingest_season_schedules
+        ingest.ingest_season_schedules = _fake
+        try:
+            ligamx_plane.ingest_history()
+        finally:
+            ingest.ingest_season_schedules = orig
+        assert seen["expected_season_year"] == 2025
+        assert seen["competition_slug"] == "liga-mx-2026"
+
+    def test_history_lands_in_the_same_slug_so_team_ids_survive(self):
+        """Not a style point. `Team` rows are competition-keyed, so
+        ingesting history under its own slug would mint a second set of
+        team ids, and ratings fitted on those could never be looked up
+        for a current-season fixture."""
+        assert ligamx_plane.HISTORY_SEASON_YEAR == 2025
+        import inspect
+        src = inspect.getsource(ligamx_plane.ingest_history)
+        assert "LIGAMX_SLUG" in src
+
+
 class TestLigamxModelIsDark:
     """THE dark contract, proven as a pair: identical seeded state, zero
     runs unapproved (guard) / runs the moment F3 alone flips (control) —

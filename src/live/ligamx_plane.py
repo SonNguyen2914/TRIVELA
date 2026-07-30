@@ -124,6 +124,37 @@ def ingest_season() -> dict:
                                           espn_league=ESPN_LEAGUE)
 
 
+# ESPN's season year for Apertura 2025 + Clausura 2026 — the tournaments
+# BEFORE the ones this slug is named for. One year covers both, because
+# ESPN's mex.1 season year spans them (the same fact ladder_replay's
+# ReplaySource records: the year cannot separate them, only the slug can).
+HISTORY_SEASON_YEAR = 2025
+
+
+def ingest_history() -> dict:
+    """Pull the PREVIOUS season's completed fixtures into this slug.
+
+    Why this exists: `fit()` refuses to rate a club with fewer than
+    MIN_GAMES completed matches, and the Apertura that this slug is named
+    for had two rounds played on 2026-07-30 — so every club sat below the
+    floor and the odds board was empty while the model was correctly
+    approved. Measured on ESPN that day: pinning season=2025 returns 40
+    completed fixtures for Guadalajara (17 Apertura + 17 Clausura + 6
+    playoff), so the floor is comfortably cleared.
+
+    These land in liga-mx-2026 deliberately, NOT under a slug of their
+    own: `Team` rows are competition-keyed, so a separate slug would mint
+    a second set of team ids and the ratings fitted on them could not be
+    looked up for a current-season fixture. Keeping one slug keeps one
+    identity. The 90-day recency half-life then does the honest thing on
+    its own — these results decay out as the new Apertura accumulates.
+
+    Idempotent: `_upsert_fixture` keys on (competition, espn_event_id)."""
+    return ingest.ingest_season_schedules(
+        competition_slug=LIGAMX_SLUG, espn_league=ESPN_LEAGUE,
+        expected_season_year=HISTORY_SEASON_YEAR)
+
+
 def refresh_window() -> dict:
     return ingest.refresh_window(competition_slug=LIGAMX_SLUG,
                                  espn_league=ESPN_LEAGUE)
@@ -287,6 +318,9 @@ def boot() -> dict:
     for name, step in (
         ("seed_teams", seed_teams),
         ("season_ingest", ingest_season),
+        # the previous season, so the ratings have a history to stand on
+        # while the new Apertura is still only a round or two old
+        ("history_ingest", ingest_history),
         ("market_map", discover_and_map),
         # DARK registration: the row exists so the F3 gate has something
         # to refuse against; approved_for_shadow stays False.

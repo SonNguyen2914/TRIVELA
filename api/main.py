@@ -1602,20 +1602,69 @@ def ligamx_match(event_id: str):
 
 @app.get("/api/ligamx/odds")
 def ligamx_odds():
-    """The Liga MX shadow odds board. EMPTY while liga-mx-2026-v0 is
-    dark (no approval decision exists; runs are structurally refused) —
-    the response says so explicitly rather than serving a zero that
-    could read as a forecast."""
-    odds = []
+    """The Liga MX shadow odds board, with the reason it is empty.
+
+    Same fix EPL's board already carries: `model_dark = len(odds) == 0`
+    collapsed several different states into the most reassuring one. An
+    approved model with no runs read as "dark", and so did a failed read.
+
+    Liga MX then demonstrated a state EPL's four labels still could not
+    express. On 2026-07-30 it was approved, enabled, 99/99 events mapped
+    — and serving nothing, because the Apertura it is named for was two
+    rounds old and no club cleared MIN_GAMES. That is not "no runs yet";
+    the sweep was running and refusing every fixture. So the census is
+    attached whenever the board is empty despite an approval.
+
+    model_state is one of:
+      dark              the approval response EXPLICITLY says unapproved
+      approved_no_runs  approved, but no complete run exists yet
+      approved          approved, with runs
+      unavailable       the approval or odds read FAILED — we do not
+                        know, and must not claim to
+    """
+    approval = None
+    errors: dict[str, str] = {}
+    try:
+        from src.live import ligamx_plane
+        approval = ligamx_plane.approval_status()
+    except Exception as exc:
+        errors["approval"] = str(exc)[:160]
+        print(f"[ligamx] approval read failed: {exc}")
+    odds = None
     try:
         from src.live import ligamx_plane
         odds = ligamx_plane.latest_odds()
     except Exception as exc:
+        errors["odds"] = str(exc)[:160]
         print(f"[ligamx] odds board failed: {exc}")
-    return {"odds": odds, "shadow": True,
-            "model_dark": len(odds) == 0,
-            "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
-            "generated_at": utcnow().isoformat()}
+
+    if approval is None or odds is None:
+        state = "unavailable"
+    elif (approval.get("approval_decision_missing", True)
+            or not approval.get("approved_for_shadow")):
+        state = "dark"
+    elif not odds:
+        state = "approved_no_runs"
+    else:
+        state = "approved"
+    out = {"odds": odds or [], "shadow": True,
+           "model_state": state,
+           # kept for compatibility, but now it means what it says
+           "model_dark": state == "dark",
+           "model_version": (approval or {}).get("model_version"),
+           "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
+           "generated_at": utcnow().isoformat()}
+    if state == "approved_no_runs":
+        try:
+            from src.live import model_ligamx
+            out["no_runs_reason"] = model_ligamx.history_census()
+        except Exception as exc:
+            # a missing census must not take the board down with it
+            errors["census"] = str(exc)[:160]
+            print(f"[ligamx] history census failed: {exc}")
+    if errors:
+        out["errors"] = errors
+    return out
 
 
 @app.get("/api/ligamx/approval")
@@ -1628,6 +1677,30 @@ def ligamx_approval():
     except Exception as exc:
         print(f"[ligamx] approval failed: {exc}")
         raise HTTPException(503, "approval unavailable")
+
+
+@app.post("/api/admin/ligamx/sweep")
+def ligamx_admin_sweep(request: Request,
+                       history: bool = Query(False)):
+    """Operator-only: run the Liga MX plane's sweeps NOW. Mirrors
+    /api/admin/mls/sweep and /api/admin/laliga/sweep — Liga MX was the
+    one live plane with no manual trigger, so its 15-minute scheduler was
+    the only way to move it and there was no way to see a sweep's result.
+
+    `history=true` additionally re-ingests the PREVIOUS season. That is
+    the expensive step (one ESPN request per club) and it is idempotent,
+    so it is opt-in rather than part of every sweep."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from src.live import ligamx_plane
+    out: dict = {}
+    if history:
+        out["history"] = ligamx_plane.ingest_history()
+    out["window"] = ligamx_plane.refresh_window()
+    out["map"] = ligamx_plane.discover_and_map()
+    out["runs"] = ligamx_plane.scheduled_runs()
+    out["generated_at"] = utcnow().isoformat()
+    return out
 
 
 @app.get("/api/ligamx/status")
