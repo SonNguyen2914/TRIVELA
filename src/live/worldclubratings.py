@@ -162,6 +162,34 @@ def ratings(force: bool = False) -> dict:
 _index_cache: tuple[int, list[tuple[frozenset, dict]]] | None = None
 
 
+def _prefix_ok(query_tokens, row_tokens, query: str, row: str) -> bool:
+    """Whether a query CONTAINED IN a longer row name may match it.
+
+    Both containment directions are needed, but they carry very different
+    risk:
+
+      row ⊂ query   "Leeds United" -> "Leeds". The provider simply uses a
+                    shorter canonical name. Safe.
+      query ⊂ row   "Al Nassr" -> "Al Nassr Riyadh" is right, but
+                    "Miami FC" -> "Inter Miami" is a DIFFERENT CLUB — a
+                    USL side matched to an MLS one, found live on
+                    2026-07-30. {miami} is a strict subset of
+                    {inter, miami}, so plain containment accepted it.
+
+    The distinguishing fact is POSITION. A club's own name normally starts
+    its full name: "Estrela" begins "Estrela Amadora", "Al Nassr" begins
+    "Al Nassr Riyadh". A club whose name merely CONTAINS another club's is
+    a different club: "Inter Miami" does not begin with "Miami".
+
+    So the query must be a PREFIX of the row when the row is the longer
+    one. Cheap, explainable, and it keeps every match that was already
+    correct while refusing the one that was not.
+    """
+    if row_tokens < query_tokens:            # row is shorter: safe direction
+        return True
+    return row.startswith(query)
+
+
 def _token_index(table: dict) -> list[tuple[frozenset, dict]]:
     """(tokens, row) for the whole table, computed ONCE per table.
 
@@ -194,8 +222,11 @@ def _candidates(query: str, table: dict) -> list[dict]:
     q = _tokens(query)
     if not q:
         return []
+    nq = _norm(query)
     return [row for toks, row in _token_index(table)
-            if toks == q or toks < q or q < toks]
+            if toks == q
+            or ((toks < q or q < toks)
+                and _prefix_ok(q, toks, nq, _norm(row["club"])))]
 
 
 def lookup(name: str, country_hint: str | None = None) -> dict | None:
