@@ -333,7 +333,11 @@ class TestAbsencesCannotReachTheModelInput:
 
         snap = helper._fake_snapshot(live_session, up.id)
         monkeypatch.setattr(markets, "capture_lock_snapshot",
-                            lambda fixture_id: snap)
+                            # **kw tolerates the `spec` kwarg the
+                            # competition-keyed live plane added
+                            # 2026-07-30; the sentinel sweep below is the
+                            # assertion and is unchanged
+                            lambda fixture_id, **kw: snap)
         import src.alerts as alerts
         monkeypatch.setattr(alerts, "send_alert", lambda msg, **kw: None)
         monkeypatch.setattr(
