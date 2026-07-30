@@ -115,6 +115,14 @@ def ratings(force: bool = False) -> dict:
         r = requests.get(URL, timeout=TIMEOUT)
         if r.status_code != 200:
             return {}
+        # EXPLICIT utf-8. The response omits a charset in its Content-Type,
+        # and requests then falls back to Latin-1 for text/html per RFC
+        # 2616 — which turned "AS Saint-Étienne" into "AS Saint-Ã‰tienne".
+        # That is not cosmetic: normalisation strips non-ASCII, so every
+        # accented club name silently stopped matching, which is a large
+        # share of European and Latin American football. Found by asking
+        # why ClubElo was out-covering a table four times its size.
+        r.encoding = "utf-8"
         blobs = re.findall(
             r'<script type="application/json"[^>]*>(.*?)</script>',
             r.text, re.S)
