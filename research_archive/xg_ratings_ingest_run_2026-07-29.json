@@ -1,0 +1,399 @@
+{
+ "_what": "append-only league xG ingest. A re-read returning the same values writes nothing; a re-read returning DIFFERENT values inserts a second row, so a retroactive provider correction is visible rather than silently applied.",
+ "ingested_utc": "2026-07-30T00:06:18.592420+00:00",
+ "max_fixtures_per_league": 150,
+ "refetch": false,
+ "requests_used": 1963,
+ "rate_limit": {
+  "remaining_minute": "260",
+  "remaining_day": "7460",
+  "limit_day": "7500"
+ },
+ "results": [
+  {
+   "league_id": 39,
+   "season": 2025,
+   "completed_fixtures": 150,
+   "requests_used": 151,
+   "rate_limit": {
+    "remaining_minute": "292",
+    "remaining_day": "6527",
+    "limit_day": "7500"
+   },
+   "counts": {
+    "written": 300,
+    "unchanged": 0,
+    "corrected": 0,
+    "skipped_existing": 0,
+    "no_stats": 0,
+    "one_sided": 0,
+    "fetch_failed": 0
+   },
+   "read_at": "2026-07-29T23:50:54.975905+00:00"
+  },
+  {
+   "league_id": 40,
+   "season": 2025,
+   "completed_fixtures": 150,
+   "requests_used": 302,
+   "rate_limit": {
+    "remaining_minute": "253",
+    "remaining_day": "6333",
+    "limit_day": "7500"
+   },
+   "counts": {
+    "written": 300,
+    "unchanged": 0,
+    "corrected": 0,
+    "skipped_existing": 0,
+    "no_stats": 0,
+    "one_sided": 0,
+    "fetch_failed": 0
+   },
+   "read_at": "2026-07-29T23:52:04.261042+00:00"
+  },
+  {
+   "league_id": 42,
+   "season": 2025,
+   "completed_fixtures": 150,
+   "requests_used": 453,
+   "rate_limit": {
+    "remaining_minute": "216",
+    "remaining_day": "6120",
+    "limit_day": "7500"
+   },
+   "counts": {
+    "written": 300,
+    "unchanged": 0,
+    "corrected": 0,
+    "skipped_existing": 0,
+    "no_stats": 0,
+    "one_sided": 0,
+    "fetch_failed": 0
+   },
+   "read_at": "2026-07-29T23:53:13.335284+00:00"
+  },
+  {
+   "league_id": 61,
+   "season": 2025,
+   "completed_fixtures": 150,
+   "requests_used": 604,
+   "rate_limit": {
+    "remaining_minute": "194",
+    "remaining_day": "5853",
+    "limit_day": "7500"
+   },
+   "counts": {
+    "written": 300,
+    "unchanged": 0,
+    "corrected": 0,
+    "skipped_existing": 0,
+    "no_stats": 0,
+    "one_sided": 0,
+    "fetch_failed": 0
+   },
+   "read_at": "2026-07-29T23:54:22.567282+00:00"
+  },
+  {
+   "league_id": 78,
+   "season": 2025,
+   "completed_fixtures": 150,
+   "requests_used": 755,
+   "rate_limit": {
+    "remaining_minute": "206",
+    "remaining_day": "5471",
+    "limit_day": "7500"
+   },
+   "counts": {
+    "written": 300,
+    "unchanged": 0,
+    "corrected": 0,
+    "skipped_existing": 0,
+    "no_stats": 0,
+    "one_sided": 0,
+    "fetch_failed": 0
+   },
+   "read_at": "2026-07-29T23:55:31.447199+00:00"
+  },
+  {
+   "league_id": 88,
+   "season": 2025,
+   "completed_fixtures": 150,
+   "requests_used": 906,
+   "rate_limit": {
+    "remaining_minute": "193",
+    "remaining_day": "5320",
+    "limit_day": "7500"
+   },
+   "counts": {
+    "written": 300,
+    "unchanged": 0,
+    "corrected": 0,
+    "skipped_existing": 0,
+    "no_stats": 0,
+    "one_sided": 0,
+    "fetch_failed": 0
+   },
+   "read_at": "2026-07-29T23:56:40.154507+00:00"
+  },
+  {
+   "league_id": 89,
+   "season": 2025,
+   "completed_fixtures": 150,
+   "requests_used": 1057,
+   "rate_limit": {
+    "remaining_minute": "167",
+    "remaining_day": "5163",
+    "limit_day": "7500"
+   },
+   "counts": {
+    "written": 276,
+    "unchanged": 0,
+    "corrected": 0,
+    "skipped_existing": 0,
+    "no_stats": 12,
+    "one_sided": 0,
+    "fetch_failed": 0
+   },
+   "read_at": "2026-07-29T23:57:49.290758+00:00"
+  },
+  {
+   "league_id": 94,
+   "season": 2025,
+   "completed_fixtures": 150,
+   "requests_used": 1208,
+   "rate_limit": {
+    "remaining_minute": "286",
+    "remaining_day": "5144",
+    "limit_day": "7500"
+   },
+   "counts": {
+    "written": 300,
+    "unchanged": 0,
+    "corrected": 0,
+    "skipped_existing": 0,
+    "no_stats": 0,
+    "one_sided": 0,
+    "fetch_failed": 0
+   },
+   "read_at": "2026-07-29T23:58:58.229670+00:00"
+  },
+  {
+   "league_id": 98,
+   "season": 2026,
+   "completed_fixtures": 150,
+   "requests_used": 1359,
+   "rate_limit": {
+    "remaining_minute": "234",
+    "remaining_day": "5092",
+    "limit_day": "7500"
+   },
+   "counts": {
+    "written": 300,
+    "unchanged": 0,
+    "corrected": 0,
+    "skipped_existing": 0,
+    "no_stats": 0,
+    "one_sided": 0,
+    "fetch_failed": 0
+   },
+   "read_at": "2026-07-30T00:00:14.033259+00:00"
+  },
+  {
+   "league_id": 135,
+   "season": 2025,
+   "completed_fixtures": 150,
+   "requests_used": 1510,
+   "rate_limit": {
+    "remaining_minute": "207",
+    "remaining_day": "7172",
+    "limit_day": "7500"
+   },
+   "counts": {
+    "written": 300,
+    "unchanged": 0,
+    "corrected": 0,
+    "skipped_existing": 0,
+    "no_stats": 0,
+    "one_sided": 0,
+    "fetch_failed": 0
+   },
+   "read_at": "2026-07-30T00:01:30.317210+00:00"
+  },
+  {
+   "league_id": 140,
+   "season": 2025,
+   "completed_fixtures": 150,
+   "requests_used": 1661,
+   "rate_limit": {
+    "remaining_minute": "175",
+    "remaining_day": "7021",
+    "limit_day": "7500"
+   },
+   "counts": {
+    "written": 300,
+    "unchanged": 0,
+    "corrected": 0,
+    "skipped_existing": 0,
+    "no_stats": 0,
+    "one_sided": 0,
+    "fetch_failed": 0
+   },
+   "read_at": "2026-07-30T00:02:47.902023+00:00"
+  },
+  {
+   "league_id": 141,
+   "season": 2025,
+   "completed_fixtures": 150,
+   "requests_used": 1812,
+   "rate_limit": {
+    "remaining_minute": "282",
+    "remaining_day": "6998",
+    "limit_day": "7500"
+   },
+   "counts": {
+    "written": 300,
+    "unchanged": 0,
+    "corrected": 0,
+    "skipped_existing": 0,
+    "no_stats": 0,
+    "one_sided": 0,
+    "fetch_failed": 0
+   },
+   "read_at": "2026-07-30T00:03:57.906743+00:00"
+  },
+  {
+   "league_id": 203,
+   "season": 2025,
+   "completed_fixtures": 150,
+   "requests_used": 1963,
+   "rate_limit": {
+    "remaining_minute": "260",
+    "remaining_day": "7460",
+    "limit_day": "7500"
+   },
+   "counts": {
+    "written": 300,
+    "unchanged": 0,
+    "corrected": 0,
+    "skipped_existing": 0,
+    "no_stats": 0,
+    "one_sided": 0,
+    "fetch_failed": 0
+   },
+   "read_at": "2026-07-30T00:05:08.857294+00:00"
+  }
+ ],
+ "census": {
+  "leagues": [
+   {
+    "league_id": 39,
+    "season": 2025,
+    "rows": 300,
+    "fixtures": 150,
+    "fixtures_with_usable_xg": 150,
+    "teams": 20
+   },
+   {
+    "league_id": 40,
+    "season": 2025,
+    "rows": 300,
+    "fixtures": 150,
+    "fixtures_with_usable_xg": 150,
+    "teams": 24
+   },
+   {
+    "league_id": 42,
+    "season": 2025,
+    "rows": 300,
+    "fixtures": 150,
+    "fixtures_with_usable_xg": 120,
+    "teams": 24
+   },
+   {
+    "league_id": 61,
+    "season": 2025,
+    "rows": 300,
+    "fixtures": 150,
+    "fixtures_with_usable_xg": 146,
+    "teams": 21
+   },
+   {
+    "league_id": 78,
+    "season": 2025,
+    "rows": 300,
+    "fixtures": 150,
+    "fixtures_with_usable_xg": 148,
+    "teams": 19
+   },
+   {
+    "league_id": 88,
+    "season": 2025,
+    "rows": 300,
+    "fixtures": 150,
+    "fixtures_with_usable_xg": 145,
+    "teams": 18
+   },
+   {
+    "league_id": 89,
+    "season": 2025,
+    "rows": 276,
+    "fixtures": 138,
+    "fixtures_with_usable_xg": 89,
+    "teams": 20
+   },
+   {
+    "league_id": 94,
+    "season": 2025,
+    "rows": 300,
+    "fixtures": 150,
+    "fixtures_with_usable_xg": 148,
+    "teams": 19
+   },
+   {
+    "league_id": 98,
+    "season": 2026,
+    "rows": 300,
+    "fixtures": 150,
+    "fixtures_with_usable_xg": 120,
+    "teams": 20
+   },
+   {
+    "league_id": 135,
+    "season": 2025,
+    "rows": 300,
+    "fixtures": 150,
+    "fixtures_with_usable_xg": 150,
+    "teams": 20
+   },
+   {
+    "league_id": 140,
+    "season": 2025,
+    "rows": 300,
+    "fixtures": 150,
+    "fixtures_with_usable_xg": 150,
+    "teams": 20
+   },
+   {
+    "league_id": 141,
+    "season": 2025,
+    "rows": 300,
+    "fixtures": 150,
+    "fixtures_with_usable_xg": 64,
+    "teams": 22
+   },
+   {
+    "league_id": 203,
+    "season": 2025,
+    "rows": 300,
+    "fixtures": 150,
+    "fixtures_with_usable_xg": 150,
+    "teams": 18
+   }
+  ]
+ },
+ "retroactive_corrections": {
+  "pairs_with_multiple_readings": 0,
+  "detail": []
+ }
+}
