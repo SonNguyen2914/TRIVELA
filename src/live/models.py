@@ -1076,13 +1076,24 @@ class TeamNewsLineup(LiveBase):
     container_present = Column(Boolean, nullable=False, default=False)
     captured_at = Column(DateTime(timezone=True), nullable=False)
     first_seen_at = Column(DateTime(timezone=True))
-    # the transition. Set ONCE, on the first capture that sees a full XI,
+    # The transition. Set ONCE, on the first capture that sees a full XI,
     # and never rewritten — a later re-release must not move the clock on
-    # when the news actually landed.
+    # when the news landed.
+    #
+    # READ IT AS AN UPPER BOUND, NOT A PUBLICATION TIME. This records when
+    # WE FIRST OBSERVED the XI, not when the provider published it.
+    # Neither ESPN nor API-Football timestamps a lineup, so the
+    # publication moment is unavailable at ANY polling rate, and the
+    # observation clock is the only honest thing to store. The error is
+    # bounded by the polling interval and always in one direction: a
+    # sparse poll makes a release look LATER than it was. Nothing
+    # downstream may therefore treat this as the instant the market
+    # learned anything.
     first_released_at = Column(DateTime(timezone=True))
     kickoff_utc = Column(DateTime(timezone=True))
-    # computed AT THE MOMENT OF TRANSITION and frozen, so a later
+    # computed AT THE MOMENT OF OBSERVATION and frozen, so a later
     # reschedule cannot retroactively change how early the news landed.
+    # Carries the same upper-bound caveat as first_released_at.
     released_minutes_before_kickoff = Column(Integer)
     __table_args__ = (
         UniqueConstraint("provider", "subject_ref", "side",

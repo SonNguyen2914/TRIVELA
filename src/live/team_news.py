@@ -535,11 +535,17 @@ def freshness(feed: str, captured_at, state: str, now=None) -> dict:
 # ---------------------------------------------------------------------------
 
 def _record_capture(s, provider: str, subject_ref: str, feed: str,
-                    f: Fetched, fixture_id=None, competition=None) -> None:
+                    f: Fetched, fixture_id=None, competition=None,
+                    now: datetime | None = None) -> None:
+    """`now` is threaded in rather than read here, because ONE CAPTURE IS
+    ONE INSTANT. Reading the clock again would stamp the ledger a few
+    microseconds after the rows it describes, and the freshness comparison
+    that decides whether a record is `still_reported` would then mark
+    every currently-reported absence as retracted."""
     row = (s.query(TeamNewsCapture)
            .filter_by(provider=provider, subject_ref=str(subject_ref),
                       feed=feed).first())
-    now = _now()
+    now = now or _now()
     if row is None:
         row = TeamNewsCapture(provider=provider,
                               subject_ref=str(subject_ref), feed=feed,
@@ -607,7 +613,7 @@ def capture_absences(subject_ref: str, fixture_id: int | None = None,
             row.competition = competition
             stored += 1
         _record_capture(s, PROVIDER_APIFOOTBALL, subject_ref, "absences", f,
-                        fixture_id, competition)
+                        fixture_id, competition, now=now)
         s.commit()
         return {"state": f.state, "feed": "absences", "count": f.count,
                 "stored": stored, "note": (_redact(f.note) if f.note
@@ -661,7 +667,7 @@ def capture_events(subject_ref: str, fixture_id: int | None = None,
             row.competition = competition
             stored += 1
         _record_capture(s, PROVIDER_APIFOOTBALL, subject_ref, "events", f,
-                        fixture_id, competition)
+                        fixture_id, competition, now=now)
         s.commit()
         return {"state": f.state, "feed": "events", "count": f.count,
                 "stored": stored, "note": (_redact(f.note) if f.note
@@ -755,6 +761,11 @@ def capture_friendly_lineup(espn_event_id: str, kickoff_utc=None,
     release is the largest genuine information event on the fixture — and
     the one thing about a friendly that is information rather than
     forecast.
+
+    The recorded `first_released_at` is an UPPER BOUND on when the XI
+    appeared, not a publication time: neither provider timestamps a
+    lineup, so our observation clock is all there is, and a sparse poll
+    makes a release look later than it was.
 
     The fixture is identified by its ESPN EVENT ID, which is the identity
     src/friendlies.py already keys every friendly on (its scoreboard and
@@ -908,6 +919,15 @@ def fixture_news(subject_ref: str) -> dict:
             "_empty_is_not_nobody_injured": (
                 "An empty or absent list means the provider listed no one. "
                 "It is NOT evidence that no player is unavailable."),
+            "_record_count_vs_stored_records": (
+                "record_count is the RAW length of the provider's array; "
+                "stored_records is the number of DISTINCT players. They "
+                "differ because API-Football duplicates rows: on MLS "
+                "fixture 1490361 it returned 26 records for 13 players, "
+                "each listed exactly twice (measured 2026-07-30). The raw "
+                "count is kept so the duplication stays visible instead of "
+                "being silently absorbed — reporting 26 absences there "
+                "would double-count every player."),
         }
 
         # ---- lineups, PER PROVIDER, never pooled --------------------------
@@ -951,6 +971,12 @@ def fixture_news(subject_ref: str) -> dict:
                 "Before a lineup is released the only honest statement is "
                 "'not yet released'. An absent XI is never a claim that "
                 "anyone is out."),
+            "_first_released_at_is_an_upper_bound": (
+                "first_released_at is when WE FIRST OBSERVED a full XI, not "
+                "when the provider published it. Neither provider "
+                "timestamps a lineup, so the error is bounded by the "
+                "polling interval and always makes a release look later "
+                "than it was."),
         }
 
         # ---- events -------------------------------------------------------
