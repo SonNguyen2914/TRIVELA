@@ -1,0 +1,230 @@
+{
+ "_engine_note": "byte-identical to origin/main d15bc1d; the model was not touched, so no approval is invalidated",
+ "_governing_rule": "ASSERT A NON-ZERO COUNT, NEVER A STATUS CODE \u2014 and here also COUNT THE NAMES, NOT THE CONTAINERS, because both providers ship present-but-empty lineup containers.",
+ "_what": "END-TO-END ingestion verification against the REAL providers, on a throwaway PostgreSQL database. Separate from the coverage probe: this exercises the module's own parse+persist+read path, not the raw endpoints.",
+ "apifootball_requests_used_this_run": 0,
+ "cases": {
+  "espn_401863532_released": {
+   "absences": {
+    "freshness_state": "never_captured",
+    "record_count": null,
+    "stored_records": 0
+   },
+   "events": {
+    "freshness_state": "never_captured",
+    "stored_records": 0
+   },
+   "label": "Liverpool v Wrexham \u2014 a REAL released friendly XI from ESPN",
+   "lineup_by_provider": {
+    "espn": {
+     "away": {
+      "first_released_at": "2026-07-29T18:04:39.343405-07:00",
+      "formation": "3-4-3",
+      "lineup_state": "released",
+      "named_count": 24
+     },
+     "home": {
+      "first_released_at": "2026-07-29T18:04:39.343405-07:00",
+      "formation": "4-2-3-1",
+      "lineup_state": "released",
+      "named_count": 22
+     }
+    }
+   }
+  },
+  "espn_401886550_scheduled": {
+   "absences": {
+    "freshness_state": "never_captured",
+    "record_count": null,
+    "stored_records": 0
+   },
+   "events": {
+    "freshness_state": "never_captured",
+    "stored_records": 0
+   },
+   "label": "Barcelona at Birmingham, scheduled \u2014 not_released",
+   "lineup_by_provider": {
+    "espn": {
+     "away": {
+      "first_released_at": null,
+      "formation": null,
+      "lineup_state": "not_released",
+      "named_count": 0
+     },
+     "home": {
+      "first_released_at": null,
+      "formation": null,
+      "lineup_state": "not_released",
+      "named_count": 0
+     }
+    }
+   }
+  },
+  "espn_401896388_empty_containers": {
+   "absences": {
+    "freshness_state": "never_captured",
+    "record_count": null,
+    "stored_records": 0
+   },
+   "events": {
+    "freshness_state": "never_captured",
+    "stored_records": 0
+   },
+   "label": "Atletico v Getafe at FT \u2014 rosters present, ZERO names. not_released",
+   "lineup_by_provider": {
+    "espn": {
+     "away": {
+      "first_released_at": null,
+      "formation": null,
+      "lineup_state": "not_released",
+      "named_count": 0
+     },
+     "home": {
+      "first_released_at": null,
+      "formation": null,
+      "lineup_state": "not_released",
+      "named_count": 0
+     }
+    }
+   }
+  },
+  "mls_1490360_events": {
+   "absences": {
+    "freshness_state": "never_captured",
+    "record_count": null,
+    "stored_records": 0
+   },
+   "events": {
+    "freshness_state": "stale",
+    "stored_records": 16
+   },
+   "label": "a completed MLS fixture \u2014 in-play events",
+   "lineup_by_provider": {}
+  },
+  "mls_1490361_injuries_present": {
+   "absences": {
+    "freshness_state": "ok",
+    "record_count": 26,
+    "stored_records": 13
+   },
+   "events": {
+    "freshness_state": "never_captured",
+    "stored_records": 0
+   },
+   "explains_26_vs_13": "record_count 26 is the raw array; stored_records 13 is distinct players. See provider_duplication_finding.",
+   "label": "NYCFC v Toronto \u2014 the fixture measured to carry 26 injury records",
+   "lineup_by_provider": {}
+  },
+  "mls_1490364_injuries_empty": {
+   "absences": {
+    "freshness_state": "empty",
+    "record_count": 0,
+    "stored_records": 0
+   },
+   "events": {
+    "freshness_state": "never_captured",
+    "stored_records": 0
+   },
+   "label": "Philadelphia v Atlanta \u2014 provider listed NONE. empty, NOT 'nobody injured'",
+   "lineup_by_provider": {}
+  }
+ },
+ "coverage": {
+  "_denominator_note": "fixtures_attempted is the denominator: fixtures this module actually fetched. It is not the number of fixtures on the board, and this table does not claim to cover them.",
+  "absences": {
+   "capture_states": {
+    "empty": 2,
+    "ok": 1
+   },
+   "fixtures_attempted": 3,
+   "fixtures_with_records": 1,
+   "total_records_stored": 13
+  },
+  "budget": {
+   "_note": "an in-process courtesy counter that resets with the process, NOT an accounting record of the shared key",
+   "ceiling": 500,
+   "in_process_requests_used": 0
+  },
+  "by_source": {
+   "apifootball": {
+    "fixtures_attempted": 1,
+    "lineup_capture_states": {
+     "empty": 1
+    },
+    "lineups_by_competition": {}
+   },
+   "espn": {
+    "fixtures_attempted": 4,
+    "lineup_capture_states": {
+     "ok": 3,
+     "unavailable": 1
+    },
+    "lineups_by_competition": {
+     "club-friendly": {
+      "no_coverage": 0,
+      "not_released": 2,
+      "released": 1,
+      "total": 3
+     }
+    }
+   }
+  },
+  "events": {
+   "capture_states": {
+    "ok": 1
+   },
+   "fixtures_attempted": 1,
+   "total_records_stored": 16
+  },
+  "generated_at": "2026-07-30T01:06:43.755057+00:00"
+ },
+ "database": "throwaway local PostgreSQL, schema created from the ORM metadata",
+ "engine_signature_modules_sha256": {
+  "src/live/model_mls.py": "bbb0eaff0dcd13066ff425372e2920494f39b60408190d4542ecb3b6d2344c08",
+  "src/models/features.py": "65ecdd7892205590a64a034ed2628d84463bb504e4a90fe999c4460fe4b8bfc1",
+  "src/models/simulator.py": "fe1b02445648cafd1dcc6f62029b38ca960eb1dadfe1cdfa877f2f13a4e6542e",
+  "src/models/xg_model.py": "61f8753d1e7f09009c1b3bcd7dc3400f5b47e2c66a8424f3e33b8d60d33bfeea"
+ },
+ "provider_duplication_finding": {
+  "_what": "API-Football returns every injury record EXACTLY TWICE for MLS fixture 1490361: 26 array elements for 13 distinct players.",
+  "how_it_is_handled": "Dedupe on (provider, subject_ref, player_key) collapses to 13 rows, and BOTH numbers stay on the read surface: record_count=26 (raw) beside stored_records=13 (distinct), so the 2x artefact stays visible rather than being silently absorbed.",
+  "measured": {
+   "distinct_player_ids": 13,
+   "every_player_id_appeared": 2,
+   "raw_array_length": 26
+  },
+  "pinned_by": "tests/test_team_news.py::TestProviderDuplicationIsVisibleNotAbsorbed",
+  "why_it_matters": "The brief for this build cited '26 records on NYCFC v Toronto' as the coverage figure. The honest figure is 13 absences. Reporting 26 would double-count every player, and any aggregate built on it would be wrong by 2x \u2014 one more reason this module builds no aggregate at all."
+ },
+ "run_utc": "2026-07-30T01:06:43.653116+00:00",
+ "verbatim_provider_typing_observed": [
+  [
+   "Missing Fixture",
+   "Ankle Injury"
+  ],
+  [
+   "Missing Fixture",
+   "Groin Injury"
+  ],
+  [
+   "Missing Fixture",
+   "Knee Injury"
+  ],
+  [
+   "Missing Fixture",
+   "Leg Injury"
+  ],
+  [
+   "Missing Fixture",
+   "Lower-Body Injury"
+  ],
+  [
+   "Missing Fixture",
+   "Thigh Injury"
+  ],
+  [
+   "Questionable",
+   "Injury"
+  ]
+ ]
+}

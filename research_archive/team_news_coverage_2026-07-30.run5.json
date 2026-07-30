@@ -1,0 +1,463 @@
+{
+ "_governing_rule": "ASSERT A NON-ZERO COUNT, NEVER A STATUS CODE. A 200 with an empty response array is NOT coverage. empty != unavailable != ok.",
+ "_states": {
+  "empty": "the request succeeded, the array was empty. For a lineup this means NOT RELEASED, never 'no players'. For injuries it means the provider listed none, which is NOT the same as 'nobody is injured'.",
+  "ok": "the response array had elements",
+  "unavailable": "the request did not succeed (transport/HTTP)"
+ },
+ "_what": "team-news coverage measurement: injuries, lineups, events",
+ "apifootball": {
+  "friendlies": {
+   "candidates": [
+    {
+     "id": 10,
+     "name": "Friendlies",
+     "type": "Cup"
+    },
+    {
+     "id": 666,
+     "name": "Friendlies Women",
+     "type": "Cup"
+    },
+    {
+     "id": 667,
+     "name": "Friendlies Clubs",
+     "type": "Cup"
+    }
+   ],
+   "club_scoped": true,
+   "discovery_count": 3,
+   "discovery_search": "Friendlies",
+   "discovery_state": "ok",
+   "fixture_count": 454,
+   "fixture_window_state": "ok",
+   "lineup_probes": [
+    {
+     "away": "Verspah Oita",
+     "count": 2,
+     "fixture_id": 1598551,
+     "home": "Sanfrecce Hiroshima",
+     "interpretation": "ok",
+     "sides": [
+      {
+       "formation": null,
+       "start_xi": 0,
+       "substitutes": 0,
+       "team": "Sanfrecce Hiroshima",
+       "team_id": 282
+      },
+      {
+       "formation": null,
+       "start_xi": 0,
+       "substitutes": 0,
+       "team": "Verspah Oita",
+       "team_id": 7151
+      }
+     ],
+     "state": "ok",
+     "status": "FT"
+    },
+    {
+     "away": "Western Sydney Wanderers",
+     "count": 0,
+     "fixture_id": 1502103,
+     "home": "Chelsea",
+     "interpretation": "not_released",
+     "sides": [],
+     "state": "empty",
+     "status": "FT"
+    },
+    {
+     "away": "Al-Ahli Jeddah",
+     "count": 1,
+     "fixture_id": 1604642,
+     "home": "Portimonense",
+     "interpretation": "ok",
+     "sides": [
+      {
+       "formation": null,
+       "start_xi": 0,
+       "substitutes": 0,
+       "team": "Portimonense",
+       "team_id": 216
+      }
+     ],
+     "state": "ok",
+     "status": "FT"
+    },
+    {
+     "away": "Valencia",
+     "count": 2,
+     "fixture_id": 1567753,
+     "home": "Derby",
+     "interpretation": "ok",
+     "sides": [
+      {
+       "formation": null,
+       "start_xi": 0,
+       "substitutes": 0,
+       "team": "Derby",
+       "team_id": 69
+      },
+      {
+       "formation": null,
+       "start_xi": 0,
+       "substitutes": 0,
+       "team": "Valencia",
+       "team_id": 532
+      }
+     ],
+     "state": "ok",
+     "status": "FT"
+    },
+    {
+     "away": "Preston North End U21",
+     "count": 2,
+     "fixture_id": 1567752,
+     "home": "Blackburn Rovers U21",
+     "interpretation": "ok",
+     "sides": [
+      {
+       "formation": null,
+       "start_xi": 0,
+       "substitutes": 0,
+       "team": "Blackburn Rovers U21",
+       "team_id": 19744
+      },
+      {
+       "formation": null,
+       "start_xi": 0,
+       "substitutes": 0,
+       "team": "Preston North End U21",
+       "team_id": 24848
+      }
+     ],
+     "state": "ok",
+     "status": "FT"
+    }
+   ],
+   "measured": "4/5 friendly fixtures returned a lineup array; 0/5 returned a FULL XI FOR BOTH SIDES",
+   "probed_league_id": 667,
+   "probed_league_name": "Friendlies Clubs",
+   "selection": "completed fixtures first; an empty lineup on a not-started fixture would prove nothing"
+  },
+  "per_league": {
+   "mls": {
+    "apif_league_id": 253,
+    "display": "Major League Soccer",
+    "events_on_completed_fixture": {
+     "count": 16,
+     "fixture_id": 1490360,
+     "note": null,
+     "sample": [
+      {
+       "assist": {
+        "id": null,
+        "name": null
+       },
+       "comments": null,
+       "detail": "Yellow Card",
+       "player": {
+        "id": 51312,
+        "name": "C. Bassett"
+       },
+       "team": {
+        "id": 1617,
+        "logo": "https://media.api-sports.io/football/teams/1617.png",
+        "name": "Portland Timbers"
+       },
+       "time": {
+        "elapsed": 10,
+        "extra": null
+       },
+       "type": "Card"
+      },
+      {
+       "assist": {
+        "id": 23643,
+        "name": "M. Guilavogui"
+       },
+       "comments": null,
+       "detail": "Normal Goal",
+       "player": {
+        "id": 162891,
+        "name": "J. Sanabria"
+       },
+       "team": {
+        "id": 1606,
+        "logo": "https://media.api-sports.io/football/teams/1606.png",
+        "name": "Real Salt Lake"
+       },
+       "time": {
+        "elapsed": 18,
+        "extra": null
+       },
+       "type": "Goal"
+      },
+      {
+       "assist": {
+        "id": null,
+        "name": null
+       },
+       "comments": null,
+       "detail": "Red Card",
+       "player": {
+        "id": 23643,
+        "name": "M. Guilavogui"
+       },
+       "team": {
+        "id": 1606,
+        "logo": "https://media.api-sports.io/football/teams/1606.png",
+        "name": "Real Salt Lake"
+       },
+       "time": {
+        "elapsed": 34,
+        "extra": null
+       },
+       "type": "Card"
+      }
+     ],
+     "state": "ok",
+     "types": {
+      "Card/Red Card": 1,
+      "Card/Yellow Card": 3,
+      "Goal/Normal Goal": 3,
+      "subst/Substitution 1": 2,
+      "subst/Substitution 2": 2,
+      "subst/Substitution 3": 2,
+      "subst/Substitution 4": 2,
+      "subst/Substitution 5": 1
+     }
+    },
+    "fixture_window": {
+     "count": 16,
+     "from": "2026-07-30",
+     "note": null,
+     "state": "ok",
+     "to": "2026-08-09"
+    },
+    "fixtures": [],
+    "injuries_on_completed_fixture": {
+     "count": 16,
+     "fixture_id": 1490360,
+     "note": null,
+     "records": [
+      {
+       "player": "G. Guerra",
+       "player_id": 513030,
+       "provider_reason": "Abdominal strain",
+       "provider_type": "Missing Fixture",
+       "team": "Portland Timbers",
+       "team_id": 1617
+      },
+      {
+       "player": "K. Kelsy",
+       "player_id": 311016,
+       "provider_reason": "Foot Injury",
+       "provider_type": "Missing Fixture",
+       "team": "Portland Timbers",
+       "team_id": 1617
+      },
+      {
+       "player": "Z. McGraw",
+       "player_id": 201729,
+       "provider_reason": "Back Injury",
+       "provider_type": "Missing Fixture",
+       "team": "Portland Timbers",
+       "team_id": 1617
+      },
+      {
+       "player": "J. Mosquera",
+       "player_id": 197913,
+       "provider_reason": "Foot Injury",
+       "provider_type": "Missing Fixture",
+       "team": "Portland Timbers",
+       "team_id": 1617
+      },
+      {
+       "player": "E. Eneli",
+       "player_id": 413169,
+       "provider_reason": "Knee Injury",
+       "provider_type": "Missing Fixture",
+       "team": "Real Salt Lake",
+       "team_id": 1606
+      }
+     ],
+     "state": "ok"
+    },
+    "season": 2026,
+    "season_fallback_used": false,
+    "upcoming_not_started_count": 16
+   }
+  },
+  "plan_status": {
+   "requests": {
+    "current": 900,
+    "limit_day": 7500
+   },
+   "subscription": {
+    "active": true,
+    "end": "2026-08-29T23:01:12+00:00",
+    "plan": "Pro"
+   }
+  }
+ },
+ "coverage_summary": {
+  "apifootball_friendlies_lineups": "4/5 friendly fixtures returned a lineup array; 0/5 returned a FULL XI FOR BOTH SIDES",
+  "apifootball_leagues": {
+   "mls": {
+    "events_on_completed": "ok/16",
+    "fixtures_probed": 0,
+    "injuries_fixtures_with_records": "0/0",
+    "injury_records_total": 0,
+    "lineups_released_pre_match": "0/0"
+   }
+  },
+  "espn_friendly_rosters": {
+   "by_state": {
+    "released": 1
+   },
+   "denominator_on_board": 8,
+   "probed": 1
+  }
+ },
+ "espn_friendlies": {
+  "board_count": 8,
+  "coverage": {
+   "by_state": {
+    "released": 1
+   },
+   "denominator_on_board": 8,
+   "probed": 1
+  },
+  "fixtures": [
+   {
+    "detail": "49'",
+    "espn_event_id": "401863532",
+    "name": "Wrexham at Liverpool",
+    "roster_containers": 2,
+    "roster_state": "released",
+    "sides": {
+     "away": {
+      "formation": "3-4-3",
+      "named": 24,
+      "released": true,
+      "starters": 11
+     },
+     "home": {
+      "formation": "4-2-3-1",
+      "named": 22,
+      "released": true,
+      "starters": 11
+     }
+    },
+    "state": "in",
+    "teams": [
+     "Liverpool",
+     "Wrexham"
+    ]
+   }
+  ],
+  "request_log": [
+   {
+    "label": "espn_scoreboard:20260729",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_scoreboard:20260730",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_scoreboard:20260731",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_summary:401863532",
+    "note": null,
+    "state": "ok"
+   }
+  ],
+  "slug": "club.friendly"
+ },
+ "key_problems": [],
+ "key_source": ".apifootball_key",
+ "request_log": [
+  {
+   "count": 0,
+   "label": "status",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 16,
+   "label": "fixtures:mls",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 1,
+   "label": "fixtures_ft:mls",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 16,
+   "label": "events:mls:1490360",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 16,
+   "label": "injuries_completed:mls:1490360",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 3,
+   "label": "leagues:friendlies",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 454,
+   "label": "fixtures:friendlies",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 2,
+   "label": "lineups:friendly:1598551",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 0,
+   "label": "lineups:friendly:1502103",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 1,
+   "label": "lineups:friendly:1604642",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 2,
+   "label": "lineups:friendly:1567753",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 2,
+   "label": "lineups:friendly:1567752",
+   "note": null,
+   "state": "ok"
+  }
+ ],
+ "requests_used": 12,
+ "run_utc": "2026-07-30T00:43:22.052690+00:00"
+}

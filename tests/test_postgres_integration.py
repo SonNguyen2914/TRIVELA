@@ -580,3 +580,86 @@ def test_hunter_stale_scan_cannot_reopen_or_alert(pg_schema):
         assert wm.observed_through == t2
     finally:
         chk.close()
+
+
+def test_team_absence_uniqueness_holds_on_postgres(pg_schema):
+    """A re-ingest must refresh, never duplicate.
+
+    This is the NULL-distinctness trap made concrete. PostgreSQL treats
+    NULLs as distinct inside a UNIQUE constraint, so keying absences on a
+    nullable provider player id would admit duplicate rows in production
+    while a SQLite suite stayed green. `player_key` is NOT NULL with a
+    normalised-name fallback precisely so this constraint bites.
+    """
+    from datetime import datetime, timezone
+    S = sessionmaker(bind=pg_schema.engine, future=True)
+    s = S()
+    try:
+        from src.live.models import TeamAbsence
+        now = datetime.now(timezone.utc)
+
+        def row(**over):
+            kw = dict(provider="apifootball", subject_ref="900001",
+                      player_key="name:namelessnine", player_name="Nameless",
+                      provider_type="Missing Fixture",
+                      provider_reason="Knock", captured_at=now)
+            kw.update(over)
+            return TeamAbsence(**kw)
+
+        s.add(row())
+        s.commit()
+        s.add(row())                      # same (provider, subject, key)
+        with pytest.raises(IntegrityError):
+            s.commit()
+        s.rollback()
+        # a DIFFERENT player on the same fixture is fine
+        s.add(row(player_key="502"))
+        s.commit()
+        assert s.query(TeamAbsence).filter_by(subject_ref="900001").count() == 2
+    finally:
+        s.close()
+
+
+def test_record_count_is_genuinely_nullable_on_postgres(pg_schema):
+    """`unavailable` must be storable as NULL, not coerced to 0.
+
+    If the column were NOT NULL, the ingestion would be forced to write a
+    zero for a fetch that saw nothing — the precise reading that let
+    `results: 0` pass as "no match on" and `{"created": 0}` pass as a
+    successful write.
+    """
+    from datetime import datetime, timezone
+    S = sessionmaker(bind=pg_schema.engine, future=True)
+    s = S()
+    try:
+        from src.live.models import TeamNewsCapture
+        s.add(TeamNewsCapture(
+            provider="apifootball", subject_ref="900002", feed="absences",
+            state="unavailable", record_count=None, attempts=1,
+            captured_at=datetime.now(timezone.utc), note="HTTP 500"))
+        s.commit()
+        got = s.query(TeamNewsCapture).filter_by(subject_ref="900002").one()
+        assert got.record_count is None
+    finally:
+        s.close()
+
+
+def test_team_news_tables_carry_no_aggregate_column_on_postgres(pg_schema):
+    """The schema itself must offer nowhere to put a team-strength number.
+
+    Read from information_schema rather than the ORM, so this reflects
+    what the migration actually created in the database.
+    """
+    with pg_schema.engine.connect() as c:
+        rows = c.execute(text(
+            "SELECT table_name, column_name FROM information_schema.columns "
+            "WHERE table_schema = current_schema() "
+            "AND table_name IN ('team_absence','team_news_capture',"
+            "'team_news_lineup','team_news_event')")).all()
+    assert rows, "the team-news tables were not created by the migration"
+    banned = {"impact", "severity", "weight", "score", "strength",
+              "team_strength", "absence_score", "availability_index"}
+    offenders = [(t, col) for t, col in rows if col in banned]
+    assert offenders == [], (
+        f"an aggregate column exists on a team-news table: {offenders}. "
+        f"An aggregate of absences is a model wearing a news label.")

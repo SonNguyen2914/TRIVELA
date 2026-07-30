@@ -1,0 +1,586 @@
+{
+ "_counting_rule": "array_len and named_players are separate columns. An array of two empty side objects is len=2, named=0 \u2014 that gap IS the disagreement.",
+ "_neither_measurement_adjusted": "Both readings are recorded with their fixture ids and raw bodies. Nothing here is reconciled toward the other reading; a number neither party can reproduce is worth less than two disagreeing numbers that are both traceable.",
+ "_what": "Re-probe of BOTH samples in the friendly-lineup-array disagreement, in one run on one key at one moment.",
+ "_why": "The two samples did not overlap by a single fixture id, so per-fixture inconsistency, a transient, and a measurement error were all live explanations. Probing both samples together is what distinguishes them.",
+ "coordinator_sample": [
+  {
+   "array_len": 0,
+   "fixture_id": 1604675,
+   "label": "Estrela v Portimonense",
+   "named_players": 0,
+   "note": null,
+   "provider_declared_results": 0,
+   "raw_body": {
+    "errors": [],
+    "get": "fixtures/lineups",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1604675"
+    },
+    "response": [],
+    "results": 0
+   },
+   "resolved_from_names": [
+    "Estrela",
+    "Portimonense"
+   ],
+   "sides": [],
+   "state": "empty",
+   "status": "FT"
+  },
+  {
+   "array_len": 0,
+   "fixture_id": 1583479,
+   "label": "Palermo v Iraklis 1908",
+   "named_players": 0,
+   "note": null,
+   "provider_declared_results": 0,
+   "raw_body": {
+    "errors": [],
+    "get": "fixtures/lineups",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1583479"
+    },
+    "response": [],
+    "results": 0
+   },
+   "resolved_from_names": [
+    "Palermo",
+    "Iraklis"
+   ],
+   "sides": [],
+   "state": "empty",
+   "status": "FT"
+  },
+  {
+   "array_len": 0,
+   "fixture_id": 1583475,
+   "label": "Saint Etienne v Lausanne",
+   "named_players": 0,
+   "note": null,
+   "provider_declared_results": 0,
+   "raw_body": {
+    "errors": [],
+    "get": "fixtures/lineups",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1583475"
+    },
+    "response": [],
+    "results": 0
+   },
+   "resolved_from_names": [
+    "Saint Etienne",
+    "Lausanne"
+   ],
+   "sides": [],
+   "state": "empty",
+   "status": "FT"
+  },
+  {
+   "array_len": 0,
+   "fixture_id": 1585000,
+   "label": "Oviedo v Ponferradina",
+   "named_players": 0,
+   "note": null,
+   "provider_declared_results": 0,
+   "raw_body": {
+    "errors": [],
+    "get": "fixtures/lineups",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1585000"
+    },
+    "response": [],
+    "results": 0
+   },
+   "resolved_from_names": [
+    "Oviedo",
+    "Ponferradina"
+   ],
+   "sides": [],
+   "state": "empty",
+   "status": "FT"
+  },
+  {
+   "array_len": 0,
+   "fixture_id": 1583493,
+   "label": "Ipswich v Osasuna",
+   "named_players": 0,
+   "note": null,
+   "provider_declared_results": 0,
+   "raw_body": {
+    "errors": [],
+    "get": "fixtures/lineups",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1583493"
+    },
+    "response": [],
+    "results": 0
+   },
+   "resolved_from_names": [
+    "Ipswich",
+    "Osasuna"
+   ],
+   "sides": [],
+   "state": "empty",
+   "status": "FT"
+  },
+  {
+   "array_len": 0,
+   "fixture_id": 1546736,
+   "label": "Cerezo Osaka v Borussia Dortmund",
+   "named_players": 0,
+   "note": null,
+   "provider_declared_results": 0,
+   "raw_body": {
+    "errors": [],
+    "get": "fixtures/lineups",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1546736"
+    },
+    "response": [],
+    "results": 0
+   },
+   "resolved_from_names": [
+    "Cerezo Osaka",
+    "Dortmund"
+   ],
+   "sides": [],
+   "state": "empty",
+   "status": "FT"
+  }
+ ],
+ "coordinator_unresolved": [],
+ "friendly_league_id": 667,
+ "key_problems": [],
+ "key_source": ".apifootball_key",
+ "measured_now": {
+  "coordinator_sample": {
+   "probed": 6,
+   "returned_non_empty_array": 0,
+   "unresolved_not_probed": 0
+  },
+  "named_players_across_every_fixture_probed": 0,
+  "this_agent_sample": {
+   "probed": 5,
+   "reproduced_prior_reading": "5/5",
+   "returned_non_empty_array": 4
+  }
+ },
+ "request_log": [
+  {
+   "count": 2,
+   "label": "lineups:1598551",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 0,
+   "label": "lineups:1502103",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 1,
+   "label": "lineups:1604642",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 2,
+   "label": "lineups:1567753",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 2,
+   "label": "lineups:1567752",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 1933,
+   "label": "fixtures:friendlies",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 0,
+   "label": "lineups:1604675",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:1583479",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:1583475",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:1585000",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:1583493",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:1546736",
+   "note": null,
+   "state": "empty"
+  }
+ ],
+ "requests_used": 12,
+ "resolution_window": {
+  "count": 1933,
+  "from": "2026-07-16",
+  "state": "ok",
+  "to": "2026-08-02"
+ },
+ "run_utc": "2026-07-30T01:17:15.490115+00:00",
+ "this_agent_sample": [
+  {
+   "array_len": 2,
+   "fixture_id": 1598551,
+   "label": "Sanfrecce Hiroshima v Verspah Oita",
+   "named_players": 0,
+   "note": null,
+   "prior_reading_run5": {
+    "array_len": 2,
+    "named_players": 0,
+    "state": "ok"
+   },
+   "provider_declared_results": 2,
+   "raw_body": {
+    "errors": [],
+    "get": "fixtures/lineups",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1598551"
+    },
+    "response": [
+     {
+      "coach": {
+       "id": 27410,
+       "name": "Bartosch Gaul",
+       "photo": "https://media.api-sports.io/football/coachs/27410.png"
+      },
+      "formation": null,
+      "team": {
+       "colors": null,
+       "id": 282,
+       "logo": "https://media.api-sports.io/football/teams/282.png",
+       "name": "Sanfrecce Hiroshima"
+      }
+     },
+     {
+      "coach": {
+       "id": 14753,
+       "name": "T. Yamahashi",
+       "photo": "https://media.api-sports.io/football/coachs/14753.png"
+      },
+      "formation": null,
+      "team": {
+       "colors": null,
+       "id": 7151,
+       "logo": "https://media.api-sports.io/football/teams/7151.png",
+       "name": "Verspah Oita"
+      }
+     }
+    ],
+    "results": 2
+   },
+   "reproduces_prior": true,
+   "sides": [
+    {
+     "formation": null,
+     "start_xi_len": 0,
+     "start_xi_named": 0,
+     "substitutes_len": 0,
+     "team": "Sanfrecce Hiroshima",
+     "team_id": 282
+    },
+    {
+     "formation": null,
+     "start_xi_len": 0,
+     "start_xi_named": 0,
+     "substitutes_len": 0,
+     "team": "Verspah Oita",
+     "team_id": 7151
+    }
+   ],
+   "state": "ok"
+  },
+  {
+   "array_len": 0,
+   "fixture_id": 1502103,
+   "label": "Chelsea v Western Sydney Wanderers",
+   "named_players": 0,
+   "note": null,
+   "prior_reading_run5": {
+    "array_len": 0,
+    "named_players": 0,
+    "state": "empty"
+   },
+   "provider_declared_results": 0,
+   "raw_body": {
+    "errors": [],
+    "get": "fixtures/lineups",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1502103"
+    },
+    "response": [],
+    "results": 0
+   },
+   "reproduces_prior": true,
+   "sides": [],
+   "state": "empty"
+  },
+  {
+   "array_len": 1,
+   "fixture_id": 1604642,
+   "label": "Portimonense v Al-Ahli Jeddah",
+   "named_players": 0,
+   "note": null,
+   "prior_reading_run5": {
+    "array_len": 1,
+    "named_players": 0,
+    "state": "ok"
+   },
+   "provider_declared_results": 1,
+   "raw_body": {
+    "errors": [],
+    "get": "fixtures/lineups",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1604642"
+    },
+    "response": [
+     {
+      "coach": {
+       "id": 26804,
+       "name": "Tiago Fernandes",
+       "photo": "https://media.api-sports.io/football/coachs/26804.png"
+      },
+      "formation": null,
+      "team": {
+       "colors": null,
+       "id": 216,
+       "logo": "https://media.api-sports.io/football/teams/216.png",
+       "name": "Portimonense"
+      }
+     }
+    ],
+    "results": 1
+   },
+   "reproduces_prior": true,
+   "sides": [
+    {
+     "formation": null,
+     "start_xi_len": 0,
+     "start_xi_named": 0,
+     "substitutes_len": 0,
+     "team": "Portimonense",
+     "team_id": 216
+    }
+   ],
+   "state": "ok"
+  },
+  {
+   "array_len": 2,
+   "fixture_id": 1567753,
+   "label": "Derby v Valencia",
+   "named_players": 0,
+   "note": null,
+   "prior_reading_run5": {
+    "array_len": 2,
+    "named_players": 0,
+    "state": "ok"
+   },
+   "provider_declared_results": 2,
+   "raw_body": {
+    "errors": [],
+    "get": "fixtures/lineups",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1567753"
+    },
+    "response": [
+     {
+      "coach": {
+       "id": 2956,
+       "name": "John Eustace",
+       "photo": "https://media.api-sports.io/football/coachs/2956.png"
+      },
+      "formation": null,
+      "team": {
+       "colors": null,
+       "id": 69,
+       "logo": "https://media.api-sports.io/football/teams/69.png",
+       "name": "Derby"
+      }
+     },
+     {
+      "coach": {
+       "id": 25638,
+       "name": "Carlos Corberan",
+       "photo": "https://media.api-sports.io/football/coachs/25638.png"
+      },
+      "formation": null,
+      "team": {
+       "colors": null,
+       "id": 532,
+       "logo": "https://media.api-sports.io/football/teams/532.png",
+       "name": "Valencia"
+      }
+     }
+    ],
+    "results": 2
+   },
+   "reproduces_prior": true,
+   "sides": [
+    {
+     "formation": null,
+     "start_xi_len": 0,
+     "start_xi_named": 0,
+     "substitutes_len": 0,
+     "team": "Derby",
+     "team_id": 69
+    },
+    {
+     "formation": null,
+     "start_xi_len": 0,
+     "start_xi_named": 0,
+     "substitutes_len": 0,
+     "team": "Valencia",
+     "team_id": 532
+    }
+   ],
+   "state": "ok"
+  },
+  {
+   "array_len": 2,
+   "fixture_id": 1567752,
+   "label": "Blackburn Rovers U21 v Preston North End U21",
+   "named_players": 0,
+   "note": null,
+   "prior_reading_run5": {
+    "array_len": 2,
+    "named_players": 0,
+    "state": "ok"
+   },
+   "provider_declared_results": 2,
+   "raw_body": {
+    "errors": [],
+    "get": "fixtures/lineups",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1567752"
+    },
+    "response": [
+     {
+      "coach": {
+       "id": 27056,
+       "name": "John Prince",
+       "photo": "https://media.api-sports.io/football/coachs/27056.png"
+      },
+      "formation": null,
+      "team": {
+       "colors": null,
+       "id": 19744,
+       "logo": "https://media.api-sports.io/football/teams/19744.png",
+       "name": "Blackburn Rovers U21"
+      }
+     },
+     {
+      "coach": {
+       "id": 23441,
+       "name": "N. Harrison",
+       "photo": "https://media.api-sports.io/football/coachs/23441.png"
+      },
+      "formation": null,
+      "team": {
+       "colors": null,
+       "id": 24848,
+       "logo": "https://media.api-sports.io/football/teams/24848.png",
+       "name": "Preston North End U21"
+      }
+     }
+    ],
+    "results": 2
+   },
+   "reproduces_prior": true,
+   "sides": [
+    {
+     "formation": null,
+     "start_xi_len": 0,
+     "start_xi_named": 0,
+     "substitutes_len": 0,
+     "team": "Blackburn Rovers U21",
+     "team_id": 19744
+    },
+    {
+     "formation": null,
+     "start_xi_len": 0,
+     "start_xi_named": 0,
+     "substitutes_len": 0,
+     "team": "Preston North End U21",
+     "team_id": 24848
+    }
+   ],
+   "state": "ok"
+  }
+ ],
+ "verdict": "(a) PER-FIXTURE INCONSISTENCY. Both readings reproduce in the same run on the same key: some friendly fixtures carry side objects, others carry no array at all. Neither summary generalised, and a single sample of either kind would have produced a confident wrong answer.",
+ "what_holds_either_way": "No friendly fixture in EITHER sample produced a single NAMED player (0 names across all fixtures probed). So the operative conclusion is unchanged and was never in dispute: API-Football is not a usable source of friendly XIs, and ESPN's club.friendly rosters are. What the two readings disagree about is the SHAPE of the emptiness, not whether it is empty."
+}
