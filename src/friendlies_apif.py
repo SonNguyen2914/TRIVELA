@@ -110,6 +110,17 @@ APIF_BASE = os.getenv("APIFOOTBALL_BASE", "https://v3.football.api-sports.io")
 
 # Horizon and cadence are config, per the plan's budget (see REQUEST_BUDGET).
 APIF_HORIZON_DAYS = int(os.getenv("FRIENDLIES_APIF_HORIZON_DAYS", "3"))
+
+# The sweep looks BACKWARD as well as forward, and this is not padding for
+# its own sake. A Kalshi event stays tradeable while the match is in play
+# and until it settles, so at 00:02 UTC the still-trading Liverpool v
+# Wrexham book pointed at a fixture on Eastern Jul 29 — a date a
+# forward-only window had already left behind. Measured live: the census
+# correctly refused to call it absent and reported `outside_horizon`
+# instead, which is the guard working and ALSO a real coverage hole,
+# because "many friendlies right now" is exactly the in-play case. One
+# extra request per sweep buys the whole of yesterday.
+APIF_LOOKBACK_DAYS = int(os.getenv("FRIENDLIES_APIF_LOOKBACK_DAYS", "1"))
 APIF_SWEEP_TTL = float(os.getenv("FRIENDLIES_APIF_SWEEP_TTL", "600"))
 APIF_TIMEOUT = float(os.getenv("FRIENDLIES_APIF_TIMEOUT", "20"))
 APIF_DELAY = float(os.getenv("FRIENDLIES_APIF_DELAY", "0.5"))
@@ -463,18 +474,22 @@ def parse_fixture(row: object) -> dict | None:
 # the sweep
 # ---------------------------------------------------------------------------
 
-def utc_dates_for(horizon_days: int, today: datetime | None = None) -> list[str]:
-    """The UTC dates that must be fetched to cover `horizon_days` of
-    US-Eastern dates starting today.
+def utc_dates_for(horizon_days: int, today: datetime | None = None,
+                  lookback_days: int | None = None) -> list[str]:
+    """The UTC dates that must be fetched to cover `lookback_days` behind
+    plus `horizon_days` of US-Eastern dates from today.
 
     ET date D spans UTC D 04:00 -> D+1 04:00, so covering N ET dates
-    needs N+1 UTC dates. Dropping the pad silently loses every
+    needs N+1 UTC dates. Dropping that trailing pad silently loses every
     late-evening Eastern kickoff, which on the measured slate would have
-    been most of the Jul 31 card."""
+    been most of the Jul 31 card. The LEADING pad exists for in-play
+    events — see APIF_LOOKBACK_DAYS."""
     n = max(1, min(int(horizon_days), 14))
+    back = max(0, min(int(APIF_LOOKBACK_DAYS if lookback_days is None
+                          else lookback_days), 7))
     base = (today or datetime.now(timezone.utc)).astimezone(timezone.utc)
     return [(base + timedelta(days=i)).strftime("%Y-%m-%d")
-            for i in range(n + 1)]
+            for i in range(-back, n + 1)]
 
 
 def covered_et_dates(utc_dates: list[str]) -> set[str]:
@@ -539,10 +554,10 @@ def sweep(horizon_days: int | None = None, today: datetime | None = None) -> dic
     registry. An incomplete sweep is NEVER cached, so the next read
     retries.
 
-    One request per UTC date. The horizon default is 3 ET days = 4
-    requests; at the default 600s TTL that is at most 576 requests/day
-    against a 7500/day plan (7.7%), and 4 per refresh against a 300/min
-    limit."""
+    One request per UTC date. The defaults — 1 day of lookback plus a
+    3-day horizon — are 5 requests; at the default 600s TTL that is at
+    most 720 requests/day against a 7500/day plan (9.6%), and 5 per
+    refresh against a 300/min limit."""
     days = APIF_HORIZON_DAYS if horizon_days is None else horizon_days
     dates = utc_dates_for(days, today)
     ckey = f"sweep:{','.join(dates)}"

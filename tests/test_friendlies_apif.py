@@ -250,17 +250,39 @@ class TestSecrets:
 class TestSweepWindow:
     def test_covering_n_eastern_dates_needs_n_plus_one_utc_dates(self):
         """GUARD. ET date D spans UTC D 04:00 -> D+1 04:00. Without the
-        pad every late-evening Eastern kickoff falls out of the window —
-        on the measured slate that was most of the Jul 31 card."""
+        trailing pad every late-evening Eastern kickoff falls out of the
+        window — on the measured slate that was most of the Jul 31 card."""
         now = datetime(2026, 7, 29, 12, 0, tzinfo=timezone.utc)
-        assert fa.utc_dates_for(3, now) == [
+        assert fa.utc_dates_for(3, now, lookback_days=0) == [
             "2026-07-29", "2026-07-30", "2026-07-31", "2026-08-01"]
-        assert fa.utc_dates_for(1, now) == ["2026-07-29", "2026-07-30"]
+        assert fa.utc_dates_for(1, now, lookback_days=0) == [
+            "2026-07-29", "2026-07-30"]
 
-    def test_horizon_is_clamped(self):
+    def test_the_sweep_reaches_backward_for_in_play_events(self):
+        """GUARD, from a live observation at 00:02 UTC. A Kalshi event
+        stays tradeable while the match is IN PLAY, so a forward-only
+        window loses the still-trading book whose fixture sat on
+        yesterday's Eastern date. Measured: Liverpool v Wrexham reported
+        `outside_horizon` — correct, and a real coverage hole."""
+        now = datetime(2026, 7, 30, 0, 2, tzinfo=timezone.utc)
+        dates = fa.utc_dates_for(3, now)
+        assert dates[0] == "2026-07-29", "yesterday must be swept"
+        assert "26JUL29" in fa.covered_et_dates(dates), \
+            "the in-play event's Eastern date must be reachable"
+
+    def test_lookback_default_is_one_day(self):
+        now = datetime(2026, 7, 30, 12, 0, tzinfo=timezone.utc)
+        assert fa.APIF_LOOKBACK_DAYS == 1
+        assert fa.utc_dates_for(3, now) == [
+            "2026-07-29", "2026-07-30", "2026-07-31", "2026-08-01",
+            "2026-08-02"]
+
+    def test_horizon_and_lookback_are_clamped(self):
         now = datetime(2026, 7, 29, 12, 0, tzinfo=timezone.utc)
-        assert len(fa.utc_dates_for(0, now)) == 2
-        assert len(fa.utc_dates_for(99, now)) == 15
+        assert len(fa.utc_dates_for(0, now, lookback_days=0)) == 2
+        assert len(fa.utc_dates_for(99, now, lookback_days=0)) == 15
+        assert len(fa.utc_dates_for(1, now, lookback_days=99)) == 2 + 7
+        assert len(fa.utc_dates_for(1, now, lookback_days=-5)) == 2
 
     def test_late_eastern_kickoff_buckets_to_the_previous_et_date(self):
         """A 2026-07-30T02:00Z kickoff is 22:00 ET on Jul 29."""
@@ -299,7 +321,9 @@ class TestSweepWindow:
         a = fa.sweep(1, now)
         b = fa.sweep(1, now)
         assert a["complete"] is False and b["complete"] is False
-        assert len(calls) == 4, "the failed sweep must be retried, not cached"
+        n = len(fa.utc_dates_for(1, now))
+        assert len(calls) == 2 * n, \
+            "the failed sweep must be retried, not cached"
 
     def test_a_complete_sweep_is_cached(self, monkeypatch):
         calls = []
@@ -314,7 +338,8 @@ class TestSweepWindow:
         now = datetime(2026, 7, 29, tzinfo=timezone.utc)
         assert fa.sweep(1, now)["cached"] is False
         assert fa.sweep(1, now)["cached"] is True
-        assert len(calls) == 2
+        assert len(calls) == len(fa.utc_dates_for(1, now)), \
+            "the second read must be served from cache, not refetched"
 
     def test_a_partial_sweep_keeps_what_it_found(self, monkeypatch):
         """A fixture found in a partial sweep still bridges; only ABSENCE
@@ -346,10 +371,11 @@ class TestSweepWindow:
         monkeypatch.setattr(fa, "load_key", lambda: ("K", "test", []))
         monkeypatch.setattr(fa, "_fetch_date", twice)
         monkeypatch.setattr(fa, "APIF_DELAY", 0)
-        out = fa.sweep(3, datetime(2026, 7, 29, tzinfo=timezone.utc))
-        assert out["requests_used"] == 4, "four buckets were fetched"
+        now = datetime(2026, 7, 29, tzinfo=timezone.utc)
+        out = fa.sweep(3, now)
+        assert out["requests_used"] == len(fa.utc_dates_for(3, now)) > 1
         assert len(out["fixtures"]) == 1, \
-            "the same fixture id must appear once, not four times"
+            "the same fixture id must appear once, not once per bucket"
 
     def test_the_sweep_is_kickoff_ordered(self, monkeypatch):
         def rows(_session, _key, utc_date):
@@ -1005,15 +1031,23 @@ class TestTradeableRegistry:
 
 class TestRequestBudget:
     def test_a_sweep_costs_one_request_per_utc_date(self, monkeypatch):
-        """The plan is 7500/day and 300/min. A 3-day horizon is 4
-        requests; at the default 600s TTL that is 576/day, 7.7%."""
+        """The plan is 7500/day and 300/min. The defaults — 1 day of
+        lookback plus a 3-day horizon — are 5 requests; at the default
+        600s TTL that is 720/day, 9.6%. The budget assertion is derived,
+        not a literal, so widening the window cannot silently outgrow the
+        plan without turning this red."""
         calls = []
         monkeypatch.setattr(fa, "load_key", lambda: ("K", "test", []))
         monkeypatch.setattr(fa, "APIF_DELAY", 0)
         monkeypatch.setattr(fa, "_fetch_date",
                             lambda _s, _k, d: (calls.append(d), ([], None))[1])
-        out = fa.sweep(3, datetime(2026, 7, 29, tzinfo=timezone.utc))
-        assert len(calls) == 4 and out["requests_used"] == 4
-        per_day = (86400 / fa.APIF_SWEEP_TTL) * 4
-        assert per_day < fa.REQUEST_BUDGET["per_day"]
-        assert 4 < fa.REQUEST_BUDGET["per_minute"]
+        now = datetime(2026, 7, 29, tzinfo=timezone.utc)
+        out = fa.sweep(3, now)
+        n = len(fa.utc_dates_for(3, now))
+        assert n == 5, "1 lookback + 3 horizon + 1 trailing pad"
+        assert len(calls) == n and out["requests_used"] == n
+        per_day = (86400 / fa.APIF_SWEEP_TTL) * n
+        assert per_day < fa.REQUEST_BUDGET["per_day"], (
+            f"{per_day}/day exceeds the plan's "
+            f"{fa.REQUEST_BUDGET['per_day']}")
+        assert n < fa.REQUEST_BUDGET["per_minute"]
