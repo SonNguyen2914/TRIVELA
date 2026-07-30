@@ -1,0 +1,21 @@
+{
+  "probed_at": "2026-07-29T00:00:00Z",
+  "question": "Does an official Liga MX public no-auth stats API exist, analogous to MLS's stats-api.mlssoccer.com (Sportec) feed?",
+  "verdict": "NO_USABLE_PUBLIC_CONTRACT",
+  "method": [
+    "GET https://www.ligamx.net/ (200, 475KB HTML) and read the site's own data-access JavaScript (LMX.js, js/widgets/master.js, js/widgets/portada.js) for the endpoints the official site itself calls.",
+    "No guessed endpoints were scraped for data; the probe read only the public pages and scripts the site serves to every visitor."
+  ],
+  "findings": {
+    "static_cdn": "cldrsrcs.apilmx.com/v1/ serves only static assets (css/js/images/logos) — no data JSON.",
+    "data_rpc": "The site's data layer is an OBFUSCATED internal RPC: LMX.js builds requests as GET /ws/<base64(service_path)> with '/' replaced by '@' after template substitution (<VARIABLE> placeholders from window.parametros), dataType json; the live-score widget (master.js getMrcdrs) calls /ws/directo/<base64> returning XML whose <JSON> nodes are passed to eval().",
+    "evidence_snippets": [
+      "LMX.js: url = btoa(service).replace('/','@'); ... url: \"ws/\"+url, dataType: 'json'",
+      "master.js: urlAjxPlngMrcd = btoa(urlAjxPlngMrcd).replace(\"/\", \"@\"); $.ajax({ url: \"ws/directo/\" + urlAjxPlngMrcd, dataType: \"xml\", success: ... $(data).find(\"JSON\").each(function() { eval($(this)[0].innerHTML); ... })",
+      "socket endpoints: https://dksx1d.ligamx.net/bs and /oturl (websocket bootstrap, not a documented API)"
+    ],
+    "why_rejected": "Technically no-auth, but there is no documented public contract: service names are base64-obfuscated internal identifiers, responses are eval()'d script payloads, and nothing resembles the stable, versioned, self-describing JSON contract that stats-api.mlssoccer.com provides. Building ingestion on it would be reverse-engineering an internal interface — the same class as scraping, which this project rejects."
+  },
+  "consequence": "Liga MX ships with ESPN mex.1 as the club+player stats source (per-match summary boxscore, rosters with per-player stats, leaders) and NO official-feed ingestion. No Sportec-style team xG source exists for Liga MX in this stack.",
+  "xg_note": "ESPN mex.1 summaries carry xG ONLY inside the per-category leaders block (the single leading player's expectedGoals / a GK's expectedGoalsConceded — see ligamx_espn_summary_401877031_2026-07-29.json paths /leaders[*]/leaders[*]/leaders[0]/statistics). Team-level match xG is NOT present in the boxscore team statistics, and per-player roster stats carry no xG, so no credible team xG can be assembled. The model therefore ships goals-only."
+}

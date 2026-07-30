@@ -1,0 +1,622 @@
+{
+ "_provenance": {
+  "kind": "RECORDED",
+  "note": "RECORDED verbatim from a live API-Football PRO response on 2026-07-29, extracted from research_archive/apifootball_verification_2026-07-29.run2.json (request label 'teams:mls:2026'). Real captured traffic, not a hand-written shape.",
+  "proves": "CHECK 3 team-id / player-id / roster resolution inputs"
+ },
+ "payload": {
+  "get": "teams",
+  "parameters": {
+   "league": "253",
+   "season": "2026"
+  },
+  "errors": [],
+  "results": 30,
+  "paging": {
+   "current": 1,
+   "total": 1
+  },
+  "response": [
+   {
+    "team": {
+     "id": 1595,
+     "name": "Seattle Sounders",
+     "code": "SEA",
+     "country": "USA",
+     "founded": 2007,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1595.png"
+    },
+    "venue": {
+     "id": 11534,
+     "name": "Lumen Field",
+     "address": "800 Occidental Avenue South",
+     "city": "Seattle, Washington",
+     "capacity": 72000,
+     "surface": "artificial turf",
+     "image": "https://media.api-sports.io/football/venues/11534.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1596,
+     "name": "San Jose Earthquakes",
+     "code": "JOS",
+     "country": "USA",
+     "founded": 1995,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1596.png"
+    },
+    "venue": {
+     "id": 11918,
+     "name": "PayPal Park",
+     "address": "1123 Coleman Avenue",
+     "city": "San Jose, California",
+     "capacity": 18000,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/11918.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1597,
+     "name": "FC Dallas",
+     "code": "DAL",
+     "country": "USA",
+     "founded": 1996,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1597.png"
+    },
+    "venue": {
+     "id": 1612,
+     "name": "Toyota Stadium",
+     "address": "6000 Main Street",
+     "city": "Frisco, Texas",
+     "capacity": 22565,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/1612.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1598,
+     "name": "Orlando City SC",
+     "code": null,
+     "country": "USA",
+     "founded": 2008,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1598.png"
+    },
+    "venue": {
+     "id": 20500,
+     "name": "Inter&Co Stadium",
+     "address": "655 West Church Street",
+     "city": "Orlando, Florida",
+     "capacity": 25527,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/20500.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1599,
+     "name": "Philadelphia Union",
+     "code": "PHI",
+     "country": "USA",
+     "founded": 2008,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1599.png"
+    },
+    "venue": {
+     "id": 1620,
+     "name": "Subaru Park",
+     "address": "Seaport Drive",
+     "city": "Chester, Pennsylvania",
+     "capacity": 19778,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/1620.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1600,
+     "name": "Houston Dynamo",
+     "code": "HOU",
+     "country": "USA",
+     "founded": 2005,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1600.png"
+    },
+    "venue": {
+     "id": 19418,
+     "name": "Shell Energy Stadium",
+     "address": "2200 Texas Avenue, East End",
+     "city": "Houston, Texas",
+     "capacity": 22661,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/19418.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1601,
+     "name": "Toronto FC",
+     "code": "TOR",
+     "country": "Canada",
+     "founded": 2006,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1601.png"
+    },
+    "venue": {
+     "id": 312,
+     "name": "BMO Field",
+     "address": "170 Princes’ Boulevard",
+     "city": "Toronto, Ontario",
+     "capacity": 36045,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/312.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1602,
+     "name": "New York Red Bulls",
+     "code": "YOR",
+     "country": "USA",
+     "founded": 1995,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1602.png"
+    },
+    "venue": {
+     "id": 21544,
+     "name": "Sports Illustrated Stadium",
+     "address": "Frank Rogers Boulevard South",
+     "city": "Harrison, New Jersey",
+     "capacity": 26765,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/21544.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1603,
+     "name": "Vancouver Whitecaps",
+     "code": null,
+     "country": "Canada",
+     "founded": 1986,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1603.png"
+    },
+    "venue": {
+     "id": 19445,
+     "name": "BC Place",
+     "address": "777 Pacific Boulevard, False Creek",
+     "city": "Vancouver, British Columbia",
+     "capacity": 54405,
+     "surface": "artificial turf",
+     "image": "https://media.api-sports.io/football/venues/19445.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1604,
+     "name": "New York City FC",
+     "code": null,
+     "country": "USA",
+     "founded": 2013,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1604.png"
+    },
+    "venue": {
+     "id": 1833,
+     "name": "Yankee Stadium",
+     "address": "One East 161st Street, The Bronx",
+     "city": "New York City",
+     "capacity": 54251,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/1833.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1605,
+     "name": "Los Angeles Galaxy",
+     "code": "ANG",
+     "country": "USA",
+     "founded": 1995,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1605.png"
+    },
+    "venue": {
+     "id": 1616,
+     "name": "Dignity Health Sports Park",
+     "address": "18400 Avalon Boulevard, Dominguez Hills",
+     "city": "Carson, California",
+     "capacity": 30510,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/1616.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1606,
+     "name": "Real Salt Lake",
+     "code": "SAL",
+     "country": "USA",
+     "founded": 2004,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1606.png"
+    },
+    "venue": {
+     "id": 19223,
+     "name": "America First Field",
+     "address": "9256 South State Street",
+     "city": "Sandy, Utah",
+     "capacity": 21810,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/19223.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1607,
+     "name": "Chicago Fire",
+     "code": "CHI",
+     "country": "USA",
+     "founded": 1997,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1607.png"
+    },
+    "venue": {
+     "id": 1609,
+     "name": "Soldier Field",
+     "address": "1410 South Museum Campus Drive",
+     "city": "Chicago, Illinois",
+     "capacity": 62493,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/1609.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1608,
+     "name": "Atlanta United FC",
+     "code": null,
+     "country": "USA",
+     "founded": 2014,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1608.png"
+    },
+    "venue": {
+     "id": 1898,
+     "name": "Mercedes-Benz Stadium",
+     "address": "1 AMB Drive North West",
+     "city": "Atlanta, Georgia",
+     "capacity": 73019,
+     "surface": "artificial turf",
+     "image": "https://media.api-sports.io/football/venues/1898.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1609,
+     "name": "New England Revolution",
+     "code": "ENG",
+     "country": "USA",
+     "founded": 1995,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1609.png"
+    },
+    "venue": {
+     "id": 1618,
+     "name": "Gillette Stadium",
+     "address": "1388 One Patriot Place",
+     "city": "Foxborough, Massachusetts",
+     "capacity": 68756,
+     "surface": "artificial turf",
+     "image": "https://media.api-sports.io/football/venues/1618.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1610,
+     "name": "Colorado Rapids",
+     "code": "COL",
+     "country": "USA",
+     "founded": 1996,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1610.png"
+    },
+    "venue": {
+     "id": 1610,
+     "name": "Dick's Sporting Goods Park",
+     "address": "6000 Victory Way",
+     "city": "Commerce City, Colorado",
+     "capacity": 19734,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/1610.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1611,
+     "name": "Sporting Kansas City",
+     "code": "KAN",
+     "country": "USA",
+     "founded": 1995,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1611.png"
+    },
+    "venue": {
+     "id": 1615,
+     "name": "Children's Mercy Park",
+     "address": "One Sporting Way",
+     "city": "Kansas City, Kansas",
+     "capacity": 21650,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/1615.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1612,
+     "name": "Minnesota United FC",
+     "code": "MIN",
+     "country": "USA",
+     "founded": 2010,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1612.png"
+    },
+    "venue": {
+     "id": 1617,
+     "name": "Allianz Field",
+     "address": "400 Snelling Avenue North",
+     "city": "Saint Paul, Minnesota",
+     "capacity": 19954,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/1617.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1613,
+     "name": "Columbus Crew",
+     "code": "COL",
+     "country": "USA",
+     "founded": 1996,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1613.png"
+    },
+    "venue": {
+     "id": 12667,
+     "name": "Lower.com Field",
+     "address": "560 West Nationwide Boulevard",
+     "city": "Columbus, Ohio",
+     "capacity": 20931,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/12667.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1614,
+     "name": "CF Montreal",
+     "code": "MON",
+     "country": "Canada",
+     "founded": 2010,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1614.png"
+    },
+    "venue": {
+     "id": 310,
+     "name": "Stade Saputo",
+     "address": "4750, rue Sherbrooke Est",
+     "city": "Montreal, Quebec",
+     "capacity": 20801,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/310.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1615,
+     "name": "DC United",
+     "code": "UNI",
+     "country": "USA",
+     "founded": 1996,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1615.png"
+    },
+    "venue": {
+     "id": 1613,
+     "name": "Audi Field",
+     "address": "32-60 R Street South West, Buzzard Point",
+     "city": "Washington, District of Columbia",
+     "capacity": 20621,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/1613.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1616,
+     "name": "Los Angeles FC",
+     "code": null,
+     "country": "USA",
+     "founded": 2014,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1616.png"
+    },
+    "venue": {
+     "id": 19419,
+     "name": "BMO Stadium",
+     "address": "3939 S Figueroa Street",
+     "city": "Los Angeles, California",
+     "capacity": 22921,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/19419.png"
+    }
+   },
+   {
+    "team": {
+     "id": 1617,
+     "name": "Portland Timbers",
+     "code": "POR",
+     "country": "USA",
+     "founded": 2009,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/1617.png"
+    },
+    "venue": {
+     "id": 1748,
+     "name": "Providence Park",
+     "address": "1844 SW Morrison Street",
+     "city": "Portland, Oregon",
+     "capacity": 25518,
+     "surface": "artificial turf",
+     "image": "https://media.api-sports.io/football/venues/1748.png"
+    }
+   },
+   {
+    "team": {
+     "id": 2242,
+     "name": "FC Cincinnati",
+     "code": null,
+     "country": "USA",
+     "founded": null,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/2242.png"
+    },
+    "venue": {
+     "id": 19229,
+     "name": "TQL Stadium",
+     "address": "1501 Central Parkway",
+     "city": "Cincinnati, Ohio",
+     "capacity": 26000,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/19229.png"
+    }
+   },
+   {
+    "team": {
+     "id": 9568,
+     "name": "Inter Miami",
+     "code": null,
+     "country": "USA",
+     "founded": 2018,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/9568.png"
+    },
+    "venue": {
+     "id": 20764,
+     "name": "Chase Stadium",
+     "address": "1350 Northwest 55th Street",
+     "city": "Fort Lauderdale, Florida",
+     "capacity": 21550,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/20764.png"
+    }
+   },
+   {
+    "team": {
+     "id": 9569,
+     "name": "Nashville SC",
+     "code": null,
+     "country": "USA",
+     "founded": 2020,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/9569.png"
+    },
+    "venue": {
+     "id": 19357,
+     "name": "GEODIS Park",
+     "address": "513 Benton Avenue",
+     "city": "Nashville, Tennessee",
+     "capacity": 30109,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/19357.png"
+    }
+   },
+   {
+    "team": {
+     "id": 16489,
+     "name": "Austin",
+     "code": null,
+     "country": "USA",
+     "founded": 2021,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/16489.png"
+    },
+    "venue": {
+     "id": 11535,
+     "name": "Q2 Stadium",
+     "address": "10414 Mc Kalla Place",
+     "city": "Austin, Texas",
+     "capacity": 20738,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/11535.png"
+    }
+   },
+   {
+    "team": {
+     "id": 18310,
+     "name": "Charlotte",
+     "code": null,
+     "country": "USA",
+     "founded": 2019,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/18310.png"
+    },
+    "venue": {
+     "id": 18659,
+     "name": "Bank of America Stadium",
+     "address": "800 South Mint Street",
+     "city": "Charlotte, North Carolina",
+     "capacity": 75412,
+     "surface": "artificial turf",
+     "image": "https://media.api-sports.io/football/venues/18659.png"
+    }
+   },
+   {
+    "team": {
+     "id": 20787,
+     "name": "St. Louis City",
+     "code": null,
+     "country": "USA",
+     "founded": 2023,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/20787.png"
+    },
+    "venue": {
+     "id": 19408,
+     "name": "CITYPARK",
+     "address": "2100 Market Street",
+     "city": "St. Louis, Missouri",
+     "capacity": 22500,
+     "surface": "grass",
+     "image": "https://media.api-sports.io/football/venues/19408.png"
+    }
+   },
+   {
+    "team": {
+     "id": 25484,
+     "name": "San Diego",
+     "code": null,
+     "country": "USA",
+     "founded": null,
+     "national": false,
+     "logo": "https://media.api-sports.io/football/teams/25484.png"
+    },
+    "venue": {
+     "id": null,
+     "name": null,
+     "address": null,
+     "city": null,
+     "capacity": null,
+     "surface": null,
+     "image": null
+    }
+   }
+  ]
+ }
+}

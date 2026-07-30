@@ -1,0 +1,65 @@
+{
+  "source": "API-Football / api-sports.io (v3)",
+  "probed_at_utc": "2026-07-29T22:24:14.836452Z",
+  "probe_method": "unauthenticated curl to the API host; attempts to read the public pricing/documentation/coverage pages with both WebFetch and curl. No account created. NO attempt was made to defeat the bot protection.",
+  "probes": [
+    {
+      "request": "GET https://v3.football.api-sports.io/status (no key)",
+      "http_status": 403,
+      "body": "{\"get\":\"\",\"parameters\":[],\"errors\":{\"token\":\"Missing application key, Check our documentation on how to add your API key in headers.\",\"error\":\"4xHe\"},\"results\":0,\"paging\":{\"current\":1,\"total\":1},\"response\":[]}",
+      "response_headers_of_note": "server: cloudflare; NO x-ratelimit-* headers on an unauthenticated 403"
+    },
+    {
+      "request": "GET https://www.api-football.com/pricing",
+      "http_status": 403,
+      "via": "WebFetch and curl with a desktop browser User-Agent",
+      "meaning": "Cloudflare bot protection"
+    },
+    {
+      "request": "GET https://www.api-football.com/documentation-v3",
+      "http_status": 403
+    },
+    {
+      "request": "GET https://www.api-football.com/coverage",
+      "http_status": 403
+    },
+    {
+      "request": "GET https://api-sports.io/documentation/football/v3",
+      "http_status": 403
+    },
+    {
+      "request": "GET https://api-sports.io/pricing",
+      "http_status": 403
+    },
+    {
+      "request": "GET https://www.api-football.com/news/post/players-statistics-from-fixtures",
+      "http_status": 403
+    }
+  ],
+  "consequence": "THE PRIMARY DOCUMENTATION IS UNREADABLE FROM THIS ENVIRONMENT. Every statement below about API-Football fields, per-league coverage or plan-scoped season access is therefore secondary-source or UNVERIFIED. It can only be settled from a browser session or a live key.",
+  "secondary_source_pricing": {
+    "values": "Free 100 requests/day (10 req/min); Pro USD 19/mo 7,500 req/day; Ultra USD 29/mo 75,000 req/day; Mega USD 39/mo 150,000 req/day",
+    "provenance": "web search result summaries citing api-football.com/pricing and third-party comparison blogs (highlightly.net \"Best Football APIs in 2026\")",
+    "status": "SECONDARY, plausible, not confirmed against the vendor page"
+  },
+  "xg_status": "UNVERIFIED. A competitor comparison page (thestatsapi.com) states: \"api-football's expected goals coverage should be treated as inconsistent unless you have verified the exact league, season, plan, and endpoint\" - a hostile source, but it agrees with backlog S-8 rather than contradicting it. No primary evidence either way was obtainable. GitHub code search for cached api-sports responses containing expected_goals returned nothing.",
+  "this_projects_own_measured_evidence": {
+    "finding": "the free plan returned an EMPTY /fixtures?live=all for a season-2026 fixture that was actually in progress",
+    "where_recorded": [
+      "backend/src/live_feed.py:221 - \"the free plan excludes season-2026 fixtures from its responses (found 2026-07-09, MAR-FRA at 45' with an empty live=all)\"",
+      "backend/docs/V6/PROJECT_DOC.md:162 - \"API-Football free plan is SEASON-BLIND for 2026\"",
+      "backend/docs/V6/PROJECT_REPORT.md:189 - \"the 'official' football API's free tier turned out to be season-blind for 2026\"",
+      "backend/tests/test_live_phases.py:498,661 and backend/src/live_feed.py:180 encode the behaviour as a permanent fallback path"
+    ],
+    "scope_honesty": "the measurement was taken on the World Cup 2026 competition (API_FOOTBALL_LEAGUE_ID default 1, season 2026). It is direct evidence that a current season can be silently empty on the free plan. It is NOT direct evidence about MLS/EPL/La Liga/Liga MX, and it is NOT evidence about any PAID plan.",
+    "the_trap_it_illustrates": "the failure mode is HTTP 200 with results:0 - indistinguishable from \"nothing is live\". A buyer who probes with a fixture that legitimately has no data will read a pass."
+  },
+  "assessment": {
+    "criterion_1": "coverage of the four leagues is near-certain (1,200+ leagues claimed); SEASON VISIBILITY on a paid plan is the open question and is exactly what burned this project",
+    "criterion_2": "documented endpoints /fixtures/statistics and /fixtures/players exist (secondary evidence). Field list UNVERIFIED.",
+    "criterion_3": "UNVERIFIED - unchanged from backlog S-8",
+    "criterion_5": "a real documented API with published rate limits exists, but the vendor blocks non-browser access to its own docs, which makes contract diligence awkward",
+    "criterion_7": "cheapest useful tier plausibly USD 19/mo - by far the cheapest candidate IF its xG turns out to exist for all four leagues",
+    "verdict": "the cheapest possible win and the least verifiable candidate. Its correct treatment is a bounded probe, not a purchase decision."
+  }
+}

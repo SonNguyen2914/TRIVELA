@@ -21,8 +21,9 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Index,
-                        Integer, String, Text, UniqueConstraint, text)
+from sqlalchemy import (Boolean, CheckConstraint, Column, DateTime, Float,
+                        ForeignKey, Index, Integer, String, Text,
+                        UniqueConstraint, text)
 from sqlalchemy.orm import declarative_base
 
 LiveBase = declarative_base()
@@ -899,6 +900,183 @@ class MlsPlayerMatchStat(LiveBase):
     )
 
 
+class HunterFinding(LiveBase):
+    """One observational market-structure finding from the Kalshi soccer
+    hunter. APPEND-ONLY: a later cycle that no longer sees the anomaly
+    marks the row expired with a second capture timestamp — it never
+    deletes or rewrites the original observation.
+
+    Every price in legs_json carries OUR capture clock; Kalshi publishes
+    no quote timestamp (updated_time is the definition clock, ~30h stale
+    on active markets — see markets.QUOTE_FRESHNESS_NOTE). Margins are
+    exact Decimal net of the exact versioned fee policy, serialized as
+    strings. Provider-controlled strings (series/event/market tickers)
+    get generous widths — a 26-char fee-policy string in a 24-char
+    column once silently destroyed a night of production fills.
+
+    Cross-process idempotency: finding_key is the provider-stable
+    identity (type|series|event|market) and a PARTIAL unique index
+    enforces at most ONE OPEN row per key at the database — Railway
+    keeps the old container serving while the new one boots, so two
+    hunter processes legitimately overlap and an in-Python dedup check
+    alone is a race. Alert delivery is a durable claim on the row
+    (alert_claimed_at, leased) taken BEFORE any bytes leave the process;
+    alerted_at is set only on a confirmed transport acceptance and
+    alert_results_json retains the per-transport outcome either way."""
+    __tablename__ = "hunter_finding"
+    id = Column(Integer, primary_key=True)
+    # competition slug when the event maps to a known fixture (mls-2026);
+    # otherwise NULL and the series ticker is the grouping key
+    competition_slug = Column(String(32))
+    series = Column(String(64), nullable=False)          # KXUCLGAME ...
+    event_ticker = Column(String(128))
+    market_ticker = Column(String(128))    # market-level findings only
+    finding_type = Column(String(32), nullable=False)
+    # provider-stable identity: finding_type|series|event|market. The
+    # partial unique index below makes "one open finding per key" a
+    # database invariant, not a process-local one.
+    finding_key = Column(String(384), nullable=False)
+    # SUM_BELOW_ONE | CROSSED_BOOK | POST_CERTAINTY |
+    # WIDE_SPREAD | THIN_BOOK | IN_PLAY_OVERREACTION | MODEL_EDGE
+    # liquidity/repricing flags are CONTEXT, never wins: labelled so,
+    # never alerted
+    is_context = Column(Boolean, nullable=False, default=False)
+    # the full arithmetic: legs, exact prices, exact fee per leg, margin
+    legs_json = Column(Text, nullable=False)
+    net_margin_dollars = Column(String(24))       # exact Decimal, string
+    fee_policy_version = Column(String(64))
+    # MODEL_EDGE only: the standing approval qualifier (edge, n, CI,
+    # significance) copied verbatim from the active approval decision
+    model_qualifier_json = Column(Text)
+    fixture_id = Column(Integer, ForeignKey("fixture.id"))
+    # the per-series Kalshi fetch-COMPLETION clock — the only timing
+    # evidence a quote gets (Kalshi publishes no quote timestamp), so it
+    # is preserved verbatim, never replaced by a later cycle-end clock
+    first_captured_at = Column(DateTime(timezone=True), nullable=False)
+    last_seen_at = Column(DateTime(timezone=True))
+    observed_cycles = Column(Integer, default=1)
+    # the separate clocks, kept apart on purpose: when the detector
+    # evaluated, and when the row reached the persistence phase
+    detected_at = Column(DateTime(timezone=True))
+    persisted_at = Column(DateTime(timezone=True))
+    # POST_CERTAINTY only: when the ESPN state was (re-)read — always at
+    # detection time, never cached from a previous cycle
+    espn_captured_at = Column(DateTime(timezone=True))
+    status = Column(String(16), nullable=False, default="open")
+    # open | expired
+    expired_at = Column(DateTime(timezone=True))
+    alerted_at = Column(DateTime(timezone=True))
+    # durable alert claim (leased) + retained per-transport outcomes
+    alert_claimed_at = Column(DateTime(timezone=True))
+    alert_results_json = Column(Text)
+    __table_args__ = (
+        Index("ix_hunter_finding_status_type", "status", "finding_type"),
+        # at most ONE open row per provider-stable key, enforced by the
+        # DATABASE on both dialects (same pattern as the canonical-lock
+        # partial unique index — the real cross-container guard)
+        Index("uq_hunter_finding_open_key", "finding_key", unique=True,
+              postgresql_where=text("status = 'open'"),
+              sqlite_where=text("status = 'open'")),
+        # observation clocks may never regress on a row: last_seen_at is
+        # a LATER observation of the same anomaly, never an earlier one.
+        # Overlapping Railway containers commit out of order, so this is
+        # a database invariant, not a process-local one (P0-3).
+        CheckConstraint("last_seen_at IS NULL OR "
+                        "last_seen_at >= first_captured_at",
+                        name="ck_hunter_finding_clock_monotonic"),
+        # POST_CERTAINTY only: the quote must have been captured AFTER
+        # finality was observed. A pre-final price paired with a settled
+        # outcome manufactures a margin that never existed, so the
+        # ordering is enforced by the TABLE and not merely by the
+        # detector that happens to write it (P0-2).
+        CheckConstraint("espn_captured_at IS NULL OR "
+                        "first_captured_at >= espn_captured_at",
+                        name="ck_hunter_finding_quote_after_finality"),
+    )
+
+
+class HunterObservationWatermark(LiveBase):
+    """The newest observation clock any process has applied to one
+    hunter finding_key — the cross-process chronological reconciliation
+    point (P0-3).
+
+    Railway deploys overlap old and new containers deliberately
+    (teardown is OFF), so an OLDER container's scan can legitimately
+    commit AFTER a newer one's. Without a watermark that straggler
+    re-opens a finding a newer clean scan already expired, and can send
+    an alert about a book that no longer exists. Advancing this row is
+    an atomic `UPDATE ... WHERE observed_through < :clock`: the DATABASE
+    decides which write is newest — exactly like the leased alert claim
+    — and a losing (stale) write is ignored rather than applied.
+
+    Keyed by finding_key rather than by finding id on purpose: the
+    watermark has to OUTLIVE the row it guards, or the straggler would
+    simply insert a fresh open row after the expiry.
+
+    Growth: one row per DISTINCT finding key ever observed (type x
+    series x event x market) — the same order as hunter_finding itself
+    and far smaller per row, written only when a key's observation
+    clock actually advances, never once per cycle."""
+    __tablename__ = "hunter_observation_watermark"
+    id = Column(Integer, primary_key=True)
+    finding_key = Column(String(384), nullable=False, unique=True)
+    # the newest per-series capture clock (OURS) applied to this key
+    observed_through = Column(DateTime(timezone=True), nullable=False)
+    updated_at = Column(DateTime(timezone=True))
+
+
+class HunterCycle(LiveBase):
+    """One hunter scan cycle — the heartbeat AND the denominator. A count
+    of findings without cycles-run/markets-scanned is a defect in this
+    repo, and a scanner that dies silently must be visible as dead, not
+    as a quiet market. One row per cycle, including failed ones.
+
+    Completeness is fail-closed: series_outcomes_json records the
+    per-series outcome (SUCCESS / REQUEST_FAILED / PAGINATION_CAP /
+    DETECTION_FAILED with detail), and any non-SUCCESS outcome makes the
+    cycle 'degraded' — "didn't look" is never recordable as "no
+    anomaly", and only a SUCCESS pass for a series may expire that
+    series' open findings."""
+    __tablename__ = "hunter_cycle"
+    id = Column(Integer, primary_key=True)
+    started_at = Column(DateTime(timezone=True), nullable=False)
+    completed_at = Column(DateTime(timezone=True))
+    status = Column(String(16), nullable=False, default="running")
+    # running | complete | degraded | failed
+    series_scanned = Column(Integer)
+    # series whose scan was NOT a complete success this cycle
+    series_failed = Column(Integer)
+    # per-series outcome map: {ticker: {outcome, detail?}}
+    series_outcomes_json = Column(Text)
+    events_scanned = Column(Integer)
+    markets_scanned = Column(Integer)
+    findings_new = Column(Integer)
+    findings_expired = Column(Integer)
+    # writes this cycle produced that a NEWER process had already
+    # superseded — ignored at the watermark rather than applied. A
+    # silent rejection would be its own kind of missing evidence, so
+    # the count rides on the heartbeat.
+    stale_writes_rejected = Column(Integer)
+    request_count = Column(Integer)
+    # the SECOND provider's spend (API-Football live in-play statistics),
+    # counted apart from Kalshi's. One combined number would hide which
+    # provider a budget problem came from, and the two have different
+    # limits and different failure modes.
+    live_stats_request_count = Column(Integer)
+    # what the live-evidence pass did this cycle: whether it ran at all,
+    # how many overreaction candidates it saw, which joins resolved or
+    # refused, the conditioning-state histogram, and the budget block. A
+    # cycle that spent nothing records WHY it spent nothing.
+    live_stats_json = Column(Text)
+    roster_size = Column(Integer)          # discovered soccer GAME series
+    active_series = Column(Integer)        # series with open markets
+    # when the roster was last (re-)discovered, and whether a DUE
+    # discovery failed this cycle (stale roster scanned instead)
+    discovery_at = Column(DateTime(timezone=True))
+    discovery_error = Column(Text)
+    error = Column(Text)
+
+
 class CorpusExport(LiveBase):
     """An IMMUTABLE published corpus version (V9 eval F3). build_corpus
     reads live state, so its bytes legitimately drift as the database
@@ -918,3 +1096,447 @@ class CorpusExport(LiveBase):
     backend_revision = Column(String(40))
     size_bytes = Column(Integer)
     published_at = Column(DateTime(timezone=True))
+
+
+# --- league-derived xG (API-Football) -------------------------------------
+#
+# These three tables are PROVIDER-NATIVE: keyed by API-Football's own league,
+# season, fixture and team ids rather than by rows in `fixture` / `team`.
+# That is deliberate. Friendlies span the global club universe, so the vast
+# majority of the clubs these ratings describe have no row in `team` and never
+# will — keying to our own fixtures would make the store unable to hold the
+# very data it exists for. The optional bridge to our fixtures lives in
+# `apifootball.bridge_fixture_xg`, which is a READ over these rows.
+#
+# No SourceObservation payload is written per fixture. That is a deliberate
+# departure from `mls_stats`, and the reason is the 2026-07-25 DiskFull
+# incident: `source_observation` payloads with no reader were one of the two
+# growth drivers that filled the volume and made every prediction write fail
+# silently. A full-season xG ingest is ~380 statistics responses per league,
+# which is exactly that shape. What is retained instead is the parsed value
+# PLUS the provider's raw string, which is what an audit actually needs.
+
+
+class ApiFootballLeagueCoverage(LiveBase):
+    """MEASURED xG coverage for one (league, season), and the date measured.
+
+    API-Football's documentation is 403-walled, so no published coverage list
+    exists — this table IS the coverage documentation. It records an empirical
+    probe, never a provider claim.
+
+    The measurement that matters is the VALUE, not the type. The
+    expected-goals statistic TYPE is present in `fixtures/statistics`
+    responses even where every value is null, so a type-presence check
+    succeeds while carrying no data — the same shallow-success shape as this
+    repo's `results: 0` and `{"created": 0}` incidents.
+    `type_without_value_seen` records that the hollow form was observed, so
+    the distinction stays on the record rather than being inferred.
+
+    `verdict` is one of xg_available (every sampled fixture had a numeric
+    value for both teams), xg_partial (some did), xg_absent (none did), or
+    indeterminate_no_completed_fixture (the probe could not run, which is
+    never read as clean)."""
+    __tablename__ = "apifootball_league_coverage"
+    id = Column(Integer, primary_key=True)
+    league_id = Column(Integer, nullable=False)
+    season = Column(Integer, nullable=False)
+    league_name = Column(String(96))
+    country = Column(String(64))
+    verdict = Column(String(40), nullable=False)
+    measured_rate = Column(Float)                 # fraction of samples with
+    # completed fixtures the provider showed for this season. Load-bearing for
+    # SEASON CHOICE, not decoration: on 2026-07-29 the provider's 'current'
+    # season for the Premier League was 2026 (barely started, a handful of
+    # completed fixtures) while the xG history sat in 2025 (380), and J1's
+    # 'current' was 2027 against 200 completed in 2026 — the J-League moved to
+    # an autumn-spring calendar. A rating fitted on the 'current' season would
+    # have been fitted on almost nothing, so the season with the data wins.
+    completed_fixtures_visible = Column(Integer)
+    samples_taken = Column(Integer, nullable=False, default=0)
+    samples_with_xg = Column(Integer, nullable=False, default=0)
+    type_without_value_seen = Column(Boolean, default=False, nullable=False)
+    # rounds whose sample carried no value — the attributable form of the
+    # rate. End-of-season promotion/relegation ties were MEASURED to be the
+    # miss on three leagues that a most-recent-N sample called 'partial'.
+    miss_rounds_json = Column(Text)
+    sampling_method = Column(String(40))          # spread_across_season
+    measured_at = Column(DateTime(timezone=True), nullable=False)
+    __table_args__ = (UniqueConstraint("league_id", "season"),)
+
+
+class ApiFootballFixtureXg(LiveBase):
+    """One team's provider xG in one league fixture, AS READ AT ONE INSTANT.
+
+    APPEND-ONLY BY CONSTRUCTION. API-Football's documentation is 403-walled
+    and Sportmonks-style retroactive correction of historical values cannot
+    be ruled out, so a stored xG is evidence of what the provider said WHEN WE
+    ASKED — never a cell to be refetched and overwritten. The unique key
+    includes `value_hash`, so:
+
+      - a re-read returning the SAME value collides and writes nothing
+        (the ingest is idempotent and cheap to resume);
+      - a re-read returning a DIFFERENT value inserts a SECOND row, which
+        makes a retroactive correction VISIBLE and countable instead of
+        silently replacing the evidence.
+
+    `xg` is NULL where the provider offered no usable value; `xg_raw` keeps
+    the provider's own string so the parse can be re-audited. A null, empty,
+    '-' or exactly-zero value is ABSENCE, never zero: the provider uses null
+    and 0 interchangeably as placeholders and the two cannot be told apart,
+    so 0 is never read as data (the pre-registered trial criteria took the
+    same line)."""
+    __tablename__ = "apifootball_fixture_xg"
+    id = Column(Integer, primary_key=True)
+    provider_fixture_id = Column(Integer, nullable=False)
+    side = Column(String(8), nullable=False)          # home | away
+    league_id = Column(Integer, nullable=False)
+    season = Column(Integer, nullable=False)
+    provider_team_id = Column(Integer, nullable=False)
+    team_name = Column(String(96))
+    opponent_team_id = Column(Integer)
+    xg = Column(Float)                                # None == absent
+    xg_raw = Column(String(32))                       # provider's own string
+    xg_against = Column(Float)                        # opponent's xg
+    goals = Column(Integer)
+    goals_conceded = Column(Integer)
+    kickoff_utc = Column(DateTime(timezone=True))
+    round_label = Column(String(64))
+    # sha256 over the canonical (xg_raw, xg_against_raw, goals) triple — the
+    # discriminator that turns an overwrite into a new row
+    value_hash = Column(String(64), nullable=False)
+    read_at = Column(DateTime(timezone=True), nullable=False)
+    __table_args__ = (
+        UniqueConstraint("provider_fixture_id", "side", "value_hash"),
+        Index("ix_apif_xg_league_season", "league_id", "season"),
+        Index("ix_apif_xg_team", "provider_team_id"),
+    )
+
+
+class ApiFootballClubLeague(LiveBase):
+    """A club's DOMESTIC league, derived from provider data and archived.
+
+    A friendly's clubs must be resolved to the league whose fixtures the
+    club's rating is fitted on — Son's rule: a club's xG rating comes from
+    the league that club plays in. The resolution is provider-derived
+    (`/teams?search=` then `/leagues?team=`), never guessed from a name.
+
+    Resolution is authoritative against LEAGUE ROSTERS, not against the
+    provider's own club->league answer. That answer is structurally ambiguous:
+    `/leagues?team=` mixes the real league with pre-season friendly
+    tournaments ('Premier League - Summer Series') and years-stale lower-tier
+    registrations, with no field distinguishing them. Membership of a league
+    roster has no such problem — a club belongs to exactly one domestic league
+    roster — and one request buys a whole league.
+
+    `resolution` is one of resolved (exactly one roster club at the strongest
+    matching tier), ambiguous_team (several at that tier — never guessed), or
+    league_not_indexed (no roster we hold contains this club, which is a
+    statement about OUR coverage and is worded as one, never as 'this club has
+    no league'). Only `resolved` may be used to pick a rating; every other
+    value is shown in words.
+
+    `match_tier` records HOW it matched, because the tiers are not equally
+    strong: exact and token_set are safe alone, while unique_containment
+    ('Newcastle' for 'Newcastle United') is directional — the roster name's
+    tokens must be a strict subset of the query's. The reverse direction is
+    what makes 'Real Madrid' match 'Real Madrid Castilla'."""
+    __tablename__ = "apifootball_club_league"
+    id = Column(Integer, primary_key=True)
+    # the name we asked about (an ESPN displayName on the friendlies surface)
+    query_name = Column(String(96), nullable=False, unique=True)
+    resolution = Column(String(24), nullable=False)
+    provider_team_id = Column(Integer)
+    provider_team_name = Column(String(96))
+    country = Column(String(64))
+    league_id = Column(Integer)
+    season = Column(Integer)
+    league_name = Column(String(96))
+    league_country = Column(String(64))
+    match_tier = Column(String(24))       # exact | token_set | alias
+    candidates_json = Column(Text)        # what was refused, and why
+    resolved_at = Column(DateTime(timezone=True), nullable=False)
+
+class ApiFootballLiveCoverage(LiveBase):
+    """Per-competition verdict on whether API-Football serves LIVE in-play
+    data — MEASURED, dated, and one row per competition.
+
+    The hunter's in-play conditioning inference is only as honest as its
+    knowledge of what the provider actually covers, and coverage is uneven
+    and undocumented: measured 2026-07-29, CONMEBOL Sudamericana served 18
+    statistic types at 90' while Copa Colombia served ZERO at 90'. So the
+    verdict is measured from readings the scanner actually took, never
+    assumed and never read off the provider's own coverage flag (which the
+    trial harness found declaring `False` for two leagues whose payloads
+    carried xG).
+
+    STATISTICS AND EVENTS ARE SEPARATE COLUMNS, not one "has live data"
+    flag, because event coverage is strictly BROADER: competitions with
+    zero statistic types still served goal events. Collapsing them would
+    have made the broader signal invisible.
+
+    `fixtures_probed` is the DENOMINATOR and travels with the verdict: a
+    verdict from one fixture at 20' and one from ten fixtures at 70' are
+    not the same evidence. `too_early_reads` counts readings taken before
+    a match had time to generate statistics — those never downgrade an
+    already-measured PRESENT verdict, because letting one early read erase
+    a measured presence would convert missing evidence into a conclusion.
+
+    Growth is bounded by the number of competitions, updated IN PLACE —
+    deliberately not one row per reading. Per-reading payloads with no
+    reader are what filled the production volume on 2026-07-25.
+
+    NOT A MODEL INPUT. Nothing here may reach a T-10 lock, a
+    PredictionRun, a paper signal, or a fitted/scored feature; live xG
+    carries information from after a lock. Enforced by
+    tests/test_hunter_live_stats.py."""
+    __tablename__ = "apifootball_live_coverage"
+    id = Column(Integer, primary_key=True)
+    # the PROVIDER's own league id — a provider-stable identity, never a
+    # competition name
+    league_id = Column(Integer, nullable=False, unique=True)
+    league_name = Column(String(128))
+    league_country = Column(String(64))
+    # LIVE_STATS_PRESENT | LIVE_STATS_ABSENT | TOO_EARLY_TO_CONCLUDE
+    verdict = Column(String(32))
+    statistic_type_count = Column(Integer)
+    statistic_types_json = Column(Text)
+    # xG presence means a PARSEABLE number for both teams; a present-but-
+    # null xG (several leagues serve one) is ABSENT, never zero
+    xg_present = Column(Boolean, default=False)
+    xg_type_offered = Column(Boolean, default=False)
+    # tracked separately from statistics on purpose — see the class note
+    events_present = Column(Boolean, default=False)
+    event_count_last = Column(Integer)
+    fixtures_probed = Column(Integer, default=0)
+    too_early_reads = Column(Integer, default=0)
+    last_elapsed_observed = Column(Integer)
+    first_measured_at = Column(DateTime(timezone=True))
+    last_measured_at = Column(DateTime(timezone=True))
+    # when a PRESENT verdict was last actually observed, kept apart from
+    # last_measured_at so a long run of absences cannot make a stale
+    # presence look current
+    last_present_at = Column(DateTime(timezone=True))
+
+
+# ===========================================================================
+# Team news (2026-07-30). Injuries/absences, lineup RELEASE state and in-play
+# events, per provider, with our capture clock on every row.
+#
+# THE EPISTEMIC LINE, built into the schema rather than asserted in prose:
+#
+#   - Nothing here is a model feature. No PredictionRun, no canonical T-10
+#     lock, no paper signal and no engine-signature module reads any of
+#     these tables, and tests/test_team_news_isolation.py fails if one
+#     starts to. The platform MEASURED lineup and key-attacker features as
+#     negative-or-marginal (key-attacker +0.0034, not significant) and
+#     switched them off; this is reader context, not a revived feature.
+#   - There is deliberately NO aggregate column anywhere below — no
+#     "absences_count" on a fixture, no severity weight, no team-strength
+#     impact. An aggregate is a model wearing a news label.
+#   - The provider's typing is stored VERBATIM (`provider_type`,
+#     `provider_reason`). "Missing Fixture / Knee Injury" is API-Football's
+#     claim about a player, not ours, and re-wording it into our vocabulary
+#     would launder a third party's guess into our voice.
+#   - `record_count` is NULLABLE ON PURPOSE and is NULL whenever the state
+#     is `unavailable`. Zero means "the provider showed us an empty list";
+#     NULL means "we never saw a list". This repo has twice read a zero as
+#     an answer (`results: 0` on a live match; `{"created": 0}` over a full
+#     volume), so the difference is structural here, not a convention.
+#   - `subject_ref` is a STRING provider reference, and `fixture_id` is
+#     NULLABLE, so club friendlies — which have no live-plane fixture row
+#     and by design get none (src/friendlies.py) — can carry news without
+#     being handed the evidence machinery they are excluded from.
+#   - Raw provider bodies are NOT stored. Only a content hash and a byte
+#     length live here; the bytes live in research_archive/. A per-fixture
+#     payload column was the growth driver behind the 2026-07-25 DiskFull
+#     incident, and re-adding one to carry news would repeat it.
+# ===========================================================================
+
+TEAM_NEWS_FEEDS = ("absences", "lineup", "events")
+TEAM_NEWS_STATES = ("ok", "empty", "unavailable")
+
+
+class TeamNewsCapture(LiveBase):
+    """The freshness ledger: one upserted row per (provider, subject, feed)
+    recording what the LAST fetch attempt actually saw.
+
+    This table is what makes "stale", "unavailable" and "empty"
+    distinguishable instead of collapsing into an absent section. It is
+    upserted rather than appended so growth stays bounded by
+    fixtures x feeds; the one transition worth keeping as history — a
+    lineup being released — is kept on TeamNewsLineup.first_released_at.
+    """
+    __tablename__ = "team_news_capture"
+    id = Column(Integer, primary_key=True)
+    provider = Column(String(16), nullable=False)      # apifootball|espn
+    subject_ref = Column(String(32), nullable=False)   # provider fixture ref
+    fixture_id = Column(Integer, ForeignKey("fixture.id"))   # nullable
+    competition = Column(String(32))
+    feed = Column(String(16), nullable=False)          # TEAM_NEWS_FEEDS
+    state = Column(String(16), nullable=False)         # TEAM_NEWS_STATES
+    # NULL when state='unavailable' — see the header note. Never defaulted
+    # to 0, because 0 is a measurement and NULL is the absence of one.
+    record_count = Column(Integer)
+    # the provider's own count, kept only to record a DISAGREEMENT with the
+    # array it shipped. The array always wins; this is evidence, not input.
+    provider_declared_count = Column(Integer)
+    captured_at = Column(DateTime(timezone=True), nullable=False)
+    first_captured_at = Column(DateTime(timezone=True))
+    attempts = Column(Integer, nullable=False, default=1)
+    # an error CLASS or a short provider note. Never a payload, never a
+    # credential — the ingestion redacts before anything reaches here.
+    note = Column(String(300))
+    content_hash = Column(String(64))     # sha256 of the raw body
+    payload_bytes = Column(Integer)       # length of the body we hashed
+    __table_args__ = (
+        UniqueConstraint("provider", "subject_ref", "feed",
+                         name="uq_team_news_capture_subject_feed"),
+        Index("ix_team_news_capture_fixture", "fixture_id"),
+    )
+
+
+class TeamAbsence(LiveBase):
+    """One provider-reported absence for one fixture, typed IN THE
+    PROVIDER'S OWN WORDS.
+
+    Injury feeds are stale and wrong often enough that a record is only
+    worth having if a human can discount it, so every row carries its
+    provider, its capture clock, and when it was first and last seen. A
+    row whose `last_seen_at` predates the newest successful capture for
+    its fixture is no longer being reported by the provider — which is
+    surfaced, not deleted, because a retraction is information too.
+    """
+    __tablename__ = "team_absence"
+    id = Column(Integer, primary_key=True)
+    provider = Column(String(16), nullable=False)
+    subject_ref = Column(String(32), nullable=False)
+    fixture_id = Column(Integer, ForeignKey("fixture.id"))   # nullable
+    competition = Column(String(32))
+    # provider player id when present, else a normalised name. NOT NULL so
+    # the uniqueness below is enforced identically on PostgreSQL and
+    # SQLite: PG treats NULLs as distinct in a unique constraint, so a
+    # nullable key would silently admit duplicates in production while the
+    # SQLite suite stayed green.
+    player_key = Column(String(96), nullable=False)
+    provider_player_id = Column(String(24))
+    player_name = Column(String(96))
+    provider_team_id = Column(String(24))
+    team_name = Column(String(96))
+    # VERBATIM provider fields. Do not normalise, map or re-word these.
+    provider_type = Column(String(64))       # e.g. "Missing Fixture"
+    provider_reason = Column(String(96))     # e.g. "Knee Injury"
+    captured_at = Column(DateTime(timezone=True), nullable=False)
+    first_seen_at = Column(DateTime(timezone=True))
+    last_seen_at = Column(DateTime(timezone=True))
+    __table_args__ = (
+        UniqueConstraint("provider", "subject_ref", "player_key",
+                         name="uq_team_absence_subject_player"),
+        Index("ix_team_absence_fixture", "fixture_id"),
+    )
+
+
+class TeamNewsLineup(LiveBase):
+    """Per-side lineup RELEASE state, per provider, plus the release
+    transition.
+
+    `provider` is part of the identity on purpose: ESPN carries friendly
+    XIs and API-Football carries league XIs, and pooling them into an
+    undifferentiated "lineup" with the source lost would make a coverage
+    number unreadable.
+
+    THE THREE STATES THAT MUST NOT COLLAPSE:
+      container_present=False                 -> no coverage for this fixture
+      container_present=True, named_count=0   -> NOT RELEASED
+      released=True                           -> a full XI exists
+
+    The middle case is real and measured: API-Football returns friendly
+    lineup arrays whose side objects carry formation=None and startXI=0,
+    and ESPN returned rosters=2 with named=0 on a COMPLETED fixture
+    (Atletico v Getafe, 2026-07-30). Counting containers reports coverage
+    that does not exist, so release is decided by counting NAMES.
+
+    `first_released_at` is the information event: on a friendly, where the
+    XI is arbitrary rather than predictable, the moment it lands is the
+    largest genuine information event on the fixture.
+    """
+    __tablename__ = "team_news_lineup"
+    id = Column(Integer, primary_key=True)
+    provider = Column(String(16), nullable=False)      # espn|apifootball
+    subject_ref = Column(String(32), nullable=False)
+    fixture_id = Column(Integer, ForeignKey("fixture.id"))   # nullable
+    competition = Column(String(32))
+    side = Column(String(8), nullable=False)           # home|away
+    team_name = Column(String(96))
+    formation = Column(String(16))
+    named_count = Column(Integer)        # NAMES, never containers
+    starter_count = Column(Integer)
+    released = Column(Boolean, nullable=False, default=False)
+    container_present = Column(Boolean, nullable=False, default=False)
+    captured_at = Column(DateTime(timezone=True), nullable=False)
+    first_seen_at = Column(DateTime(timezone=True))
+    # The transition. Set ONCE, on the first capture that sees a full XI,
+    # and never rewritten — a later re-release must not move the clock on
+    # when the news landed.
+    #
+    # READ IT AS AN UPPER BOUND, NOT A PUBLICATION TIME. This records when
+    # WE FIRST OBSERVED the XI, not when the provider published it.
+    # Neither ESPN nor API-Football timestamps a lineup, so the
+    # publication moment is unavailable at ANY polling rate, and the
+    # observation clock is the only honest thing to store. The error is
+    # bounded by the polling interval and always in one direction: a
+    # sparse poll makes a release look LATER than it was. Nothing
+    # downstream may therefore treat this as the instant the market
+    # learned anything.
+    first_released_at = Column(DateTime(timezone=True))
+    kickoff_utc = Column(DateTime(timezone=True))
+    # computed AT THE MOMENT OF OBSERVATION and frozen, so a later
+    # reschedule cannot retroactively change how early the news landed.
+    # Carries the same upper-bound caveat as first_released_at.
+    released_minutes_before_kickoff = Column(Integer)
+    __table_args__ = (
+        UniqueConstraint("provider", "subject_ref", "side",
+                         name="uq_team_news_lineup_subject_side"),
+        Index("ix_team_news_lineup_fixture", "fixture_id"),
+    )
+
+
+class TeamNewsEvent(LiveBase):
+    """An in-play event (goal, card, substitution) with the PROVIDER'S
+    minute and OUR capture time — both, never one.
+
+    A provider minute alone cannot be aged: it says "73'", not "we learned
+    this at 20:41Z". Anything downstream that wants to know how fresh an
+    event read is needs the capture clock, and anything that wants to know
+    where in the match it happened needs the provider minute.
+
+    Deliberately NOT named `fixture_event`: the in-play detector work on
+    feat-hunter-live-stats also consumes `fixtures/events`, and a
+    namespaced table lets both branches land without a schema collision.
+    Nothing in this module reads or writes src/live/hunter.py.
+    """
+    __tablename__ = "team_news_event"
+    id = Column(Integer, primary_key=True)
+    provider = Column(String(16), nullable=False)
+    subject_ref = Column(String(32), nullable=False)
+    fixture_id = Column(Integer, ForeignKey("fixture.id"))   # nullable
+    competition = Column(String(32))
+    # dedupe identity: minute|extra|type|detail|player|team, so re-reading
+    # a live feed refreshes rather than duplicating
+    event_key = Column(String(160), nullable=False)
+    provider_minute = Column(Integer)
+    provider_minute_extra = Column(Integer)
+    # VERBATIM provider strings
+    event_type = Column(String(32))       # Goal|Card|subst|Var
+    event_detail = Column(String(64))     # Red Card|Normal Goal|...
+    provider_team_id = Column(String(24))
+    team_name = Column(String(96))
+    provider_player_id = Column(String(24))
+    player_name = Column(String(96))
+    assist_name = Column(String(96))
+    captured_at = Column(DateTime(timezone=True), nullable=False)
+    first_seen_at = Column(DateTime(timezone=True))
+    __table_args__ = (
+        UniqueConstraint("provider", "subject_ref", "event_key",
+                         name="uq_team_news_event_subject_key"),
+        Index("ix_team_news_event_fixture", "fixture_id"),
+    )

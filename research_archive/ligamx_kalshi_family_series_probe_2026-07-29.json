@@ -1,0 +1,146 @@
+{
+ "probed_at": "2026-07-29T07:27:03.902940+00:00",
+ "results": {
+  "KXLIGAMXTOTAL": {
+   "series_http_status": 200,
+   "exists": true,
+   "open_events_http_status": 200,
+   "open_events": 9,
+   "open_event_sample": [
+    "KXLIGAMXTOTAL-26JUL31PUECDG",
+    "KXLIGAMXTOTAL-26JUL31ASLTIJ",
+    "KXLIGAMXTOTAL-26JUL31JUAPUM",
+    "KXLIGAMXTOTAL-26AUG01QUETIG",
+    "KXLIGAMXTOTAL-26AUG01ATLMON"
+   ]
+  },
+  "KXLIGAMXBTTS": {
+   "series_http_status": 200,
+   "exists": true,
+   "open_events_http_status": 200,
+   "open_events": 9,
+   "open_event_sample": [
+    "KXLIGAMXBTTS-26JUL31PUECDG",
+    "KXLIGAMXBTTS-26JUL31ASLTIJ",
+    "KXLIGAMXBTTS-26JUL31JUAPUM",
+    "KXLIGAMXBTTS-26AUG01QUETIG",
+    "KXLIGAMXBTTS-26AUG01ATLMON"
+   ]
+  },
+  "KXLIGAMXSPREAD": {
+   "series_http_status": 200,
+   "exists": true,
+   "open_events_http_status": 200,
+   "open_events": 9,
+   "open_event_sample": [
+    "KXLIGAMXSPREAD-26JUL31PUECDG",
+    "KXLIGAMXSPREAD-26JUL31ASLTIJ",
+    "KXLIGAMXSPREAD-26JUL31JUAPUM",
+    "KXLIGAMXSPREAD-26AUG01QUETIG",
+    "KXLIGAMXSPREAD-26AUG01ATLMON"
+   ]
+  },
+  "KXLIGAMXTEAMTOTAL": {
+   "series_http_status": 200,
+   "exists": true,
+   "open_events_http_status": 200,
+   "open_events": 9,
+   "open_event_sample": [
+    "KXLIGAMXTEAMTOTAL-26JUL31PUECDG",
+    "KXLIGAMXTEAMTOTAL-26JUL31ASLTIJ",
+    "KXLIGAMXTEAMTOTAL-26JUL31JUAPUM",
+    "KXLIGAMXTEAMTOTAL-26AUG01QUETIG",
+    "KXLIGAMXTEAMTOTAL-26AUG01ATLMON"
+   ]
+  },
+  "KXLIGAMXSCORE": {
+   "series_http_status": 200,
+   "exists": true,
+   "open_events_http_status": 200,
+   "open_events": 9,
+   "open_event_sample": [
+    "KXLIGAMXSCORE-26JUL31PUECDG",
+    "KXLIGAMXSCORE-26JUL31ASLTIJ",
+    "KXLIGAMXSCORE-26JUL31JUAPUM",
+    "KXLIGAMXSCORE-26AUG01QUETIG",
+    "KXLIGAMXSCORE-26AUG01ATLMON"
+   ]
+  },
+  "KXLIGAMXFTTS": {
+   "series_http_status": 200,
+   "exists": true,
+   "open_events_http_status": 200,
+   "open_events": 9,
+   "open_event_sample": [
+    "KXLIGAMXFTTS-26JUL31PUECDG",
+    "KXLIGAMXFTTS-26JUL31ASLTIJ",
+    "KXLIGAMXFTTS-26JUL31JUAPUM",
+    "KXLIGAMXFTTS-26AUG01QUETIG",
+    "KXLIGAMXFTTS-26AUG01ATLMON"
+   ]
+  },
+  "KXLIGAMXMOV": {
+   "series_http_status": 200,
+   "exists": true,
+   "open_events_http_status": 200,
+   "open_events": 0,
+   "open_event_sample": []
+  },
+  "KXLIGAMX1H": {
+   "series_http_status": 200,
+   "exists": true,
+   "open_events_http_status": 200,
+   "open_events": 9,
+   "open_event_sample": [
+    "KXLIGAMX1H-26JUL31PUECDG",
+    "KXLIGAMX1H-26JUL31ASLTIJ",
+    "KXLIGAMX1H-26JUL31JUAPUM",
+    "KXLIGAMX1H-26AUG01QUETIG",
+    "KXLIGAMX1H-26AUG01ATLMON"
+   ]
+  },
+  "KXLIGAMX1HTOTAL": {
+   "series_http_status": 200,
+   "exists": true,
+   "open_events_http_status": 200,
+   "open_events": 9,
+   "open_event_sample": [
+    "KXLIGAMX1HTOTAL-26JUL31PUECDG",
+    "KXLIGAMX1HTOTAL-26JUL31ASLTIJ",
+    "KXLIGAMX1HTOTAL-26JUL31JUAPUM",
+    "KXLIGAMX1HTOTAL-26AUG01QUETIG",
+    "KXLIGAMX1HTOTAL-26AUG01ATLMON"
+   ]
+  },
+  "KXLIGAMX1HSPREAD": {
+   "series_http_status": 200,
+   "exists": true,
+   "open_events_http_status": 200,
+   "open_events": 9,
+   "open_event_sample": [
+    "KXLIGAMX1HSPREAD-26JUL31PUECDG",
+    "KXLIGAMX1HSPREAD-26JUL31ASLTIJ",
+    "KXLIGAMX1HSPREAD-26JUL31JUAPUM",
+    "KXLIGAMX1HSPREAD-26AUG01QUETIG",
+    "KXLIGAMX1HSPREAD-26AUG01ATLMON"
+   ]
+  },
+  "KXLIGAMX1HBTTS": {
+   "series_http_status": 200,
+   "exists": true,
+   "open_events_http_status": 200,
+   "open_events": 9,
+   "open_event_sample": [
+    "KXLIGAMX1HBTTS-26JUL31PUECDG",
+    "KXLIGAMX1HBTTS-26JUL31ASLTIJ",
+    "KXLIGAMX1HBTTS-26JUL31JUAPUM",
+    "KXLIGAMX1HBTTS-26AUG01QUETIG",
+    "KXLIGAMX1HBTTS-26AUG01ATLMON"
+   ]
+  },
+  "KXLIGAMXCUP": {
+   "series_http_status": 404,
+   "exists": false
+  }
+ }
+}

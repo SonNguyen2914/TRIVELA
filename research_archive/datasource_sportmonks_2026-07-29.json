@@ -1,0 +1,367 @@
+{
+  "source": "Sportmonks Football API 3.0",
+  "probed_at_utc": "2026-07-29T22:22:58.481145Z",
+  "probe_method": "unauthenticated curl against api.sportmonks.com; public docs (docs.sportmonks.com serves every page as .md), public pricing page, public coverage page, public terms of service. NO ACCOUNT CREATED, no payment details entered.",
+  "probes": [
+    {
+      "request": "GET https://api.sportmonks.com/v3/football/leagues (no token)",
+      "http_status": 401,
+      "body": "{\"message\":\"No token provided. You can supply your token by query string or authorization header.\"}",
+      "meaning": "every data endpoint is token-gated; nothing about actual payloads for our four leagues could be exercised without a subscription"
+    },
+    {
+      "request": "GET https://docs.sportmonks.com/v3/tutorials-and-guides/tutorials/expected/coverage.md",
+      "http_status": 200,
+      "bytes": 6983
+    },
+    {
+      "request": "GET https://www.sportmonks.com/football-api/coverage/",
+      "http_status": 200,
+      "bytes": 73282710,
+      "note": "per-league feature matrix rendered server-side; parser validated against a sparse league (Mauritian League #1523 correctly reads Odds=NO, Match Statistics=NO) before trusting the target rows"
+    },
+    {
+      "request": "GET https://www.sportmonks.com/football-api/plans-pricing/",
+      "http_status": 200
+    },
+    {
+      "request": "GET https://www.sportmonks.com/terms-of-service/",
+      "http_status": 200
+    }
+  ],
+  "xg_coverage_doc": {
+    "quoted": "\"The xG data is available from the 2024/2025 season to date. We cover the following leagues for our Expected values.\"",
+    "add_on_requirement_quoted": "\"Expected Goals (xG) data requires either the xG Basic or xG Advanced add-on.\"",
+    "timing_quoted": "\"xG Basic Add-on: Access to all xG statistics immediately after match completion\"",
+    "target_league_ids_present": {
+      "Premier League": 8,
+      "La Liga": 564,
+      "Liga MX": 743,
+      "Major League Soccer": 779
+    },
+    "full_xg_league_count": 50,
+    "full_xg_league_list": {
+      "Champions League": 2,
+      "Europa League": 5,
+      "Premier League": 8,
+      "Championship": 9,
+      "League One": 12,
+      "League Two": 14,
+      "FA Cup": 24,
+      "Carabao Cup": 27,
+      "EFL Trophy": 39,
+      "Eredivisie": 72,
+      "Eerste Divisie": 74,
+      "Bundesliga": 82,
+      "2. Bundesliga": 85,
+      "DFB Pokal": 109,
+      "Bundesliga Play-offs": 163,
+      "2. Bundesliga Play-offs": 166,
+      "Admiral Bundesliga": 181,
+      "Pro League": 944,
+      "Superliga": 636,
+      "Ligue 1": 301,
+      "Coupe de France": 307,
+      "Serie A": 648,
+      "Coppa Italia": 390,
+      "Eliteserien": 444,
+      "Liga Portugal": 462,
+      "Premiership": 501,
+      "La Liga": 564,
+      "Copa Del Rey": 570,
+      "Allsvenskan": 573,
+      "Super League": 591,
+      "Super Lig": 600,
+      "WC Qualification Concacaf": 717,
+      "WC Qualification Europe": 720,
+      "WC Qualification South America": 726,
+      "World Cup": 732,
+      "Liga MX": 743,
+      "Major League Soccer": 779,
+      "J-League": 968,
+      "Indian Super League": 1007,
+      "Copa America": 1114,
+      "Africa Cup of Nations": 1117,
+      "Copa Libertadores": 1122,
+      "Euro Qualification": 1325,
+      "European Championship": 1326,
+      "A-League Men": 1356,
+      "UEFA Nations League": 1538,
+      "Copa de la Superliga": 1658,
+      "Europa Conference League": 2286,
+      "Primeira Liga - Play-offs": 2295,
+      "J1 100 Year Vision League": 3537
+    },
+    "add_on_price_from_this_doc": {
+      "xG Basic": {
+        "Starter": "EUR 19/mo",
+        "Growth": "EUR 69/mo",
+        "Pro": "EUR 99/mo"
+      },
+      "xG Advanced": {
+        "Starter": "EUR 199/mo",
+        "Growth": "EUR 299/mo"
+      }
+    }
+  },
+  "per_league_feature_flags": {
+    "Premier League #8": {
+      "Standings": "YES",
+      "Odds": "YES",
+      "Fixtures and Season Schedules": "YES",
+      "Advanced Player Stats": "YES",
+      "Standard Player Stats and Lineups": "YES",
+      "Livescores and Events": "YES",
+      "Match Statistics": "YES",
+      "Standings Live": "YES",
+      "Topscorers": "YES",
+      "Historical data": "YES"
+    },
+    "La Liga #564": {
+      "Standings": "YES",
+      "Odds": "YES",
+      "Fixtures and Season Schedules": "YES",
+      "Advanced Player Stats": "YES",
+      "Standard Player Stats and Lineups": "YES",
+      "Livescores and Events": "YES",
+      "Match Statistics": "YES",
+      "Standings Live": "YES",
+      "Topscorers": "YES",
+      "Historical data": "YES"
+    },
+    "Major League Soccer #779": {
+      "Standings": "YES",
+      "Odds": "YES",
+      "Fixtures and Season Schedules": "YES",
+      "Advanced Player Stats": "YES",
+      "Standard Player Stats and Lineups": "YES",
+      "Livescores and Events": "YES",
+      "Match Statistics": "YES",
+      "Standings Live": "YES",
+      "Topscorers": "YES",
+      "Historical data": "YES"
+    },
+    "Liga MX #743": {
+      "Standings": "YES",
+      "Odds": "YES",
+      "Fixtures and Season Schedules": "YES",
+      "Advanced Player Stats": "YES",
+      "Standard Player Stats and Lineups": "YES",
+      "Livescores and Events": "YES",
+      "Match Statistics": "YES",
+      "Standings Live": "YES",
+      "Topscorers": "NO",
+      "Historical data": "YES"
+    },
+    "Mauritian League #1523": {
+      "Standings": "YES",
+      "Odds": "NO",
+      "Fixtures and Season Schedules": "YES",
+      "Advanced Player Stats": "NO",
+      "Standard Player Stats and Lineups": "NO",
+      "Livescores and Events": "NO",
+      "Match Statistics": "NO",
+      "Standings Live": "NO",
+      "Topscorers": "YES",
+      "Historical data": "YES"
+    }
+  },
+  "documented_statistic_type_codes_fixture_scope": {
+    "count": 97,
+    "codes": [
+      "CORNERS",
+      "SHOTS_OFF_TARGET",
+      "SHOTS_TOTAL",
+      "ATTACKS",
+      "DANGEROUS_ATTACKS",
+      "BALL_POSSESSION",
+      "BALL_SAFE",
+      "PENALTIES",
+      "SHOTS_INSIDEBOX",
+      "SHOTS_OUTSIDEBOX",
+      "OFFSIDES",
+      "GOALS",
+      "GOAL_KICKS",
+      "GOAL_ATTEMPTS",
+      "FREE_KICKS",
+      "FOULS",
+      "SAVES",
+      "SHOTS_BLOCKED",
+      "SUBSTITUTIONS",
+      "THROWINS",
+      "LONG_PASSES",
+      "HIT_WOODWORK",
+      "SUCCESSFUL_HEADERS",
+      "SUCCESSFUL_INTERCEPTIONS",
+      "SUBSTITUTIONS_OVERTIME",
+      "OFFSIDES_OVERTIME",
+      "HEADERS",
+      "YELLOWCARDS_OVERTIME",
+      "CHALLENGES",
+      "TACKLES",
+      "ASSISTS",
+      "PASSES",
+      "SUCCESSFUL_PASSES",
+      "SUCCESSFUL_PASSES_PERCENTAGE",
+      "REDCARDS",
+      "YELLOWCARDS",
+      "YELLOWRED_CARDS",
+      "SHOTS_ON_TARGET",
+      "INJURIES",
+      "TOTAL_CROSSES",
+      "ACCURATE_CROSSES",
+      "INTERCEPTIONS",
+      "DUELS_WON",
+      "DRIBBLED_ATTEMPTS",
+      "SUCCESSFUL_DRIBBLES",
+      "KEY_PASSES",
+      "BIG_CHANCES_CREATED",
+      "BIG_CHANCES_MISSED",
+      "TREATMENTS",
+      "COUNTER_ATTACKS",
+      "SUCCESSFUL_CROSSES_PERCENTAGE",
+      "SUCCESSFUL_DRIBBLES_PERCENTAGE",
+      "SUCCESSFUL_LONG_PASSES",
+      "SUCCESSFUL_LONG_PASSES_PERCENTAGE",
+      "CAPTAIN",
+      "SHOTS_OFF_TARGET",
+      "SHOTS_TOTAL",
+      "PENALTIES",
+      "OFFSIDES",
+      "GOALS",
+      "FOULS",
+      "SAVES",
+      "SHOTS_BLOCKED",
+      "HIT_WOODWORK",
+      "TACKLES",
+      "ASSISTS",
+      "PASSES",
+      "REDCARDS",
+      "YELLOWCARDS",
+      "YELLOWRED_CARDS",
+      "SHOTS_ON_TARGET",
+      "GOALS_CONCEDED",
+      "FOULS_DRAWN",
+      "BLOCKED_SHOTS",
+      "TOTAL_CROSSES",
+      "ACCURATE_CROSSES",
+      "INTERCEPTIONS",
+      "CLEARANCES",
+      "SAVES_INSIDE_BOX",
+      "TOTAL_DUELS",
+      "DUELS_WON",
+      "AERIALS_WON",
+      "DRIBBLED_ATTEMPTS",
+      "SUCCESSFUL_DRIBBLES",
+      "DRIBBLED_PAST",
+      "ACCURATE_PASSES",
+      "KEY_PASSES",
+      "RATING",
+      "MINUTES_PLAYED",
+      "TOUCHES",
+      "LONG_BALLS",
+      "LONG_BALLS_WON",
+      "BIG_CHANCES_MISSED",
+      "DUELS_LOST",
+      "SUCCESSFUL_CROSSES_PERCENTAGE",
+      "ACCURATE_PASSES_PERCENTAGE",
+      "SUCCESSFUL_DRIBBLES_PERCENTAGE"
+    ]
+  },
+  "documented_expected_types": [
+    {
+      "code": "EXPECTED_GOALS",
+      "description": "xG"
+    },
+    {
+      "code": "EXPECTED_GOALS_ON_TARGET",
+      "description": "xGoT"
+    },
+    {
+      "code": "EXPECTED_POINTS",
+      "description": "xPTS"
+    },
+    {
+      "code": "EXPECTED_GOALS_PENALTIES",
+      "description": "xGP"
+    },
+    {
+      "code": "EXPECTED_GOALS_FREE_KICKS",
+      "description": "xGFK"
+    },
+    {
+      "code": "EXPECTED_GOALS_CORNERS",
+      "description": "xGC"
+    },
+    {
+      "code": "EXPECTED_NON_PENALTY_GOALS",
+      "description": "npxG"
+    },
+    {
+      "code": "EXPECTED_GOALS_SET_PLAY",
+      "description": "xGSP"
+    },
+    {
+      "code": "EXPECTED_GOALS_OPEN_PLAY",
+      "description": "xGOP"
+    },
+    {
+      "code": "EXPECTED_GOALS_DIFFERENCE",
+      "description": "xGD"
+    },
+    {
+      "code": "SHOOTING_PERFORMANCE",
+      "description": "SP"
+    },
+    {
+      "code": "EXPECTED_GOALS_PREVENTED",
+      "description": "xGP"
+    },
+    {
+      "code": "EXPECTED_GOALS_AGAINST",
+      "description": "xGA"
+    }
+  ],
+  "pricing_quoted": {
+    "headline": "\"Pick any leagues - all plans are flexible.\"",
+    "Starter": "EUR 29/mo monthly, EUR 24/mo billed yearly - \"Pick any 5 leagues worldwide\", \"2,000 API calls per entity per hour\"",
+    "Growth": "EUR 99/mo monthly, EUR 79/mo yearly - \"Pick any 30 leagues worldwide\", 2,500 calls/entity/hour",
+    "Pro": "EUR 249/mo monthly, EUR 199/mo yearly - \"Pick any 120 leagues worldwide\", 3,000 calls/entity/hour",
+    "Enterprise": "custom - \"All 2300+ available leagues\", 5,000 calls/entity/hour, \"Historical data included\"",
+    "xG_and_Pressure_Index_bundle": "\"Starting at EUR 29 / EUR 24 Save 15% /month\"",
+    "Extra leagues add-on": "\"Starting at EUR 4 /month\"",
+    "Historical data add-on": "\"Comprehensive historical football data archive ... Starting at EUR 29 One-time fee\"",
+    "DISCREPANCY_TO_RESOLVE": "the xG coverage DOC prices xG Basic on Starter at EUR 19/mo; the PRICING PAGE prices the \"xG & Pressure Index\" bundle from EUR 29/mo (EUR 24 yearly). Two different products or a stale page - confirm the line item in checkout before subscribing."
+  },
+  "faq_quoted": {
+    "feature_parity": "\"All plans include the same professional-grade data features. The only difference between plans is the number of leagues you can select and your API call capacity.\"",
+    "historical": "\"Historical data older than three seasons is available as a one-time add-on for Starter, Growth, and Pro plans. Enterprise plans include full historical access.\"",
+    "league_swaps": "\"You can swap leagues within your plan's monthly swap limit.\"",
+    "trial": "\"Once subscribed to one of our plans you will automatically receive the 14-day free trial. After 14 days, your credit card will be charged, unless you choose to cancel your subscription in time. You're only permitted to have one free trial.\""
+  },
+  "rate_limit_quoted_from_docs": "\"Your rate limit defines how many API calls you can make per entity per hour\" / \"Starter: 2,000 API calls / entity / hour\" / \"Limits are per entity, not per endpoint. Resets after 1 hour from first request\" / 429 on exceed",
+  "terms_of_service_quoted": {
+    "permits": "\"distribution, transfer, and storage of data provided by our services is allowed, but reselling the product is forbidden without our consent\"",
+    "forbids": "\"Reselling Sportmonks' data without approval is not allowed. This means that you cannot directly sell the data we provide.\"",
+    "derivative_use": "\"In principle, if you use our data to create something based on our data and start earning money from your creation, everything is fine.\"",
+    "per_domain": "\"Our data is exclusively available per domain, and the prices listed on our website apply.\"",
+    "accuracy_disclaimer": "\"Coverage gaps may exist across certain leagues or competitions. Sportmonks does not guarantee the completeness, accuracy, or availability of data at all times\"",
+    "jurisdiction": "Netherlands",
+    "reading": "private research plus a paper-trading record is PERMITTED: nothing is resold. The \"personal and non-commercial use\" sentence in the Copyright section is scoped to website MATERIAL (text, illustrations, audio, video), not to API data, which the preceding sentence explicitly allows to be stored and distributed."
+  },
+  "assessment": {
+    "criterion_1_all_four_leagues": "YES - documented, all four appear BOTH in the xG coverage league list (PL 8, La Liga 564, Liga MX 743, MLS 779) and in the general coverage matrix with Match Statistics = YES",
+    "criterion_1_season_visibility_2026_27": "UNVERIFIED - no key, so /seasons could not be called. No plan-scoped season restriction is documented anywhere; the documented restriction is on LEAGUE COUNT and on history older than three seasons, not on the current season. This is the single thing to prove before paying.",
+    "criterion_2_stats": "DOCUMENTED - 97 statistic type codes at fixture scope covering team level (SHOTS_TOTAL, SHOTS_ON_TARGET, BALL_POSSESSION, CORNERS, YELLOWCARDS, ...) and player level (MINUTES_PLAYED, RATING, TOUCHES, KEY_PASSES, ...). Per-league presence UNVERIFIED.",
+    "criterion_3_xg": "DOCUMENTED for all four leagues, at team, player AND shot level, 13 expected types incl. EXPECTED_GOALS, EXPECTED_GOALS_ON_TARGET, EXPECTED_NON_PENALTY_GOALS, EXPECTED_POINTS. POST-MATCH on xG Basic (\"immediately after match completion\"). Pre-match xG is NOT offered - which is the safe answer for this repo.",
+    "criterion_4_history": "core stats: three seasons included, deeper for a one-time EUR 29+ fee. xG: 2024/25 ONWARDS ONLY - roughly two completed seasons per league. This is the recommendation's sharpest limitation.",
+    "criterion_5_contract": "YES - versioned REST API, documented rate limits with 429 semantics, published ToS permitting storage and non-resale use",
+    "criterion_6_identity": "stable integer ids (fixture_id, participant/team id, player_id) reused across endpoints. NO ESPN cross-reference field - a bridge must be built, as was already done for ESPN<->Sportec players in MLS.",
+    "criterion_7_cost": "Starter EUR 29/mo (5 leagues, we need 4) + xG Basic EUR 19/mo = EUR 48/mo = EUR 576/yr monthly-billed; roughly EUR 40/mo = EUR 480/yr on annual billing. Rate headroom: 2,000 calls/entity/hour vastly exceeds ~1,520 fixtures/season plus in-season polling."
+  },
+  "per_league_feature_flags_context": {
+    "unique_leagues_in_matrix": 2314,
+    "leagues_with_Advanced_Player_Stats": 112,
+    "note": "the coverage page renders every league twice (desktop + mobile blocks), so raw row counts double. Figures here are deduplicated by league title. All four target leagues are inside the 112."
+  }
+}

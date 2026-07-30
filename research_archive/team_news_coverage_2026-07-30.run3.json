@@ -1,0 +1,815 @@
+{
+ "_governing_rule": "ASSERT A NON-ZERO COUNT, NEVER A STATUS CODE. A 200 with an empty response array is NOT coverage. empty != unavailable != ok.",
+ "_states": {
+  "empty": "the request succeeded, the array was empty. For a lineup this means NOT RELEASED, never 'no players'. For injuries it means the provider listed none, which is NOT the same as 'nobody is injured'.",
+  "ok": "the response array had elements",
+  "unavailable": "the request did not succeed (transport/HTTP)"
+ },
+ "_what": "team-news coverage measurement: injuries, lineups, events",
+ "apifootball": {
+  "friendlies": {
+   "candidates": [
+    {
+     "id": 10,
+     "name": "Friendlies",
+     "type": "Cup"
+    },
+    {
+     "id": 666,
+     "name": "Friendlies Women",
+     "type": "Cup"
+    },
+    {
+     "id": 667,
+     "name": "Friendlies Clubs",
+     "type": "Cup"
+    }
+   ],
+   "club_scoped": true,
+   "discovery_count": 3,
+   "discovery_search": "Friendlies",
+   "discovery_state": "ok",
+   "fixture_count": 454,
+   "fixture_window_state": "ok",
+   "lineup_probes": [
+    {
+     "away": "Cadiz",
+     "count": 0,
+     "fixture_id": 1583597,
+     "home": "Tenerife",
+     "interpretation": "not_released",
+     "state": "empty",
+     "status": "NS"
+    },
+    {
+     "away": "Genoa",
+     "count": 0,
+     "fixture_id": 1585028,
+     "home": "Leicester",
+     "interpretation": "not_released",
+     "state": "empty",
+     "status": "NS"
+    },
+    {
+     "away": "Guingamp",
+     "count": 0,
+     "fixture_id": 1583595,
+     "home": "Stade Brestois 29",
+     "interpretation": "not_released",
+     "state": "empty",
+     "status": "NS"
+    },
+    {
+     "away": "Almeria",
+     "count": 0,
+     "fixture_id": 1598580,
+     "home": "Real Betis",
+     "interpretation": "not_released",
+     "state": "empty",
+     "status": "NS"
+    },
+    {
+     "away": "Arsenal",
+     "count": 0,
+     "fixture_id": 1583596,
+     "home": "Girona",
+     "interpretation": "not_released",
+     "state": "empty",
+     "status": "NS"
+    }
+   ],
+   "measured": "0/5 friendly fixtures returned a lineup array",
+   "probed_league_id": 667,
+   "probed_league_name": "Friendlies Clubs"
+  },
+  "per_league": {
+   "ligamx": {
+    "apif_league_id": 262,
+    "display": "Mexican Liga BBVA MX",
+    "events_on_completed_fixture": {
+     "count": 17,
+     "fixture_id": 1550911,
+     "note": null,
+     "sample": [
+      {
+       "assist": {
+        "id": 2723,
+        "name": "Oussama Idrissi"
+       },
+       "comments": null,
+       "detail": "Normal Goal",
+       "player": {
+        "id": 2461,
+        "name": "Salom\u00f3n Rond\u00f3n"
+       },
+       "team": {
+        "id": 2292,
+        "logo": "https://media.api-sports.io/football/teams/2292.png",
+        "name": "CF Pachuca"
+       },
+       "time": {
+        "elapsed": 3,
+        "extra": null
+       },
+       "type": "Goal"
+      },
+      {
+       "assist": {
+        "id": null,
+        "name": null
+       },
+       "comments": "Foul",
+       "detail": "Yellow Card",
+       "player": {
+        "id": 441051,
+        "name": "Bayron Duarte"
+       },
+       "team": {
+        "id": 2290,
+        "logo": "https://media.api-sports.io/football/teams/2290.png",
+        "name": "Club Queretaro"
+       },
+       "time": {
+        "elapsed": 34,
+        "extra": null
+       },
+       "type": "Card"
+      },
+      {
+       "assist": {
+        "id": null,
+        "name": null
+       },
+       "comments": "Foul",
+       "detail": "Yellow Card",
+       "player": {
+        "id": 18902,
+        "name": "Kenedy"
+       },
+       "team": {
+        "id": 2292,
+        "logo": "https://media.api-sports.io/football/teams/2292.png",
+        "name": "CF Pachuca"
+       },
+       "time": {
+        "elapsed": 49,
+        "extra": null
+       },
+       "type": "Card"
+      }
+     ],
+     "state": "ok",
+     "types": {
+      "Card/Yellow Card": 5,
+      "Goal/Normal Goal": 3,
+      "subst/Substitution 1": 2,
+      "subst/Substitution 2": 2,
+      "subst/Substitution 3": 2,
+      "subst/Substitution 4": 2,
+      "subst/Substitution 5": 1
+     }
+    },
+    "fixture_window": {
+     "count": 9,
+     "from": "2026-07-30",
+     "note": null,
+     "state": "ok",
+     "to": "2026-08-09"
+    },
+    "fixtures": [
+     {
+      "away": "Guadalajara Chivas",
+      "fixture_id": 1550912,
+      "home": "Puebla",
+      "hours_to_kickoff": 48.3,
+      "injuries": {
+       "count": 0,
+       "note": null,
+       "records": [],
+       "state": "empty"
+      },
+      "kickoff_utc": "2026-08-01T01:00:00+00:00",
+      "lineups": {
+       "count": 0,
+       "interpretation": "not_released",
+       "note": null,
+       "sides": [],
+       "state": "empty"
+      }
+     }
+    ],
+    "injuries_on_completed_fixture": {
+     "count": 0,
+     "fixture_id": 1550911,
+     "note": null,
+     "records": [],
+     "state": "empty"
+    },
+    "season": 2026,
+    "season_fallback_used": false,
+    "upcoming_not_started_count": 9
+   },
+   "mls": {
+    "apif_league_id": 253,
+    "display": "Major League Soccer",
+    "events_on_completed_fixture": {
+     "count": 16,
+     "fixture_id": 1490360,
+     "note": null,
+     "sample": [
+      {
+       "assist": {
+        "id": null,
+        "name": null
+       },
+       "comments": null,
+       "detail": "Yellow Card",
+       "player": {
+        "id": 51312,
+        "name": "C. Bassett"
+       },
+       "team": {
+        "id": 1617,
+        "logo": "https://media.api-sports.io/football/teams/1617.png",
+        "name": "Portland Timbers"
+       },
+       "time": {
+        "elapsed": 10,
+        "extra": null
+       },
+       "type": "Card"
+      },
+      {
+       "assist": {
+        "id": 23643,
+        "name": "M. Guilavogui"
+       },
+       "comments": null,
+       "detail": "Normal Goal",
+       "player": {
+        "id": 162891,
+        "name": "J. Sanabria"
+       },
+       "team": {
+        "id": 1606,
+        "logo": "https://media.api-sports.io/football/teams/1606.png",
+        "name": "Real Salt Lake"
+       },
+       "time": {
+        "elapsed": 18,
+        "extra": null
+       },
+       "type": "Goal"
+      },
+      {
+       "assist": {
+        "id": null,
+        "name": null
+       },
+       "comments": null,
+       "detail": "Red Card",
+       "player": {
+        "id": 23643,
+        "name": "M. Guilavogui"
+       },
+       "team": {
+        "id": 1606,
+        "logo": "https://media.api-sports.io/football/teams/1606.png",
+        "name": "Real Salt Lake"
+       },
+       "time": {
+        "elapsed": 34,
+        "extra": null
+       },
+       "type": "Card"
+      }
+     ],
+     "state": "ok",
+     "types": {
+      "Card/Red Card": 1,
+      "Card/Yellow Card": 3,
+      "Goal/Normal Goal": 3,
+      "subst/Substitution 1": 2,
+      "subst/Substitution 2": 2,
+      "subst/Substitution 3": 2,
+      "subst/Substitution 4": 2,
+      "subst/Substitution 5": 1
+     }
+    },
+    "fixture_window": {
+     "count": 16,
+     "from": "2026-07-30",
+     "note": null,
+     "state": "ok",
+     "to": "2026-08-09"
+    },
+    "fixtures": [
+     {
+      "away": "Toronto FC",
+      "fixture_id": 1490361,
+      "home": "New York City FC",
+      "hours_to_kickoff": 46.8,
+      "injuries": {
+       "count": 26,
+       "note": null,
+       "records": [
+        {
+         "player": "D. Baiera",
+         "player_id": 422794,
+         "provider_reason": "Knee Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "A. Martinez",
+         "player_id": 79678,
+         "provider_reason": "Knee Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "M. Moralez",
+         "player_id": 50859,
+         "provider_reason": "Knee Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "A. O'Neill",
+         "player_id": 7050,
+         "provider_reason": "Ankle Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "K. O'Toole",
+         "player_id": 103167,
+         "provider_reason": "Leg Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "K. Parks",
+         "player_id": 50854,
+         "provider_reason": "Groin Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "Raul Gustavo",
+         "player_id": 14390,
+         "provider_reason": "Leg Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "K. Trewin",
+         "player_id": 153622,
+         "provider_reason": "Ankle Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "M. Cimermancic",
+         "player_id": 365964,
+         "provider_reason": "Thigh Injury",
+         "provider_type": "Missing Fixture",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "N. Gomis",
+         "player_id": 342659,
+         "provider_reason": "Thigh Injury",
+         "provider_type": "Missing Fixture",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "Matheus Pereira",
+         "player_id": 195091,
+         "provider_reason": "Groin Injury",
+         "provider_type": "Missing Fixture",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "N. Palacio",
+         "player_id": 197557,
+         "provider_reason": "Lower-Body Injury",
+         "provider_type": "Missing Fixture",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "A. Bossenberry",
+         "player_id": 541970,
+         "provider_reason": "Injury",
+         "provider_type": "Questionable",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "D. Baiera",
+         "player_id": 422794,
+         "provider_reason": "Knee Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "A. Martinez",
+         "player_id": 79678,
+         "provider_reason": "Knee Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "M. Moralez",
+         "player_id": 50859,
+         "provider_reason": "Knee Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "A. O'Neill",
+         "player_id": 7050,
+         "provider_reason": "Ankle Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "K. O'Toole",
+         "player_id": 103167,
+         "provider_reason": "Leg Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "K. Parks",
+         "player_id": 50854,
+         "provider_reason": "Groin Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "Raul Gustavo",
+         "player_id": 14390,
+         "provider_reason": "Leg Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "K. Trewin",
+         "player_id": 153622,
+         "provider_reason": "Ankle Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "M. Cimermancic",
+         "player_id": 365964,
+         "provider_reason": "Thigh Injury",
+         "provider_type": "Missing Fixture",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "N. Gomis",
+         "player_id": 342659,
+         "provider_reason": "Thigh Injury",
+         "provider_type": "Missing Fixture",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "Matheus Pereira",
+         "player_id": 195091,
+         "provider_reason": "Groin Injury",
+         "provider_type": "Missing Fixture",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "N. Palacio",
+         "player_id": 197557,
+         "provider_reason": "Lower-Body Injury",
+         "provider_type": "Missing Fixture",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "A. Bossenberry",
+         "player_id": 541970,
+         "provider_reason": "Injury",
+         "provider_type": "Questionable",
+         "team": "Toronto FC",
+         "team_id": 1601
+        }
+       ],
+       "state": "ok"
+      },
+      "kickoff_utc": "2026-07-31T23:30:00+00:00",
+      "lineups": {
+       "count": 0,
+       "interpretation": "not_released",
+       "note": null,
+       "sides": [],
+       "state": "empty"
+      }
+     }
+    ],
+    "injuries_on_completed_fixture": {
+     "count": 16,
+     "fixture_id": 1490360,
+     "note": null,
+     "records": [
+      {
+       "player": "G. Guerra",
+       "player_id": 513030,
+       "provider_reason": "Abdominal strain",
+       "provider_type": "Missing Fixture",
+       "team": "Portland Timbers",
+       "team_id": 1617
+      },
+      {
+       "player": "K. Kelsy",
+       "player_id": 311016,
+       "provider_reason": "Foot Injury",
+       "provider_type": "Missing Fixture",
+       "team": "Portland Timbers",
+       "team_id": 1617
+      },
+      {
+       "player": "Z. McGraw",
+       "player_id": 201729,
+       "provider_reason": "Back Injury",
+       "provider_type": "Missing Fixture",
+       "team": "Portland Timbers",
+       "team_id": 1617
+      },
+      {
+       "player": "J. Mosquera",
+       "player_id": 197913,
+       "provider_reason": "Foot Injury",
+       "provider_type": "Missing Fixture",
+       "team": "Portland Timbers",
+       "team_id": 1617
+      },
+      {
+       "player": "E. Eneli",
+       "player_id": 413169,
+       "provider_reason": "Knee Injury",
+       "provider_type": "Missing Fixture",
+       "team": "Real Salt Lake",
+       "team_id": 1606
+      }
+     ],
+     "state": "ok"
+    },
+    "season": 2026,
+    "season_fallback_used": false,
+    "upcoming_not_started_count": 16
+   }
+  },
+  "plan_status": {
+   "requests": {
+    "current": 849,
+    "limit_day": 7500
+   },
+   "subscription": {
+    "active": true,
+    "end": "2026-08-29T23:01:12+00:00",
+    "plan": "Pro"
+   }
+  }
+ },
+ "coverage_summary": {
+  "apifootball_friendlies_lineups": "0/5 friendly fixtures returned a lineup array",
+  "apifootball_leagues": {
+   "ligamx": {
+    "events_on_completed": "ok/17",
+    "fixtures_probed": 1,
+    "injuries_fixtures_with_records": "0/1",
+    "injury_records_total": 0,
+    "lineups_released_pre_match": "0/1"
+   },
+   "mls": {
+    "events_on_completed": "ok/16",
+    "fixtures_probed": 1,
+    "injuries_fixtures_with_records": "1/1",
+    "injury_records_total": 26,
+    "lineups_released_pre_match": "0/1"
+   }
+  },
+  "espn_friendly_rosters": {
+   "by_state": {
+    "released": 1
+   },
+   "denominator_on_board": 8,
+   "probed": 1
+  }
+ },
+ "espn_friendlies": {
+  "board_count": 8,
+  "coverage": {
+   "by_state": {
+    "released": 1
+   },
+   "denominator_on_board": 8,
+   "probed": 1
+  },
+  "fixtures": [
+   {
+    "detail": "47'",
+    "espn_event_id": "401863532",
+    "name": "Wrexham at Liverpool",
+    "roster_containers": 2,
+    "roster_state": "released",
+    "sides": {
+     "away": {
+      "formation": "3-4-3",
+      "named": 24,
+      "released": true,
+      "starters": 11
+     },
+     "home": {
+      "formation": "4-2-3-1",
+      "named": 22,
+      "released": true,
+      "starters": 11
+     }
+    },
+    "state": "in",
+    "teams": [
+     "Liverpool",
+     "Wrexham"
+    ]
+   }
+  ],
+  "request_log": [
+   {
+    "label": "espn_scoreboard:20260729",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_scoreboard:20260730",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_scoreboard:20260731",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_summary:401863532",
+    "note": null,
+    "state": "ok"
+   }
+  ],
+  "slug": "club.friendly"
+ },
+ "key_problems": [],
+ "key_source": ".apifootball_key",
+ "request_log": [
+  {
+   "count": 0,
+   "label": "status",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 16,
+   "label": "fixtures:mls",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 26,
+   "label": "injuries:mls:1490361",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 0,
+   "label": "lineups:mls:1490361",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 1,
+   "label": "fixtures_ft:mls",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 16,
+   "label": "events:mls:1490360",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 16,
+   "label": "injuries_completed:mls:1490360",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 9,
+   "label": "fixtures:ligamx",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 0,
+   "label": "injuries:ligamx:1550912",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:ligamx:1550912",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 1,
+   "label": "fixtures_ft:ligamx",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 17,
+   "label": "events:ligamx:1550911",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 0,
+   "label": "injuries_completed:ligamx:1550911",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 3,
+   "label": "leagues:friendlies",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 454,
+   "label": "fixtures:friendlies",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 0,
+   "label": "lineups:friendly:1583597",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:friendly:1585028",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:friendly:1583595",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:friendly:1598580",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:friendly:1583596",
+   "note": null,
+   "state": "empty"
+  }
+ ],
+ "requests_used": 20,
+ "run_utc": "2026-07-30T00:42:04.579254+00:00"
+}

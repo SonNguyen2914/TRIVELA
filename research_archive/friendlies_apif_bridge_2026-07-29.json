@@ -1,0 +1,1792 @@
+{
+ "measured_utc": "2026-07-29",
+ "what": "The curated kalshi_title_side -> apifootball_team_id bridge, with the fixture that is each entry's evidence, and the id-stability measurements that justify using ids at all.",
+ "entries": {
+  "al-ittihad": {
+   "apif_team_id": 2938,
+   "apif_team_name": "Al-Ittihad FC",
+   "evidence_fixture": "f1598562"
+  },
+  "albacete": {
+   "apif_team_id": 722,
+   "apif_team_name": "Albacete",
+   "evidence_fixture": "f1598568"
+  },
+  "andorra": {
+   "apif_team_id": 8157,
+   "apif_team_name": "FC Andorra",
+   "evidence_fixture": "f1583496"
+  },
+  "arezzo": {
+   "apif_team_id": 876,
+   "apif_team_name": "Arezzo",
+   "evidence_fixture": "f1583495"
+  },
+  "aris thessaloniki": {
+   "apif_team_id": 1123,
+   "apif_team_name": "Aris Thessalonikis",
+   "evidence_fixture": "f1585001"
+  },
+  "augsburg": {
+   "apif_team_id": 170,
+   "apif_team_name": "FC Augsburg",
+   "evidence_fixture": "f1583494"
+  },
+  "barcelona": {
+   "apif_team_id": 529,
+   "apif_team_name": "Barcelona",
+   "evidence_fixture": "f1583514"
+  },
+  "birmingham": {
+   "apif_team_id": 54,
+   "apif_team_name": "Birmingham",
+   "evidence_fixture": "f1583514"
+  },
+  "bournemouth": {
+   "apif_team_id": 35,
+   "apif_team_name": "Bournemouth",
+   "evidence_fixture": "f1583494"
+  },
+  "bromley": {
+   "apif_team_id": 1832,
+   "apif_team_name": "Bromley",
+   "evidence_fixture": "f1583511"
+  },
+  "caen": {
+   "apif_team_id": 88,
+   "apif_team_name": "Caen",
+   "evidence_fixture": "f1604711"
+  },
+  "concarneau": {
+   "apif_team_id": 1300,
+   "apif_team_name": "Concarneau",
+   "evidence_fixture": "f1548928"
+  },
+  "cordoba": {
+   "apif_team_id": 713,
+   "apif_team_name": "Cordoba",
+   "evidence_fixture": "f1604708"
+  },
+  "crawley": {
+   "apif_team_id": 1362,
+   "apif_team_name": "Crawley Town",
+   "evidence_fixture": "f1583512"
+  },
+  "derby": {
+   "apif_team_id": 69,
+   "apif_team_name": "Derby",
+   "evidence_fixture": "f1583509"
+  },
+  "dieppe": {
+   "apif_team_id": 9274,
+   "apif_team_name": "Dieppe",
+   "evidence_fixture": "f1604711"
+  },
+  "elche": {
+   "apif_team_id": 797,
+   "apif_team_name": "Elche",
+   "evidence_fixture": "f1604708"
+  },
+  "europa": {
+   "apif_team_id": 593,
+   "apif_team_name": "Europa Fc",
+   "evidence_fixture": "f1583496"
+  },
+  "folgore caratese": {
+   "apif_team_id": 9450,
+   "apif_team_name": "Folgore Caratese",
+   "evidence_fixture": "f1583505"
+  },
+  "juventus": {
+   "apif_team_id": 496,
+   "apif_team_name": "Juventus",
+   "evidence_fixture": "f1585004"
+  },
+  "leeds united": {
+   "apif_team_id": 63,
+   "apif_team_name": "Leeds",
+   "evidence_fixture": "f1589334"
+  },
+  "liverpool": {
+   "apif_team_id": 40,
+   "apif_team_name": "Liverpool",
+   "evidence_fixture": "f1589333"
+  },
+  "mainz": {
+   "apif_team_id": 164,
+   "apif_team_name": "FSV Mainz 05",
+   "evidence_fixture": "f1604714"
+  },
+  "malaga": {
+   "apif_team_id": 535,
+   "apif_team_name": "Malaga",
+   "evidence_fixture": "f1598562"
+  },
+  "mansfield": {
+   "apif_team_id": 1374,
+   "apif_team_name": "Mansfield Town",
+   "evidence_fixture": "f1583509"
+  },
+  "monza": {
+   "apif_team_id": 1579,
+   "apif_team_name": "Monza",
+   "evidence_fixture": "f1585001"
+  },
+  "nice": {
+   "apif_team_id": 84,
+   "apif_team_name": "Nice",
+   "evidence_fixture": "f1585004"
+  },
+  "nijmegen": {
+   "apif_team_id": 413,
+   "apif_team_name": "NEC Nijmegen",
+   "evidence_fixture": "f1583504"
+  },
+  "nottingham": {
+   "apif_team_id": 65,
+   "apif_team_name": "Nottingham Forest",
+   "evidence_fixture": "f1583500"
+  },
+  "parma calcio": {
+   "apif_team_id": 523,
+   "apif_team_name": "Parma",
+   "evidence_fixture": "f1583495"
+  },
+  "pontivy gsi": {
+   "apif_team_id": 3098,
+   "apif_team_name": "Pontivy GSI",
+   "evidence_fixture": "f1548928"
+  },
+  "qpr": {
+   "apif_team_id": 72,
+   "apif_team_name": "QPR",
+   "evidence_fixture": "f1583511"
+  },
+  "reading": {
+   "apif_team_id": 53,
+   "apif_team_name": "Reading",
+   "evidence_fixture": "f1583512"
+  },
+  "real madrid castilla": {
+   "apif_team_id": 9575,
+   "apif_team_name": "Real Madrid II",
+   "evidence_fixture": "f1598568"
+  },
+  "sassuolo": {
+   "apif_team_id": 488,
+   "apif_team_name": "Sassuolo",
+   "evidence_fixture": "f1583505"
+  },
+  "sevilla": {
+   "apif_team_id": 536,
+   "apif_team_name": "Sevilla",
+   "evidence_fixture": "f1583504"
+  },
+  "shabab al-ahli": {
+   "apif_team_id": 2870,
+   "apif_team_name": "Shabab Al Ahli Dubai",
+   "evidence_fixture": "f1604714"
+  },
+  "southport": {
+   "apif_team_id": 1826,
+   "apif_team_name": "Southport",
+   "evidence_fixture": "f1583515"
+  },
+  "sporting cp": {
+   "apif_team_id": 228,
+   "apif_team_name": "Sporting CP",
+   "evidence_fixture": "f1583500"
+  },
+  "stade lavallois": {
+   "apif_team_id": 433,
+   "apif_team_name": "Laval",
+   "evidence_fixture": "f1604699"
+  },
+  "sunderland": {
+   "apif_team_id": 746,
+   "apif_team_name": "Sunderland",
+   "evidence_fixture": "f1589334"
+  },
+  "us granville": {
+   "apif_team_id": 3185,
+   "apif_team_name": "Granville",
+   "evidence_fixture": "f1604699"
+  },
+  "wigan": {
+   "apif_team_id": 61,
+   "apif_team_name": "Wigan",
+   "evidence_fixture": "f1583515"
+  },
+  "wrexham": {
+   "apif_team_id": 1837,
+   "apif_team_name": "Wrexham",
+   "evidence_fixture": "f1589333"
+  }
+ },
+ "entry_count": 44,
+ "name_tier_proposals": [
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL29LFCWRE",
+   "title": "Liverpool vs Wrexham",
+   "et_date": "26JUL29",
+   "kalshi_home": "Liverpool",
+   "kalshi_away": "Wrexham",
+   "hits": [
+    {
+     "orientation": "same",
+     "tiers": [
+      "exact",
+      "exact"
+     ],
+     "fixture_id": 1589333,
+     "league_id": 1022,
+     "league_name": "Premier League - Summer Series",
+     "league_season": 2025,
+     "kickoff": "2026-07-29T23:30:00+00:00",
+     "home": "Liverpool",
+     "home_id": 40,
+     "away": "Wrexham",
+     "away_id": 1837,
+     "k_home_id": 40,
+     "k_home_name": "Liverpool",
+     "k_away_id": 1837,
+     "k_away_name": "Wrexham"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL30ANDEUR",
+   "title": "Andorra vs Europa",
+   "et_date": "26JUL30",
+   "kalshi_home": "Andorra",
+   "kalshi_away": "Europa",
+   "hits": [
+    {
+     "orientation": "same",
+     "tiers": [
+      "tokenset",
+      "tokenset"
+     ],
+     "fixture_id": 1583496,
+     "league_id": 667,
+     "league_name": "Friendlies Clubs",
+     "league_season": 2026,
+     "kickoff": "2026-07-30T17:00:00+00:00",
+     "home": "FC Andorra",
+     "home_id": 8157,
+     "away": "Europa Fc",
+     "away_id": 593,
+     "k_home_id": 8157,
+     "k_home_name": "FC Andorra",
+     "k_away_id": 593,
+     "k_away_name": "Europa Fc"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL30BOUFCA",
+   "title": "Bournemouth vs Augsburg",
+   "et_date": "26JUL30",
+   "kalshi_home": "Bournemouth",
+   "kalshi_away": "Augsburg",
+   "hits": [
+    {
+     "orientation": "reversed",
+     "tiers": [
+      "exact",
+      "tokenset"
+     ],
+     "fixture_id": 1583494,
+     "league_id": 667,
+     "league_name": "Friendlies Clubs",
+     "league_season": 2026,
+     "kickoff": "2026-07-30T14:00:00+00:00",
+     "home": "FC Augsburg",
+     "home_id": 170,
+     "away": "Bournemouth",
+     "away_id": 35,
+     "k_home_id": 35,
+     "k_home_name": "Bournemouth",
+     "k_away_id": 170,
+     "k_away_name": "FC Augsburg"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL30FCREBMU",
+   "title": "FC Rottach-Egern vs Bayern Munich",
+   "et_date": "26JUL30",
+   "kalshi_home": "FC Rottach-Egern",
+   "kalshi_away": "Bayern Munich",
+   "hits": []
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL30LAVUSG",
+   "title": "Stade Lavallois vs US Granville",
+   "et_date": "26JUL30",
+   "kalshi_home": "Stade Lavallois",
+   "kalshi_away": "US Granville",
+   "hits": []
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL30LEESUN",
+   "title": "Leeds United vs Sunderland",
+   "et_date": "26JUL30",
+   "kalshi_home": "Leeds United",
+   "kalshi_away": "Sunderland",
+   "hits": [
+    {
+     "orientation": "reversed",
+     "tiers": [
+      "loose",
+      "exact"
+     ],
+     "fixture_id": 1589334,
+     "league_id": 1022,
+     "league_name": "Premier League - Summer Series",
+     "league_season": 2025,
+     "kickoff": "2026-07-30T23:30:00+00:00",
+     "home": "Sunderland",
+     "home_id": 746,
+     "away": "Leeds",
+     "away_id": 63,
+     "k_home_id": 63,
+     "k_home_name": "Leeds",
+     "k_away_id": 746,
+     "k_away_name": "Sunderland"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL30LUATER",
+   "title": "Luanda vs Teruel",
+   "et_date": "26JUL30",
+   "kalshi_home": "Luanda",
+   "kalshi_away": "Teruel",
+   "hits": []
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL30MCFITJ",
+   "title": "Malaga vs Al-Ittihad",
+   "et_date": "26JUL30",
+   "kalshi_home": "Malaga",
+   "kalshi_away": "Al-Ittihad",
+   "hits": [
+    {
+     "orientation": "same",
+     "tiers": [
+      "exact",
+      "tokenset"
+     ],
+     "fixture_id": 1598562,
+     "league_id": 667,
+     "league_name": "Friendlies Clubs",
+     "league_season": 2026,
+     "kickoff": "2026-07-30T18:00:00+00:00",
+     "home": "Malaga",
+     "home_id": 535,
+     "away": "Al-Ittihad FC",
+     "away_id": 2938,
+     "k_home_id": 535,
+     "k_home_name": "Malaga",
+     "k_away_id": 2938,
+     "k_away_name": "Al-Ittihad FC"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL30MONARIS",
+   "title": "Monza vs Aris Thessaloniki",
+   "et_date": "26JUL30",
+   "kalshi_home": "Monza",
+   "kalshi_away": "Aris Thessaloniki",
+   "hits": []
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL30PARARE",
+   "title": "Parma Calcio vs Arezzo",
+   "et_date": "26JUL30",
+   "kalshi_home": "Parma Calcio",
+   "kalshi_away": "Arezzo",
+   "hits": [
+    {
+     "orientation": "same",
+     "tiers": [
+      "loose",
+      "exact"
+     ],
+     "fixture_id": 1583495,
+     "league_id": 667,
+     "league_name": "Friendlies Clubs",
+     "league_season": 2026,
+     "kickoff": "2026-07-30T15:00:00+00:00",
+     "home": "Parma",
+     "home_id": 523,
+     "away": "Arezzo",
+     "away_id": 876,
+     "k_home_id": 523,
+     "k_home_name": "Parma",
+     "k_away_id": 876,
+     "k_away_name": "Arezzo"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL30SWEENN",
+   "title": "Essen vs Ennepetal",
+   "et_date": "26JUL30",
+   "kalshi_home": "Essen",
+   "kalshi_away": "Ennepetal",
+   "hits": []
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL31ALBRMA",
+   "title": "Albacete vs Real Madrid Castilla",
+   "et_date": "26JUL31",
+   "kalshi_home": "Albacete",
+   "kalshi_away": "Real Madrid Castilla",
+   "hits": []
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL31BCBAR",
+   "title": "Birmingham vs Barcelona",
+   "et_date": "26JUL31",
+   "kalshi_home": "Birmingham",
+   "kalshi_away": "Barcelona",
+   "hits": [
+    {
+     "orientation": "same",
+     "tiers": [
+      "exact",
+      "exact"
+     ],
+     "fixture_id": 1583514,
+     "league_id": 667,
+     "league_name": "Friendlies Clubs",
+     "league_season": 2026,
+     "kickoff": "2026-07-31T18:45:00+00:00",
+     "home": "Birmingham",
+     "home_id": 54,
+     "away": "Barcelona",
+     "away_id": 529,
+     "k_home_id": 54,
+     "k_home_name": "Birmingham",
+     "k_away_id": 529,
+     "k_away_name": "Barcelona"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL31BROQPR",
+   "title": "Bromley vs QPR",
+   "et_date": "26JUL31",
+   "kalshi_home": "Bromley",
+   "kalshi_away": "QPR",
+   "hits": [
+    {
+     "orientation": "same",
+     "tiers": [
+      "exact",
+      "exact"
+     ],
+     "fixture_id": 1583511,
+     "league_id": 667,
+     "league_name": "Friendlies Clubs",
+     "league_season": 2026,
+     "kickoff": "2026-07-31T18:30:00+00:00",
+     "home": "Bromley",
+     "home_id": 1832,
+     "away": "QPR",
+     "away_id": 72,
+     "k_home_id": 1832,
+     "k_home_name": "Bromley",
+     "k_away_id": 72,
+     "k_away_name": "QPR"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL31CONPON",
+   "title": "Concarneau vs Pontivy GSI",
+   "et_date": "26JUL31",
+   "kalshi_home": "Concarneau",
+   "kalshi_away": "Pontivy GSI",
+   "hits": [
+    {
+     "orientation": "same",
+     "tiers": [
+      "exact",
+      "exact"
+     ],
+     "fixture_id": 1548928,
+     "league_id": 667,
+     "league_name": "Friendlies Clubs",
+     "league_season": 2026,
+     "kickoff": "2026-07-31T12:00:00+00:00",
+     "home": "Concarneau",
+     "home_id": 1300,
+     "away": "Pontivy GSI",
+     "away_id": 3098,
+     "k_home_id": 1300,
+     "k_home_name": "Concarneau",
+     "k_away_id": 3098,
+     "k_away_name": "Pontivy GSI"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL31CRAREA",
+   "title": "Crawley vs Reading",
+   "et_date": "26JUL31",
+   "kalshi_home": "Crawley",
+   "kalshi_away": "Reading",
+   "hits": [
+    {
+     "orientation": "same",
+     "tiers": [
+      "loose",
+      "exact"
+     ],
+     "fixture_id": 1583512,
+     "league_id": 667,
+     "league_name": "Friendlies Clubs",
+     "league_season": 2026,
+     "kickoff": "2026-07-31T18:30:00+00:00",
+     "home": "Crawley Town",
+     "home_id": 1362,
+     "away": "Reading",
+     "away_id": 53,
+     "k_home_id": 1362,
+     "k_home_name": "Crawley Town",
+     "k_away_id": 53,
+     "k_away_name": "Reading"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL31ELCCOR",
+   "title": "Elche vs Cordoba",
+   "et_date": "26JUL31",
+   "kalshi_home": "Elche",
+   "kalshi_away": "Cordoba",
+   "hits": [
+    {
+     "orientation": "same",
+     "tiers": [
+      "exact",
+      "exact"
+     ],
+     "fixture_id": 1604708,
+     "league_id": 667,
+     "league_name": "Friendlies Clubs",
+     "league_season": 2026,
+     "kickoff": "2026-07-31T08:30:00+00:00",
+     "home": "Elche",
+     "home_id": 797,
+     "away": "Cordoba",
+     "away_id": 713,
+     "k_home_id": 797,
+     "k_home_name": "Elche",
+     "k_away_id": 713,
+     "k_away_name": "Cordoba"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL31JUVNIC",
+   "title": "Juventus vs Nice",
+   "et_date": "26JUL31",
+   "kalshi_home": "Juventus",
+   "kalshi_away": "Nice",
+   "hits": [
+    {
+     "orientation": "same",
+     "tiers": [
+      "exact",
+      "exact"
+     ],
+     "fixture_id": 1585004,
+     "league_id": 667,
+     "league_name": "Friendlies Clubs",
+     "league_season": 2026,
+     "kickoff": "2026-07-31T16:00:00+00:00",
+     "home": "Juventus",
+     "home_id": 496,
+     "away": "Nice",
+     "away_id": 84,
+     "k_home_id": 496,
+     "k_home_name": "Juventus",
+     "k_away_id": 84,
+     "k_away_name": "Nice"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL31M05SAH",
+   "title": "Mainz vs Shabab Al-Ahli",
+   "et_date": "26JUL31",
+   "kalshi_home": "Mainz",
+   "kalshi_away": "Shabab Al-Ahli",
+   "hits": []
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL31MATDER",
+   "title": "Mansfield vs Derby",
+   "et_date": "26JUL31",
+   "kalshi_home": "Mansfield",
+   "kalshi_away": "Derby",
+   "hits": [
+    {
+     "orientation": "same",
+     "tiers": [
+      "loose",
+      "exact"
+     ],
+     "fixture_id": 1583509,
+     "league_id": 667,
+     "league_name": "Friendlies Clubs",
+     "league_season": 2026,
+     "kickoff": "2026-07-31T18:00:00+00:00",
+     "home": "Mansfield Town",
+     "home_id": 1374,
+     "away": "Derby",
+     "away_id": 69,
+     "k_home_id": 1374,
+     "k_home_name": "Mansfield Town",
+     "k_away_id": 69,
+     "k_away_name": "Derby"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL31NIJSEV",
+   "title": "Nijmegen vs Sevilla",
+   "et_date": "26JUL31",
+   "kalshi_home": "Nijmegen",
+   "kalshi_away": "Sevilla",
+   "hits": [
+    {
+     "orientation": "same",
+     "tiers": [
+      "loose",
+      "exact"
+     ],
+     "fixture_id": 1583504,
+     "league_id": 667,
+     "league_name": "Friendlies Clubs",
+     "league_season": 2026,
+     "kickoff": "2026-07-31T17:00:00+00:00",
+     "home": "NEC Nijmegen",
+     "home_id": 413,
+     "away": "Sevilla",
+     "away_id": 536,
+     "k_home_id": 413,
+     "k_home_name": "NEC Nijmegen",
+     "k_away_id": 536,
+     "k_away_name": "Sevilla"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL31SASFOL",
+   "title": "Sassuolo vs Folgore Caratese",
+   "et_date": "26JUL31",
+   "kalshi_home": "Sassuolo",
+   "kalshi_away": "Folgore Caratese",
+   "hits": [
+    {
+     "orientation": "same",
+     "tiers": [
+      "exact",
+      "exact"
+     ],
+     "fixture_id": 1583505,
+     "league_id": 667,
+     "league_name": "Friendlies Clubs",
+     "league_season": 2026,
+     "kickoff": "2026-07-31T17:00:00+00:00",
+     "home": "Sassuolo",
+     "home_id": 488,
+     "away": "Folgore Caratese",
+     "away_id": 9450,
+     "k_home_id": 488,
+     "k_home_name": "Sassuolo",
+     "k_away_id": 9450,
+     "k_away_name": "Folgore Caratese"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL31SMCDIE",
+   "title": "Caen vs Dieppe",
+   "et_date": "26JUL31",
+   "kalshi_home": "Caen",
+   "kalshi_away": "Dieppe",
+   "hits": [
+    {
+     "orientation": "same",
+     "tiers": [
+      "exact",
+      "exact"
+     ],
+     "fixture_id": 1604711,
+     "league_id": 667,
+     "league_name": "Friendlies Clubs",
+     "league_season": 2026,
+     "kickoff": "2026-07-31T09:30:00+00:00",
+     "home": "Caen",
+     "home_id": 88,
+     "away": "Dieppe",
+     "away_id": 9274,
+     "k_home_id": 88,
+     "k_home_name": "Caen",
+     "k_away_id": 9274,
+     "k_away_name": "Dieppe"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL31SOUWIG",
+   "title": "Southport vs Wigan",
+   "et_date": "26JUL31",
+   "kalshi_home": "Southport",
+   "kalshi_away": "Wigan",
+   "hits": [
+    {
+     "orientation": "same",
+     "tiers": [
+      "exact",
+      "exact"
+     ],
+     "fixture_id": 1583515,
+     "league_id": 667,
+     "league_name": "Friendlies Clubs",
+     "league_season": 2026,
+     "kickoff": "2026-07-31T18:45:00+00:00",
+     "home": "Southport",
+     "home_id": 1826,
+     "away": "Wigan",
+     "away_id": 61,
+     "k_home_id": 1826,
+     "k_home_name": "Southport",
+     "k_away_id": 61,
+     "k_away_name": "Wigan"
+    }
+   ]
+  },
+  {
+   "event_ticker": "KXCLUBFGAME-26JUL31SPONFO",
+   "title": "Sporting CP vs Nottingham",
+   "et_date": "26JUL31",
+   "kalshi_home": "Sporting CP",
+   "kalshi_away": "Nottingham",
+   "hits": [
+    {
+     "orientation": "same",
+     "tiers": [
+      "exact",
+      "loose"
+     ],
+     "fixture_id": 1583500,
+     "league_id": 667,
+     "league_name": "Friendlies Clubs",
+     "league_season": 2026,
+     "kickoff": "2026-07-31T18:45:00+00:00",
+     "home": "Sporting CP",
+     "home_id": 228,
+     "away": "Nottingham Forest",
+     "away_id": 65,
+     "k_home_id": 228,
+     "k_home_name": "Sporting CP",
+     "k_away_id": 65,
+     "k_away_name": "Nottingham Forest"
+    }
+   ]
+  }
+ ],
+ "id_stability": {
+  "team_appearances_in_window": 3020,
+  "ids_carrying_more_than_one_name": 0,
+  "unordered_id_pairs_colliding_on_any_et_date": 0,
+  "same_team_id_across_two_independent_fixture_calls": [
+   {
+    "team": "Barcelona",
+    "id": 529,
+    "seen_in": [
+     "fixtures?id=1583514",
+     "fixtures?team=529"
+    ]
+   }
+  ],
+  "requests": [
+   {
+    "label": "C1 team=40 s2025 (Liverpool)",
+    "path": "fixtures",
+    "params": {
+     "team": 40,
+     "season": 2025,
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "http_status": 200,
+    "array_length": 1,
+    "declared_results": 1,
+    "provider_errors": [],
+    "body": {
+     "get": "fixtures",
+     "parameters": {
+      "team": "40",
+      "season": "2025",
+      "from": "2026-07-28",
+      "to": "2026-08-01"
+     },
+     "errors": [],
+     "results": 1,
+     "paging": {
+      "current": 1,
+      "total": 1
+     },
+     "response": [
+      {
+       "fixture": {
+        "id": 1589333,
+        "referee": null,
+        "timezone": "UTC",
+        "date": "2026-07-29T23:30:00+00:00",
+        "timestamp": 1785367800,
+        "periods": {
+         "first": 1785367800,
+         "second": null
+        },
+        "venue": {
+         "id": 0,
+         "name": null,
+         "city": null
+        },
+        "status": {
+         "long": "First Half",
+         "short": "1H",
+         "elapsed": 1,
+         "extra": null
+        }
+       },
+       "league": {
+        "id": 1022,
+        "name": "Premier League - Summer Series",
+        "country": "England",
+        "logo": "https://media.api-sports.io/football/leagues/1022.png",
+        "flag": "https://media.api-sports.io/flags/gb-eng.svg",
+        "season": 2025,
+        "round": "Regular Season - 2",
+        "standings": true
+       },
+       "teams": {
+        "home": {
+         "id": 40,
+         "name": "Liverpool",
+         "logo": "https://media.api-sports.io/football/teams/40.png",
+         "winner": null
+        },
+        "away": {
+         "id": 1837,
+         "name": "Wrexham",
+         "logo": "https://media.api-sports.io/football/teams/1837.png",
+         "winner": null
+        }
+       },
+       "goals": {
+        "home": 0,
+        "away": 0
+       },
+       "score": {
+        "halftime": {
+         "home": 0,
+         "away": 0
+        },
+        "fulltime": {
+         "home": null,
+         "away": null
+        },
+        "extratime": {
+         "home": null,
+         "away": null
+        },
+        "penalty": {
+         "home": null,
+         "away": null
+        }
+       }
+      }
+     ]
+    }
+   },
+   {
+    "label": "C1 team=63 s2025 (Leeds)",
+    "path": "fixtures",
+    "params": {
+     "team": 63,
+     "season": 2025,
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "http_status": 200,
+    "array_length": 1,
+    "declared_results": 1,
+    "provider_errors": [],
+    "body": {
+     "get": "fixtures",
+     "parameters": {
+      "team": "63",
+      "season": "2025",
+      "from": "2026-07-28",
+      "to": "2026-08-01"
+     },
+     "errors": [],
+     "results": 1,
+     "paging": {
+      "current": 1,
+      "total": 1
+     },
+     "response": [
+      {
+       "fixture": {
+        "id": 1589334,
+        "referee": null,
+        "timezone": "UTC",
+        "date": "2026-07-30T23:30:00+00:00",
+        "timestamp": 1785454200,
+        "periods": {
+         "first": null,
+         "second": null
+        },
+        "venue": {
+         "id": 0,
+         "name": null,
+         "city": null
+        },
+        "status": {
+         "long": "Not Started",
+         "short": "NS",
+         "elapsed": null,
+         "extra": null
+        }
+       },
+       "league": {
+        "id": 1022,
+        "name": "Premier League - Summer Series",
+        "country": "England",
+        "logo": "https://media.api-sports.io/football/leagues/1022.png",
+        "flag": "https://media.api-sports.io/flags/gb-eng.svg",
+        "season": 2025,
+        "round": "Regular Season - 2",
+        "standings": true
+       },
+       "teams": {
+        "home": {
+         "id": 746,
+         "name": "Sunderland",
+         "logo": "https://media.api-sports.io/football/teams/746.png",
+         "winner": null
+        },
+        "away": {
+         "id": 63,
+         "name": "Leeds",
+         "logo": "https://media.api-sports.io/football/teams/63.png",
+         "winner": null
+        }
+       },
+       "goals": {
+        "home": null,
+        "away": null
+       },
+       "score": {
+        "halftime": {
+         "home": null,
+         "away": null
+        },
+        "fulltime": {
+         "home": null,
+         "away": null
+        },
+        "extratime": {
+         "home": null,
+         "away": null
+        },
+        "penalty": {
+         "home": null,
+         "away": null
+        }
+       }
+      }
+     ]
+    }
+   },
+   {
+    "label": "C1 team=157 s2025 (Bayern M\u00fcnchen)",
+    "path": "fixtures",
+    "params": {
+     "team": 157,
+     "season": 2025,
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "http_status": 200,
+    "array_length": 0,
+    "declared_results": 0,
+    "provider_errors": [],
+    "body": {
+     "get": "fixtures",
+     "parameters": {
+      "team": "157",
+      "season": "2025",
+      "from": "2026-07-28",
+      "to": "2026-08-01"
+     },
+     "errors": [],
+     "results": 0,
+     "paging": {
+      "current": 1,
+      "total": 1
+     },
+     "response": []
+    }
+   },
+   {
+    "label": "C2 team=40 no-season (Liverpool)",
+    "path": "fixtures",
+    "params": {
+     "team": 40,
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "http_status": 200,
+    "array_length": 0,
+    "declared_results": 0,
+    "provider_errors": {
+     "season": "The Season field is required."
+    },
+    "body": {
+     "get": "fixtures",
+     "parameters": {
+      "team": "40",
+      "from": "2026-07-28",
+      "to": "2026-08-01"
+     },
+     "errors": {
+      "season": "The Season field is required."
+     },
+     "results": 0,
+     "paging": {
+      "current": 1,
+      "total": 1
+     },
+     "response": []
+    }
+   },
+   {
+    "label": "C2 team=157 no-season (Bayern M\u00fcnchen)",
+    "path": "fixtures",
+    "params": {
+     "team": 157,
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "http_status": 200,
+    "array_length": 0,
+    "declared_results": 0,
+    "provider_errors": {
+     "season": "The Season field is required."
+    },
+    "body": {
+     "get": "fixtures",
+     "parameters": {
+      "team": "157",
+      "from": "2026-07-28",
+      "to": "2026-08-01"
+     },
+     "errors": {
+      "season": "The Season field is required."
+     },
+     "results": 0,
+     "paging": {
+      "current": 1,
+      "total": 1
+     },
+     "response": []
+    }
+   },
+   {
+    "label": "C3 team=496 (Juventus)",
+    "path": "fixtures",
+    "params": {
+     "team": 496,
+     "season": 2026,
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "http_status": 200,
+    "array_length": 1,
+    "declared_results": 1,
+    "provider_errors": [],
+    "body": {
+     "get": "fixtures",
+     "parameters": {
+      "team": "496",
+      "season": "2026",
+      "from": "2026-07-28",
+      "to": "2026-08-01"
+     },
+     "errors": [],
+     "results": 1,
+     "paging": {
+      "current": 1,
+      "total": 1
+     },
+     "response": [
+      {
+       "fixture": {
+        "id": 1585004,
+        "referee": null,
+        "timezone": "UTC",
+        "date": "2026-07-31T16:00:00+00:00",
+        "timestamp": 1785513600,
+        "periods": {
+         "first": null,
+         "second": null
+        },
+        "venue": {
+         "id": null,
+         "name": "Juventus Training Center",
+         "city": "Turin"
+        },
+        "status": {
+         "long": "Not Started",
+         "short": "NS",
+         "elapsed": null,
+         "extra": null
+        }
+       },
+       "league": {
+        "id": 667,
+        "name": "Friendlies Clubs",
+        "country": "World",
+        "logo": "https://media.api-sports.io/football/leagues/667.png",
+        "flag": null,
+        "season": 2026,
+        "round": "Club Friendlies",
+        "standings": false
+       },
+       "teams": {
+        "home": {
+         "id": 496,
+         "name": "Juventus",
+         "logo": "https://media.api-sports.io/football/teams/496.png",
+         "winner": null
+        },
+        "away": {
+         "id": 84,
+         "name": "Nice",
+         "logo": "https://media.api-sports.io/football/teams/84.png",
+         "winner": null
+        }
+       },
+       "goals": {
+        "home": null,
+        "away": null
+       },
+       "score": {
+        "halftime": {
+         "home": null,
+         "away": null
+        },
+        "fulltime": {
+         "home": null,
+         "away": null
+        },
+        "extratime": {
+         "home": null,
+         "away": null
+        },
+        "penalty": {
+         "home": null,
+         "away": null
+        }
+       }
+      }
+     ]
+    }
+   },
+   {
+    "label": "C3 team=536 (Sevilla)",
+    "path": "fixtures",
+    "params": {
+     "team": 536,
+     "season": 2026,
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "http_status": 200,
+    "array_length": 1,
+    "declared_results": 1,
+    "provider_errors": [],
+    "body": {
+     "get": "fixtures",
+     "parameters": {
+      "team": "536",
+      "season": "2026",
+      "from": "2026-07-28",
+      "to": "2026-08-01"
+     },
+     "errors": [],
+     "results": 1,
+     "paging": {
+      "current": 1,
+      "total": 1
+     },
+     "response": [
+      {
+       "fixture": {
+        "id": 1583504,
+        "referee": null,
+        "timezone": "UTC",
+        "date": "2026-07-31T17:00:00+00:00",
+        "timestamp": 1785517200,
+        "periods": {
+         "first": null,
+         "second": null
+        },
+        "venue": {
+         "id": null,
+         "name": null,
+         "city": null
+        },
+        "status": {
+         "long": "Not Started",
+         "short": "NS",
+         "elapsed": null,
+         "extra": null
+        }
+       },
+       "league": {
+        "id": 667,
+        "name": "Friendlies Clubs",
+        "country": "World",
+        "logo": "https://media.api-sports.io/football/leagues/667.png",
+        "flag": null,
+        "season": 2026,
+        "round": "Club Friendlies",
+        "standings": false
+       },
+       "teams": {
+        "home": {
+         "id": 413,
+         "name": "NEC Nijmegen",
+         "logo": "https://media.api-sports.io/football/teams/413.png",
+         "winner": null
+        },
+        "away": {
+         "id": 536,
+         "name": "Sevilla",
+         "logo": "https://media.api-sports.io/football/teams/536.png",
+         "winner": null
+        }
+       },
+       "goals": {
+        "home": null,
+        "away": null
+       },
+       "score": {
+        "halftime": {
+         "home": null,
+         "away": null
+        },
+        "fulltime": {
+         "home": null,
+         "away": null
+        },
+        "extratime": {
+         "home": null,
+         "away": null
+        },
+        "penalty": {
+         "home": null,
+         "away": null
+        }
+       }
+      }
+     ]
+    }
+   },
+   {
+    "label": "C3 team=722 (Albacete)",
+    "path": "fixtures",
+    "params": {
+     "team": 722,
+     "season": 2026,
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "http_status": 200,
+    "array_length": 2,
+    "declared_results": 2,
+    "provider_errors": [],
+    "body": {
+     "get": "fixtures",
+     "parameters": {
+      "team": "722",
+      "season": "2026",
+      "from": "2026-07-28",
+      "to": "2026-08-01"
+     },
+     "errors": [],
+     "results": 2,
+     "paging": {
+      "current": 1,
+      "total": 1
+     },
+     "response": [
+      {
+       "fixture": {
+        "id": 1585007,
+        "referee": null,
+        "timezone": "UTC",
+        "date": "2026-08-01T08:00:00+00:00",
+        "timestamp": 1785571200,
+        "periods": {
+         "first": null,
+         "second": null
+        },
+        "venue": {
+         "id": null,
+         "name": null,
+         "city": null
+        },
+        "status": {
+         "long": "Not Started",
+         "short": "NS",
+         "elapsed": null,
+         "extra": null
+        }
+       },
+       "league": {
+        "id": 667,
+        "name": "Friendlies Clubs",
+        "country": "World",
+        "logo": "https://media.api-sports.io/football/leagues/667.png",
+        "flag": null,
+        "season": 2026,
+        "round": "Club Friendlies",
+        "standings": false
+       },
+       "teams": {
+        "home": {
+         "id": 539,
+         "name": "Levante",
+         "logo": "https://media.api-sports.io/football/teams/539.png",
+         "winner": null
+        },
+        "away": {
+         "id": 722,
+         "name": "Albacete",
+         "logo": "https://media.api-sports.io/football/teams/722.png",
+         "winner": null
+        }
+       },
+       "goals": {
+        "home": null,
+        "away": null
+       },
+       "score": {
+        "halftime": {
+         "home": null,
+         "away": null
+        },
+        "fulltime": {
+         "home": null,
+         "away": null
+        },
+        "extratime": {
+         "home": null,
+         "away": null
+        },
+        "penalty": {
+         "home": null,
+         "away": null
+        }
+       }
+      },
+      {
+       "fixture": {
+        "id": 1598568,
+        "referee": null,
+        "timezone": "UTC",
+        "date": "2026-07-31T18:00:00+00:00",
+        "timestamp": 1785520800,
+        "periods": {
+         "first": null,
+         "second": null
+        },
+        "venue": {
+         "id": null,
+         "name": null,
+         "city": null
+        },
+        "status": {
+         "long": "Not Started",
+         "short": "NS",
+         "elapsed": null,
+         "extra": null
+        }
+       },
+       "league": {
+        "id": 667,
+        "name": "Friendlies Clubs",
+        "country": "World",
+        "logo": "https://media.api-sports.io/football/leagues/667.png",
+        "flag": null,
+        "season": 2026,
+        "round": "Club Friendlies",
+        "standings": false
+       },
+       "teams": {
+        "home": {
+         "id": 722,
+         "name": "Albacete",
+         "logo": "https://media.api-sports.io/football/teams/722.png",
+         "winner": null
+        },
+        "away": {
+         "id": 9575,
+         "name": "Real Madrid II",
+         "logo": "https://media.api-sports.io/football/teams/9575.png",
+         "winner": null
+        }
+       },
+       "goals": {
+        "home": null,
+        "away": null
+       },
+       "score": {
+        "halftime": {
+         "home": null,
+         "away": null
+        },
+        "fulltime": {
+         "home": null,
+         "away": null
+        },
+        "extratime": {
+         "home": null,
+         "away": null
+        },
+        "penalty": {
+         "home": null,
+         "away": null
+        }
+       }
+      }
+     ]
+    }
+   },
+   {
+    "label": "fixtures?id=1583514",
+    "path": "fixtures",
+    "params": {
+     "id": 1583514
+    },
+    "http_status": 200,
+    "array_length": 1,
+    "declared_results": 1,
+    "provider_errors": [],
+    "body": {
+     "get": "fixtures",
+     "parameters": {
+      "id": "1583514"
+     },
+     "errors": [],
+     "results": 1,
+     "paging": {
+      "current": 1,
+      "total": 1
+     },
+     "response": [
+      {
+       "fixture": {
+        "id": 1583514,
+        "referee": null,
+        "timezone": "UTC",
+        "date": "2026-07-31T18:45:00+00:00",
+        "timestamp": 1785523500,
+        "periods": {
+         "first": null,
+         "second": null
+        },
+        "venue": {
+         "id": null,
+         "name": null,
+         "city": "Birmingham"
+        },
+        "status": {
+         "long": "Not Started",
+         "short": "NS",
+         "elapsed": null,
+         "extra": null
+        }
+       },
+       "league": {
+        "id": 667,
+        "name": "Friendlies Clubs",
+        "country": "World",
+        "logo": "https://media.api-sports.io/football/leagues/667.png",
+        "flag": null,
+        "season": 2026,
+        "round": "Club Friendlies",
+        "standings": false
+       },
+       "teams": {
+        "home": {
+         "id": 54,
+         "name": "Birmingham",
+         "logo": "https://media.api-sports.io/football/teams/54.png",
+         "winner": null
+        },
+        "away": {
+         "id": 529,
+         "name": "Barcelona",
+         "logo": "https://media.api-sports.io/football/teams/529.png",
+         "winner": null
+        }
+       },
+       "goals": {
+        "home": null,
+        "away": null
+       },
+       "score": {
+        "halftime": {
+         "home": null,
+         "away": null
+        },
+        "fulltime": {
+         "home": null,
+         "away": null
+        },
+        "extratime": {
+         "home": null,
+         "away": null
+        },
+        "penalty": {
+         "home": null,
+         "away": null
+        }
+       },
+       "events": [],
+       "lineups": [],
+       "statistics": [],
+       "players": []
+      }
+     ]
+    }
+   },
+   {
+    "label": "fixtures?id=1583504",
+    "path": "fixtures",
+    "params": {
+     "id": 1583504
+    },
+    "http_status": 200,
+    "array_length": 1,
+    "declared_results": 1,
+    "provider_errors": [],
+    "body": {
+     "get": "fixtures",
+     "parameters": {
+      "id": "1583504"
+     },
+     "errors": [],
+     "results": 1,
+     "paging": {
+      "current": 1,
+      "total": 1
+     },
+     "response": [
+      {
+       "fixture": {
+        "id": 1583504,
+        "referee": null,
+        "timezone": "UTC",
+        "date": "2026-07-31T17:00:00+00:00",
+        "timestamp": 1785517200,
+        "periods": {
+         "first": null,
+         "second": null
+        },
+        "venue": {
+         "id": null,
+         "name": null,
+         "city": null
+        },
+        "status": {
+         "long": "Not Started",
+         "short": "NS",
+         "elapsed": null,
+         "extra": null
+        }
+       },
+       "league": {
+        "id": 667,
+        "name": "Friendlies Clubs",
+        "country": "World",
+        "logo": "https://media.api-sports.io/football/leagues/667.png",
+        "flag": null,
+        "season": 2026,
+        "round": "Club Friendlies",
+        "standings": false
+       },
+       "teams": {
+        "home": {
+         "id": 413,
+         "name": "NEC Nijmegen",
+         "logo": "https://media.api-sports.io/football/teams/413.png",
+         "winner": null
+        },
+        "away": {
+         "id": 536,
+         "name": "Sevilla",
+         "logo": "https://media.api-sports.io/football/teams/536.png",
+         "winner": null
+        }
+       },
+       "goals": {
+        "home": null,
+        "away": null
+       },
+       "score": {
+        "halftime": {
+         "home": null,
+         "away": null
+        },
+        "fulltime": {
+         "home": null,
+         "away": null
+        },
+        "extratime": {
+         "home": null,
+         "away": null
+        },
+        "penalty": {
+         "home": null,
+         "away": null
+        }
+       },
+       "events": [],
+       "lineups": [],
+       "statistics": [],
+       "players": []
+      }
+     ]
+    }
+   },
+   {
+    "label": "fixtures?team=529 (Barcelona)",
+    "path": "fixtures",
+    "params": {
+     "team": 529,
+     "season": 2026,
+     "from": "2026-07-28",
+     "to": "2026-08-01"
+    },
+    "http_status": 200,
+    "array_length": 1,
+    "declared_results": 1,
+    "provider_errors": [],
+    "body": {
+     "get": "fixtures",
+     "parameters": {
+      "team": "529",
+      "season": "2026",
+      "from": "2026-07-28",
+      "to": "2026-08-01"
+     },
+     "errors": [],
+     "results": 1,
+     "paging": {
+      "current": 1,
+      "total": 1
+     },
+     "response": [
+      {
+       "fixture": {
+        "id": 1583514,
+        "referee": null,
+        "timezone": "UTC",
+        "date": "2026-07-31T18:45:00+00:00",
+        "timestamp": 1785523500,
+        "periods": {
+         "first": null,
+         "second": null
+        },
+        "venue": {
+         "id": null,
+         "name": null,
+         "city": "Birmingham"
+        },
+        "status": {
+         "long": "Not Started",
+         "short": "NS",
+         "elapsed": null,
+         "extra": null
+        }
+       },
+       "league": {
+        "id": 667,
+        "name": "Friendlies Clubs",
+        "country": "World",
+        "logo": "https://media.api-sports.io/football/leagues/667.png",
+        "flag": null,
+        "season": 2026,
+        "round": "Club Friendlies",
+        "standings": false
+       },
+       "teams": {
+        "home": {
+         "id": 54,
+         "name": "Birmingham",
+         "logo": "https://media.api-sports.io/football/teams/54.png",
+         "winner": null
+        },
+        "away": {
+         "id": 529,
+         "name": "Barcelona",
+         "logo": "https://media.api-sports.io/football/teams/529.png",
+         "winner": null
+        }
+       },
+       "goals": {
+        "home": null,
+        "away": null
+       },
+       "score": {
+        "halftime": {
+         "home": null,
+         "away": null
+        },
+        "fulltime": {
+         "home": null,
+         "away": null
+        },
+        "extratime": {
+         "home": null,
+         "away": null
+        },
+        "penalty": {
+         "home": null,
+         "away": null
+        }
+       }
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

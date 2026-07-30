@@ -79,7 +79,8 @@ class TestBootRegistration:
     def test_single_chained_boot_job(self):
         # THE regression guard: the ARCHIVE boot is exactly one ordered
         # chain — re-adding a separate restore/prime/bracket "date" job
-        # reintroduces the race. The MLS live plane gets its OWN isolated
+        # reintroduces the race. Each LIVE plane (MLS; EPL since
+        # 2026-07-28; Liga MX since 2026-07-29) gets its OWN isolated
         # one-shot (plane isolation: a live failure must never delay or
         # break the archive chain), and nothing else.
         orig = sched.BackgroundScheduler
@@ -91,7 +92,9 @@ class TestBootRegistration:
         one_shots = [(func, kw.get("id")) for func, trigger, kw in s.jobs
                      if trigger == "date"]
         assert one_shots == [(sched.boot_sequence, "boot_sequence"),
-                             (sched.mls_boot, "mls_boot")]
+                             (sched.mls_boot, "mls_boot"),
+                             (sched.epl_boot, "epl_boot"),
+                             (sched.ligamx_boot, "ligamx_boot")]
 
     def test_recurring_jobs_still_registered(self):
         # The chain must not have cannibalized the steady-state jobs.

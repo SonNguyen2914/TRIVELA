@@ -1,0 +1,120 @@
+{
+ "baseline_exit": 0,
+ "baseline_tail": "96 passed in 8.48s",
+ "after_restore_exit": 0,
+ "after_restore_tail": "96 passed in 8.43s",
+ "mutations": [
+  {
+   "name": "M1 invert the conditioning strength ordering",
+   "defect": "treat 'we found a reason' as STRENGTHENING the finding \u2014 the central inversion this build must not permit",
+   "test": "tests/test_hunter_live_stats.py::TestInferenceDirectionIsNotInverted::test_observed_ranks_weakest_and_readable_no_cause_ranks_strongest",
+   "exit_with_defect": 1,
+   "outcome": "GUARD_CAUGHT_IT",
+   "pytest_tail": "1 failed in 0.24s"
+  },
+  {
+   "name": "M2 stop counting goals as explaining events",
+   "defect": "watch only for red cards. A goal is the most common cause of a violent move, so this files almost every goal-driven move under the STRONGEST state",
+   "test": "tests/test_hunter_live_stats.py::TestInferenceDirectionIsNotInverted::test_a_goal_is_an_explaining_event_of_equal_standing",
+   "exit_with_defect": 1,
+   "outcome": "GUARD_CAUGHT_IT",
+   "pytest_tail": "1 failed in 0.24s"
+  },
+  {
+   "name": "M3 count a yellow card as a dismissal",
+   "defect": "match any card as a sending-off; 68 of 72 measured card events were yellows, so this explains away almost every match",
+   "test": "tests/test_hunter_live_stats.py::TestInferenceDirectionIsNotInverted::test_a_yellow_card_is_not_a_dismissal",
+   "exit_with_defect": 1,
+   "outcome": "GUARD_CAUGHT_IT",
+   "pytest_tail": "1 failed in 0.24s"
+  },
+  {
+   "name": "M4 read a null xG as zero",
+   "defect": "the hollow-value-as-answer failure this repo has been burned by twice; says 'created nothing' about a competition that simply is not covered",
+   "test": "tests/test_hunter_live_stats.py::TestAbsentIsNotZero::test_a_null_xg_is_absent_not_zero_in_a_reading",
+   "exit_with_defect": 1,
+   "outcome": "GUARD_CAUGHT_IT",
+   "pytest_tail": "1 failed in 0.27s"
+  },
+  {
+   "name": "M5 let an empty event feed rule out a cause",
+   "defect": "treat an empty events array as 'nothing happened' and award the STRONGEST state \u2014 the results:0 mistake",
+   "test": "tests/test_hunter_live_stats.py::TestInferenceDirectionIsNotInverted::test_an_empty_event_feed_cannot_rule_out_a_cause",
+   "exit_with_defect": 1,
+   "outcome": "GUARD_CAUGHT_IT",
+   "pytest_tail": "1 failed in 0.25s"
+  },
+  {
+   "name": "M6 resolve an ambiguous join by picking the first",
+   "defect": "silently pick one of two matching fixtures; attaches another match's red card to this market",
+   "test": "tests/test_hunter_live_stats.py::TestTheJoinFailsClosed::test_two_matching_fixtures_fail_explicitly",
+   "exit_with_defect": 1,
+   "outcome": "GUARD_CAUGHT_IT",
+   "pytest_tail": "1 failed in 0.24s"
+  },
+  {
+   "name": "M7 let a too-early read downgrade a measured presence",
+   "defect": "one 4th-minute empty read erases a presence measured at 73' \u2014 converting missing evidence into a conclusion",
+   "test": "tests/test_hunter_live_stats.py::TestCoverageIsMeasuredNotAssumed::test_a_too_early_read_never_downgrades_a_measured_presence",
+   "exit_with_defect": 1,
+   "outcome": "GUARD_CAUGHT_IT",
+   "pytest_tail": "1 failed in 0.39s"
+  },
+  {
+   "name": "M8 alert on an OBSERVED conditioning event",
+   "defect": "broadcast a move that HAS a visible cause as an anomaly \u2014 the inference direction, inverted at the alert gate",
+   "test": "tests/test_hunter_live_stats.py::TestAlertingStaysWhereSonPutIt::test_an_observed_cause_is_refused_even_when_alerts_are_on",
+   "exit_with_defect": 1,
+   "outcome": "GUARD_CAUGHT_IT",
+   "pytest_tail": "1 failed in 0.23s"
+  },
+  {
+   "name": "M9 in-play alerts default ON",
+   "defect": "promote a context finding to Son's channel without his decision",
+   "test": "tests/test_hunter_live_stats.py::TestAlertingStaysWhereSonPutIt::test_in_play_alerts_default_off",
+   "exit_with_defect": 1,
+   "outcome": "GUARD_CAUGHT_IT",
+   "pytest_tail": "1 failed in 0.24s"
+  },
+  {
+   "name": "M10 import the live-stats surface into the lock path",
+   "defect": "a temporal-leakage route: live xG reachable from the module that writes the canonical T-10 lock",
+   "test": "tests/test_hunter_live_stats.py::TestLiveXgCannotReachALockedArtifact::test_no_lock_path_module_names_the_live_stats_surface",
+   "exit_with_defect": 1,
+   "outcome": "GUARD_CAUGHT_IT",
+   "pytest_tail": "1 failed in 0.27s"
+  },
+  {
+   "name": "M11 promote the hunter dispatch off the detail channel",
+   "defect": "put in-play model numbers on the act-now channel and the phone",
+   "test": "tests/test_hunter_live_stats.py::TestAlertingStaysWhereSonPutIt::test_the_hunter_call_site_still_declares_detail_only",
+   "exit_with_defect": 1,
+   "outcome": "GUARD_CAUGHT_IT",
+   "pytest_tail": "1 failed in 0.26s"
+  },
+  {
+   "name": "M12 accept xGA as xG",
+   "defect": "read the opponent's expected-goals-against as this team's xG",
+   "test": "tests/test_hunter_live_stats.py::TestAbsentIsNotZero::test_xga_is_never_read_as_xg",
+   "exit_with_defect": 1,
+   "outcome": "GUARD_CAUGHT_IT",
+   "pytest_tail": "1 failed in 0.33s"
+  },
+  {
+   "name": "M13 spend requests even with no candidate",
+   "defect": "sweep the world every cycle instead of only when an overreaction exists \u2014 burns the metered quota",
+   "test": "tests/test_hunter_live_stats.py::TestBudget::test_a_cycle_with_no_candidate_spends_nothing",
+   "exit_with_defect": 1,
+   "outcome": "GUARD_CAUGHT_IT",
+   "pytest_tail": "1 failed in 0.39s"
+  },
+  {
+   "name": "M14 use a cached PRESENT verdict as a shortcut",
+   "defect": "let a row assert xG values nobody looked up, by trusting a cached presence instead of reading",
+   "test": "tests/test_hunter_live_stats.py::TestCoverageIsMeasuredNotAssumed::test_a_present_verdict_is_never_used_as_a_shortcut",
+   "exit_with_defect": 1,
+   "outcome": "GUARD_CAUGHT_IT",
+   "pytest_tail": "1 failed in 0.29s"
+  }
+ ]
+}

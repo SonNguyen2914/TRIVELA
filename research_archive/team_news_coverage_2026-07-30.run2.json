@@ -1,0 +1,529 @@
+{
+ "_governing_rule": "ASSERT A NON-ZERO COUNT, NEVER A STATUS CODE. A 200 with an empty response array is NOT coverage. empty != unavailable != ok.",
+ "_states": {
+  "empty": "the request succeeded, the array was empty. For a lineup this means NOT RELEASED, never 'no players'. For injuries it means the provider listed none, which is NOT the same as 'nobody is injured'.",
+  "ok": "the response array had elements",
+  "unavailable": "the request did not succeed (transport/HTTP)"
+ },
+ "_what": "team-news coverage measurement: injuries, lineups, events",
+ "apifootball": {
+  "friendlies": {
+   "candidates": [
+    {
+     "id": 10,
+     "name": "Friendlies",
+     "type": "Cup"
+    },
+    {
+     "id": 666,
+     "name": "Friendlies Women",
+     "type": "Cup"
+    },
+    {
+     "id": 667,
+     "name": "Friendlies Clubs",
+     "type": "Cup"
+    }
+   ],
+   "club_scoped": true,
+   "discovery_count": 3,
+   "discovery_search": "Friendlies",
+   "discovery_state": "ok",
+   "fixture_count": 454,
+   "fixture_window_state": "ok",
+   "lineup_probes": [
+    {
+     "away": "Cadiz",
+     "count": 0,
+     "fixture_id": 1583597,
+     "home": "Tenerife",
+     "interpretation": "not_released",
+     "state": "empty",
+     "status": "NS"
+    },
+    {
+     "away": "Genoa",
+     "count": 0,
+     "fixture_id": 1585028,
+     "home": "Leicester",
+     "interpretation": "not_released",
+     "state": "empty",
+     "status": "NS"
+    },
+    {
+     "away": "Guingamp",
+     "count": 0,
+     "fixture_id": 1583595,
+     "home": "Stade Brestois 29",
+     "interpretation": "not_released",
+     "state": "empty",
+     "status": "NS"
+    },
+    {
+     "away": "Almeria",
+     "count": 0,
+     "fixture_id": 1598580,
+     "home": "Real Betis",
+     "interpretation": "not_released",
+     "state": "empty",
+     "status": "NS"
+    },
+    {
+     "away": "Arsenal",
+     "count": 0,
+     "fixture_id": 1583596,
+     "home": "Girona",
+     "interpretation": "not_released",
+     "state": "empty",
+     "status": "NS"
+    }
+   ],
+   "measured": "0/5 friendly fixtures returned a lineup array",
+   "probed_league_id": 667,
+   "probed_league_name": "Friendlies Clubs"
+  },
+  "per_league": {
+   "epl": {
+    "apif_league_id": 39,
+    "display": "English Premier League",
+    "events_on_completed_fixture": {
+     "count": 0,
+     "note": "no completed fixture found in this season to probe",
+     "state": "empty"
+    },
+    "fixture_window": {
+     "count": 15,
+     "from": "2026-07-30",
+     "note": null,
+     "state": "ok",
+     "to": "2026-08-29"
+    },
+    "fixtures": [
+     {
+      "away": "Coventry",
+      "fixture_id": 1557367,
+      "home": "Arsenal",
+      "hours_to_kickoff": 546.3,
+      "injuries": {
+       "count": 0,
+       "note": null,
+       "records": [],
+       "state": "empty"
+      },
+      "kickoff_utc": "2026-08-21T19:00:00+00:00",
+      "lineups": {
+       "count": 0,
+       "interpretation": "not_released",
+       "note": null,
+       "sides": [],
+       "state": "empty"
+      }
+     },
+     {
+      "away": "Manchester United",
+      "fixture_id": 1557368,
+      "home": "Hull City",
+      "hours_to_kickoff": 562.8,
+      "injuries": {
+       "count": 0,
+       "note": null,
+       "records": [],
+       "state": "empty"
+      },
+      "kickoff_utc": "2026-08-22T11:30:00+00:00",
+      "lineups": {
+       "count": 0,
+       "interpretation": "not_released",
+       "note": null,
+       "sides": [],
+       "state": "empty"
+      }
+     }
+    ],
+    "season": 2026,
+    "season_fallback_used": false,
+    "upcoming_not_started_count": 15
+   },
+   "laliga": {
+    "apif_league_id": 140,
+    "display": "Spanish LALIGA",
+    "events_on_completed_fixture": {
+     "count": 0,
+     "note": "no completed fixture found in this season to probe",
+     "state": "empty"
+    },
+    "fixture_window": {
+     "count": 25,
+     "from": "2026-07-30",
+     "note": null,
+     "state": "ok",
+     "to": "2026-08-29"
+    },
+    "fixtures": [
+     {
+      "away": "Getafe",
+      "fixture_id": 1570333,
+      "home": "Alaves",
+      "hours_to_kickoff": 400.8,
+      "injuries": {
+       "count": 0,
+       "note": null,
+       "records": [],
+       "state": "empty"
+      },
+      "kickoff_utc": "2026-08-15T17:30:00+00:00",
+      "lineups": {
+       "count": 0,
+       "interpretation": "not_released",
+       "note": null,
+       "sides": [],
+       "state": "empty"
+      }
+     },
+     {
+      "away": "Rayo Vallecano",
+      "fixture_id": 1570341,
+      "home": "Sevilla",
+      "hours_to_kickoff": 402.8,
+      "injuries": {
+       "count": 0,
+       "note": null,
+       "records": [],
+       "state": "empty"
+      },
+      "kickoff_utc": "2026-08-15T19:30:00+00:00",
+      "lineups": {
+       "count": 0,
+       "interpretation": "not_released",
+       "note": null,
+       "sides": [],
+       "state": "empty"
+      }
+     }
+    ],
+    "season": 2026,
+    "season_fallback_used": false,
+    "upcoming_not_started_count": 25
+   }
+  },
+  "plan_status": {
+   "requests": {
+    "current": 849,
+    "limit_day": 7500
+   },
+   "subscription": {
+    "active": true,
+    "end": "2026-08-29T23:01:12+00:00",
+    "plan": "Pro"
+   }
+  }
+ },
+ "coverage_summary": {
+  "apifootball_friendlies_lineups": "0/5 friendly fixtures returned a lineup array",
+  "apifootball_leagues": {
+   "epl": {
+    "events_on_completed": "empty/0",
+    "fixtures_probed": 2,
+    "injuries_fixtures_with_records": "0/2",
+    "injury_records_total": 0,
+    "lineups_released_pre_match": "0/2"
+   },
+   "laliga": {
+    "events_on_completed": "empty/0",
+    "fixtures_probed": 2,
+    "injuries_fixtures_with_records": "0/2",
+    "injury_records_total": 0,
+    "lineups_released_pre_match": "0/2"
+   }
+  },
+  "espn_friendly_rosters": {
+   "by_state": {
+    "not_released": 2,
+    "released": 2
+   },
+   "denominator_on_board": 8,
+   "probed": 4
+  }
+ },
+ "espn_friendlies": {
+  "board_count": 8,
+  "coverage": {
+   "by_state": {
+    "not_released": 2,
+    "released": 2
+   },
+   "denominator_on_board": 8,
+   "probed": 4
+  },
+  "fixtures": [
+   {
+    "detail": "46'",
+    "espn_event_id": "401863532",
+    "name": "Wrexham at Liverpool",
+    "roster_containers": 2,
+    "roster_state": "released",
+    "sides": {
+     "away": {
+      "formation": "3-4-3",
+      "named": 24,
+      "released": true,
+      "starters": 11
+     },
+     "home": {
+      "formation": "4-2-3-1",
+      "named": 22,
+      "released": true,
+      "starters": 11
+     }
+    },
+    "state": "in",
+    "teams": [
+     "Liverpool",
+     "Wrexham"
+    ]
+   },
+   {
+    "detail": "FT",
+    "espn_event_id": "401872736",
+    "name": "Borussia Dortmund at Cerezo Osaka",
+    "roster_containers": 2,
+    "roster_state": "released",
+    "sides": {
+     "away": {
+      "formation": "3-4-2-1",
+      "named": 22,
+      "released": true,
+      "starters": 11
+     },
+     "home": {
+      "formation": "3-4-2-1",
+      "named": 24,
+      "released": true,
+      "starters": 11
+     }
+    },
+    "state": "post",
+    "teams": [
+     "Cerezo Osaka",
+     "Borussia Dortmund"
+    ]
+   },
+   {
+    "detail": "Scheduled",
+    "espn_event_id": "401886550",
+    "name": "Barcelona at Birmingham City",
+    "roster_containers": 2,
+    "roster_state": "not_released",
+    "sides": {
+     "away": {
+      "formation": null,
+      "named": 0,
+      "released": false,
+      "starters": 0
+     },
+     "home": {
+      "formation": null,
+      "named": 0,
+      "released": false,
+      "starters": 0
+     }
+    },
+    "state": "pre",
+    "teams": [
+     "Birmingham City",
+     "Barcelona"
+    ]
+   },
+   {
+    "detail": "Scheduled",
+    "espn_event_id": "401887800",
+    "name": "Nice at Juventus",
+    "roster_containers": 2,
+    "roster_state": "not_released",
+    "sides": {
+     "away": {
+      "formation": null,
+      "named": 0,
+      "released": false,
+      "starters": 0
+     },
+     "home": {
+      "formation": null,
+      "named": 0,
+      "released": false,
+      "starters": 0
+     }
+    },
+    "state": "pre",
+    "teams": [
+     "Juventus",
+     "Nice"
+    ]
+   }
+  ],
+  "request_log": [
+   {
+    "label": "espn_scoreboard:20260729",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_scoreboard:20260730",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_scoreboard:20260731",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_summary:401863532",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_summary:401872736",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_summary:401886550",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_summary:401887800",
+    "note": null,
+    "state": "ok"
+   }
+  ],
+  "slug": "club.friendly"
+ },
+ "key_problems": [],
+ "key_source": ".apifootball_key",
+ "request_log": [
+  {
+   "count": 0,
+   "label": "status",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 15,
+   "label": "fixtures:epl",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 0,
+   "label": "injuries:epl:1557367",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:epl:1557367",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "injuries:epl:1557368",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:epl:1557368",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "fixtures_ft:epl",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 25,
+   "label": "fixtures:laliga",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 0,
+   "label": "injuries:laliga:1570333",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:laliga:1570333",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "injuries:laliga:1570341",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:laliga:1570341",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "fixtures_ft:laliga",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 3,
+   "label": "leagues:friendlies",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 454,
+   "label": "fixtures:friendlies",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 0,
+   "label": "lineups:friendly:1583597",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:friendly:1585028",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:friendly:1583595",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:friendly:1598580",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:friendly:1583596",
+   "note": null,
+   "state": "empty"
+  }
+ ],
+ "requests_used": 20,
+ "run_utc": "2026-07-30T00:41:11.419288+00:00"
+}

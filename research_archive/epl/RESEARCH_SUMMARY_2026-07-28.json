@@ -1,0 +1,64 @@
+{
+  "purpose": "EPL (eng.1 / epl-2026) provider research, archived BEFORE any push per repo rule. Every claim below points at a raw response file in this directory.",
+  "fetched_utc": "2026-07-28T10:15Z",
+  "espn": {
+    "league_slug": "eng.1",
+    "season": "2026-27, startDate 2026-06-01, first fixture 2026-08-21 (Coventry City at Arsenal, event 401879301)",
+    "scoreboard": {
+      "file": "espn_scoreboard_default_2026-07-28T1015Z.json",
+      "finding": "default bucket returns the NEXT matchday (1 event, Aug 21) — same matchday-not-calendar-day semantics as usa.1"
+    },
+    "teams": {
+      "file": "espn_teams_2026-07-28T1015Z.json",
+      "finding": "20 clubs for 2026-27. Promoted (no Kalshi history): Coventry City, Hull City, Ipswich Town. Relegated out of 25/26: Burnley, West Ham, Wolverhampton."
+    },
+    "standings": {
+      "file": "espn_standings_2026-07-28T1015Z.json",
+      "finding": "NOT literally empty preseason: one child ('2026-27 English Premier League', inner name 'overall') with 20 all-zero rows (gamesPlayed=0, points=0) and rank assigned ALPHABETICALLY (AFC Bournemouth rank 1). Rendering this as a table would fabricate an order out of zero information — the parser must emit an explicit empty state until at least one club has played a game."
+    },
+    "summary": {
+      "file": "espn_summary_740966_2026-07-28T1015Z.json (settled 25/26 match, Brighton v Man United, event 740966)",
+      "finding": "boxscore carries a RICHER team-stat list than usa.1 (passes/crosses/tackles/etc) and every key src.mls.STAT_ORDER uses; lastFiveGames and seasonseries present (scouting parity); rosters present. ZERO occurrences of xG/expectedGoals anywhere in the payload."
+    }
+  },
+  "kalshi": {
+    "game_series": {
+      "ticker": "KXEPLGAME",
+      "status": "VERIFIED to exist as a series definition AND to have 387 historical events (2025-26 season). 0 open events for 2026-27 as of today — listings for the new season have not appeared yet.",
+      "files": [
+        "kalshi_series_KXEPLGAME_2026-07-28T1015Z.json",
+        "kalshi_events_KXEPLGAME_full_2026-07-28T1015Z.json",
+        "kalshi_markets_KXEPLGAME-26MAY24WHULEE_2026-07-28T1015Z.json"
+      ],
+      "ticker_grammar": "KXEPLGAME-{YYMONDD}{HOME3}{AWAY3}, market tails = home code / TIE / away code — same shape as KXMLSGAME (verified on the settled 26MAY24WHULEE event: -WHU/-TIE/-LEE, price_level_structure linear_cent)",
+      "title_join": "event title is '{Home} vs {Away}' — same ' vs ' join as MLS. CAUTION: some events title as '{Team}: Game Winner?' instead, and BOTH 'Man Utd' AND 'Manchester United' appear across the season (provider name drift within one series)."
+    },
+    "family_series_probes": {
+      "method": "GET /trade-api/v2/series/{ticker}, one probe per candidate, throttled",
+      "exist_200": ["KXEPLGAME", "KXEPLTOTAL", "KXEPLBTTS", "KXEPLSPREAD", "KXEPLTEAMTOTAL", "KXEPLSCORE", "KXEPLFTTS", "KXEPL1H", "KXEPL1HTOTAL", "KXEPL1HSPREAD", "KXEPL1HBTTS", "KXEPLTOP4"],
+      "not_found_404": ["KXEPLMOV", "KXEPLWINNER", "KXEPLCUP", "KXEPLTITLE", "KXEPLCHAMP", "KXEPLLEAGUE"],
+      "files": "probe_KX*.json (raw series definitions / 404 bodies)",
+      "caveats": "existence of a SERIES DEFINITION is not evidence that per-match markets will list for 2026-27, nor that the ticker-tail grammar matches MLS's for every family. The non-game families ship as config, unverified-flagged, and the model_key parser is exercised only when real markets appear. No league-winner futures series found under the probed names; EPL futures are omitted from v1 (KXEPLTOP4 exists but is a different product from MLS's cup winner)."
+    },
+    "verified_name_bridges": {
+      "source": "distinct title sides across all 387 KXEPLGAME events of 2025-26",
+      "bridges_needed": {"Man Utd": "Manchester United"},
+      "substring_sufficient": ["Bournemouth->AFC Bournemouth", "Brighton->Brighton & Hove Albion", "Newcastle->Newcastle United", "Nottingham->Nottingham Forest", "Tottenham->Tottenham Hotspur"],
+      "exact": ["Arsenal", "Aston Villa", "Brentford", "Chelsea", "Crystal Palace", "Everton", "Fulham", "Leeds United", "Liverpool", "Manchester City", "Manchester United", "Sunderland"],
+      "unverifiable": "Coventry City, Hull City, Ipswich Town have no Kalshi history; their Kalshi names are UNKNOWN until 26/27 events list. They stay honestly unmapped until then."
+    }
+  },
+  "xg_answer": {
+    "conclusion": "NO trustworthy xG source exists for EPL in this stack today. epl-2026-v0 ships GOALS-ONLY (the M2-shape rung); there is no EPL analogue of MLS_XG_RATING_ALPHA and no fabricated xG anywhere.",
+    "evidence": [
+      "ESPN eng.1 match summary: zero xG fields (espn_summary_740966_2026-07-28T1015Z.json, greps for xG/expectedGoals/xg all 0 hits)",
+      "No public no-auth official stats API analogous to stats-api.mlssoccer.com is known for the Premier League; the PL's own stats surfaces do not expose xG via a public JSON API",
+      "API-Football free plan is season-blind for current seasons (established 2026-07-22, memory api-football-free-plan-limits) and its xG coverage for eng.1 2026-27 was NOT verified — not relied upon",
+      "Understat/FBref carry xG but only via scraping of third-party sites with no API contract — rejected as an evidence-grade source for this platform"
+    ],
+    "not_verified": "whether API-Football's paid tiers expose usable per-match xG for eng.1 (untested — no key with paid scope exists)"
+  },
+  "api_football": {
+    "status": "NOT probed in this session (free-plan season blindness makes it unusable for current-season EPL club data without a paid upgrade; per-league visibility must be verified before any reliance)."
+  }
+}

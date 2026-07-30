@@ -1,0 +1,93 @@
+{
+ "captured_at": "2026-07-29T17:31:32.067010+00:00",
+ "purpose": "Kalshi fee-schedule provenance for the market hunter (P0-1). Establishes WHERE the venue publishes a market's fee schedule and whether it is uniform across the soccer taxonomy. Empirical, unauthenticated reads only; archived before any push per repo rule.",
+ "method": {
+  "series_list": "GET /trade-api/v2/series?category=Sports  (the request discover_roster ALREADY makes)",
+  "series_single": "GET /trade-api/v2/series/KXMLSGAME",
+  "market_probe": "GET /trade-api/v2/markets?series_ticker=KXUCLGAME&status=open&limit=1",
+  "throttle": "0.4s min gap"
+ },
+ "findings": [
+  "The MARKET payload carries NO fee field of any kind (full key list below). A per-MARKET fee_type does not exist in this API version \u2014 the reviewer's P0-1 premise is correct in substance but wrong in mechanism.",
+  "The SERIES object carries fee_type and fee_multiplier. Both are present on the bulk /series listing, so the hunter can resolve every series' schedule from the discovery request it already makes \u2014 zero extra Kalshi requests.",
+  "The soccer taxonomy is NOT uniform: of 97 soccer GAME series, 90 declare fee_type='quadratic' and 7 declare fee_type='quadratic_with_maker_fees'. The 7 are the biggest leagues, INCLUDING KXUCLGAME \u2014 the series every hunter test fixture uses.",
+  "fee_multiplier is 1 on every one of the 3038 Sports series read.",
+  "Kalshi publishes the NAME of the schedule, never its rate. 'quadratic' matches the repo's exact modelled general-taker formula (FEE_POLICY kalshi-fee-2026-07-general). 'quadratic_with_maker_fees' has no published rate here and FEE_POLICY declares maker fees NOT modelled, so it is recorded as fee_unknown and can never carry a net margin or an alert."
+ ],
+ "counts": {
+  "sports_series_total": 3038,
+  "soccer_game_series": 97,
+  "soccer_game_fee_schedules": {
+   "quadratic|multiplier=1": 90,
+   "quadratic_with_maker_fees|multiplier=1": 7
+  },
+  "all_sports_fee_schedules": {
+   "quadratic|multiplier=1": 2930,
+   "quadratic_with_maker_fees|multiplier=1": 108
+  }
+ },
+ "soccer_game_series_with_non_general_schedule": [
+  "KXBUNDESLIGAGAME",
+  "KXEPLGAME",
+  "KXLALIGAGAME",
+  "KXLIGUE1GAME",
+  "KXSERIEAGAME",
+  "KXUCLGAME",
+  "KXWCGAME"
+ ],
+ "sample_series_object_KXMLSGAME": {
+  "ticker": "KXMLSGAME",
+  "category": "Sports",
+  "tags": [
+   "Soccer"
+  ],
+  "fee_type": "quadratic",
+  "fee_multiplier": 1,
+  "title": "Major League Soccer Game"
+ },
+ "sample_market_payload_keys_KXUCLGAME": [
+  "can_close_early",
+  "close_time",
+  "created_time",
+  "custom_strike",
+  "early_close_condition",
+  "event_ticker",
+  "exchange_index",
+  "expected_expiration_time",
+  "expiration_time",
+  "expiration_value",
+  "last_price_dollars",
+  "latest_expiration_time",
+  "liquidity_dollars",
+  "market_type",
+  "no_ask_dollars",
+  "no_bid_dollars",
+  "no_sub_title",
+  "notional_value_dollars",
+  "occurrence_datetime",
+  "open_interest_fp",
+  "open_time",
+  "previous_price_dollars",
+  "previous_yes_ask_dollars",
+  "previous_yes_bid_dollars",
+  "price_level_structure",
+  "price_ranges",
+  "result",
+  "rules_primary",
+  "rules_secondary",
+  "settlement_timer_seconds",
+  "status",
+  "strike_type",
+  "ticker",
+  "title",
+  "updated_time",
+  "volume_24h_fp",
+  "volume_fp",
+  "yes_ask_dollars",
+  "yes_ask_size_fp",
+  "yes_bid_dollars",
+  "yes_bid_size_fp",
+  "yes_sub_title"
+ ],
+ "sample_market_fee_fields_KXUCLGAME": {}
+}

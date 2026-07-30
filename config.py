@@ -386,6 +386,224 @@ DISCORD_DETAIL_WEBHOOK_URL = os.getenv(
 # Minutes between periodic in-play live briefs on the detail channel.
 NARRATOR_INTERVAL_MINUTES = int(os.getenv("NARRATOR_INTERVAL_MINUTES", "5"))
 
+# === EPL (epl-2026) — additive block, 2026-07-28 ==========================
+# Premier League machinery parity. The MODEL IS DARK: nothing here can
+# approve it, and no odds render until an approval decision is earned
+# through the evaluation ladder on real 2026-27 data.
+
+# Master switch for the EPL shadow-plane jobs (ingest, market discovery,
+# quote capture, run sweeps). Same fail-safe parser as the MLS flag;
+# with the model dark the run sweeps refuse regardless of this switch.
+EPL_SHADOW_ENABLED = _parse_flag(
+    os.getenv("EPL_SHADOW_ENABLED"), True, "EPL_SHADOW_ENABLED")
+
+# The Kalshi game series is CONFIG, not fact: KXEPLGAME is verified to
+# exist as a series (387 events in 25/26, research_archive/epl/) but had
+# ZERO open 2026-27 events on 2026-07-28. The discovery probe
+# (/api/epl/markets/discovery) reports its live status.
+EPL_KALSHI_GAME_SERIES = os.getenv("EPL_KALSHI_GAME_SERIES",
+                                   "KXEPLGAME").strip()
+
+# EPL goal-rate dispersion. UNMEASURED for the EPL — 0.0 carries the
+# closest measured precedent (MLS league play swept to 0.0 on 162
+# fixtures; WC26's 0.30 was tournament data). Must be re-swept on real
+# 2026-27 data before any approval evaluation; until then it only
+# affects backtests/tests, since the dark model produces no runs.
+EPL_GOAL_DISPERSION_CV = float(os.getenv("EPL_GOAL_DISPERSION_CV", "0.0"))
+
+# 3-way calibration toward uniform. 0.0 = raw simulation: MLS's 0.25
+# was MEASURED on MLS data and does not transfer by assumption. Swept
+# alongside dispersion before any approval.
+EPL_CALIBRATION_ALPHA = float(os.getenv("EPL_CALIBRATION_ALPHA", "0.0"))
+
+# Kalshi discovery cadence for EPL. Slower than MLS's 10min while the
+# series has no open events (11 family sweeps per pass; this repo has
+# been burned by Kalshi 429s) — tighten once 26/27 listings appear.
+EPL_MARKETS_JOB_MINUTES = int(os.getenv("EPL_MARKETS_JOB_MINUTES", "30"))
+# === end EPL block =========================================================
+
+# === Liga MX (liga-mx-2026) — additive block, 2026-07-29 ===================
+# Mexican Liga BBVA MX machinery parity. IN SEASON (Apertura 2026) with
+# OPEN Kalshi markets — but the MODEL IS DARK: nothing here can approve
+# it, and no odds render until an approval decision is earned through
+# the evaluation ladder.
+
+# Master switch for the Liga MX shadow-plane jobs (ingest, market
+# discovery, quote capture, run sweeps). DEFAULT FALSE — unlike the MLS
+# and EPL flags — so shipping this build changes nothing at boot until
+# an operator turns the plane on deliberately. With the model dark the
+# run/lock sweeps refuse regardless of this switch.
+LIGAMX_SHADOW_ENABLED = _parse_flag(
+    os.getenv("LIGAMX_SHADOW_ENABLED"), False, "LIGAMX_SHADOW_ENABLED")
+
+# The Kalshi game series, verified LIVE 2026-07-29: KXLIGAMXGAME exists
+# with 9 open Apertura events and 221 historical events, exact KXMLSGAME
+# grammar (research_archive/ligamx_kalshi_*_2026-07-29.json). Still
+# config, and the discovery probe (/api/ligamx/markets/discovery)
+# reports its live status.
+LIGAMX_KALSHI_GAME_SERIES = os.getenv("LIGAMX_KALSHI_GAME_SERIES",
+                                      "KXLIGAMXGAME").strip()
+
+# Liga MX goal-rate dispersion. UNMEASURED — 0.0 carries the closest
+# measured precedent (MLS league play swept to 0.0 on 162 fixtures).
+# Must be re-swept on real Liga MX data before any approval evaluation;
+# until then it only affects backtests/tests (the dark model produces
+# no runs).
+LIGAMX_GOAL_DISPERSION_CV = float(
+    os.getenv("LIGAMX_GOAL_DISPERSION_CV", "0.0"))
+
+# 3-way calibration toward uniform. 0.0 = raw simulation: MLS's 0.25
+# was MEASURED on MLS data and does not transfer by assumption.
+LIGAMX_CALIBRATION_ALPHA = float(
+    os.getenv("LIGAMX_CALIBRATION_ALPHA", "0.0"))
+
+# Kalshi discovery cadence. The listings are OPEN (unlike EPL's) but the
+# plane is off by default and money is locked; 30min is plenty for
+# discovery+capture while dark, and respects the 429 history (11 family
+# sweeps per pass). Tighten deliberately if the plane is ever activated.
+LIGAMX_MARKETS_JOB_MINUTES = int(
+    os.getenv("LIGAMX_MARKETS_JOB_MINUTES", "30"))
+# === end Liga MX block =====================================================
+
+# --- Kalshi market hunter (observational scanner; shadow mode) -------------
+# Always-on scan of Kalshi's soccer GAME-series for structurally mispriced
+# books. OBSERVATIONAL ONLY: it records findings and never places, sizes,
+# or recommends an order. Money stays locked (REAL_MONEY_SIGNALS_ENABLED).
+#
+# Every numeric HUNTER_* bound must be POSITIVE and parseable, enforced at
+# import: a zero/negative cadence or threshold would silently disable a
+# guard (0-minute poll = hammering the provider; 0 thin-book size = no
+# book is ever thin), and this repo's rule is that misconfiguration fails
+# loudly at boot, never quietly at runtime.
+def _pos_int(name: str, default: str) -> int:
+    raw = os.getenv(name, default).strip() or default
+    try:
+        v = int(raw)
+    except ValueError:
+        raise ValueError(f"[config] {name}={raw!r} is not an integer")
+    if v <= 0:
+        raise ValueError(f"[config] {name}={raw!r} must be > 0")
+    return v
+
+
+def _pos_decimal_str(name: str, default: str) -> str:
+    """Positive decimal bound kept in its STRING form — the hunter's
+    exact-Decimal consumers parse it themselves (never through float)."""
+    from decimal import Decimal, InvalidOperation
+    raw = os.getenv(name, default).strip() or default
+    try:
+        v = Decimal(raw)
+    except InvalidOperation:
+        raise ValueError(f"[config] {name}={raw!r} is not a decimal")
+    if v <= 0:
+        raise ValueError(f"[config] {name}={raw!r} must be > 0")
+    return raw
+
+
+HUNTER_ENABLED = _parse_flag(os.getenv("HUNTER_ENABLED"), True,
+                             "HUNTER_ENABLED")
+# Scan cadence. Kalshi rate-limits hard; keep this modest.
+HUNTER_POLL_MINUTES = _pos_int("HUNTER_POLL_MINUTES", "10")
+# How often the series roster is re-discovered from the provider's series
+# listing (tags=Soccer, ticker ends GAME). Between discoveries the scan
+# only touches series that recently had open markets — a series going
+# ACTIVE between discoveries is picked up with at most this much lag
+# (≤6h at the default), which is a documented trade against hammering
+# the provider's full taxonomy every cycle.
+HUNTER_DISCOVERY_MINUTES = _pos_int("HUNTER_DISCOVERY_MINUTES", "360")
+# Optional explicit roster override: comma-separated series tickers. When
+# set, discovery is skipped and EXACTLY these series are scanned. The
+# default roster comes from live discovery, never a hardcoded guess —
+# the empirical taxonomy snapshot lives in
+# research_archive/kalshi_soccer_taxonomy_2026-07-28.json.
+HUNTER_SERIES = [t.strip().upper() for t in
+                 os.getenv("HUNTER_SERIES", "").split(",") if t.strip()]
+# Known non-match novelty series excluded from discovery (verified in the
+# taxonomy snapshot): not per-fixture 3-way books.
+HUNTER_SERIES_SKIP = [t.strip().upper() for t in os.getenv(
+    "HUNTER_SERIES_SKIP",
+    "KXWCGOALEVERYGAME,KXWCTEAMSINGAME,KXKXECULPGAME").split(",")
+    if t.strip()]
+# Liquidity-context thresholds (WIDE_SPREAD / THIN_BOOK are context
+# flags, never wins and never alerts).
+HUNTER_WIDE_SPREAD_DOLLARS = _pos_decimal_str(
+    "HUNTER_WIDE_SPREAD_DOLLARS", "0.10")
+HUNTER_THIN_BOOK_SIZE = _pos_int("HUNTER_THIN_BOOK_SIZE", "5")
+# IN_PLAY_OVERREACTION: minimum mid-to-mid repricing (dollars) between
+# two consecutive hunter captures of the same market, on a match dated
+# today (ET), before the move is flagged. The move must ALSO exceed the
+# wider of the two captures' spreads — a "move" inside quote noise is
+# not a repricing. CONTEXT ONLY: a violent in-play move is usually
+# conditioned on a real match event the hunter cannot observe, so this
+# never claims mispricing and never alerts.
+HUNTER_OVERREACTION_MIN_MOVE_DOLLARS = _pos_decimal_str(
+    "HUNTER_OVERREACTION_MIN_MOVE_DOLLARS", "0.15")
+# Net margin (dollars per contract, after exact fees) a structural
+# finding must clear before it may ALERT. Findings below this are still
+# recorded; they just stay quiet.
+HUNTER_ALERT_MIN_MARGIN_DOLLARS = _pos_decimal_str(
+    "HUNTER_ALERT_MIN_MARGIN_DOLLARS", "0.01")
+# Alert budget: max hunter alerts per rolling hour. A scanner that spams
+# the channel gets muted by its human and then protects nothing.
+HUNTER_ALERT_MAX_PER_HOUR = _pos_int("HUNTER_ALERT_MAX_PER_HOUR", "4")
+# Minimum net edge for a MODEL_EDGE readout row (mirrors the paper
+# execution policy's min_net_edge; observational, never alerts).
+HUNTER_MODEL_EDGE_MIN = float(
+    _pos_decimal_str("HUNTER_MODEL_EDGE_MIN", "0.03"))
+
+# --- hunter in-play live statistics (API-Football) ------------------------
+# Makes IN_PLAY_OVERREACTION's conditioning event OBSERVABLE where the
+# provider's coverage allows. Purely OBSERVATIONAL: these readings reach
+# HunterFinding.legs_json and nothing else. They must never touch a T-10
+# lock, a PredictionRun, a paper signal, or anything the model is fitted
+# or scored on — live xG carries information from AFTER a lock, and
+# tests/test_hunter_live_stats.py fences that boundary statically and
+# behaviourally.
+#
+# Enabled by default but INERT WITHOUT A KEY: with no key configured this
+# spends zero requests and the detector reports exactly what it reports
+# today (conditioning_unobserved_no_stats). Setting the key IS the opt-in,
+# so deploying this changes nothing until an operator does that.
+HUNTER_LIVE_STATS_ENABLED = _parse_flag(
+    os.getenv("HUNTER_LIVE_STATS_ENABLED"), True,
+    "HUNTER_LIVE_STATS_ENABLED")
+# The PAID key, deliberately a DIFFERENT variable from the legacy
+# API_FOOTBALL_KEY above: that one may still hold the free-tier key, and
+# the free plan was measured season-blind for current seasons — reading it
+# would produce confident answers about the wrong plan. Same rule as
+# scripts/verify_apifootball.py.
+APIFOOTBALL_KEY = os.getenv("APIFOOTBALL_KEY", "").strip()
+APIFOOTBALL_BASE = os.getenv(
+    "APIFOOTBALL_BASE", "https://v3.football.api-sports.io").strip()
+# Per-CYCLE request ceiling. The cycle spends NOTHING unless an
+# overreaction candidate actually exists; when one does it pays 1 request
+# for the whole world's live fixtures plus 2 per distinct resolved
+# fixture. PRO is 300/min and 7,500/day.
+HUNTER_LIVE_STATS_MAX_REQUESTS_PER_CYCLE = _pos_int(
+    "HUNTER_LIVE_STATS_MAX_REQUESTS_PER_CYCLE", "12")
+# Whole-process daily ceiling, counted against OUR clock's UTC day. A
+# second guard behind the per-cycle one: a pathological slate that
+# produced candidates every cycle must still not eat the day's quota.
+HUNTER_LIVE_STATS_MAX_REQUESTS_PER_DAY = _pos_int(
+    "HUNTER_LIVE_STATS_MAX_REQUESTS_PER_DAY", "1200")
+# How long a measured ABSENT coverage verdict is trusted before the
+# competition is re-measured. Coverage drifts and this repo has been
+# broken at HTTP 200 by exactly that; a cached absence must expire.
+# A PRESENT verdict is never used in place of a fresh read — a finding's
+# evidence is always the reading it was actually made from.
+HUNTER_LIVE_STATS_COVERAGE_TTL_DAYS = _pos_int(
+    "HUNTER_LIVE_STATS_COVERAGE_TTL_DAYS", "7")
+# Whether IN_PLAY_OVERREACTION may ALERT now that its conditioning can be
+# characterised. DEFAULT OFF, and deliberately so: promoting a
+# context-class finding to the channel a consenting third party reads is
+# Son's decision, not an implementer's. With this false the finding is
+# recorded and served exactly as today and never dispatches. Turning it
+# true routes it through the SAME AMBIENT_DETAIL / detail-channel path as
+# the structural findings — never the act-now channel, never the phone.
+HUNTER_IN_PLAY_ALERTS_ENABLED = _parse_flag(
+    os.getenv("HUNTER_IN_PLAY_ALERTS_ENABLED"), False,
+    "HUNTER_IN_PLAY_ALERTS_ENABLED")
+
 # --- live-plane volume headroom -------------------------------------------
 # Railway's own volume alerts are Teams/Pro-only, so the platform CANNOT
 # warn before the disk fills. It filled once (2026-07-25) and every
@@ -404,3 +622,62 @@ STORAGE_ALERT_PCT = float(os.getenv("STORAGE_ALERT_PCT", "70"))
 # is not urgent-by-the-minute, and an hourly repeat is noise.
 STORAGE_ALERT_COOLDOWN_MINUTES = int(
     os.getenv("STORAGE_ALERT_COOLDOWN_MINUTES", "360"))
+
+
+# --- league-derived xG via API-Football ------------------------------------
+# A paid API-Football key fills the xG gap for leagues with no free
+# team-level xG source. MLS is deliberately NOT one of them: it already has
+# real Sportec xG, free, with a measured effect, and it is inside the MLS
+# engine signature — so MLS keeps Sportec and this provider is never allowed
+# to supply it.
+#
+# The key is a SECRET: it is read from the environment, or from
+# ~/.apifootball_key when that file is owner-only. It is never logged, never
+# placed in a path or query string, and redacted out of provider error text.
+APIFOOTBALL_BASE = os.getenv("APIFOOTBALL_BASE",
+                             "https://v3.football.api-sports.io")
+# Dark by default. Ingestion is an explicit operator action, exactly like the
+# other league planes — a deploy must not silently start spending quota.
+APIFOOTBALL_XG_ENABLED = os.getenv(
+    "APIFOOTBALL_XG_ENABLED", "false").lower() == "true"
+# Plan limits measured on the live key 2026-07-29: 300 requests/minute,
+# 7500/day (Pro). The delay keeps a full-season ingest inside the per-minute
+# limit with headroom; the budget is a per-process ceiling that aborts rather
+# than spending someone else's quota.
+APIFOOTBALL_REQUEST_DELAY_SECONDS = float(
+    os.getenv("APIFOOTBALL_REQUEST_DELAY_SECONDS", "0.25"))
+APIFOOTBALL_REQUEST_BUDGET = int(
+    os.getenv("APIFOOTBALL_REQUEST_BUDGET", "3000"))
+APIFOOTBALL_TIMEOUT_SECONDS = float(
+    os.getenv("APIFOOTBALL_TIMEOUT_SECONDS", "20"))
+# 429 backoff: the provider's per-minute window is 60s, so one full window is
+# the honest wait. Two attempts, never a tight retry loop.
+APIFOOTBALL_BACKOFF_SECONDS = float(
+    os.getenv("APIFOOTBALL_BACKOFF_SECONDS", "60"))
+APIFOOTBALL_MAX_RETRIES = int(os.getenv("APIFOOTBALL_MAX_RETRIES", "1"))
+# Refresh cadence for the rolling xG top-up, in minutes. Config, not a
+# constant, because the right cadence depends on how many leagues are on.
+APIFOOTBALL_XG_JOB_MINUTES = int(
+    os.getenv("APIFOOTBALL_XG_JOB_MINUTES", "720"))
+# How long a measured coverage verdict stands before it is re-probed.
+APIFOOTBALL_COVERAGE_TTL_DAYS = int(
+    os.getenv("APIFOOTBALL_COVERAGE_TTL_DAYS", "30"))
+# Fixtures sampled per league when measuring coverage, spread evenly across
+# the season. A most-recent-N sample is BIASED: the newest completed fixtures
+# on a split-year league are the promotion/relegation playoff block, which
+# carries no xG, and that alone made three fully-covered leagues read
+# 'partial' on 2026-07-29.
+APIFOOTBALL_COVERAGE_SAMPLES = int(
+    os.getenv("APIFOOTBALL_COVERAGE_SAMPLES", "6"))
+
+# xG rating shrinkage for league-derived ratings. A STARTING POINT carried
+# from MLS (model_mls.XG_SHRINK_GAMES, swept on 162 MLS fixtures to a clean
+# interior optimum at k=4-6), NOT swept on any of these leagues' own data.
+# Nothing prices off these ratings, so the parameter is a display choice
+# until someone measures it — which is why the provenance is stated here
+# rather than implied.
+LEAGUE_XG_SHRINK_GAMES = float(os.getenv("LEAGUE_XG_SHRINK_GAMES", "6.0"))
+# A club needs this many xG-carrying fixtures before it is rated at all.
+# Below it the surface says 'not enough fixtures', never a number: mirrors
+# model_mls.MIN_GAMES rather than inventing a second standard.
+LEAGUE_XG_MIN_FIXTURES = int(os.getenv("LEAGUE_XG_MIN_FIXTURES", "5"))

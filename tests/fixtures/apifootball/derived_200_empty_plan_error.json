@@ -1,0 +1,23 @@
+{
+ "_provenance": {
+  "kind": "DERIVED",
+  "note": "A 200-with-nothing-in-it, written to the real v3 envelope (get / parameters / errors / results / paging / response) confirmed against every recorded response in research_archive/apifootball_verification_2026-07-29.run2.json. Constructed, not captured: the PRO plan never returned one. This is the shape src/live_feed.py:221 records the FREE plan returning for a season-2026 fixture that was live at the 45th minute — HTTP 200, results 0.",
+  "proves": "CHECK 2 FAILS in the words 'HTTP 200 WITH AN EMPTY response ARRAY — THIS IS A FAILURE, NOT A SUCCESS'"
+ },
+ "payload": {
+  "get": "fixtures",
+  "parameters": {
+   "league": "39",
+   "season": "2026"
+  },
+  "errors": {
+   "plan": "Free plans do not have access to this season, please subscribe to a paid plan."
+  },
+  "results": 0,
+  "paging": {
+   "current": 1,
+   "total": 1
+  },
+  "response": []
+ }
+}

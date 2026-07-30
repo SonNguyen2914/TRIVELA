@@ -300,3 +300,366 @@ def test_every_versioned_constant_round_trips_on_postgres(pg_schema):
     assert not tight, (
         f"columns narrower than the longest versioned constant "
         f"({longest} chars): {tight}")
+
+
+# 8. hunter tables: created by the migration chain, and a finding row
+# with REAL provider tickers + the real fee-policy string round-trips
+# under PostgreSQL's VARCHAR enforcement (the truncation class that
+# silently erased the first slate's fills).
+def test_hunter_tables_round_trip_on_postgres(pg_schema):
+    from datetime import datetime, timezone
+
+    from src.live.models import HunterCycle, HunterFinding
+    from src.live.paper import FEE_POLICY
+    with pg_schema.engine.connect() as c:
+        tables = {r[0] for r in c.execute(text(
+            "SELECT tablename FROM pg_tables "
+            "WHERE schemaname = current_schema()"))}
+    assert {"hunter_finding", "hunter_cycle"} <= tables
+    now = datetime.now(timezone.utc)
+    s = _session(pg_schema.engine)
+    try:
+        s.add(HunterFinding(
+            series="KXCONMEBOLLIBGAME",
+            event_ticker="KXCONMEBOLLIBGAME-26JUL30CARSFE",
+            market_ticker="KXCONMEBOLLIBGAME-26JUL30CARSFE-CAR",
+            finding_type="SUM_BELOW_ONE", is_context=False,
+            finding_key="SUM_BELOW_ONE|KXCONMEBOLLIBGAME|"
+                        "KXCONMEBOLLIBGAME-26JUL30CARSFE|"
+                        "KXCONMEBOLLIBGAME-26JUL30CARSFE-CAR",
+            legs_json="{}", net_margin_dollars="0.0353",
+            fee_policy_version=FEE_POLICY["version"],
+            first_captured_at=now, last_seen_at=now, status="open"))
+        s.add(HunterCycle(started_at=now, completed_at=now,
+                          status="complete", markets_scanned=3,
+                          series_scanned=1, series_failed=0,
+                          series_outcomes_json='{"KXCONMEBOLLIBGAME": '
+                                               '{"outcome": "SUCCESS"}}'))
+        s.commit()
+        row = s.query(HunterFinding).one()
+        assert row.fee_policy_version == FEE_POLICY["version"]
+        assert row.net_margin_dollars == "0.0353"
+    finally:
+        s.close()
+
+
+# 9. P1-5: cross-process idempotency under a REAL race. Railway keeps
+# the old container serving while the new one boots, so two hunter
+# processes legitimately overlap. Barriered double-insert of the same
+# open finding_key must yield ONE open row (partial unique index), and
+# the barriered alert claim must have at most ONE winner (atomic
+# UPDATE ... WHERE on the row).
+def test_hunter_concurrent_insert_and_alert_claim(pg_schema):
+    import threading
+    from datetime import datetime, timezone
+
+    from src.live import hunter
+    from src.live.models import HunterFinding
+
+    now = datetime.now(timezone.utc)
+    f = {"finding_type": "SUM_BELOW_ONE", "series": "KXUCLGAME",
+         "event_ticker": "KXUCLGAME-26JUL28AAABBB",
+         "market_ticker": None, "is_context": False,
+         "net_margin_dollars": "0.0353", "captured_at": now,
+         "detected_at": now, "legs": {"rule": "race-test"}}
+    key = hunter._finding_key(f)
+
+    engines = [pg_schema.new_engine() for _ in range(2)]
+    barrier = threading.Barrier(2, timeout=20)
+    results: dict = {}
+
+    def worker(i):
+        from sqlalchemy.exc import IntegrityError
+        s = _session(engines[i])
+        try:
+            barrier.wait()
+            try:
+                hunter._insert_finding_row(s, f, key, now)
+                s.commit()      # loser BLOCKS here until the winner
+                #                 commits, then gets the unique violation
+                results[f"insert{i}"] = True
+            except IntegrityError:
+                s.rollback()    # the retry-pass contract: adopt, don't
+                #                 create
+                results[f"insert{i}"] = False
+            barrier.wait()
+            rid = (s.query(HunterFinding)
+                   .filter_by(finding_key=key, status="open")
+                   .one().id)
+            barrier.wait()
+            results[f"claim{i}"] = hunter._try_claim_alert(s, rid, now)
+        except Exception as exc:            # surface, never hang
+            results[f"error{i}"] = repr(exc)
+        finally:
+            s.close()
+
+    threads = [threading.Thread(target=worker, args=(i,))
+               for i in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=30)
+    for e in engines:
+        e.dispose()
+    assert not [k for k in results if k.startswith("error")], results
+    # exactly one insert won; exactly one open row exists
+    assert sorted([results["insert0"], results["insert1"]]) \
+        == [False, True]
+    chk = _session(pg_schema.engine)
+    try:
+        assert (chk.query(HunterFinding)
+                .filter_by(finding_key=key, status="open").count() == 1)
+    finally:
+        chk.close()
+    # at most one alert claim won (exactly one, since none existed)
+    assert sorted([results["claim0"], results["claim1"]]) \
+        == [False, True]
+
+
+# 10. P0-1/P0-2: the hunter's new schema invariants exist as real
+# PostgreSQL objects. SQLite CHECK support is not evidence about the
+# server that actually holds production data.
+def test_hunter_clock_check_constraints_enforced_on_postgres(pg_schema):
+    from datetime import datetime, timedelta, timezone
+
+    from src.live.models import HunterFinding, HunterObservationWatermark
+    with pg_schema.engine.connect() as c:
+        tables = {r[0] for r in c.execute(text(
+            "SELECT tablename FROM pg_tables "
+            "WHERE schemaname = current_schema()"))}
+    assert "hunter_observation_watermark" in tables
+    now = datetime.now(timezone.utc)
+
+    def _row(key, **kw):
+        base = dict(series="KXMLSGAME",
+                    event_ticker="KXMLSGAME-26JUL28HOMAWA",
+                    market_ticker="KXMLSGAME-26JUL28HOMAWA-HOM",
+                    finding_type="POST_CERTAINTY", finding_key=key,
+                    legs_json="{}", status="open", first_captured_at=now)
+        base.update(kw)
+        return HunterFinding(**base)
+
+    # a quote captured BEFORE the ESPN finality read is refused
+    s = _session(pg_schema.engine)
+    try:
+        s.add(_row("pc|stale", espn_captured_at=now + timedelta(minutes=1)))
+        with pytest.raises(IntegrityError):
+            s.commit()
+        s.rollback()
+        # last_seen_at may not regress behind first_captured_at
+        s.add(_row("mono|bad", last_seen_at=now - timedelta(seconds=1)))
+        with pytest.raises(IntegrityError):
+            s.commit()
+        s.rollback()
+        # CONTROL: both clocks the right way round, plus a watermark row
+        s.add(_row("pc|ok", espn_captured_at=now - timedelta(seconds=1),
+                   last_seen_at=now))
+        s.add(HunterObservationWatermark(
+            finding_key="pc|ok", observed_through=now, updated_at=now))
+        s.commit()
+        assert s.query(HunterObservationWatermark).one().finding_key \
+            == "pc|ok"
+    finally:
+        s.close()
+
+
+# 11. P0-3: chronological reconciliation across OVERLAPPING containers,
+# under a real barrier on a real server. Railway keeps the old container
+# serving while the new one boots (teardown is deliberately OFF), so an
+# OLDER scan legitimately commits AFTER a newer one. The older anomaly
+# must not re-open the finding the newer clean scan expired, must not
+# drag any clock backwards, and must not alert.
+def test_hunter_stale_scan_cannot_reopen_or_alert(pg_schema):
+    import threading
+    from datetime import datetime, timedelta, timezone
+
+    from src.live import hunter
+    from src.live.models import HunterFinding, HunterObservationWatermark
+
+    t0 = datetime.now(timezone.utc)
+    t1 = t0 + timedelta(minutes=5)      # the OLD container's capture
+    t2 = t0 + timedelta(minutes=10)     # the NEW container's capture
+    f = {"finding_type": "SUM_BELOW_ONE", "series": "KXUCLGAME",
+         "event_ticker": "KXUCLGAME-26JUL28AAABBB",
+         "market_ticker": None, "is_context": False,
+         "net_margin_dollars": "0.0353", "fee_status": "modeled",
+         "fee_policy_version": "kalshi-fee-2026-07-general",
+         "captured_at": t1, "detected_at": t1,
+         "alertable_liquidity": True, "limiting_quantity": "10",
+         "legs": {"rule": "stale-scan-test"}}
+    key = hunter._finding_key(f)
+
+    # the world both containers scanned into: one OPEN finding at t0
+    seed = _session(pg_schema.engine)
+    try:
+        hunter._insert_finding_row(seed, f | {"captured_at": t0}, key, t0)
+        seed.add(HunterObservationWatermark(
+            finding_key=key, observed_through=t0, updated_at=t0))
+        seed.commit()
+    finally:
+        seed.close()
+
+    engines = [pg_schema.new_engine() for _ in range(2)]
+    read = threading.Barrier(2, timeout=20)
+    newer_committed = threading.Event()
+    results: dict = {}
+
+    def newer():
+        """The NEW container: clean scan at t2 → the finding expires."""
+        s = _session(engines[0])
+        try:
+            row = (s.query(HunterFinding)
+                   .filter_by(finding_key=key, status="open").one())
+            read.wait()                 # both have read the SAME world
+            results["newer_watermark"] = hunter._advance_watermark(
+                s, key, t2)
+            row.status = "expired"
+            row.expired_at = t2
+            s.commit()
+        except Exception as exc:
+            results["newer_error"] = repr(exc)
+        finally:
+            s.close()
+            newer_committed.set()
+
+    def older():
+        """The OLD container: it read the finding as OPEN before the
+        expiry and only now gets to commit its t1 observation."""
+        s = _session(engines[1])
+        try:
+            still_open = (s.query(HunterFinding)
+                          .filter_by(finding_key=key, status="open")
+                          .count())
+            read.wait()
+            assert newer_committed.wait(timeout=20)
+            results["older_saw_open"] = still_open
+            ok = hunter._advance_watermark(s, key, t1)
+            results["older_watermark"] = ok
+            if ok:                      # the real contract: no advance,
+                #                         no write and no alert
+                hunter._insert_finding_row(s, f, key, t1)
+            s.commit()
+            if ok:
+                rid = (s.query(HunterFinding)
+                       .filter_by(finding_key=key, status="open")
+                       .one().id)
+                results["older_alerted"] = hunter._try_claim_alert(
+                    s, rid, t1)
+            else:
+                results["older_alerted"] = False
+        except Exception as exc:
+            results["older_error"] = repr(exc)
+        finally:
+            s.close()
+
+    threads = [threading.Thread(target=newer),
+               threading.Thread(target=older)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=30)
+    for e in engines:
+        e.dispose()
+
+    assert not [k for k in results if k.endswith("error")], results
+    # the older container really was mid-cycle on the pre-expiry world
+    assert results["older_saw_open"] == 1
+    assert results["newer_watermark"] is True
+    # ...and the DATABASE refused its stale write
+    assert results["older_watermark"] is False
+    assert results["older_alerted"] is False
+
+    chk = _session(pg_schema.engine)
+    try:
+        rows = chk.query(HunterFinding).filter_by(finding_key=key).all()
+        assert len(rows) == 1                     # nothing re-opened
+        assert rows[0].status == "expired"
+        assert rows[0].first_captured_at == t0    # clocks never regressed
+        wm = (chk.query(HunterObservationWatermark)
+              .filter_by(finding_key=key).one())
+        assert wm.observed_through == t2
+    finally:
+        chk.close()
+
+
+def test_team_absence_uniqueness_holds_on_postgres(pg_schema):
+    """A re-ingest must refresh, never duplicate.
+
+    This is the NULL-distinctness trap made concrete. PostgreSQL treats
+    NULLs as distinct inside a UNIQUE constraint, so keying absences on a
+    nullable provider player id would admit duplicate rows in production
+    while a SQLite suite stayed green. `player_key` is NOT NULL with a
+    normalised-name fallback precisely so this constraint bites.
+    """
+    from datetime import datetime, timezone
+    S = sessionmaker(bind=pg_schema.engine, future=True)
+    s = S()
+    try:
+        from src.live.models import TeamAbsence
+        now = datetime.now(timezone.utc)
+
+        def row(**over):
+            kw = dict(provider="apifootball", subject_ref="900001",
+                      player_key="name:namelessnine", player_name="Nameless",
+                      provider_type="Missing Fixture",
+                      provider_reason="Knock", captured_at=now)
+            kw.update(over)
+            return TeamAbsence(**kw)
+
+        s.add(row())
+        s.commit()
+        s.add(row())                      # same (provider, subject, key)
+        with pytest.raises(IntegrityError):
+            s.commit()
+        s.rollback()
+        # a DIFFERENT player on the same fixture is fine
+        s.add(row(player_key="502"))
+        s.commit()
+        assert s.query(TeamAbsence).filter_by(subject_ref="900001").count() == 2
+    finally:
+        s.close()
+
+
+def test_record_count_is_genuinely_nullable_on_postgres(pg_schema):
+    """`unavailable` must be storable as NULL, not coerced to 0.
+
+    If the column were NOT NULL, the ingestion would be forced to write a
+    zero for a fetch that saw nothing — the precise reading that let
+    `results: 0` pass as "no match on" and `{"created": 0}` pass as a
+    successful write.
+    """
+    from datetime import datetime, timezone
+    S = sessionmaker(bind=pg_schema.engine, future=True)
+    s = S()
+    try:
+        from src.live.models import TeamNewsCapture
+        s.add(TeamNewsCapture(
+            provider="apifootball", subject_ref="900002", feed="absences",
+            state="unavailable", record_count=None, attempts=1,
+            captured_at=datetime.now(timezone.utc), note="HTTP 500"))
+        s.commit()
+        got = s.query(TeamNewsCapture).filter_by(subject_ref="900002").one()
+        assert got.record_count is None
+    finally:
+        s.close()
+
+
+def test_team_news_tables_carry_no_aggregate_column_on_postgres(pg_schema):
+    """The schema itself must offer nowhere to put a team-strength number.
+
+    Read from information_schema rather than the ORM, so this reflects
+    what the migration actually created in the database.
+    """
+    with pg_schema.engine.connect() as c:
+        rows = c.execute(text(
+            "SELECT table_name, column_name FROM information_schema.columns "
+            "WHERE table_schema = current_schema() "
+            "AND table_name IN ('team_absence','team_news_capture',"
+            "'team_news_lineup','team_news_event')")).all()
+    assert rows, "the team-news tables were not created by the migration"
+    banned = {"impact", "severity", "weight", "score", "strength",
+              "team_strength", "absence_score", "availability_index"}
+    offenders = [(t, col) for t, col in rows if col in banned]
+    assert offenders == [], (
+        f"an aggregate column exists on a team-news table: {offenders}. "
+        f"An aggregate of absences is a model wearing a news label.")

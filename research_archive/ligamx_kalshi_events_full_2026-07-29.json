@@ -1,0 +1,5974 @@
+{
+ "probed_at": "2026-07-29T07:27:03.902940+00:00",
+ "pages": 2,
+ "n_events": 221,
+ "events": [
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26AUG02TOLNCX",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-27T03:16:16.677075Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TOL vs NCX (Aug 2)",
+   "title": "Toluca vs Necaxa"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26AUG02AMESLA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-27T03:16:16.041446Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "AME vs SLA (Aug 2)",
+   "title": "America vs Santos Laguna"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26AUG01CRAALA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-27T03:16:15.472398Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CRA vs ALA (Aug 1)",
+   "title": "Cruz Azul vs Atlante"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26AUG01LEOPAC",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-27T03:16:14.901859Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "LEO vs PAC (Aug 1)",
+   "title": "Leon vs Pachuca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26AUG01ATLMON",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-27T03:16:14.301398Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ATL vs MON (Aug 1)",
+   "title": "Atlas vs Monterrey"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26AUG01QUETIG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-27T03:16:13.747609Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "QUE vs TIG (Aug 1)",
+   "title": "Queretaro vs Tigres"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL31JUAPUM",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-27T03:16:13.19144Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "JUA vs PUM (Jul 31)",
+   "title": "Juarez vs Pumas UNAM"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL31ASLTIJ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-27T03:16:12.627875Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ASL vs TIJ (Jul 31)",
+   "title": "San Luis vs Tijuana de Caliente"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL31PUECDG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-27T03:16:12.082832Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUE vs CDG (Jul 31)",
+   "title": "Puebla vs Guadalajara"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL26PACQUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-24T17:06:35.570418Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PAC vs QUE (Jul 26)",
+   "title": "Pachuca vs Queretaro"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL26NCXMON",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-27T00:27:46.73807Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "NCX vs MON (Jul 26)",
+   "title": "Necaxa vs Monterrey"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL25SLAATL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-16T00:25:02.656554Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "SLA vs ATL (Jul 25)",
+   "title": "Santos Laguna vs Atlas"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL25CDGJUA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-25T23:05:23.487103Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CDG vs JUA (Jul 25)",
+   "title": "Guadalajara vs Juarez"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL24TIJLEO",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-15T00:27:11.427422Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIJ vs LEO (Jul 24)",
+   "title": "Tijuana de Caliente vs Leon"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL24ALAAME",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-24T06:05:59.601941Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ALA vs AME (Jul 24)",
+   "title": "Atlante vs America"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL24TIGASL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-24T20:01:09.363275Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIG vs ASL (Jul 24)",
+   "title": "Tigres vs San Luis"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL21TOLPUM",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-12T00:23:18.863913Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TOL vs PUM (Jul 21)",
+   "title": "Toluca vs Pumas UNAM"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL21CRAPUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-12T00:23:18.363256Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CRA vs PUE (Jul 21)",
+   "title": "Cruz Azul vs Puebla"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL18QUEAME",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-09T00:25:06.904925Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "QUE vs AME (Jul 18)",
+   "title": "Queretaro vs America"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL18CDGTOL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-09T00:25:06.384961Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CDG vs TOL (Jul 18)",
+   "title": "Guadalajara vs Toluca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL18MONSLA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-09T00:25:05.885022Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MON vs SLA (Jul 18)",
+   "title": "Monterrey vs Santos Laguna"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL18PUMPAC",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-09T00:25:05.36501Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUM vs PAC (Jul 18)",
+   "title": "Pumas UNAM vs Pachuca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL17JUAPUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-09T00:25:04.864908Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "JUA vs PUE (Jul 17)",
+   "title": "Juarez vs Puebla"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL17LEOATL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-09T00:25:04.345203Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "LEO vs ATL (Jul 17)",
+   "title": "Leon vs Atlas"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL17ASLCRA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-09T00:25:03.844978Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ASL vs CRA (Jul 17)",
+   "title": "San Luis vs Cruz Azul"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL16TIJTIG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-09T00:25:03.245053Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIJ vs TIG (Jul 16)",
+   "title": "Tijuana de Caliente vs Tigres"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JUL16NCXALA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-07-10T21:22:58.788184Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "NCX vs ALA (Jul 16)",
+   "title": "Necaxa vs Atlante"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAY24PUMCRA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-05-22T00:24:52.689136Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUM vs CRA (May 24)",
+   "title": "Pumas UNAM vs Cruz Azul"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAY21CRAPUM",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-05-18T15:25:42.462295Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CRA vs PUM (May 21)",
+   "title": "Cruz Azul vs Pumas UNAM"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAY17PUMPAC",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-05-15T00:26:30.17577Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUM vs PAC (May 17)",
+   "title": "Pumas UNAM vs Pachuca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAY16CDGCRA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-05-14T00:35:16.090477Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CDG vs CRA (May 16)",
+   "title": "Guadalajara vs Cruz Azul"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAY14PACPUM",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-05-12T00:29:21.173912Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PAC vs PUM (May 14)",
+   "title": "Pachuca vs Pumas UNAM"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAY13CRACDG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-05-11T19:23:36.053433Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CRA vs CDG (May 13)",
+   "title": "Cruz Azul vs Guadalajara"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAY10PUMAME",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-05-10T00:34:00.015456Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUM vs AME (May 10)",
+   "title": "Pumas UNAM vs America"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAY10PACTOL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-05-10T00:34:00.015299Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PAC vs TOL (May 10)",
+   "title": "Pachuca vs Toluca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAY09CRAATL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-05-10T00:34:00.015922Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CRA vs ATL (May 9)",
+   "title": "Cruz Azul vs Atlas"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAY09CDGTIG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-05-10T00:34:00.015093Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CDG vs TIG (May 9)",
+   "title": "Guadalajara vs Tigres"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAY03TOLPAC",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-05-10T00:34:00.015983Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TOL vs PAC (May 3)",
+   "title": "Toluca vs Pachuca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAY03AMEPUM",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-05-10T00:34:00.016088Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "AME vs PUM (May 3)",
+   "title": "America vs Pumas UNAM"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAY02ATLCRA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-05-10T00:34:00.00003Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ATL vs CRA (May 2)",
+   "title": "Atlas vs Cruz Azul"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAY02TIGCDG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-05-10T00:34:00.006326Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIG vs CDG (May 2)",
+   "title": "Tigres vs Guadalajara"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR26CRANCX",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-24T00:32:09.869479Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CRA vs NCX (Apr 26)",
+   "title": "Cruz Azul vs Necaxa"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR26SLAMON",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-23T00:33:49.947156Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "SLA vs MON (Apr 26)",
+   "title": "Santos Laguna vs Monterrey"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR25JUAASL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-23T00:33:49.506589Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "JUA vs ASL (Apr 25)",
+   "title": "Juarez vs San Luis"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR25AMEATL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-23T00:33:52.92694Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "AME vs ATL (Apr 25)",
+   "title": "America vs Atlas"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR25CDGTIJ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-23T00:33:50.746989Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CDG vs TIJ (Apr 25)",
+   "title": "Guadalajara vs Tijuana de Caliente"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR25TOLLEO",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-23T00:33:51.04684Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TOL vs LEO (Apr 25)",
+   "title": "Toluca vs Leon"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR25TIGMAZ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-22T00:33:38.609372Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIG vs MAZ (Apr 25)",
+   "title": "Tigres vs Mazatlan"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR25PACPUM",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-22T00:33:36.168896Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PAC vs PUM (Apr 25)",
+   "title": "Pachuca vs Pumas UNAM"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR24PUEQUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-22T00:33:36.348896Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUE vs QUE (Apr 24)",
+   "title": "Puebla vs Queretaro"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR22TIJPAC",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-20T00:27:55.824816Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIJ vs PAC (Apr 22)",
+   "title": "Tijuana de Caliente vs Pachuca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR22NCXCDG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-20T00:27:56.544984Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "NCX vs CDG (Apr 22)",
+   "title": "Necaxa vs Guadalajara"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR22MAZTOL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-20T00:27:54.245466Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MAZ vs TOL (Apr 22)",
+   "title": "Mazatlan vs Toluca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR22ATLTIG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-20T00:27:52.025157Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ATL vs TIG (Apr 22)",
+   "title": "Atlas vs Tigres"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR22ASLSLA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-20T00:27:51.52501Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ASL vs SLA (Apr 22)",
+   "title": "San Luis vs Santos Laguna"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR21LEOAME",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-19T00:28:59.639787Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "LEO vs AME (Apr 21)",
+   "title": "Leon vs America"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR21MONPUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-19T00:29:00.359728Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MON vs PUE (Apr 21)",
+   "title": "Monterrey vs Puebla"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR21QUECRA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-19T00:28:57.779726Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "QUE vs CRA (Apr 21)",
+   "title": "Queretaro vs Cruz Azul"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR21PUMJUA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-19T00:28:59.580632Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUM vs JUA (Apr 21)",
+   "title": "Pumas UNAM vs Juarez"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR19SLAATL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-16T00:35:42.970457Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "SLA vs ATL (Apr 19)",
+   "title": "Santos Laguna vs Atlas"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR18AMETOL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-16T00:35:34.330634Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "AME vs TOL (Apr 18)",
+   "title": "America vs Toluca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR18LEOJUA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-16T00:35:40.530307Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "LEO vs JUA (Apr 18)",
+   "title": "Leon vs Juarez"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR18CDGPUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-16T00:35:37.931097Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CDG vs PUE (Apr 18)",
+   "title": "Guadalajara vs Puebla"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR18MONPAC",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-16T00:35:38.210726Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MON vs PAC (Apr 18)",
+   "title": "Monterrey vs Pachuca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR18NCXTIG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-15T00:28:19.031371Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "NCX vs TIG (Apr 18)",
+   "title": "Necaxa vs Tigres"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR18CRATIJ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-15T00:28:20.310804Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CRA vs TIJ (Apr 18)",
+   "title": "Cruz Azul vs Tijuana de Caliente"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR17MAZQUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-15T00:28:18.570736Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MAZ vs QUE (Apr 17)",
+   "title": "Mazatlan vs Queretaro"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR17ASLPUM",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-15T00:28:29.770989Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ASL vs PUM (Apr 17)",
+   "title": "San Luis vs Pumas UNAM"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR12TOLASL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-10T00:29:34.247678Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TOL vs ASL (Apr 12)",
+   "title": "Toluca vs San Luis"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR12PUMMAZ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-09T00:31:56.044181Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUM vs MAZ (Apr 12)",
+   "title": "Pumas UNAM vs Mazatlan"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR11AMECRA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-09T00:32:02.223963Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "AME vs CRA (Apr 11)",
+   "title": "America vs Cruz Azul"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR11PACSLA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-09T00:31:57.584356Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PAC vs SLA (Apr 11)",
+   "title": "Pachuca vs Santos Laguna"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR11ATLMON",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-09T00:31:56.32334Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ATL vs MON (Apr 11)",
+   "title": "Atlas vs Monterrey"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR11TIGCDG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-08T00:28:08.544116Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIG vs CDG (Apr 11)",
+   "title": "Tigres vs Guadalajara"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR11QUENCX",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-08T00:28:05.183969Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "QUE vs NCX (Apr 11)",
+   "title": "Queretaro vs Necaxa"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR10JUATIJ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-08T00:28:08.603993Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "JUA vs TIJ (Apr 10)",
+   "title": "Juarez vs Tijuana de Caliente"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR10PUELEO",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-08T00:28:07.084144Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUE vs LEO (Apr 10)",
+   "title": "Puebla vs Leon"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR07QUEJUA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-05T00:27:55.414699Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "QUE vs JUA (Apr 7)",
+   "title": "Queretaro vs Juarez"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR05CDGPUM",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-03T00:31:51.737813Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CDG vs PUM (Apr 5)",
+   "title": "Guadalajara vs Pumas UNAM"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR04SLAAME",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-02T00:30:45.297711Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "SLA vs AME (Apr 4)",
+   "title": "Santos Laguna vs America"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR04CRAPAC",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-02T00:30:45.677869Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CRA vs PAC (Apr 4)",
+   "title": "Cruz Azul vs Pachuca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR04LEOATL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-02T00:30:44.038157Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "LEO vs ATL (Apr 4)",
+   "title": "Leon vs Atlas"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR04QUETOL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-01T00:28:52.306784Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "QUE vs TOL (Apr 4)",
+   "title": "Queretaro vs Toluca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR04MONASL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-01T00:28:53.986669Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MON vs ASL (Apr 4)",
+   "title": "Monterrey vs San Luis"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR03TIJTIG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-01T00:28:52.466415Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIJ vs TIG (Apr 3)",
+   "title": "Tijuana de Caliente vs Tigres"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR03NCXMAZ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-01T00:28:51.146531Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "NCX vs MAZ (Apr 3)",
+   "title": "Necaxa vs Mazatlan"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26APR03PUEJUA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-04-01T00:28:49.626504Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUE vs JUA (Apr 3)",
+   "title": "Puebla vs Juarez"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR22JUATIG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-20T03:29:09.407758Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "JUA vs TIG (Mar 22)",
+   "title": "Juarez vs Tigres"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR22SLAPUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-19T23:30:46.852342Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "SLA vs PUE (Mar 22)",
+   "title": "Santos Laguna vs Puebla"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR22PACTOL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-19T23:30:46.612466Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PAC vs TOL (Mar 22)",
+   "title": "Pachuca vs Toluca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR21PUMAME",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-19T23:30:46.012534Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUM vs AME (Mar 21)",
+   "title": "Pumas UNAM vs America"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR21MONCDG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-19T23:30:42.99294Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MON vs CDG (Mar 21)",
+   "title": "Monterrey vs Guadalajara"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR21ASLLEO",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-19T23:30:47.992815Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ASL vs LEO (Mar 21)",
+   "title": "San Luis vs Leon"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR21ATLQUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-18T14:29:16.09881Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ATL vs QUE (Mar 21)",
+   "title": "Atlas vs Queretaro"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR20MAZCRA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-18T14:29:10.039243Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MAZ vs CRA (Mar 20)",
+   "title": "Mazatlan vs Cruz Azul"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR20NCXTIJ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-18T14:29:06.939528Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "NCX vs TIJ (Mar 20)",
+   "title": "Necaxa vs Tijuana de Caliente"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR18CDGLEO",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-16T04:25:48.674227Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CDG vs LEO (Mar 18)",
+   "title": "Guadalajara vs Leon"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR15AMEMAZ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-13T08:29:45.808866Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "AME vs MAZ (Mar 15)",
+   "title": "America vs Mazatlan"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR15TIGQUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-12T00:30:34.214349Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIG vs QUE (Mar 15)",
+   "title": "Tigres vs Queretaro"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR14PUMCRA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-12T00:30:33.353773Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUM vs CRA (Mar 14)",
+   "title": "Pumas UNAM vs Cruz Azul"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR14TOLATL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-12T00:30:31.893826Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TOL vs ATL (Mar 14)",
+   "title": "Toluca vs Atlas"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR14LEOTIJ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-12T00:30:31.35356Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "LEO vs TIJ (Mar 14)",
+   "title": "Leon vs Tijuana de Caliente"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR14CDGSLA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-11T00:32:41.250837Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CDG vs SLA (Mar 14)",
+   "title": "Guadalajara vs Santos Laguna"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR14ASLPAC",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-11T00:32:41.250837Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ASL vs PAC (Mar 14)",
+   "title": "San Luis vs Pachuca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR13JUAMON",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-11T00:32:40.030986Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "JUA vs MON (Mar 13)",
+   "title": "Juarez vs Monterrey"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR13PUENCX",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-11T00:32:36.071049Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUE vs NCX (Mar 13)",
+   "title": "Puebla vs Necaxa"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR08TIJSLA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-06T17:29:14.740768Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIJ vs SLA (Mar 8)",
+   "title": "Tijuana de Caliente vs Santos Laguna"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR08TOLJUA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-05T00:28:17.749839Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TOL vs JUA (Mar 8)",
+   "title": "Toluca vs Juarez"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR07TIGMON",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-05T00:28:15.450143Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIG vs MON (Mar 7)",
+   "title": "Tigres vs Monterrey"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR07PACPUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-05T00:28:16.289449Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PAC vs PUE (Mar 7)",
+   "title": "Pachuca vs Puebla"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR07ATLCDG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-05T00:28:20.089889Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ATL vs CDG (Mar 7)",
+   "title": "Atlas vs Guadalajara"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR07QUEAME",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-04T00:26:02.946747Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "QUE vs AME (Mar 7)",
+   "title": "Queretaro vs America"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR07CRAASL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-04T00:26:04.44599Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CRA vs ASL (Mar 7)",
+   "title": "Cruz Azul vs San Luis"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR06NCXPUM",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-04T00:26:03.586031Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "NCX vs PUM (Mar 6)",
+   "title": "Necaxa vs Pumas UNAM"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR06MAZLEO",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-04T00:26:00.246231Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MAZ vs LEO (Mar 6)",
+   "title": "Mazatlan vs Leon"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR04ATLTIJ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-02T00:23:15.429328Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ATL vs TIJ (Mar 4)",
+   "title": "Atlas vs Tijuana de Caliente"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR04AMEJUA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-02T00:23:15.890219Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "AME vs JUA (Mar 4)",
+   "title": "America vs Juarez"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR04PUETIG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-02T00:23:15.34928Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUE vs TIG (Mar 4)",
+   "title": "Puebla vs Tigres"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR04MONQUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-02T00:23:13.609655Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MON vs QUE (Mar 4)",
+   "title": "Monterrey vs Queretaro"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR03PUMTOL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-01T00:24:13.736285Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUM vs TOL (Mar 3)",
+   "title": "Pumas UNAM vs Toluca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR03ASLMAZ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-01T00:24:11.67628Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ASL vs MAZ (Mar 3)",
+   "title": "San Luis vs Mazatlan"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR03SLACRA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-01T00:24:12.115448Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "SLA vs CRA (Mar 3)",
+   "title": "Santos Laguna vs Cruz Azul"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26MAR03PACNCX",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-03-01T00:24:10.496089Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PAC vs NCX (Mar 3)",
+   "title": "Pachuca vs Necaxa"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB28AMETIG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "AME vs TIG (Feb 28)",
+   "title": "America vs Tigres"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB28LEONCX",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "LEO vs NCX (Feb 28)",
+   "title": "Leon vs Necaxa"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB28MONCRA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MON vs CRA (Feb 28)",
+   "title": "Monterrey vs Cruz Azul"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB28TOLCDG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TOL vs CDG (Feb 28)",
+   "title": "Toluca vs Guadalajara"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB28ASLPUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ASL vs PUE (Feb 28)",
+   "title": "San Luis vs Puebla"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB27TIJPUM",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIJ vs PUM (Feb 27)",
+   "title": "Tijuana de Caliente vs Pumas UNAM"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB27JUAATL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "JUA vs ATL (Feb 27)",
+   "title": "Juarez vs Atlas"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB27QUESLA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "QUE vs SLA (Feb 27)",
+   "title": "Queretaro vs Santos Laguna"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB27MAZPAC",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MAZ vs PAC (Feb 27)",
+   "title": "Mazatlan vs Pachuca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB22QUEJUA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "QUE vs JUA (Feb 22)",
+   "title": "Queretaro vs Juarez"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB22PUMMON",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUM vs MON (Feb 22)",
+   "title": "Pumas UNAM vs Monterrey"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB22TIJMAZ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIJ vs MAZ (Feb 22)",
+   "title": "Tijuana de Caliente vs Mazatlan"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB21CRACDG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CRA vs CDG (Feb 21)",
+   "title": "Cruz Azul vs Guadalajara"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB21NCXTOL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "NCX vs TOL (Feb 21)",
+   "title": "Necaxa vs Toluca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB21LEOSLA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "LEO vs SLA (Feb 21)",
+   "title": "Leon vs Santos Laguna"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB21ATLASL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ATL vs ASL (Feb 21)",
+   "title": "Atlas vs San Luis"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB20PUEAME",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUE vs AME (Feb 20)",
+   "title": "Puebla vs America"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB20TIGPAC",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIG vs PAC (Feb 20)",
+   "title": "Tigres vs Pachuca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB15SLAMAZ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "SLA vs MAZ (Feb 15)",
+   "title": "Santos Laguna vs Mazatlan"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB15CRATIG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CRA vs TIG (Feb 15)",
+   "title": "Cruz Azul vs Tigres"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB14CDGAME",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CDG vs AME (Feb 14)",
+   "title": "Guadalajara vs America"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB14JUANCX",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "JUA vs NCX (Feb 14)",
+   "title": "Juarez vs Necaxa"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB14MONLEO",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MON vs LEO (Feb 14)",
+   "title": "Monterrey vs Leon"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB14PACATL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PAC vs ATL (Feb 14)",
+   "title": "Pachuca vs Atlas"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB14ASLQUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ASL vs QUE (Feb 14)",
+   "title": "San Luis vs Queretaro"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB13TOLTIJ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TOL vs TIJ (Feb 13)",
+   "title": "Toluca vs Tijuana de Caliente"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB13PUEPUM",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUE vs PUM (Feb 13)",
+   "title": "Puebla vs Pumas UNAM"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB07AMEMON",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "AME vs MON (Feb 7)",
+   "title": "America vs Monterrey"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB07PACJUA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PAC vs JUA (Feb 7)",
+   "title": "Pachuca vs Juarez"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB07ATLPUM",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ATL vs PUM (Feb 7)",
+   "title": "Atlas vs Pumas UNAM"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB07TOLCRA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TOL vs CRA (Feb 7)",
+   "title": "Toluca vs Cruz Azul"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB07QUELEO",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "QUE vs LEO (Feb 7)",
+   "title": "Queretaro vs Leon"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB06TIJPUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIJ vs PUE (Feb 6)",
+   "title": "Tijuana de Caliente vs Puebla"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB06MAZCDG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MAZ vs CDG (Feb 6)",
+   "title": "Mazatlan vs Guadalajara"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB06TIGSLA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIG vs SLA (Feb 6)",
+   "title": "Tigres vs Santos Laguna"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB06NCXASL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "NCX vs ASL (Feb 6)",
+   "title": "Necaxa vs San Luis"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26FEB01QUEPAC",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "QUE vs PAC (Feb 1)",
+   "title": "Queretaro vs Pachuca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN31LEOTIG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "LEO vs TIG (Jan 31)",
+   "title": "Leon vs Tigres"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN31MONTIJ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MON vs TIJ (Jan 31)",
+   "title": "Monterrey vs Tijuana de Caliente"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN31ATLMAZ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ATL vs MAZ (Jan 31)",
+   "title": "Atlas vs Mazatlan"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN31ASLCDG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ASL vs CDG (Jan 31)",
+   "title": "San Luis vs Guadalajara"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN31AMENCX",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "AME vs NCX (Jan 31)",
+   "title": "America vs Necaxa"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN30JUACRA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "JUA vs CRA (Jan 30)",
+   "title": "Juarez vs Cruz Azul"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN30PUMSLA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUM vs SLA (Jan 30)",
+   "title": "Pumas UNAM vs Santos Laguna"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN30PUETOL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUE vs TOL (Jan 30)",
+   "title": "Puebla vs Toluca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN18PACAME",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PAC vs AME (Jan 18)",
+   "title": "Pachuca vs America"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN18SLAJUA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "SLA vs JUA (Jan 18)",
+   "title": "Santos Laguna vs Juarez"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN18PUMLEO",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUM vs LEO (Jan 18)",
+   "title": "Pumas UNAM vs Leon"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN17TIJASL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIJ vs ASL (Jan 17)",
+   "title": "Tijuana de Caliente vs San Luis"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN17CRAPUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CRA vs PUE (Jan 17)",
+   "title": "Cruz Azul vs Puebla"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN17TIGTOL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIG vs TOL (Jan 17)",
+   "title": "Tigres vs Toluca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN17CDGQUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CDG vs QUE (Jan 17)",
+   "title": "Guadalajara vs Queretaro"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN17NCXATL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "NCX vs ATL (Jan 17)",
+   "title": "Necaxa vs Atlas"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN16MAZMON",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MAZ vs MON (Jan 16)",
+   "title": "Mazatlan vs Monterrey"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN14TIGPUM",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIG vs PUM (Jan 14)",
+   "title": "Tigres vs Pumas UNAM"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN14TOLSLA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TOL vs SLA (Jan 14)",
+   "title": "Toluca vs Santos Laguna"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN14QUETIJ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "QUE vs TIJ (Jan 14)",
+   "title": "Queretaro vs Tijuana de Caliente"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN14AMEASL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "AME vs ASL (Jan 14)",
+   "title": "America vs San Luis"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN13JUACDG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "JUA vs CDG (Jan 13)",
+   "title": "Juarez vs Guadalajara"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN13CRAATL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CRA vs ATL (Jan 13)",
+   "title": "Cruz Azul vs Atlas"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN13PACLEO",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PAC vs LEO (Jan 13)",
+   "title": "Pachuca vs Leon"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN13NCXMON",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "NCX vs MON (Jan 13)",
+   "title": "Necaxa vs Monterrey"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN13PUEMAZ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUE vs MAZ (Jan 13)",
+   "title": "Puebla vs Mazatlan"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN11ASLTIG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ASL vs TIG (Jan 11)",
+   "title": "San Luis vs Tigres"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN11PUMQUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PUM vs QUE (Jan 11)",
+   "title": "Pumas UNAM vs Queretaro"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN10MONTOL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MON vs TOL (Jan 10)",
+   "title": "Monterrey vs Toluca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN10SLANCX",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "SLA vs NCX (Jan 10)",
+   "title": "Santos Laguna vs Necaxa"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN10LEOCRA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "LEO vs CRA (Jan 10)",
+   "title": "Leon vs Cruz Azul"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN10CDGPAC",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CDG vs PAC (Jan 10)",
+   "title": "Guadalajara vs Pachuca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN09TIJAME",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIJ vs AME (Jan 9)",
+   "title": "Tijuana de Caliente vs America"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN09ATLPUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "ATL vs PUE (Jan 9)",
+   "title": "Atlas vs Puebla"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-26JAN09MAZJUA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MAZ vs JUA (Jan 9)",
+   "title": "Mazatlan vs Juarez"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25DEC14TOLTIG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TOL vs TIG (Dec 14)",
+   "title": "Toluca vs Tigres"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25DEC11TIGTOL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIG vs TOL (Dec 11)",
+   "title": "Tigres vs Toluca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25DEC06TIGCRA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIG vs CRA (Dec 6)",
+   "title": "Tigres vs Cruz Azul"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25DEC06TOLMON",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TOL vs MON (Dec 6)",
+   "title": "Toluca vs Monterrey"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25DEC03MONTOL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MON vs TOL (Dec 3)",
+   "title": "Monterrey vs Toluca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25DEC03CRATIG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CRA vs TIG (Dec 3)",
+   "title": "Cruz Azul vs Tigres"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV29TOLJUA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TOL vs JUA (Nov 29)",
+   "title": "Toluca vs Juarez"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV29TIGTIJ",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIG vs TIJ (Nov 29)",
+   "title": "Tigres vs Tijuana de Caliente"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV29CRACDG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CRA vs CDG (Nov 29)",
+   "title": "Cruz Azul vs Guadalajara"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV29AMEMON",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "AME vs MON (Nov 29)",
+   "title": "America vs Monterrey"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV26JUATOL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "JUA vs TOL (Nov 26)",
+   "title": "Juarez vs Toluca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV26TIJTIG",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIJ vs TIG (Nov 26)",
+   "title": "Tijuana de Caliente vs Tigres"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV26MONAME",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MON vs AME (Nov 26)",
+   "title": "CF Monterrey vs CF America"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV26CDGCRA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CDG vs CRA (Nov 26)",
+   "title": "CD Guadalajara vs CF Cruz Azul"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV23JUAPAC",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "JUA vs PAC (Nov 23)",
+   "title": "Juarez vs Pachuca"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV19TIJJUA",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIJ vs JUA (Nov 20)",
+   "title": "Club Tijuana de Caliente vs FC Juarez"
+  },
+  {
+   "available_on_brokers": true,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV19PACPUM",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "PAC vs PUM (Nov 20)",
+   "title": "CF Pachuca vs Pumas UNAM"
+  },
+  {
+   "available_on_brokers": false,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV09SLAPAC",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "SLA vs PAC (Nov 9)",
+   "title": "Club Santos Laguna vs CF Pachuca"
+  },
+  {
+   "available_on_brokers": false,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV08CRAPUM",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CRA vs PUM (Nov 8)",
+   "title": "CF Cruz Azul vs Pumas UNAM"
+  },
+  {
+   "available_on_brokers": false,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV08TOLAME",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TOL vs AME (Nov 8)",
+   "title": "Deportivo Toluca FC vs CF America"
+  },
+  {
+   "available_on_brokers": false,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV08LEOPUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "LEO vs PUE (Nov 8)",
+   "title": "Club Leon vs Club Puebla"
+  },
+  {
+   "available_on_brokers": false,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV08CDGMON",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "CDG vs MON (Nov 8)",
+   "title": "CD Guadalajara vs CF Monterrey"
+  },
+  {
+   "available_on_brokers": false,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV08TIGASL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIG vs ASL (Nov 8)",
+   "title": "Tigres UANL vs Atletico San Luis"
+  },
+  {
+   "available_on_brokers": false,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV07TIJATL",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "TIJ vs ATL (Nov 7)",
+   "title": "Club Tijuana de Caliente vs Atlas FC"
+  },
+  {
+   "available_on_brokers": false,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV07MAZNCX",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "MAZ vs NCX (Nov 7)",
+   "title": "Mazatlan FC vs Club Necaxa"
+  },
+  {
+   "available_on_brokers": false,
+   "category": "Sports",
+   "collateral_return_type": "MECNET",
+   "event_ticker": "KXLIGAMXGAME-25NOV07JUAQUE",
+   "exchange_index": 0,
+   "last_updated_ts": "2026-02-26T08:50:31.901806Z",
+   "mutually_exclusive": true,
+   "product_metadata": {
+    "competition": "Liga MX",
+    "competition_scope": "Game"
+   },
+   "series_ticker": "KXLIGAMXGAME",
+   "settlement_sources": [
+    {
+     "name": "ESPN",
+     "url": "https://www.espn.com/"
+    },
+    {
+     "name": "Fox Sports",
+     "url": "https://www.foxsports.com/"
+    }
+   ],
+   "strike_period": "",
+   "sub_title": "JUA vs QUE (Nov 7)",
+   "title": "FC Juarez vs Queretaro FC"
+  }
+ ]
+}
