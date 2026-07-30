@@ -516,6 +516,34 @@ class TestEplModelIsDark:
         assert st["approval_decision_missing"] is True
         assert st["model_version_registered"] is True
 
+    def test_empty_board_reason_names_the_horizon_not_the_history(
+            self, epl_session):
+        """EPL's empty board has a DIFFERENT cause than Liga MX's, and the
+        shared reason must tell them apart. Seeded with plenty of history
+        but the only upcoming fixture far outside the 168h sweep horizon —
+        which is EPL's real 2026-07-30 state (first fixture 2026-08-21,
+        22 days out). Must report no_fixtures_in_horizon, NOT
+        insufficient_team_history."""
+        _seed_epl_history(epl_session, upcoming_in_hours=24 * 22)
+        model_epl.ensure_model_version(approved_for_shadow=True)
+        r = epl_plane.empty_board_reason()
+        assert r["state"] == "no_fixtures_in_horizon"
+        assert r["fixtures_in_horizon"] == 0
+        assert r["clubs_rated"] > 0          # history is NOT the problem
+
+    def test_empty_board_reason_names_history_when_that_is_the_cause(
+            self, epl_session):
+        """The CONTROL for the test above: same function, other cause.
+        Without this pair, either label could be the only one it ever
+        emits."""
+        identity.seed_league_teams(
+            "epl-2026", epl_plane.ESPN_TEAMS_URL,
+            epl_plane.KALSHI_BRIDGES, espn_teams=CANNED_EPL)
+        r = epl_plane.empty_board_reason()
+        assert r["state"] in ("no_completed_fixtures",
+                             "insufficient_team_history")
+        assert r["clubs_rated"] == 0
+
     def test_no_epl_xg_knob_exists(self):
         """The xG gap is documented, not papered over: no EPL analogue
         of MLS_XG_RATING_ALPHA exists anywhere in config, and the EPL

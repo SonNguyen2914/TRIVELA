@@ -105,6 +105,24 @@ def ingest_season() -> dict:
         expected_season_label=config.EPL_SEASON_LABEL)
 
 
+# The season before EPL_SEASON_YEAR. Measured 2026-07-30: eng.1
+# season=2025 returns 38 completed fixtures per club, all carrying
+# per-event season.year 2025.
+HISTORY_SEASON_YEAR = config.EPL_SEASON_YEAR - 1
+
+
+def ingest_history() -> dict:
+    """Previous-season fixtures, so the ratings have a history to stand on.
+
+    EPL needs this MORE than the league that exposed the problem: the
+    2026-27 season has zero completed fixtures and does not start until
+    2026-08-21, so without history every club is unrated on day one and
+    the first matchday would price nothing."""
+    return ingest.ingest_prior_season(
+        competition_slug=EPL_SLUG, espn_league=ESPN_LEAGUE,
+        season_year=HISTORY_SEASON_YEAR)
+
+
 def refresh_window() -> dict:
     return ingest.refresh_window(competition_slug=EPL_SLUG,
                                  espn_league=ESPN_LEAGUE)
@@ -137,6 +155,11 @@ def shadow_counts() -> dict:
 
 def latest_odds() -> list[dict]:
     return runs.latest_odds(spec=RUNS_SPEC)
+
+
+def empty_board_reason() -> dict:
+    """Why this board is empty. Shared implementation in runs."""
+    return runs.empty_board_reason(spec=RUNS_SPEC)
 
 
 # --- the discovery probe + explicit unmapped state -------------------------
@@ -287,6 +310,8 @@ def boot() -> dict:
     for name, step in (
         ("seed_teams", seed_teams),
         ("season_ingest", ingest_season),
+        # the previous season, or every club is unrated on matchday one
+        ("history_ingest", ingest_history),
         ("market_map", discover_and_map),
         # DARK registration: the row exists so the F3 gate has something
         # to refuse against; approved_for_shadow stays False.

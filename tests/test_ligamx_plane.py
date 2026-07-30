@@ -377,7 +377,7 @@ class TestHistoryFloorIsVisible:
                 status="post", home_goals=1, away_goals=0))
         ligamx_session.commit()
 
-        c = model_ligamx.history_census()
+        c = ligamx_plane.empty_board_reason()
         assert c["state"] == "insufficient_team_history"
         assert c["clubs_rated"] == 0
         assert c["min_games"] == model_ligamx.MIN_GAMES
@@ -388,7 +388,7 @@ class TestHistoryFloorIsVisible:
         """The CONTROL. Without it, `insufficient_team_history` above
         could be what this function always says."""
         _seed_ligamx_history(ligamx_session)
-        c = model_ligamx.history_census()
+        c = ligamx_plane.empty_board_reason()
         assert c["state"] == "ok"
         assert c["clubs_rated"] > 0
         assert c["max_games_seen"] >= model_ligamx.MIN_GAMES

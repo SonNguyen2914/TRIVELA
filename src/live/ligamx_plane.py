@@ -149,10 +149,12 @@ def ingest_history() -> dict:
     identity. The 90-day recency half-life then does the honest thing on
     its own — these results decay out as the new Apertura accumulates.
 
-    Idempotent: `_upsert_fixture` keys on (competition, espn_event_id)."""
-    return ingest.ingest_season_schedules(
+    The shared reasoning now lives in `ingest.ingest_prior_season` — EPL
+    and La Liga hit the same wall, so the WHY is stated once there rather
+    than three times."""
+    return ingest.ingest_prior_season(
         competition_slug=LIGAMX_SLUG, espn_league=ESPN_LEAGUE,
-        expected_season_year=HISTORY_SEASON_YEAR)
+        season_year=HISTORY_SEASON_YEAR)
 
 
 def refresh_window() -> dict:
@@ -187,6 +189,11 @@ def shadow_counts() -> dict:
 
 def latest_odds() -> list[dict]:
     return runs.latest_odds(spec=RUNS_SPEC)
+
+
+def empty_board_reason() -> dict:
+    """Why this board is empty. Shared implementation in runs."""
+    return runs.empty_board_reason(spec=RUNS_SPEC)
 
 
 # --- the discovery probe + explicit unmapped state -------------------------

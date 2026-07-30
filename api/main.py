@@ -1480,6 +1480,16 @@ def epl_odds():
            "model_version": (approval or {}).get("model_version"),
            "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
            "generated_at": utcnow().isoformat()}
+    if state == "approved_no_runs":
+        # WHICH kind of "no runs" — EPL's is the horizon (its season opens
+        # 2026-08-21, the sweep looks 168h ahead), Liga MX's was the
+        # history floor. Same shape, different answer, one implementation.
+        try:
+            from src.live import epl_plane as _p
+            out["no_runs_reason"] = _p.empty_board_reason()
+        except Exception as exc:
+            errors["reason"] = str(exc)[:160]
+            print(f"[epl] empty-board reason failed: {exc}")
     if errors:
         out["errors"] = errors
     return out
@@ -1656,12 +1666,12 @@ def ligamx_odds():
            "generated_at": utcnow().isoformat()}
     if state == "approved_no_runs":
         try:
-            from src.live import model_ligamx
-            out["no_runs_reason"] = model_ligamx.history_census()
+            from src.live import ligamx_plane as _p
+            out["no_runs_reason"] = _p.empty_board_reason()
         except Exception as exc:
-            # a missing census must not take the board down with it
-            errors["census"] = str(exc)[:160]
-            print(f"[ligamx] history census failed: {exc}")
+            # a missing reason must not take the board down with it
+            errors["reason"] = str(exc)[:160]
+            print(f"[ligamx] empty-board reason failed: {exc}")
     if errors:
         out["errors"] = errors
     return out
@@ -1838,18 +1848,55 @@ def laliga_match(event_id: str):
 
 @app.get("/api/laliga/odds")
 def laliga_odds():
-    """The shadow odds board — EMPTY until a La Liga model earns an
-    approval decision (none exists; boot is fail-closed). The flags
-    say so explicitly so no client renders silence as a forecast."""
-    odds = []
+    """The La Liga shadow odds board, with the reason it is empty.
+
+    `model_dark` was hardcoded `True` here — a literal constant, so this
+    board would have kept reporting "dark" even after La Liga earned an
+    approval. Same class of stale assertion as the approval note that
+    claimed no decision existed while sitting beside a live decision id.
+    Now DERIVED, with the same four states as MLS/EPL/Liga MX and the
+    same shared empty-board reason."""
+    approval = None
+    errors: dict[str, str] = {}
+    try:
+        from src.live import laliga_live
+        approval = laliga_live.approval_status()
+    except Exception as exc:
+        errors["approval"] = str(exc)[:160]
+        print(f"[laliga] approval read failed: {exc}")
+    odds = None
     try:
         from src.live import laliga_live
         odds = laliga_live.latest_odds()
     except Exception as exc:
+        errors["odds"] = str(exc)[:160]
         print(f"[laliga] odds board failed: {exc}")
-    return {"odds": odds, "shadow": True, "model_dark": True,
-            "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
-            "generated_at": utcnow().isoformat()}
+
+    if approval is None or odds is None:
+        state = "unavailable"
+    elif (approval.get("approval_decision_missing", True)
+            or not approval.get("approved_for_shadow")):
+        state = "dark"
+    elif not odds:
+        state = "approved_no_runs"
+    else:
+        state = "approved"
+    out = {"odds": odds or [], "shadow": True,
+           "model_state": state,
+           "model_dark": state == "dark",
+           "model_version": (approval or {}).get("model_version"),
+           "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
+           "generated_at": utcnow().isoformat()}
+    if state == "approved_no_runs":
+        try:
+            from src.live import laliga_live as _p
+            out["no_runs_reason"] = _p.empty_board_reason()
+        except Exception as exc:
+            errors["reason"] = str(exc)[:160]
+            print(f"[laliga] empty-board reason failed: {exc}")
+    if errors:
+        out["errors"] = errors
+    return out
 
 
 @app.get("/api/laliga/status")
@@ -1867,17 +1914,22 @@ def laliga_status():
 
 
 @app.post("/api/admin/laliga/sweep")
-def laliga_admin_sweep(request: Request):
+def laliga_admin_sweep(request: Request,
+                       history: bool = Query(False)):
     """Operator-only: run the La Liga plane's sweeps NOW (window refresh,
     market discovery, scheduled runs — the last refuses while the model
     is dark). Mirrors /api/admin/mls/sweep."""
     if not _admin_ok(request):
         raise HTTPException(403, "operator credentials required")
     from src.live import laliga_live
-    return {"window": laliga_live.refresh_window(),
-            "map": laliga_live.discover_and_map(),
-            "runs": laliga_live.scheduled_runs(),
-            "generated_at": utcnow().isoformat()}
+    out: dict = {}
+    if history:
+        out["history"] = laliga_live.ingest_history()
+    out["window"] = laliga_live.refresh_window()
+    out["map"] = laliga_live.discover_and_map()
+    out["runs"] = laliga_live.scheduled_runs()
+    out["generated_at"] = utcnow().isoformat()
+    return out
 # --- La Liga — END additive block -------------------------------------------
 
 

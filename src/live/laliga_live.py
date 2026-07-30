@@ -156,6 +156,23 @@ def ingest_season() -> dict:
                                           espn_league=LEAGUE_PATH)
 
 
+# Measured 2026-07-30: esp.1 season=2025 returns 38 completed fixtures
+# per club, all carrying per-event season.year 2025. Hard-coded rather
+# than derived from a LALIGA_SEASON_YEAR, because no such config exists
+# (see ingest_season above) and inventing one would change what the
+# CURRENT-season ingest pulls.
+HISTORY_SEASON_YEAR = 2025
+
+
+def ingest_history() -> dict:
+    """Previous-season fixtures, so the ratings have a history to stand
+    on. Like EPL, La Liga has no completed 2026-27 fixtures yet, so
+    without this every club is unrated when the season opens."""
+    return ingest.ingest_prior_season(
+        competition_slug=SLUG, espn_league=LEAGUE_PATH,
+        season_year=HISTORY_SEASON_YEAR)
+
+
 def refresh_window() -> dict:
     return ingest.refresh_window(competition_slug=SLUG,
                                  espn_league=LEAGUE_PATH)
@@ -189,6 +206,54 @@ def model_for_event(espn_event_id: str) -> dict | None:
 
 def latest_odds() -> list[dict]:
     return runs.latest_odds(spec=RUNS_SPEC)
+
+
+def empty_board_reason() -> dict:
+    """Why this board is empty. Shared implementation in runs."""
+    return runs.empty_board_reason(spec=RUNS_SPEC)
+
+
+def approval_status() -> dict:
+    """What the runtime is (not) operating under for laliga-2026-v0.
+
+    LOAD-ONLY, mirroring epl_plane/ligamx_plane: nothing here can create
+    or activate an approval. This did not exist before 2026-07-30 — the
+    La Liga odds board hardcoded `model_dark: True` instead of asking,
+    which meant it would have kept reporting "dark" after La Liga earned
+    an approval. Deriving it needs this function, so here it is."""
+    out = {"model_version": model_laliga.MODEL_NAME,
+           "approved_for_shadow": False,
+           "approval_decision_missing": True,
+           "mode": "dark"}
+    if not plane_ready():
+        out["live_plane"] = "dormant"
+        return out
+    from src.live.models import ModelApprovalDecision, ModelVersion
+    s = get_session()
+    try:
+        mv = s.query(ModelVersion).filter_by(
+            name=model_laliga.MODEL_NAME).first()
+        dec = (s.query(ModelApprovalDecision)
+               .filter_by(model_version_name=model_laliga.MODEL_NAME,
+                          approved=True)
+               .order_by(ModelApprovalDecision.id.desc()).first())
+        out["model_version_registered"] = mv is not None
+        out["approved_for_shadow"] = bool(mv and mv.approved_for_shadow)
+        out["approval_decision_missing"] = dec is None
+        if dec is not None:
+            out["mode"] = "approved_decision_present"
+            out["decision_id"] = dec.id
+            out["content_hash"] = dec.content_hash
+            out["note"] = (
+                f"laliga-2026-v0 has an active approval decision "
+                f"(id {dec.id}, policy {dec.policy_version!r}) — shadow "
+                f"collection and locks run once fixtures exist. This does "
+                f"NOT mean real money signals are enabled "
+                f"(real_money_signals stays server-side gated) or that an "
+                f"edge is established.")
+        return out
+    finally:
+        s.close()
 
 
 def shadow_status() -> dict:
@@ -252,6 +317,8 @@ def boot() -> None:
             ("model_version_row", model_laliga.ensure_model_version),
             ("seed_teams", seed_teams),
             ("season_ingest", ingest_season),
+            # the previous season, or every club is unrated on matchday one
+            ("history_ingest", ingest_history),
             ("market_map", discover_and_map),
     ):
         try:

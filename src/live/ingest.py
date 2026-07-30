@@ -163,6 +163,37 @@ def _event_season_year(ev: dict) -> int | None:
         return None
 
 
+def ingest_prior_season(competition_slug: str, espn_league: str,
+                        season_year: int) -> dict:
+    """Pull the season BEFORE the one a competition is named for.
+
+    Why every league needs this, not just the one that exposed it: `fit()`
+    refuses to rate a club with fewer than MIN_GAMES completed matches, so
+    a competition whose season has barely started (or has not started at
+    all) rates NOBODY and serves an empty odds board. Liga MX hit it live
+    on 2026-07-30 with two rounds played; EPL and La Liga were both
+    heading for the same wall with ZERO completed 2026-27 fixtures.
+
+    Measured that day, per club: mex.1 season=2025 -> 40 completed,
+    eng.1 -> 38, esp.1 -> 38. All carry per-EVENT season.year 2025.
+
+    PINNED, always. An unpinned ingest lets the provider's idea of
+    "current" choose the corpus, which is exactly how the clubs ended up
+    under the floor to begin with.
+
+    The fixtures land in the CALLER's own competition slug, deliberately
+    not a slug of their own: `Team` rows are competition-keyed, so a
+    separate slug would mint a second set of team ids and ratings fitted
+    on them could never be looked up for a current-season fixture. One
+    slug, one identity. The recency half-life then decays these out on
+    its own as the new season accumulates — nothing to clean up later.
+
+    Idempotent: `_upsert_fixture` keys on (competition, espn_event_id)."""
+    return ingest_season_schedules(
+        competition_slug=competition_slug, espn_league=espn_league,
+        expected_season_year=season_year)
+
+
 def ingest_season_schedules(competition_slug: str = "mls-2026",
                             espn_league: str = "usa.1",
                             expected_season_year: int | None = None,
