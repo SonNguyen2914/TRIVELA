@@ -1,0 +1,711 @@
+{
+  "swept_at": "2026-07-30T09:51:48.484835+00:00",
+  "method": "rolling-origin, analytic independent-Poisson 3-way, match-cluster bootstrap CI vs the incumbent k=24; reuses model_eval's ladder instrument so the numbers are comparable to what approvals are computed on",
+  "governing_rule": "a constant changes ONLY on a CI excluding zero. 'Bolder' is not 'better' \u2014 MLS measured k=6 LOSING to baseline for goals.",
+  "leagues": {
+    "mls-2026": {
+      "slug": "mls-2026",
+      "n_completed": 0,
+      "error": "too few completed fixtures to sweep honestly"
+    },
+    "epl-2026": {
+      "slug": "epl-2026",
+      "model": "epl-2026-v0",
+      "n_completed": 272,
+      "n_scored": 225,
+      "incumbent_k": 24.0,
+      "incumbent_logloss": 1.0698,
+      "m0_baseline_logloss": 1.087,
+      "incumbent_beats_m0_by": 0.0172,
+      "shrink_grid": {
+        "1.0": {
+          "logloss": 1.0811,
+          "vs_m0_edge": 0.006,
+          "delta_vs_k24": -0.0112,
+          "ci95": [
+            -0.0428,
+            0.0195
+          ],
+          "significant": false
+        },
+        "2.0": {
+          "logloss": 1.0755,
+          "vs_m0_edge": 0.0116,
+          "delta_vs_k24": -0.0056,
+          "ci95": [
+            -0.0322,
+            0.0203
+          ],
+          "significant": false
+        },
+        "3.0": {
+          "logloss": 1.072,
+          "vs_m0_edge": 0.015,
+          "delta_vs_k24": -0.0022,
+          "ci95": [
+            -0.0252,
+            0.0201
+          ],
+          "significant": false
+        },
+        "4.0": {
+          "logloss": 1.0698,
+          "vs_m0_edge": 0.0172,
+          "delta_vs_k24": 0.0,
+          "ci95": [
+            -0.0201,
+            0.0195
+          ],
+          "significant": false
+        },
+        "6.0": {
+          "logloss": 1.0675,
+          "vs_m0_edge": 0.0195,
+          "delta_vs_k24": 0.0024,
+          "ci95": [
+            -0.0132,
+            0.0174
+          ],
+          "significant": false
+        },
+        "8.0": {
+          "logloss": 1.0666,
+          "vs_m0_edge": 0.0204,
+          "delta_vs_k24": 0.0032,
+          "ci95": [
+            -0.0089,
+            0.0152
+          ],
+          "significant": false
+        },
+        "12.0": {
+          "logloss": 1.0667,
+          "vs_m0_edge": 0.0203,
+          "delta_vs_k24": 0.0032,
+          "ci95": [
+            -0.0042,
+            0.0106
+          ],
+          "significant": false
+        },
+        "16.0": {
+          "logloss": 1.0676,
+          "vs_m0_edge": 0.0194,
+          "delta_vs_k24": 0.0022,
+          "ci95": [
+            -0.0019,
+            0.0065
+          ],
+          "significant": false
+        },
+        "24.0": {
+          "logloss": 1.0698,
+          "vs_m0_edge": 0.0172,
+          "delta_vs_k24": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "significant": false
+        },
+        "32.0": {
+          "logloss": 1.0718,
+          "vs_m0_edge": 0.0152,
+          "delta_vs_k24": -0.002,
+          "ci95": [
+            -0.0046,
+            0.0006
+          ],
+          "significant": false
+        },
+        "48.0": {
+          "logloss": 1.0747,
+          "vs_m0_edge": 0.0123,
+          "delta_vs_k24": -0.0049,
+          "ci95": [
+            -0.0106,
+            0.0007
+          ],
+          "significant": false
+        }
+      },
+      "half_life_grid": {
+        "45.0": {
+          "logloss": 1.0712,
+          "delta_vs_90d": -0.0013,
+          "ci95": [
+            -0.0073,
+            0.005
+          ],
+          "significant": false
+        },
+        "60.0": {
+          "logloss": 1.0704,
+          "delta_vs_90d": -0.0005,
+          "ci95": [
+            -0.0039,
+            0.003
+          ],
+          "significant": false
+        },
+        "90.0": {
+          "logloss": 1.0698,
+          "delta_vs_90d": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "significant": false
+        },
+        "120.0": {
+          "logloss": 1.0698,
+          "delta_vs_90d": 0.0,
+          "ci95": [
+            -0.002,
+            0.002
+          ],
+          "significant": false
+        },
+        "180.0": {
+          "logloss": 1.07,
+          "delta_vs_90d": -0.0002,
+          "ci95": [
+            -0.0045,
+            0.0039
+          ],
+          "significant": false
+        }
+      },
+      "point_optimum": {
+        "k": 8.0,
+        "logloss": 1.0666,
+        "vs_m0_edge": 0.0204,
+        "delta_vs_k24": 0.0032,
+        "ci95": [
+          -0.0089,
+          0.0152
+        ],
+        "significant": false
+      },
+      "significantly_better_than_incumbent": [],
+      "significantly_worse_than_incumbent": [],
+      "ci_narrowing_caveat": "The CI is on a PAIRED delta vs k=24, so it narrows as a candidate approaches the incumbent. A near-incumbent k can therefore show a 'significant' small gain while a genuinely better far-from-incumbent k spans zero. Rank by the point optimum and the SHAPE of the curve; use significance only to rule values OUT, never to pick the winner.",
+      "recommendation": {
+        "k": 8.0,
+        "action": "propose_pending_review",
+        "why": "k=8 is the point optimum (+0.0032 log loss) with a clean interior shape, but its CI [-0.0089, 0.0152] spans zero at n=225 \u2014 so this is a POINT-ESTIMATE case, not a significance result. Adopting it is defensible on the curve's shape plus the MLS precedent for the same failure mode; claiming it is proven is not.",
+        "significant_values_are_only_useful_for_exclusion": {
+          "worse": []
+        }
+      }
+    },
+    "liga-mx-2026": {
+      "slug": "liga-mx-2026",
+      "model": "liga-mx-2026-v0",
+      "n_completed": 303,
+      "n_scored": 258,
+      "incumbent_k": 24.0,
+      "incumbent_logloss": 1.0314,
+      "m0_baseline_logloss": 1.0575,
+      "incumbent_beats_m0_by": 0.0261,
+      "shrink_grid": {
+        "1.0": {
+          "logloss": 1.0294,
+          "vs_m0_edge": 0.0281,
+          "delta_vs_k24": 0.002,
+          "ci95": [
+            -0.0336,
+            0.038
+          ],
+          "significant": false
+        },
+        "2.0": {
+          "logloss": 1.0248,
+          "vs_m0_edge": 0.0328,
+          "delta_vs_k24": 0.0066,
+          "ci95": [
+            -0.0236,
+            0.0372
+          ],
+          "significant": false
+        },
+        "3.0": {
+          "logloss": 1.0222,
+          "vs_m0_edge": 0.0353,
+          "delta_vs_k24": 0.0092,
+          "ci95": [
+            -0.0169,
+            0.0356
+          ],
+          "significant": false
+        },
+        "4.0": {
+          "logloss": 1.0209,
+          "vs_m0_edge": 0.0366,
+          "delta_vs_k24": 0.0105,
+          "ci95": [
+            -0.0123,
+            0.0337
+          ],
+          "significant": false
+        },
+        "6.0": {
+          "logloss": 1.0203,
+          "vs_m0_edge": 0.0373,
+          "delta_vs_k24": 0.0111,
+          "ci95": [
+            -0.0064,
+            0.0291
+          ],
+          "significant": false
+        },
+        "8.0": {
+          "logloss": 1.0209,
+          "vs_m0_edge": 0.0366,
+          "delta_vs_k24": 0.0105,
+          "ci95": [
+            -0.0031,
+            0.0246
+          ],
+          "significant": false
+        },
+        "12.0": {
+          "logloss": 1.0235,
+          "vs_m0_edge": 0.034,
+          "delta_vs_k24": 0.0079,
+          "ci95": [
+            -0.0004,
+            0.0165
+          ],
+          "significant": false
+        },
+        "16.0": {
+          "logloss": 1.0264,
+          "vs_m0_edge": 0.0311,
+          "delta_vs_k24": 0.005,
+          "ci95": [
+            0.0004,
+            0.0097
+          ],
+          "significant": true
+        },
+        "24.0": {
+          "logloss": 1.0314,
+          "vs_m0_edge": 0.0261,
+          "delta_vs_k24": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "significant": false
+        },
+        "32.0": {
+          "logloss": 1.0352,
+          "vs_m0_edge": 0.0223,
+          "delta_vs_k24": -0.0038,
+          "ci95": [
+            -0.0067,
+            -0.001
+          ],
+          "significant": true
+        },
+        "48.0": {
+          "logloss": 1.0404,
+          "vs_m0_edge": 0.0172,
+          "delta_vs_k24": -0.009,
+          "ci95": [
+            -0.0153,
+            -0.0029
+          ],
+          "significant": true
+        }
+      },
+      "half_life_grid": {
+        "45.0": {
+          "logloss": 1.0385,
+          "delta_vs_90d": -0.0071,
+          "ci95": [
+            -0.013,
+            -0.0014
+          ],
+          "significant": true
+        },
+        "60.0": {
+          "logloss": 1.0352,
+          "delta_vs_90d": -0.0038,
+          "ci95": [
+            -0.0072,
+            -0.0006
+          ],
+          "significant": true
+        },
+        "90.0": {
+          "logloss": 1.0314,
+          "delta_vs_90d": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "significant": false
+        },
+        "120.0": {
+          "logloss": 1.0294,
+          "delta_vs_90d": 0.002,
+          "ci95": [
+            -0.0,
+            0.0041
+          ],
+          "significant": false
+        },
+        "180.0": {
+          "logloss": 1.0275,
+          "delta_vs_90d": 0.0039,
+          "ci95": [
+            -0.0005,
+            0.0083
+          ],
+          "significant": false
+        }
+      },
+      "point_optimum": {
+        "k": 6.0,
+        "logloss": 1.0203,
+        "vs_m0_edge": 0.0373,
+        "delta_vs_k24": 0.0111,
+        "ci95": [
+          -0.0064,
+          0.0291
+        ],
+        "significant": false
+      },
+      "significantly_better_than_incumbent": [
+        {
+          "k": 16.0,
+          "logloss": 1.0264,
+          "vs_m0_edge": 0.0311,
+          "delta_vs_k24": 0.005,
+          "ci95": [
+            0.0004,
+            0.0097
+          ],
+          "significant": true
+        }
+      ],
+      "significantly_worse_than_incumbent": [
+        {
+          "k": 32.0,
+          "logloss": 1.0352,
+          "vs_m0_edge": 0.0223,
+          "delta_vs_k24": -0.0038,
+          "ci95": [
+            -0.0067,
+            -0.001
+          ],
+          "significant": true
+        },
+        {
+          "k": 48.0,
+          "logloss": 1.0404,
+          "vs_m0_edge": 0.0172,
+          "delta_vs_k24": -0.009,
+          "ci95": [
+            -0.0153,
+            -0.0029
+          ],
+          "significant": true
+        }
+      ],
+      "ci_narrowing_caveat": "The CI is on a PAIRED delta vs k=24, so it narrows as a candidate approaches the incumbent. A near-incumbent k can therefore show a 'significant' small gain while a genuinely better far-from-incumbent k spans zero. Rank by the point optimum and the SHAPE of the curve; use significance only to rule values OUT, never to pick the winner.",
+      "recommendation": {
+        "k": 6.0,
+        "action": "propose_pending_review",
+        "why": "k=6 is the point optimum (+0.0111 log loss) with a clean interior shape, but its CI [-0.0064, 0.0291] spans zero at n=258 \u2014 so this is a POINT-ESTIMATE case, not a significance result. Adopting it is defensible on the curve's shape plus the MLS precedent for the same failure mode; claiming it is proven is not.",
+        "significant_values_are_only_useful_for_exclusion": {
+          "worse": [
+            32.0,
+            48.0
+          ]
+        }
+      }
+    },
+    "la-liga-2026": {
+      "slug": "la-liga-2026",
+      "model": "laliga-2026-v0",
+      "n_completed": 272,
+      "n_scored": 226,
+      "incumbent_k": 24.0,
+      "incumbent_logloss": 1.0112,
+      "m0_baseline_logloss": 1.0473,
+      "incumbent_beats_m0_by": 0.0361,
+      "shrink_grid": {
+        "1.0": {
+          "logloss": 0.9979,
+          "vs_m0_edge": 0.0494,
+          "delta_vs_k24": 0.0133,
+          "ci95": [
+            -0.0248,
+            0.0503
+          ],
+          "significant": false
+        },
+        "2.0": {
+          "logloss": 0.9942,
+          "vs_m0_edge": 0.0531,
+          "delta_vs_k24": 0.017,
+          "ci95": [
+            -0.0163,
+            0.049
+          ],
+          "significant": false
+        },
+        "3.0": {
+          "logloss": 0.9925,
+          "vs_m0_edge": 0.0548,
+          "delta_vs_k24": 0.0187,
+          "ci95": [
+            -0.0106,
+            0.0468
+          ],
+          "significant": false
+        },
+        "4.0": {
+          "logloss": 0.9919,
+          "vs_m0_edge": 0.0554,
+          "delta_vs_k24": 0.0193,
+          "ci95": [
+            -0.0065,
+            0.0438
+          ],
+          "significant": false
+        },
+        "6.0": {
+          "logloss": 0.9927,
+          "vs_m0_edge": 0.0546,
+          "delta_vs_k24": 0.0185,
+          "ci95": [
+            -0.0015,
+            0.0377
+          ],
+          "significant": false
+        },
+        "8.0": {
+          "logloss": 0.9945,
+          "vs_m0_edge": 0.0528,
+          "delta_vs_k24": 0.0167,
+          "ci95": [
+            0.001,
+            0.0319
+          ],
+          "significant": true
+        },
+        "12.0": {
+          "logloss": 0.9992,
+          "vs_m0_edge": 0.0481,
+          "delta_vs_k24": 0.012,
+          "ci95": [
+            0.0024,
+            0.0214
+          ],
+          "significant": true
+        },
+        "16.0": {
+          "logloss": 1.0037,
+          "vs_m0_edge": 0.0436,
+          "delta_vs_k24": 0.0075,
+          "ci95": [
+            0.0021,
+            0.0128
+          ],
+          "significant": true
+        },
+        "24.0": {
+          "logloss": 1.0112,
+          "vs_m0_edge": 0.0361,
+          "delta_vs_k24": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "significant": false
+        },
+        "32.0": {
+          "logloss": 1.0167,
+          "vs_m0_edge": 0.0306,
+          "delta_vs_k24": -0.0055,
+          "ci95": [
+            -0.0089,
+            -0.0022
+          ],
+          "significant": true
+        },
+        "48.0": {
+          "logloss": 1.0241,
+          "vs_m0_edge": 0.0232,
+          "delta_vs_k24": -0.0129,
+          "ci95": [
+            -0.0203,
+            -0.0054
+          ],
+          "significant": true
+        }
+      },
+      "half_life_grid": {
+        "45.0": {
+          "logloss": 1.0213,
+          "delta_vs_90d": -0.0101,
+          "ci95": [
+            -0.0163,
+            -0.0036
+          ],
+          "significant": true
+        },
+        "60.0": {
+          "logloss": 1.0164,
+          "delta_vs_90d": -0.0052,
+          "ci95": [
+            -0.0087,
+            -0.0016
+          ],
+          "significant": true
+        },
+        "90.0": {
+          "logloss": 1.0112,
+          "delta_vs_90d": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "significant": false
+        },
+        "120.0": {
+          "logloss": 1.0085,
+          "delta_vs_90d": 0.0027,
+          "ci95": [
+            0.0005,
+            0.0048
+          ],
+          "significant": true
+        },
+        "180.0": {
+          "logloss": 1.0059,
+          "delta_vs_90d": 0.0053,
+          "ci95": [
+            0.0007,
+            0.0097
+          ],
+          "significant": true
+        }
+      },
+      "point_optimum": {
+        "k": 4.0,
+        "logloss": 0.9919,
+        "vs_m0_edge": 0.0554,
+        "delta_vs_k24": 0.0193,
+        "ci95": [
+          -0.0065,
+          0.0438
+        ],
+        "significant": false
+      },
+      "significantly_better_than_incumbent": [
+        {
+          "k": 8.0,
+          "logloss": 0.9945,
+          "vs_m0_edge": 0.0528,
+          "delta_vs_k24": 0.0167,
+          "ci95": [
+            0.001,
+            0.0319
+          ],
+          "significant": true
+        },
+        {
+          "k": 12.0,
+          "logloss": 0.9992,
+          "vs_m0_edge": 0.0481,
+          "delta_vs_k24": 0.012,
+          "ci95": [
+            0.0024,
+            0.0214
+          ],
+          "significant": true
+        },
+        {
+          "k": 16.0,
+          "logloss": 1.0037,
+          "vs_m0_edge": 0.0436,
+          "delta_vs_k24": 0.0075,
+          "ci95": [
+            0.0021,
+            0.0128
+          ],
+          "significant": true
+        }
+      ],
+      "significantly_worse_than_incumbent": [
+        {
+          "k": 32.0,
+          "logloss": 1.0167,
+          "vs_m0_edge": 0.0306,
+          "delta_vs_k24": -0.0055,
+          "ci95": [
+            -0.0089,
+            -0.0022
+          ],
+          "significant": true
+        },
+        {
+          "k": 48.0,
+          "logloss": 1.0241,
+          "vs_m0_edge": 0.0232,
+          "delta_vs_k24": -0.0129,
+          "ci95": [
+            -0.0203,
+            -0.0054
+          ],
+          "significant": true
+        }
+      ],
+      "ci_narrowing_caveat": "The CI is on a PAIRED delta vs k=24, so it narrows as a candidate approaches the incumbent. A near-incumbent k can therefore show a 'significant' small gain while a genuinely better far-from-incumbent k spans zero. Rank by the point optimum and the SHAPE of the curve; use significance only to rule values OUT, never to pick the winner.",
+      "recommendation": {
+        "k": 4.0,
+        "action": "propose_pending_review",
+        "why": "k=4 is the point optimum (+0.0193 log loss) with a clean interior shape, but its CI [-0.0065, 0.0438] spans zero at n=226 \u2014 so this is a POINT-ESTIMATE case, not a significance result. Adopting it is defensible on the curve's shape plus the MLS precedent for the same failure mode; claiming it is proven is not.",
+        "significant_values_are_only_useful_for_exclusion": {
+          "worse": [
+            32.0,
+            48.0
+          ]
+        }
+      }
+    }
+  },
+  "CORROBORATION_by_the_repos_own_instrument": {
+    "what": "ladder_replay.sweep() ALREADY EXISTED and does this job. It was found only after this script was written \u2014 a duplication that should not have happened. It is the better instrument: it runs on the FROZEN archived replay bytes behind a completeness gate, not on a locally re-ingested database.",
+    "result_mean_m2_vs_m0": {
+      "epl-2026": {
+        "k24_carried": 0.0334,
+        "k6": 0.047,
+        "gain": 0.0136
+      },
+      "liga-mx-2026": {
+        "k24_carried": 0.0229,
+        "k6": 0.0323,
+        "gain": 0.0094
+      },
+      "la-liga-2026": {
+        "k24_carried": 0.0333,
+        "k6": 0.045,
+        "gain": 0.0117
+      }
+    },
+    "agreement": "Both harnesses, on different substrates, put the optimum at k=6 for all three inherited leagues, with monotonic degradation out to k=48. The finding is real."
+  },
+  "WHY_NOTHING_WAS_CHANGED": {
+    "rule": "V9.3 F8, enforced by tests/test_ladder_replay.py::TestHyperparameterSweep",
+    "quote": "ladder_replay.sweep's own docstring: 'DIAGNOSTIC ONLY... A constant chosen on this sample and then evaluated on this same sample produces an optimistic number... the approval decisions are NOT computed with swept values: they use the carried constants, which is also what the deployed model would actually run.'",
+    "what_was_attempted_and_reverted": "SHRINK_GAMES was set to 6.0 in model_{epl,ligamx,laliga} and GOALS_ONLY_LADDER['M2']['shrink'] aligned to match. Two existing tests failed and were RIGHT to: aligning the ladder to a swept value makes the approval score itself on a constant chosen from its own evidence, which is exactly what F8 forbids. A parity test written alongside the change asserted the OPPOSITE of the existing rule. All reverted.",
+    "the_legitimate_path": "k=6 needs OUT-OF-SAMPLE confirmation \u2014 the 2026-27 seasons as they accumulate \u2014 not a same-sample sweep. Until then the carried k=24 stands and the sweep remains what its author intended: a diagnostic that says what a re-sweep would buy, nothing more.",
+    "what_the_diagnosis_still_explains": "The Liga MX symptom is unchanged and correctly understood: at k=24 with ~9 recency-weighted games each rating is ~72% prior, which is why Puebla and Guadalajara were served identical xG (1.343 vs 1.337) while the market had them 58.2/21.4. That gap is model under-confidence, NOT a mispriced market, and must not be read as value."
+  }
+}
