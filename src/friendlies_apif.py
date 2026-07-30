@@ -1125,9 +1125,23 @@ def _bridge_by_fixture_id(swept: dict, events: list[dict]) -> dict:
     return out
 
 
+# Statuses that mean the match is OVER (or will never happen). A fixture
+# list that keeps these is not a fixture list — measured 2026-07-30, the hub
+# was carrying 84 dead rows, 81 of them the previous day's, which is what
+# made a 399-row table unusable.
+FINISHED_STATUSES = {"FT", "AET", "PEN", "CANC", "ABD", "AWD", "WO", "PST"}
+
+
 def fixture_rows(horizon_days: int | None = None,
-                 with_strength: bool = True) -> dict:
-    """EVERY classified friendly in the horizon, Kalshi-listed or not.
+                 with_strength: bool = True,
+                 include_finished: bool = False) -> dict:
+    """Every classified friendly in the horizon, Kalshi-listed or not.
+
+    UPCOMING ONLY by default. The sweep is date-scoped and necessarily
+    includes the current UTC day's earlier hours (and the previous day, for
+    late kickoffs in western timezones), so without this filter yesterday's
+    finished matches sit at the TOP of a chronological list. Pass
+    include_finished=True for the raw view.
 
     Deliberately does NOT fetch a book per fixture: only the handful that
     bridge to a Kalshi event are worth a request, and the hub renders
@@ -1135,6 +1149,7 @@ def fixture_rows(horizon_days: int | None = None,
     """
     swept = sweep(horizon_days)
     fixtures = friendly_fixtures(swept)
+    reg: dict = {}
     try:
         reg = tradeable_events()
         bridged = _bridge_by_fixture_id(swept, reg["events"])
@@ -1160,7 +1175,46 @@ def fixture_rows(horizon_days: int | None = None,
             row["strength"] = _strength_for(f)
         rows.append(row)
     rows.sort(key=lambda r: (r.get("kickoff_utc") or ""))
+
+    from datetime import datetime, timezone
+    now_iso = datetime.now(timezone.utc).isoformat()
+    finished = [r for r in rows
+                if (r.get("status") in FINISHED_STATUSES
+                    or (r.get("kickoff_utc") or "") < now_iso)]
+    if not include_finished:
+        fin_ids = {id(r) for r in finished}
+        rows = [r for r in rows if id(r) not in fin_ids]
+
+    # Tradeable Kalshi events that bridged to NO fixture. Surfaced rather
+    # than dropped: this list is the answer to "show me everything the venue
+    # is actually pricing", and silently omitting an event because our own
+    # fixture feed missed it would make the hub quietly less complete than
+    # the market it is watching.
+    bridged_tickers = {b.get("event_ticker") for b in bridged.values()}
+    kalshi_only = []
+    if reg_ok:
+        for ev in (reg.get("events") or []):
+            tk = ev.get("event_ticker")
+            if tk and tk not in bridged_tickers:
+                kalshi_only.append({
+                    "event_ticker": tk, "title": ev.get("title"),
+                    "state": "no_fixture_match",
+                    "means": ("this market is tradeable but no API-Football "
+                              "fixture bridged to it, so it has no teams, "
+                              "no kickoff and no strength read here")})
+
     return {"fixtures": rows, "count": len(rows),
+            "finished_hidden": len(finished),
+            "include_finished": include_finished,
+            "kalshi_only": kalshi_only,
+            "kalshi_tradeable_total": (len(reg.get("events") or [])
+                                       if reg_ok else None),
+            "kalshi_listed_total": reg.get("listed_total") if reg_ok else None,
+            "kalshi_counts_note": (
+                "listed_total counts every event the series carries, most of "
+                "them SETTLED past matches; tradeable_total is the subset "
+                "with an open market. Only the second is a number of things "
+                "you could bet on now."),
             "sweep": {"dates": swept.get("dates"),
                       "complete": swept.get("complete"),
                       "fixtures_seen": len(swept.get("fixtures") or [])},

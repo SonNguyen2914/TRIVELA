@@ -1051,3 +1051,83 @@ class TestRequestBudget:
             f"{per_day}/day exceeds the plan's "
             f"{fa.REQUEST_BUDGET['per_day']}")
         assert n < fa.REQUEST_BUDGET["per_minute"]
+
+
+class TestHubIsUsable:
+    """The three things Son reported on 2026-07-30: a table full of
+    yesterday's results, no Kalshi, and 399 undifferentiated rows."""
+
+    def _swept(self, statuses):
+        """A canned sweep with one fixture per given (status, iso) pair."""
+        return {"fixtures": [
+            {"fixture_id": 1000 + i, "kickoff_utc": iso, "status": st,
+             "is_classified_friendly": True, "league_name": "Friendlies Clubs",
+             "league_country": "World", "round": "Club Friendlies",
+             "venue": None, "venue_city": None,
+             "home": {"apif_team_id": i, "name": f"H{i}", "crest": None},
+             "away": {"apif_team_id": 900 + i, "name": f"A{i}", "crest": None},
+             "goals": {"home": None, "away": None}}
+            for i, (st, iso) in enumerate(statuses)],
+            "utc_dates": [], "complete": True, "failures": [],
+            "requests_used": 0, "key_source": "test", "problems": []}
+
+    def test_finished_and_past_are_hidden_by_default(self, monkeypatch):
+        from datetime import datetime, timedelta, timezone
+        import src.friendlies_apif as m
+        now = datetime.now(timezone.utc)
+        past = (now - timedelta(hours=6)).isoformat()
+        soon = (now + timedelta(hours=6)).isoformat()
+        swept = self._swept([("FT", past), ("CANC", soon),
+                             ("NS", past), ("NS", soon)])
+        monkeypatch.setattr(m, "sweep", lambda *a, **k: swept)
+        monkeypatch.setattr(m, "tradeable_events",
+                            lambda *a, **k: {"events": [], "listed_total": 0,
+                                             "complete": True,
+                                             "truncated": False})
+        monkeypatch.setattr(m, "_strength_for", lambda f: {"available": False})
+        out = m.fixture_rows(2)
+        # only the future NS fixture survives: FT is over, CANC will never
+        # happen, and a past NS kickoff is stale even without a final status
+        assert out["count"] == 1
+        assert out["fixtures"][0]["status"] == "NS"
+        assert out["fixtures"][0]["kickoff_utc"] == soon
+        assert out["finished_hidden"] == 3
+
+    def test_include_finished_is_the_escape_hatch(self, monkeypatch):
+        """The CONTROL: the rows are filtered, not lost."""
+        from datetime import datetime, timedelta, timezone
+        import src.friendlies_apif as m
+        now = datetime.now(timezone.utc)
+        swept = self._swept([("FT", (now - timedelta(hours=6)).isoformat()),
+                             ("NS", (now + timedelta(hours=6)).isoformat())])
+        monkeypatch.setattr(m, "sweep", lambda *a, **k: swept)
+        monkeypatch.setattr(m, "tradeable_events",
+                            lambda *a, **k: {"events": [], "listed_total": 0,
+                                             "complete": True,
+                                             "truncated": False})
+        monkeypatch.setattr(m, "_strength_for", lambda f: {"available": False})
+        assert m.fixture_rows(2, include_finished=True)["count"] == 2
+
+    def test_tradeable_events_with_no_fixture_are_still_surfaced(
+            self, monkeypatch):
+        """"Show me every Kalshi market" cannot quietly drop an event just
+        because our fixture feed lacks the club. Measured 2026-07-30: two
+        such events exist (Schwarz-Weiss Essen and FC Rottach-Egern are
+        genuinely absent from API-Football, per KNOWN_PROVIDER_ABSENCES)."""
+        import src.friendlies_apif as m
+        from datetime import datetime, timedelta, timezone
+        soon = (datetime.now(timezone.utc) + timedelta(hours=6)).isoformat()
+        monkeypatch.setattr(m, "sweep", lambda *a, **k: self._swept(
+            [("NS", soon)]))
+        monkeypatch.setattr(m, "tradeable_events", lambda *a, **k: {
+            "events": [{"event_ticker": "KX-ORPHAN", "title": "X vs Y"}],
+            "listed_total": 312, "complete": True, "truncated": False})
+        monkeypatch.setattr(m, "_bridge_by_fixture_id", lambda s, e: {})
+        monkeypatch.setattr(m, "_strength_for", lambda f: {"available": False})
+        out = m.fixture_rows(2)
+        assert len(out["kalshi_only"]) == 1
+        assert out["kalshi_only"][0]["event_ticker"] == "KX-ORPHAN"
+        # and the two Kalshi counts stay APART: 312 listed is mostly settled
+        assert out["kalshi_listed_total"] == 312
+        assert out["kalshi_tradeable_total"] == 1
+        assert "settled" in out["kalshi_counts_note"].lower()
