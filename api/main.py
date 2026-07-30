@@ -615,6 +615,78 @@ def friendlies_match(event_id: str):
             "generated_at": utcnow().isoformat()}
 
 
+# --------------------------------------------------------------------------
+# Team news — absences, lineup RELEASE state, in-play events.
+#
+# READ-ONLY AND ADDITIVE. GET only, no mutation, and no ingestion trigger:
+# fetching spends a shared API key's budget, so polling is a decision for
+# Son rather than something a route starts on its own.
+#
+# NOT A MODEL SURFACE. Nothing here reaches a PredictionRun, a canonical
+# T-10 lock or a paper signal, and tests/test_team_news_isolation.py fails
+# if it starts to. Lineup and key-attacker features were measured
+# negative-or-marginal (key-attacker +0.0034, not significant) and are off.
+# --------------------------------------------------------------------------
+
+@app.get("/api/news/fixture/{fixture_ref}")
+def news_fixture(fixture_ref: str):
+    """One fixture's team news with full provenance and freshness.
+
+    `fixture_ref` is the PROVIDER reference the news was captured under —
+    an ESPN event id for club friendlies, an API-Football fixture id for
+    league fixtures. It is not an internal database id, so this route
+    cannot be used to enumerate the live plane.
+
+    Every block reports its provider, capture time, age and freshness
+    state. The three ways a block can carry nothing — `unavailable`,
+    `empty` and `never_captured` — stay distinct, because a reader who
+    cannot tell them apart cannot tell "nobody is injured" from "we could
+    not ask".
+    """
+    if not fixture_ref.isdigit() or len(fixture_ref) > 20:
+        raise HTTPException(404, "unknown fixture reference")
+    from src.live import team_news
+    try:
+        out = team_news.fixture_news(fixture_ref)
+    except Exception as exc:
+        print(f"[news] fixture {fixture_ref} failed: {exc}")
+        # a failure is UNAVAILABLE, never an empty news section: "there is
+        # no team news" is a claim a crash cannot support
+        raise HTTPException(503, "team news unavailable")
+    resolved = None
+    try:
+        resolved = team_news.resolve_fixture(fixture_ref)
+    except Exception as exc:
+        print(f"[news] fixture resolve {fixture_ref} failed: {exc}")
+    out["resolved_fixture"] = (
+        {"fixture_id": resolved["fixture_id"],
+         "competition": resolved["competition"],
+         "kickoff_utc": (resolved["kickoff_utc"].isoformat()
+                         if resolved.get("kickoff_utc") else None)}
+        if resolved else
+        {"fixture_id": None,
+         "note": ("this reference resolves to no live-plane fixture. Club "
+                  "friendlies have no fixture row by design, so news is "
+                  "keyed on the provider reference alone")})
+    return out
+
+
+@app.get("/api/news/coverage")
+def news_coverage():
+    """Per-source, per-competition coverage WITH its denominator.
+
+    The denominator is fixtures this module actually fetched, not fixtures
+    on the board — a coverage figure without one implies completeness it
+    has not earned.
+    """
+    from src.live import team_news
+    try:
+        return team_news.coverage()
+    except Exception as exc:
+        print(f"[news] coverage failed: {exc}")
+        raise HTTPException(503, "coverage unavailable")
+
+
 @app.post("/api/admin/mls/sweep")
 def mls_admin_sweep(request: Request, force: bool = Query(False)):
     """Operator-only: run the shadow sweeps NOW and return their result

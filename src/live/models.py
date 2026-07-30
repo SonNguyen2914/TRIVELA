@@ -918,3 +918,216 @@ class CorpusExport(LiveBase):
     backend_revision = Column(String(40))
     size_bytes = Column(Integer)
     published_at = Column(DateTime(timezone=True))
+
+
+# ===========================================================================
+# Team news (2026-07-30). Injuries/absences, lineup RELEASE state and in-play
+# events, per provider, with our capture clock on every row.
+#
+# THE EPISTEMIC LINE, built into the schema rather than asserted in prose:
+#
+#   - Nothing here is a model feature. No PredictionRun, no canonical T-10
+#     lock, no paper signal and no engine-signature module reads any of
+#     these tables, and tests/test_team_news_isolation.py fails if one
+#     starts to. The platform MEASURED lineup and key-attacker features as
+#     negative-or-marginal (key-attacker +0.0034, not significant) and
+#     switched them off; this is reader context, not a revived feature.
+#   - There is deliberately NO aggregate column anywhere below — no
+#     "absences_count" on a fixture, no severity weight, no team-strength
+#     impact. An aggregate is a model wearing a news label.
+#   - The provider's typing is stored VERBATIM (`provider_type`,
+#     `provider_reason`). "Missing Fixture / Knee Injury" is API-Football's
+#     claim about a player, not ours, and re-wording it into our vocabulary
+#     would launder a third party's guess into our voice.
+#   - `record_count` is NULLABLE ON PURPOSE and is NULL whenever the state
+#     is `unavailable`. Zero means "the provider showed us an empty list";
+#     NULL means "we never saw a list". This repo has twice read a zero as
+#     an answer (`results: 0` on a live match; `{"created": 0}` over a full
+#     volume), so the difference is structural here, not a convention.
+#   - `subject_ref` is a STRING provider reference, and `fixture_id` is
+#     NULLABLE, so club friendlies — which have no live-plane fixture row
+#     and by design get none (src/friendlies.py) — can carry news without
+#     being handed the evidence machinery they are excluded from.
+#   - Raw provider bodies are NOT stored. Only a content hash and a byte
+#     length live here; the bytes live in research_archive/. A per-fixture
+#     payload column was the growth driver behind the 2026-07-25 DiskFull
+#     incident, and re-adding one to carry news would repeat it.
+# ===========================================================================
+
+TEAM_NEWS_FEEDS = ("absences", "lineup", "events")
+TEAM_NEWS_STATES = ("ok", "empty", "unavailable")
+
+
+class TeamNewsCapture(LiveBase):
+    """The freshness ledger: one upserted row per (provider, subject, feed)
+    recording what the LAST fetch attempt actually saw.
+
+    This table is what makes "stale", "unavailable" and "empty"
+    distinguishable instead of collapsing into an absent section. It is
+    upserted rather than appended so growth stays bounded by
+    fixtures x feeds; the one transition worth keeping as history — a
+    lineup being released — is kept on TeamNewsLineup.first_released_at.
+    """
+    __tablename__ = "team_news_capture"
+    id = Column(Integer, primary_key=True)
+    provider = Column(String(16), nullable=False)      # apifootball|espn
+    subject_ref = Column(String(32), nullable=False)   # provider fixture ref
+    fixture_id = Column(Integer, ForeignKey("fixture.id"))   # nullable
+    competition = Column(String(32))
+    feed = Column(String(16), nullable=False)          # TEAM_NEWS_FEEDS
+    state = Column(String(16), nullable=False)         # TEAM_NEWS_STATES
+    # NULL when state='unavailable' — see the header note. Never defaulted
+    # to 0, because 0 is a measurement and NULL is the absence of one.
+    record_count = Column(Integer)
+    # the provider's own count, kept only to record a DISAGREEMENT with the
+    # array it shipped. The array always wins; this is evidence, not input.
+    provider_declared_count = Column(Integer)
+    captured_at = Column(DateTime(timezone=True), nullable=False)
+    first_captured_at = Column(DateTime(timezone=True))
+    attempts = Column(Integer, nullable=False, default=1)
+    # an error CLASS or a short provider note. Never a payload, never a
+    # credential — the ingestion redacts before anything reaches here.
+    note = Column(String(300))
+    content_hash = Column(String(64))     # sha256 of the raw body
+    payload_bytes = Column(Integer)       # length of the body we hashed
+    __table_args__ = (
+        UniqueConstraint("provider", "subject_ref", "feed",
+                         name="uq_team_news_capture_subject_feed"),
+        Index("ix_team_news_capture_fixture", "fixture_id"),
+    )
+
+
+class TeamAbsence(LiveBase):
+    """One provider-reported absence for one fixture, typed IN THE
+    PROVIDER'S OWN WORDS.
+
+    Injury feeds are stale and wrong often enough that a record is only
+    worth having if a human can discount it, so every row carries its
+    provider, its capture clock, and when it was first and last seen. A
+    row whose `last_seen_at` predates the newest successful capture for
+    its fixture is no longer being reported by the provider — which is
+    surfaced, not deleted, because a retraction is information too.
+    """
+    __tablename__ = "team_absence"
+    id = Column(Integer, primary_key=True)
+    provider = Column(String(16), nullable=False)
+    subject_ref = Column(String(32), nullable=False)
+    fixture_id = Column(Integer, ForeignKey("fixture.id"))   # nullable
+    competition = Column(String(32))
+    # provider player id when present, else a normalised name. NOT NULL so
+    # the uniqueness below is enforced identically on PostgreSQL and
+    # SQLite: PG treats NULLs as distinct in a unique constraint, so a
+    # nullable key would silently admit duplicates in production while the
+    # SQLite suite stayed green.
+    player_key = Column(String(96), nullable=False)
+    provider_player_id = Column(String(24))
+    player_name = Column(String(96))
+    provider_team_id = Column(String(24))
+    team_name = Column(String(96))
+    # VERBATIM provider fields. Do not normalise, map or re-word these.
+    provider_type = Column(String(64))       # e.g. "Missing Fixture"
+    provider_reason = Column(String(96))     # e.g. "Knee Injury"
+    captured_at = Column(DateTime(timezone=True), nullable=False)
+    first_seen_at = Column(DateTime(timezone=True))
+    last_seen_at = Column(DateTime(timezone=True))
+    __table_args__ = (
+        UniqueConstraint("provider", "subject_ref", "player_key",
+                         name="uq_team_absence_subject_player"),
+        Index("ix_team_absence_fixture", "fixture_id"),
+    )
+
+
+class TeamNewsLineup(LiveBase):
+    """Per-side lineup RELEASE state, per provider, plus the release
+    transition.
+
+    `provider` is part of the identity on purpose: ESPN carries friendly
+    XIs and API-Football carries league XIs, and pooling them into an
+    undifferentiated "lineup" with the source lost would make a coverage
+    number unreadable.
+
+    THE THREE STATES THAT MUST NOT COLLAPSE:
+      container_present=False                 -> no coverage for this fixture
+      container_present=True, named_count=0   -> NOT RELEASED
+      released=True                           -> a full XI exists
+
+    The middle case is real and measured: API-Football returns friendly
+    lineup arrays whose side objects carry formation=None and startXI=0,
+    and ESPN returned rosters=2 with named=0 on a COMPLETED fixture
+    (Atletico v Getafe, 2026-07-30). Counting containers reports coverage
+    that does not exist, so release is decided by counting NAMES.
+
+    `first_released_at` is the information event: on a friendly, where the
+    XI is arbitrary rather than predictable, the moment it lands is the
+    largest genuine information event on the fixture.
+    """
+    __tablename__ = "team_news_lineup"
+    id = Column(Integer, primary_key=True)
+    provider = Column(String(16), nullable=False)      # espn|apifootball
+    subject_ref = Column(String(32), nullable=False)
+    fixture_id = Column(Integer, ForeignKey("fixture.id"))   # nullable
+    competition = Column(String(32))
+    side = Column(String(8), nullable=False)           # home|away
+    team_name = Column(String(96))
+    formation = Column(String(16))
+    named_count = Column(Integer)        # NAMES, never containers
+    starter_count = Column(Integer)
+    released = Column(Boolean, nullable=False, default=False)
+    container_present = Column(Boolean, nullable=False, default=False)
+    captured_at = Column(DateTime(timezone=True), nullable=False)
+    first_seen_at = Column(DateTime(timezone=True))
+    # the transition. Set ONCE, on the first capture that sees a full XI,
+    # and never rewritten — a later re-release must not move the clock on
+    # when the news actually landed.
+    first_released_at = Column(DateTime(timezone=True))
+    kickoff_utc = Column(DateTime(timezone=True))
+    # computed AT THE MOMENT OF TRANSITION and frozen, so a later
+    # reschedule cannot retroactively change how early the news landed.
+    released_minutes_before_kickoff = Column(Integer)
+    __table_args__ = (
+        UniqueConstraint("provider", "subject_ref", "side",
+                         name="uq_team_news_lineup_subject_side"),
+        Index("ix_team_news_lineup_fixture", "fixture_id"),
+    )
+
+
+class TeamNewsEvent(LiveBase):
+    """An in-play event (goal, card, substitution) with the PROVIDER'S
+    minute and OUR capture time — both, never one.
+
+    A provider minute alone cannot be aged: it says "73'", not "we learned
+    this at 20:41Z". Anything downstream that wants to know how fresh an
+    event read is needs the capture clock, and anything that wants to know
+    where in the match it happened needs the provider minute.
+
+    Deliberately NOT named `fixture_event`: the in-play detector work on
+    feat-hunter-live-stats also consumes `fixtures/events`, and a
+    namespaced table lets both branches land without a schema collision.
+    Nothing in this module reads or writes src/live/hunter.py.
+    """
+    __tablename__ = "team_news_event"
+    id = Column(Integer, primary_key=True)
+    provider = Column(String(16), nullable=False)
+    subject_ref = Column(String(32), nullable=False)
+    fixture_id = Column(Integer, ForeignKey("fixture.id"))   # nullable
+    competition = Column(String(32))
+    # dedupe identity: minute|extra|type|detail|player|team, so re-reading
+    # a live feed refreshes rather than duplicating
+    event_key = Column(String(160), nullable=False)
+    provider_minute = Column(Integer)
+    provider_minute_extra = Column(Integer)
+    # VERBATIM provider strings
+    event_type = Column(String(32))       # Goal|Card|subst|Var
+    event_detail = Column(String(64))     # Red Card|Normal Goal|...
+    provider_team_id = Column(String(24))
+    team_name = Column(String(96))
+    provider_player_id = Column(String(24))
+    player_name = Column(String(96))
+    assist_name = Column(String(96))
+    captured_at = Column(DateTime(timezone=True), nullable=False)
+    first_seen_at = Column(DateTime(timezone=True))
+    __table_args__ = (
+        UniqueConstraint("provider", "subject_ref", "event_key",
+                         name="uq_team_news_event_subject_key"),
+        Index("ix_team_news_event_fixture", "fixture_id"),
+    )
