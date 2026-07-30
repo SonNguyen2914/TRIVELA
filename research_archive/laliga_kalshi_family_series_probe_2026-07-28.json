@@ -1,0 +1,85 @@
+{
+ "probed_at": "2026-07-28",
+ "results": {
+  "KXLALIGATOTAL": {
+   "exists": true,
+   "title": "La Liga Total",
+   "category": "Sports",
+   "frequency": "custom"
+  },
+  "KXLALIGABTTS": {
+   "exists": true,
+   "title": "La Liga BTTS",
+   "category": "Sports",
+   "frequency": "custom"
+  },
+  "KXLALIGASPREAD": {
+   "exists": true,
+   "title": "La Liga Spread",
+   "category": "Sports",
+   "frequency": "custom"
+  },
+  "KXLALIGATEAMTOTAL": {
+   "exists": true,
+   "title": "Team Total",
+   "category": "Sports",
+   "frequency": "custom"
+  },
+  "KXLALIGASCORE": {
+   "exists": true,
+   "title": "Correct Score",
+   "category": "Sports",
+   "frequency": "custom"
+  },
+  "KXLALIGAFTTS": {
+   "exists": true,
+   "title": "First Team to Score",
+   "category": "Sports",
+   "frequency": "custom"
+  },
+  "KXLALIGAMOV": {
+   "exists": true,
+   "title": "Method of Victory",
+   "category": "Sports",
+   "frequency": "custom"
+  },
+  "KXLALIGA1H": {
+   "exists": true,
+   "title": "La Liga First Half Winner",
+   "category": "Sports",
+   "frequency": "one_off"
+  },
+  "KXLALIGA1HTOTAL": {
+   "exists": true,
+   "title": "1st Half Total",
+   "category": "Sports",
+   "frequency": "custom"
+  },
+  "KXLALIGA1HSPREAD": {
+   "exists": true,
+   "title": "1st Half Spread",
+   "category": "Sports",
+   "frequency": "custom"
+  },
+  "KXLALIGA1HBTTS": {
+   "exists": true,
+   "title": "1st Half BTTS",
+   "category": "Sports",
+   "frequency": "custom"
+  },
+  "KXLALIGA": {
+   "exists": true,
+   "title": "LA LIGA",
+   "category": "Sports",
+   "frequency": "annual"
+  },
+  "KXLALIGACUP": {
+   "exists": false,
+   "http": 404
+  },
+  "KXLALIGAWINNER": {
+   "exists": false,
+   "http": 404
+  }
+ }
+}

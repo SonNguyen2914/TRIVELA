@@ -451,6 +451,27 @@ EPL_CALIBRATION_ALPHA = float(os.getenv("EPL_CALIBRATION_ALPHA", "0.0"))
 # been burned by Kalshi 429s) — tighten once 26/27 listings appear.
 EPL_MARKETS_JOB_MINUTES = int(os.getenv("EPL_MARKETS_JOB_MINUTES", "30"))
 # === end EPL block =========================================================
+# --- La Liga (la-liga-2026) — BEGIN additive block -------------------------
+# Season 2026-27 starts Aug 15. The Kalshi series PREFIX was verified to
+# exist on 2026-07-28 (series endpoint; 383 historical 2025-26 events)
+# but had ZERO open events that day, so 2026-27 market COVERAGE is
+# unverified — the tickers stay config, discovery reports the honest
+# unmapped state, and nothing is hardcoded as fact. See
+# research_archive/laliga_provider_research_2026-07-28.json.
+LALIGA_KALSHI_SERIES_PREFIX = os.getenv(
+    "LALIGA_KALSHI_SERIES_PREFIX", "KXLALIGA").strip()
+# The annual season-winner futures series (title "LA LIGA", verified to
+# exist 2026-07-28; KXLALIGACUP / KXLALIGAWINNER 404).
+LALIGA_KALSHI_FUTURES_SERIES = os.getenv(
+    "LALIGA_KALSHI_FUTURES_SERIES", "KXLALIGA").strip()
+# La Liga shadow collection defaults OFF — fail-closed for a new
+# competition whose market coverage is unverified and whose model has
+# no approval decision (boot is fail-closed on approval, so flipping
+# this alone still produces no runs and no locks; it only enables the
+# ingest/discovery jobs). Turning it on is an operator decision.
+LALIGA_SHADOW_ENABLED = _parse_flag(
+    os.getenv("LALIGA_SHADOW_ENABLED"), False, "LALIGA_SHADOW_ENABLED")
+# --- La Liga — END additive block ------------------------------------------
 
 # === Liga MX (liga-mx-2026) — additive block, 2026-07-29 ===================
 # Mexican Liga BBVA MX machinery parity. IN SEASON (Apertura 2026) with

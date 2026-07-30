@@ -313,11 +313,11 @@ _DARK_LEAGUE_REGISTRY = (
     ("epl-2026", "src.live.model_epl", "EPL_CALIBRATION_ALPHA", "EPL"),
     ("liga-mx-2026", "src.live.model_ligamx", "LIGAMX_CALIBRATION_ALPHA",
      "LIGAMX"),
-    # La Liga: uncomment the row once src/live/model_laliga.py exists on
-    # this branch. Absent modules are skipped, not fatal, so this file
-    # stays importable on branches where a league has not landed yet.
     ("la-liga-2026", "src.live.model_laliga", "LALIGA_CALIBRATION_ALPHA",
      "LALIGA"),
+    # A row here is a declaration, not a promise: a module that will not
+    # import is skipped, not fatal, so this file stays importable on a
+    # branch where a league has not landed yet.
 )
 
 

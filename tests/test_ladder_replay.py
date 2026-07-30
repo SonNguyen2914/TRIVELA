@@ -310,9 +310,13 @@ class TestHyperparameterSweep:
 
 
 class TestLaLigaDropsInWithARegistryEntry:
-    """The abstraction's real test: La Liga lives on another branch, so its
-    model module is absent here. It must be registered, skipped cleanly,
-    and its history must already be archived and gated."""
+    """La Liga's model module LANDED on 2026-07-29, so this class asserts
+    the landed reality: registered, archived, gated, and replaying.
+
+    It used to assert the opposite — that the module was absent and
+    skipped — which was only ever true because La Liga sat on another
+    branch. See TestRegisteredLeagueWithoutAModule for that guarantee,
+    now keyed to a synthetic slug that no merge can retire."""
 
     def test_la_liga_history_is_archived_and_passes_stage_1(self):
         source = ladder_replay.REPLAY_SOURCES["la-liga-2026"]
@@ -321,15 +325,37 @@ class TestLaLigaDropsInWithARegistryEntry:
         assert gate["gate"] == "PASS"
         assert gate["per_segment"]["2025-26-laliga"]["retrieved"] == 380
 
-    def test_absent_model_module_is_skipped_not_fatal(self):
-        assert "la-liga-2026" not in model_eval.ladder_specs()
+    def test_the_model_module_landed_and_the_ladder_runs(self):
+        assert "la-liga-2026" in model_eval.ladder_specs()
         agg_leagues = ladder_replay.aggregate_report(n_boot=5)["leagues"]
-        assert "skipped" in agg_leagues["la-liga-2026"]
-        assert "not on this branch" in agg_leagues["la-liga-2026"]["skipped"]
+        assert "skipped" not in agg_leagues["la-liga-2026"]
 
     def test_the_registry_row_exists_so_only_a_module_is_missing(self):
         rows = {slug for slug, *_ in model_eval._DARK_LEAGUE_REGISTRY}
         assert "la-liga-2026" in rows
+
+
+class TestRegisteredLeagueWithoutAModule:
+    """A registry row is a declaration, not a promise: a league whose
+    model module will not import must be SKIPPED, never fatal, so this
+    file stays importable on a branch where a league has not landed.
+
+    Keyed to a synthetic slug on purpose. The original version of this
+    guarantee rested on La Liga's temporary absence and went vacuous the
+    moment La Liga merged — the assertion inverted and the test failed
+    while the product was correct."""
+
+    def test_absent_model_module_is_skipped_not_fatal(self, monkeypatch):
+        monkeypatch.setattr(
+            model_eval, "_DARK_LEAGUE_REGISTRY",
+            model_eval._DARK_LEAGUE_REGISTRY
+            + (("phantom-2026", "src.live.model_phantom_does_not_exist",
+                "PHANTOM_CALIBRATION_ALPHA", "PHANTOM"),))
+        specs = model_eval._build_specs()   # direct: never touches the memo
+        assert "phantom-2026" not in specs
+        # Control: the real leagues in that same pass still build. Without
+        # this, "not in specs" would also pass if the whole build collapsed.
+        assert {"mls-2026", "epl-2026", "la-liga-2026"} <= set(specs)
 
 
 class TestReplayEndpoints:
@@ -362,11 +388,19 @@ class TestReplayEndpoints:
                         headers={"X-Admin-Token": "test-operator-token"})
         assert r.status_code == 404
 
-    def test_registered_league_without_a_module_says_so(self, client):
-        """La Liga: history archived and gated, model module elsewhere.
-        That is a different fact from 'this endpoint is broken', and the
-        status code must not conflate them."""
-        r = client.get("/api/la-liga-2026/replay-ladder",
+    def test_registered_league_without_a_module_says_so(self, client,
+                                                        monkeypatch):
+        """History archived and gated, model module absent. That is a
+        different fact from 'this endpoint is broken', and the status code
+        must not conflate them.
+
+        Uses a synthetic competition that borrows La Liga's archive: La
+        Liga's own module landed 2026-07-29, so pointing this at La Liga
+        now asserts nothing."""
+        from src.live import ladder_replay
+        monkeypatch.setitem(ladder_replay.REPLAY_SOURCES, "phantom-2026",
+                            ladder_replay.REPLAY_SOURCES["la-liga-2026"])
+        r = client.get("/api/phantom-2026/replay-ladder",
                        params={"n_boot": 5})
         assert r.status_code == 409
         assert "no model module" in r.json()["detail"]

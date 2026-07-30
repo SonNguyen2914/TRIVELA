@@ -1,0 +1,82 @@
+{
+  "purpose": "La Liga (esp.1 / KXLALIGA*) provider research for the feat-la-liga branch — every claim below was probed live on 2026-07-28 and the raw responses are archived beside this file as laliga_*_2026-07-28.json.",
+  "probed_at": "2026-07-28",
+  "espn": {
+    "league_slug": "esp.1",
+    "league_name_served": "Spanish LALIGA",
+    "season": "2026-27 (season.year=2026), first fixtures 2026-08-15",
+    "scoreboard": {
+      "verified": true,
+      "events_in_default_bucket": 2,
+      "first_fixtures": [
+        {"id": "401882926", "date": "2026-08-15T17:30Z", "home": "Alavés", "away": "Getafe"},
+        {"id": "401882918", "date": "2026-08-15T19:30Z", "home": "Sevilla", "away": "Rayo Vallecano"}
+      ],
+      "note": "same event shape as usa.1 — parse_event applies unchanged"
+    },
+    "standings": {
+      "verified": true,
+      "preseason_state": "ONE child ('2026-27 LALIGA') carrying 20 entries whose every stat is 0 and whose ranks are a clean 1..20 — NOT an empty payload. Rendering it through the MLS parser produces a plausible-looking all-zero table, which is exactly the fabricated-zero-row surface the frontend rules forbid. The La Liga layer therefore suppresses tables in which every row has gamesPlayed==0 and reports preseason=true instead.",
+      "stat_names": "identical to usa.1 (gamesPlayed/wins/losses/ties/points/pointsFor/pointsAgainst/pointDifferential/rank/ppg)"
+    },
+    "teams": {
+      "verified": true,
+      "count": 20,
+      "non_ascii_names": ["Alavés", "Atlético Madrid", "Deportivo La Coruña", "Málaga"],
+      "promoted_2026_27": ["Deportivo La Coruña", "Málaga", "Racing Santander"],
+      "note": "displayName/abbreviation/shortDisplayName all present; abbreviations 3-char"
+    },
+    "match_summary": {
+      "verified": true,
+      "pre_match_event": "401882926",
+      "completed_event": "748506 (Celta Vigo at Athletic Club, 2026-05-17, post)",
+      "lastFiveGames": "present, same fields as usa.1 including the WINNER-FIRST `score` string trap: Alavés' 2-4 home loss to ATH arrives as score='4-2' while homeTeamScore=2/awayTeamScore=4/atVs='vs' — the derive-from-scores discipline applies unchanged",
+      "seasonseries": "present (the H2H shape ESPN renamed to on Jul 24)",
+      "boxscore_team_stats": "richer than usa.1 (passes/tackles/crosses/clearances) and a superset of the MLS STAT_ORDER keys",
+      "boxscore_xg": "NO xG-like field exists (checked every stat name for xg/expected)",
+      "rosters": "per-match participants present with per-player stats (goals/assists/shots/cards/GK saves) — the transfer-stale team-roster endpoint is NOT needed"
+    }
+  },
+  "kalshi": {
+    "throttle": "all probes spaced >=0.35s (repo rule — Kalshi 429s tight loops)",
+    "game_series": {
+      "ticker": "KXLALIGAGAME",
+      "series_endpoint_verified": true,
+      "title": "La Liga Game",
+      "category": "Sports",
+      "open_events_2026_07_28": 0,
+      "historical_events_paged": 383,
+      "historical_season": "2025-26 (380 fixtures + a 'Real Madrid: Game Winner?' title anomaly worth defending against)",
+      "ticker_format": "KXLALIGAGAME-{YYMONDD}{HOMECODE}{AWAYCODE} — same suffix-join shape as KXMLSGAME"
+    },
+    "verified_title_side_names_2025_26": {
+      "Alaves": "Alavés", "Atletico": "Atlético Madrid", "Barcelona": "Barcelona",
+      "Bilbao": "Athletic Club", "Celta Vigo": "Celta Vigo", "Elche": "Elche",
+      "Espanyol": "Espanyol", "Getafe": "Getafe", "Girona": "RELEGATED — historical only",
+      "Levante": "Levante", "Mallorca": "RELEGATED — historical only",
+      "Osasuna": "Osasuna", "Oviedo": "RELEGATED — historical only",
+      "Real Betis": "Real Betis", "Real Madrid": "Real Madrid",
+      "Real Sociedad": "Real Sociedad", "Sevilla": "Sevilla",
+      "Valencia": "Valencia", "Vallecano": "Rayo Vallecano", "Villarreal": "Villarreal"
+    },
+    "unverifiable_bridges": "Deportivo La Coruña, Málaga, Racing Santander are newly promoted and appear in NO historical Kalshi event — their Kalshi names cannot be curated until the venue lists them. They stay unmapped and the unmapped-upcoming metric reports them; guessing a name is exactly the KXMENWORLDCUP class of error.",
+    "family_series_probe": {
+      "all_verified_to_EXIST_via_series_endpoint": [
+        "KXLALIGAGAME", "KXLALIGATOTAL", "KXLALIGABTTS", "KXLALIGASPREAD",
+        "KXLALIGATEAMTOTAL", "KXLALIGASCORE", "KXLALIGAFTTS", "KXLALIGAMOV",
+        "KXLALIGA1H", "KXLALIGA1HTOTAL", "KXLALIGA1HSPREAD", "KXLALIGA1HBTTS"
+      ],
+      "futures": "KXLALIGA exists (title 'LA LIGA', frequency annual) — the KXMLSCUP analogue. KXLALIGACUP and KXLALIGAWINNER 404.",
+      "honesty": "series EXISTENCE is verified; 2026-27 market COVERAGE is not — zero open events today. The series tickers ship as config with a discovery probe, and nothing renders until events actually open."
+    }
+  },
+  "xg_sources": {
+    "conclusion": "NO trustworthy public xG source exists for La Liga as of 2026-07-28 — the La Liga model scaffold ships WITHOUT xG ratings (goals-only, the MLS xg_alpha=0 path).",
+    "espn_esp1": "no xG field anywhere in the completed-match boxscore (verified event 748506)",
+    "laliga_official": "apim.laliga.com answers 401 'missing subscription key' — subscription-gated, no public no-auth plane (unlike MLS's stats-api.mlssoccer.com Sportec feed)",
+    "understat": "HTTP 200 but an 18KB shell without the teamsData payload under a plain client — HTML scraping of a third party's model estimates, no API contract; this repo has been burned by silent provider drift on REAL APIs (ESPN score winner-first, headToHeadGames rename), so an unversioned scrape is not a trustworthy evidence substrate",
+    "fbref_opta": "NOT probed — bulk scraping is against their terms; no API",
+    "api_football": "NOT VERIFIED — the free plan is season-blind for current seasons (memory: verify club-season visibility before relying on it) and no key was available to this session; xG availability for La Liga on the free tier remains an open question for Son",
+    "rule_applied": "never fabricate or approximate xG parity — absence documented, not papered over"
+  }
+}
