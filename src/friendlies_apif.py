@@ -1172,7 +1172,7 @@ def fixture_rows(horizon_days: int | None = None,
                        "the Kalshi registry could not be read, so whether "
                        "this fixture is listed is UNKNOWN — not 'unlisted'")})
         if with_strength:
-            row["strength"] = _strength_for(f)
+            row["strength"] = _slim_strength(_strength_for(f))
         rows.append(row)
     rows.sort(key=lambda r: (r.get("kickoff_utc") or ""))
 
@@ -1204,6 +1204,8 @@ def fixture_rows(horizon_days: int | None = None,
                               "no kickoff and no strength read here")})
 
     return {"fixtures": rows, "count": len(rows),
+            # said once, not 304 times — see _STRENGTH_CONSTANTS
+            "strength_notes": strength_notes() if with_strength else None,
             "finished_hidden": len(finished),
             "include_finished": include_finished,
             "kalshi_only": kalshi_only,
@@ -1254,6 +1256,35 @@ def fixture_by_id(fixture_id: int, horizon_days: int | None = None) -> dict | No
         if p and int(p.get("fixture_id") or -1) == int(fixture_id):
             return p
     return None
+
+
+# Constants that are byte-identical on EVERY row. Measured 2026-07-30: the
+# list served 0.7 MB for 304 fixtures, of which 0.5 MB was these four
+# strings repeated 304 times — 1,568 bytes of strength block against 706
+# bytes of actual fixture data per row. Through Vercel's proxy that took
+# 77 SECONDS while the backend itself answered in 0.20s, so the friendlies
+# page rendered no rows at all in production.
+#
+# They are not dropped: `strength_notes` carries them ONCE at the top
+# level, so nothing that was said before goes unsaid.
+_STRENGTH_CONSTANTS = ("estimate_meaning", "semantics",
+                       "home_field_advantage", "attribution")
+
+
+def _slim_strength(s: dict) -> dict:
+    """The per-row strength read WITHOUT the boilerplate constants."""
+    return {k: v for k, v in (s or {}).items()
+            if k not in _STRENGTH_CONSTANTS}
+
+
+def strength_notes() -> dict:
+    """The constants stripped from every row, served once."""
+    try:
+        from src.live import club_strength_estimate as cse
+        return {"estimate_class": cse.ESTIMATE_CLASS,
+                "estimate_meaning": cse.ESTIMATE_MEANING}
+    except Exception:
+        return {}
 
 
 def _strength_for(f: dict) -> dict:

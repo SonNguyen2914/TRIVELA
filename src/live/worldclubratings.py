@@ -159,6 +159,28 @@ def ratings(force: bool = False) -> dict:
     return {}
 
 
+_index_cache: tuple[int, list[tuple[frozenset, dict]]] | None = None
+
+
+def _token_index(table: dict) -> list[tuple[frozenset, dict]]:
+    """(tokens, row) for the whole table, computed ONCE per table.
+
+    `_candidates` used to tokenise all 2,413 club names on every single
+    lookup. The friendlies hub does 304 fixtures x 2 sides, so that was
+    ~1.5 MILLION tokenisations per cold request — measured 2026-07-30 as a
+    42-second response where the same call served from cache in 0.20s, and
+    77 seconds through the proxy, which left the page rendering no rows at
+    all in production."""
+    global _index_cache
+    key = id(table)
+    if _index_cache and _index_cache[0] == key:
+        return _index_cache[1]
+    idx = [(_tokens(r["club"]), r) for r in table.values()]
+    idx = [(t, r) for t, r in idx if t]
+    _index_cache = (key, idx)
+    return idx
+
+
 def _candidates(query: str, table: dict) -> list[dict]:
     """Every row plausibly naming the same club, both containment
     directions.
@@ -172,14 +194,8 @@ def _candidates(query: str, table: dict) -> list[dict]:
     q = _tokens(query)
     if not q:
         return []
-    hits = []
-    for row in table.values():
-        r = _tokens(row["club"])
-        if not r:
-            continue
-        if r == q or r < q or q < r:
-            hits.append(row)
-    return hits
+    return [row for toks, row in _token_index(table)
+            if toks == q or toks < q or q < toks]
 
 
 def lookup(name: str, country_hint: str | None = None) -> dict | None:
