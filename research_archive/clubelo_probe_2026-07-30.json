@@ -1,0 +1,212 @@
+{
+  "probed_at": "2026-07-30",
+  "purpose": "Decide whether api.clubelo.com can supply a cross-league club strength signal for club friendlies, and which of its constants are PUBLISHED (citable) versus unpublished (must not be invented).",
+  "access": {
+    "robots_txt": "open; no AI-crawler disallow. Contrast footballdatabase.com, which explicitly Disallows ClaudeBot and was therefore ruled out.",
+    "format": "CSV, not JSON \u2014 unlike every other provider client in this repo."
+  },
+  "endpoints_probed": {
+    "GET /Fixtures": {
+      "rows_parsed": 125,
+      "columns": [
+        "Date",
+        "Country",
+        "Home",
+        "Away",
+        "GD<-5",
+        "GD=-5",
+        "GD=-4",
+        "GD=-3",
+        "GD=-2",
+        "GD=-1",
+        "GD=0",
+        "GD=1",
+        "GD=2",
+        "GD=3",
+        "GD=4",
+        "GD=5",
+        "GD>5",
+        "R:0-0",
+        "R:0-1",
+        "R:1-0",
+        "R:0-2",
+        "R:1-1",
+        "R:2-0",
+        "R:0-3",
+        "R:1-2",
+        "R:2-1",
+        "R:3-0",
+        "R:0-4",
+        "R:1-3",
+        "R:2-2",
+        "R:3-1",
+        "R:4-0",
+        "R:0-5",
+        "R:1-4",
+        "R:2-3",
+        "R:3-2",
+        "R:4-1",
+        "R:5-0",
+        "R:0-6",
+        "R:1-5",
+        "R:2-4",
+        "R:3-3",
+        "R:4-2",
+        "R:5-1",
+        "R:6-0"
+      ],
+      "country_values": [
+        [
+          "ECL",
+          39
+        ],
+        [
+          "UEL",
+          9
+        ],
+        [
+          "NOR",
+          8
+        ],
+        [
+          "CZE",
+          7
+        ],
+        [
+          "ROM",
+          7
+        ],
+        [
+          "AUT",
+          6
+        ],
+        [
+          "BUL",
+          6
+        ],
+        [
+          "POL",
+          6
+        ],
+        [
+          "SCO",
+          6
+        ],
+        [
+          "DEN",
+          6
+        ],
+        [
+          "SUI",
+          6
+        ],
+        [
+          "SWE",
+          6
+        ],
+        [
+          "UKR",
+          5
+        ],
+        [
+          "CRO",
+          4
+        ],
+        [
+          "HUN",
+          2
+        ],
+        [
+          "SRB",
+          2
+        ]
+      ],
+      "VERDICT": "UNUSABLE FOR FRIENDLIES. Zero friendly fixtures \u2014 every row is a competitive match (ECL/UEL + domestic leagues). Its precomputed goal-difference and scoreline probabilities therefore cannot be reused for a friendly; any friendly estimate must be computed from the day-ranking Elo values instead."
+    },
+    "GET /YYYY-MM-DD": {
+      "rows_parsed": 589,
+      "columns": [
+        "Rank",
+        "Club",
+        "Country",
+        "Level",
+        "Elo",
+        "From",
+        "To"
+      ],
+      "VERDICT": "USABLE. 589 clubs with Country and Level (league tier) columns \u2014 Level is a directly relevant 'level of play' signal.",
+      "countries": 55,
+      "level_distribution": [
+        [
+          "1",
+          383
+        ],
+        [
+          "0",
+          107
+        ],
+        [
+          "2",
+          99
+        ]
+      ]
+    }
+  },
+  "published_constants": {
+    "elo_expectation": {
+      "formula": "E = 1 / (10**(-dr/400) + 1)",
+      "dr": "Elo point difference between the two clubs",
+      "CRITICAL_SEMANTICS": "E is an EXPECTED POINTS SHARE, not P(win). ClubElo's own wording: 'draws counting as half win/half loss'. So E = P(win) + 0.5*P(draw). Reporting E as a win probability would misstate the source.",
+      "cited_from": "clubelo.com/System"
+    },
+    "k_factor": {
+      "value": 20,
+      "cited_from": "clubelo.com/System"
+    },
+    "hfa_update_rule": {
+      "formula": "HFA += sum(dElo)*0.075",
+      "cited_from": "clubelo.com/System"
+    }
+  },
+  "NOT_published_do_not_invent": {
+    "hfa_current_value": "Per-country and converged daily by an algorithm; the site publishes the UPDATE RULE but never the current value. No HFA is applied by us. Independently, a pre-season friendly is often at a neutral or touring venue, so a home-field term would be questionable here even if the number were published.",
+    "one_x_two_split": "'The match odds are based on a result histogram for the two club's Elo difference.' That histogram is NOT published as a formula. Therefore NO win/draw/loss split is derived for ANY pair \u2014 not merely for mixed-source pairs. Only E is reported.",
+    "inter_league_adjustments": "page says 'Coming soon' \u2014 undocumented.",
+    "start_values": "page says 'Coming soon' \u2014 undocumented."
+  },
+  "name_matching_measured": {
+    "method": "Automatic tiers only: exact-normalized, then token-set, then unique directional containment. No alias table used for this measurement.",
+    "friendly_club_slots": 22,
+    "exact": 10,
+    "token_set": 0,
+    "unique_containment": 5,
+    "matched_without_aliases": "15/22 = 68%",
+    "containment_examples": {
+      "Leeds United": "Leeds",
+      "Birmingham City": "Birmingham",
+      "Borussia Dortmund": "Dortmund",
+      "Atletico Madrid": "Atletico",
+      "Cardiff City": "Cardiff"
+    },
+    "alias_misses_EVIDENCE_BACKED": {
+      "Manchester City": "Man City (ENG, L1)",
+      "Manchester United": "Man United (ENG, L1)",
+      "Internazionale": "Inter (ITA, L1). Note containment CORRECTLY refused this: 'Inter' also substring-matches Winterthur and Inter Turku, so an explicit alias is required rather than a looser tier."
+    },
+    "genuine_no_coverage": {
+      "Al Sadd": "Qatar",
+      "Al Nassr": "Saudi Arabia",
+      "FC Tokyo": "Japan",
+      "Estrela": "Portugal \u2014 only 2 Portuguese clubs are in the ranking at all"
+    },
+    "projected_with_3_aliases": "18/22 = 82% clubelo; remaining 4 -> API-Football fallback"
+  },
+  "design_consequences": [
+    "Compute from the day ranking; /Fixtures is useless for friendlies.",
+    "Report E as an expected points share, never as 'win probability'.",
+    "Publish no draw probability and no 1X2 split, for any pair.",
+    "Apply no home-field term; say so explicitly rather than silently omitting it.",
+    "Level + Country give the league-tier and region signal directly.",
+    "Aliases are added only from the measured misses above, never from intuition."
+  ]
+}
