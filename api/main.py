@@ -783,6 +783,58 @@ def mls_metrics():
         raise HTTPException(503, "metrics unavailable")
 
 
+@app.get("/api/hunter/findings")
+def hunter_findings(competition: str | None = Query(None, max_length=64),
+                    type: str | None = Query(None, max_length=32),
+                    status: str | None = Query(None, max_length=16),
+                    limit: int = Query(100, ge=1, le=500)):
+    """Kalshi market-hunter findings — OBSERVATIONAL records only, with
+    their denominators (cycles run, markets scanned, findings per type)
+    and the last-cycle heartbeat so a dead scanner is distinguishable
+    from a quiet market. Filters: competition (slug or series ticker),
+    type (SUM_BELOW_ONE | CROSSED_BOOK | POST_CERTAINTY | WIDE_SPREAD |
+    THIN_BOOK | IN_PLAY_OVERREACTION | MODEL_EDGE), status (open |
+    expired). Public read-only; nothing here is advice and no order
+    path exists."""
+    try:
+        from src.live import hunter
+        return hunter.findings_report(competition=competition,
+                                      finding_type=type, status=status,
+                                      limit=limit)
+    except Exception as exc:
+        print(f"[hunter] findings failed: {exc}")
+        raise HTTPException(503, "hunter findings unavailable")
+
+
+@app.get("/api/hunter/live-coverage")
+def hunter_live_coverage():
+    """Which competitions API-Football was MEASURED to serve live in-play
+    data for, per competition, with the date measured and the number of
+    fixtures the verdict rests on.
+
+    Exposed because an unexposed coverage verdict is a private assumption,
+    and the in-play detector's whole claim is that coverage is measured
+    rather than assumed. Statistics and EVENTS coverage are reported
+    separately: events coverage is strictly broader (measured — some
+    competitions serve goal events with zero statistic types), and one
+    combined flag would hide that.
+
+    Also carries the three conditioning states with their strength ranks,
+    so the inference direction is readable from the API and not only from
+    the source: `conditioning_observed` ranks LOWEST, because an explaining
+    event makes a market's move more reasonable and therefore makes the
+    finding WEAKER.
+
+    Public read-only. Observational; nothing here is advice, and none of
+    it may reach a model — live xG carries post-lock information."""
+    try:
+        from src.live import apifootball_live
+        return apifootball_live.coverage_report()
+    except Exception as exc:
+        print(f"[hunter] live coverage failed: {exc}")
+        raise HTTPException(503, "hunter live coverage unavailable")
+
+
 @app.get("/api/mls/paper")
 def mls_paper():
     """The paper-trading ledger P&L: signals, fills, rejections (with

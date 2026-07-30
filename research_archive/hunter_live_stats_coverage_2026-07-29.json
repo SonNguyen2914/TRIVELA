@@ -1,0 +1,5698 @@
+{
+ "coverage_by_competition": {
+  "1022": {
+   "elapsed_minutes": [
+    14
+   ],
+   "events_present": false,
+   "fixtures_probed": 1,
+   "league_country": "England",
+   "league_id": 1022,
+   "league_name": "Premier League - Summer Series",
+   "max_statistic_types": 0,
+   "red_cards_seen": 0,
+   "stats_present": false,
+   "too_early_only": true,
+   "verdict": "TOO_EARLY_TO_CONCLUDE",
+   "xg_present": false,
+   "xg_type_offered": false,
+   "xg_verdict": "XG_ABSENT",
+   "xg_zero_valued": false
+  },
+  "1030": {
+   "elapsed_minutes": [
+    62,
+    62
+   ],
+   "events_present": true,
+   "fixtures_probed": 2,
+   "league_country": "Brazil",
+   "league_id": 1030,
+   "league_name": "Goiano - 2",
+   "max_statistic_types": 0,
+   "red_cards_seen": 0,
+   "stats_present": false,
+   "too_early_only": false,
+   "verdict": "LIVE_STATS_ABSENT",
+   "xg_present": false,
+   "xg_type_offered": false,
+   "xg_verdict": "XG_ABSENT",
+   "xg_zero_valued": false
+  },
+  "11": {
+   "elapsed_minutes": [
+    90
+   ],
+   "events_present": true,
+   "fixtures_probed": 1,
+   "league_country": "World",
+   "league_id": 11,
+   "league_name": "CONMEBOL Sudamericana",
+   "max_statistic_types": 18,
+   "red_cards_seen": 0,
+   "stats_present": true,
+   "too_early_only": false,
+   "verdict": "LIVE_STATS_PRESENT",
+   "xg_present": true,
+   "xg_type_offered": true,
+   "xg_verdict": "XG_PRESENT",
+   "xg_zero_valued": false
+  },
+  "128": {
+   "elapsed_minutes": [
+    73
+   ],
+   "events_present": true,
+   "fixtures_probed": 1,
+   "league_country": "Argentina",
+   "league_id": 128,
+   "league_name": "Liga Profesional Argentina",
+   "max_statistic_types": 18,
+   "red_cards_seen": 0,
+   "stats_present": true,
+   "too_early_only": false,
+   "verdict": "LIVE_STATS_PRESENT",
+   "xg_present": true,
+   "xg_type_offered": true,
+   "xg_verdict": "XG_PRESENT",
+   "xg_zero_valued": false
+  },
+  "241": {
+   "elapsed_minutes": [
+    90,
+    61
+   ],
+   "events_present": true,
+   "fixtures_probed": 2,
+   "league_country": "Colombia",
+   "league_id": 241,
+   "league_name": "Copa Colombia",
+   "max_statistic_types": 0,
+   "red_cards_seen": 0,
+   "stats_present": false,
+   "too_early_only": false,
+   "verdict": "LIVE_STATS_ABSENT",
+   "xg_present": false,
+   "xg_type_offered": false,
+   "xg_verdict": "XG_ABSENT",
+   "xg_zero_valued": false
+  },
+  "255": {
+   "elapsed_minutes": [
+    43,
+    14
+   ],
+   "events_present": true,
+   "fixtures_probed": 2,
+   "league_country": "USA",
+   "league_id": 255,
+   "league_name": "USL Championship",
+   "max_statistic_types": 0,
+   "red_cards_seen": 0,
+   "stats_present": false,
+   "too_early_only": false,
+   "verdict": "LIVE_STATS_ABSENT",
+   "xg_present": false,
+   "xg_type_offered": false,
+   "xg_verdict": "XG_ABSENT",
+   "xg_zero_valued": false
+  },
+  "370": {
+   "elapsed_minutes": [
+    45
+   ],
+   "events_present": false,
+   "fixtures_probed": 1,
+   "league_country": "El-Salvador",
+   "league_id": 370,
+   "league_name": "Primera Division",
+   "max_statistic_types": 0,
+   "red_cards_seen": 0,
+   "stats_present": false,
+   "too_early_only": false,
+   "verdict": "LIVE_STATS_ABSENT",
+   "xg_present": false,
+   "xg_type_offered": false,
+   "xg_verdict": "XG_ABSENT",
+   "xg_zero_valued": false
+  },
+  "489": {
+   "elapsed_minutes": [
+    44
+   ],
+   "events_present": true,
+   "fixtures_probed": 1,
+   "league_country": "USA",
+   "league_id": 489,
+   "league_name": "USL League One",
+   "max_statistic_types": 0,
+   "red_cards_seen": 0,
+   "stats_present": false,
+   "too_early_only": false,
+   "verdict": "LIVE_STATS_ABSENT",
+   "xg_present": false,
+   "xg_type_offered": false,
+   "xg_verdict": "XG_ABSENT",
+   "xg_zero_valued": false
+  },
+  "71": {
+   "elapsed_minutes": [
+    59,
+    58
+   ],
+   "events_present": true,
+   "fixtures_probed": 2,
+   "league_country": "Brazil",
+   "league_id": 71,
+   "league_name": "Serie A",
+   "max_statistic_types": 18,
+   "red_cards_seen": 0,
+   "stats_present": true,
+   "too_early_only": false,
+   "verdict": "LIVE_STATS_PRESENT",
+   "xg_present": true,
+   "xg_type_offered": true,
+   "xg_verdict": "XG_PRESENT",
+   "xg_zero_valued": false
+  }
+ },
+ "fixtures_probed_planned": 13,
+ "live_competitions": 9,
+ "live_count_disagreement": null,
+ "live_fixtures_total": 16,
+ "live_provider_errors": [],
+ "min_honest_elapsed": 20,
+ "probes": [
+  {
+   "away": "Wrexham",
+   "away_id": 1837,
+   "coverage_verdict": "too_early_to_conclude",
+   "elapsed": 14,
+   "events": {
+    "event_count": 0,
+    "event_kinds": {},
+    "events_present": false,
+    "red_card_count": 0,
+    "red_cards": []
+   },
+   "events_provider_errors": [],
+   "fixture_id": 1589333,
+   "goals": {
+    "away": 0,
+    "home": 0
+   },
+   "home": "Liverpool",
+   "home_id": 40,
+   "league_country": "England",
+   "league_id": 1022,
+   "league_name": "Premier League - Summer Series",
+   "statistics": {
+    "entries": 0,
+    "statistic_type_count_max": 0,
+    "statistic_types_offered": [],
+    "stats_present": false,
+    "teams": [],
+    "xg_present_any_team": false,
+    "xg_present_both_teams": false,
+    "xg_type_offered": false,
+    "xg_zero_valued_any": false
+   },
+   "stats_provider_errors": [],
+   "status_short": "1H",
+   "too_early": true
+  },
+  {
+   "away": "Gr\u00eamio An\u00e1polis",
+   "away_id": 13127,
+   "coverage_verdict": "stats_absent",
+   "elapsed": 62,
+   "events": {
+    "event_count": 1,
+    "event_kinds": {
+     "Goal/Normal Goal": 1
+    },
+    "events_present": true,
+    "red_card_count": 0,
+    "red_cards": []
+   },
+   "events_provider_errors": [],
+   "fixture_id": 1606255,
+   "goals": {
+    "away": 0,
+    "home": 1
+   },
+   "home": "Goi\u00e2nia",
+   "home_id": 10674,
+   "league_country": "Brazil",
+   "league_id": 1030,
+   "league_name": "Goiano - 2",
+   "statistics": {
+    "entries": 0,
+    "statistic_type_count_max": 0,
+    "statistic_types_offered": [],
+    "stats_present": false,
+    "teams": [],
+    "xg_present_any_team": false,
+    "xg_present_both_teams": false,
+    "xg_type_offered": false,
+    "xg_zero_valued_any": false
+   },
+   "stats_provider_errors": [],
+   "status_short": "2H",
+   "too_early": false
+  },
+  {
+   "away": "Tupy FC",
+   "away_id": 24773,
+   "coverage_verdict": "stats_absent",
+   "elapsed": 62,
+   "events": {
+    "event_count": 1,
+    "event_kinds": {
+     "Goal/Normal Goal": 1
+    },
+    "events_present": true,
+    "red_card_count": 0,
+    "red_cards": []
+   },
+   "events_provider_errors": [],
+   "fixture_id": 1606256,
+   "goals": {
+    "away": 0,
+    "home": 1
+   },
+   "home": "Rio Verde",
+   "home_id": 24771,
+   "league_country": "Brazil",
+   "league_id": 1030,
+   "league_name": "Goiano - 2",
+   "statistics": {
+    "entries": 0,
+    "statistic_type_count_max": 0,
+    "statistic_types_offered": [],
+    "stats_present": false,
+    "teams": [],
+    "xg_present_any_team": false,
+    "xg_present_both_teams": false,
+    "xg_type_offered": false,
+    "xg_zero_valued_any": false
+   },
+   "stats_provider_errors": [],
+   "status_short": "2H",
+   "too_early": false
+  },
+  {
+   "away": "Independiente Medellin",
+   "away_id": 1128,
+   "coverage_verdict": "stats_present",
+   "elapsed": 90,
+   "events": {
+    "event_count": 14,
+    "event_kinds": {
+     "Card/Yellow Card": 4,
+     "Goal/Normal Goal": 1,
+     "subst/Substitution 1": 2,
+     "subst/Substitution 2": 2,
+     "subst/Substitution 3": 2,
+     "subst/Substitution 4": 2,
+     "subst/Substitution 5": 1
+    },
+    "events_present": true,
+    "red_card_count": 0,
+    "red_cards": []
+   },
+   "events_provider_errors": [],
+   "fixture_id": 1547788,
+   "goals": {
+    "away": 0,
+    "home": 1
+   },
+   "home": "Vasco DA Gama",
+   "home_id": 133,
+   "league_country": "World",
+   "league_id": 11,
+   "league_name": "CONMEBOL Sudamericana",
+   "statistics": {
+    "entries": 2,
+    "statistic_type_count_max": 18,
+    "statistic_types_offered": [
+     "Shots on Goal",
+     "Shots off Goal",
+     "Total Shots",
+     "Blocked Shots",
+     "Shots insidebox",
+     "Shots outsidebox",
+     "Fouls",
+     "Corner Kicks",
+     "Offsides",
+     "Ball Possession",
+     "Yellow Cards",
+     "Red Cards",
+     "Goalkeeper Saves",
+     "Total passes",
+     "Passes accurate",
+     "Passes %",
+     "expected_goals",
+     "goals_prevented"
+    ],
+    "stats_present": true,
+    "teams": [
+     {
+      "statistic_type_count": 18,
+      "team_id": 133,
+      "team_name": "Vasco DA Gama",
+      "xg_present": true,
+      "xg_raw": "1.28",
+      "xg_statistic_type": "expected_goals",
+      "xg_value": 1.28,
+      "xg_zero_valued": false
+     },
+     {
+      "statistic_type_count": 18,
+      "team_id": 1128,
+      "team_name": "Independiente Medellin",
+      "xg_present": true,
+      "xg_raw": "0.24",
+      "xg_statistic_type": "expected_goals",
+      "xg_value": 0.24,
+      "xg_zero_valued": false
+     }
+    ],
+    "xg_present_any_team": true,
+    "xg_present_both_teams": true,
+    "xg_type_offered": true,
+    "xg_zero_valued_any": false
+   },
+   "stats_provider_errors": [],
+   "status_short": "2H",
+   "too_early": false
+  },
+  {
+   "away": "River Plate",
+   "away_id": 435,
+   "coverage_verdict": "stats_present",
+   "elapsed": 73,
+   "events": {
+    "event_count": 7,
+    "event_kinds": {
+     "Card/Yellow Card": 1,
+     "subst/Substitution 1": 2,
+     "subst/Substitution 2": 2,
+     "subst/Substitution 3": 1,
+     "subst/Substitution 4": 1
+    },
+    "events_present": true,
+    "red_card_count": 0,
+    "red_cards": []
+   },
+   "events_provider_errors": [],
+   "fixture_id": 1493023,
+   "goals": {
+    "away": 0,
+    "home": 0
+   },
+   "home": "Gimnasia L.P.",
+   "home_id": 434,
+   "league_country": "Argentina",
+   "league_id": 128,
+   "league_name": "Liga Profesional Argentina",
+   "statistics": {
+    "entries": 2,
+    "statistic_type_count_max": 18,
+    "statistic_types_offered": [
+     "Shots on Goal",
+     "Shots off Goal",
+     "Total Shots",
+     "Blocked Shots",
+     "Shots insidebox",
+     "Shots outsidebox",
+     "Fouls",
+     "Corner Kicks",
+     "Offsides",
+     "Ball Possession",
+     "Yellow Cards",
+     "Red Cards",
+     "Goalkeeper Saves",
+     "Total passes",
+     "Passes accurate",
+     "Passes %",
+     "expected_goals",
+     "goals_prevented"
+    ],
+    "stats_present": true,
+    "teams": [
+     {
+      "statistic_type_count": 18,
+      "team_id": 434,
+      "team_name": "Gimnasia L.P.",
+      "xg_present": true,
+      "xg_raw": "0.65",
+      "xg_statistic_type": "expected_goals",
+      "xg_value": 0.65,
+      "xg_zero_valued": false
+     },
+     {
+      "statistic_type_count": 18,
+      "team_id": 435,
+      "team_name": "River Plate",
+      "xg_present": true,
+      "xg_raw": "0.18",
+      "xg_statistic_type": "expected_goals",
+      "xg_value": 0.18,
+      "xg_zero_valued": false
+     }
+    ],
+    "xg_present_any_team": true,
+    "xg_present_both_teams": true,
+    "xg_type_offered": true,
+    "xg_zero_valued_any": false
+   },
+   "stats_provider_errors": [],
+   "status_short": "2H",
+   "too_early": false
+  },
+  {
+   "away": "Internacional de Bogota",
+   "away_id": 1134,
+   "coverage_verdict": "stats_absent",
+   "elapsed": 90,
+   "events": {
+    "event_count": 3,
+    "event_kinds": {
+     "Goal/Normal Goal": 3
+    },
+    "events_present": true,
+    "red_card_count": 0,
+    "red_cards": []
+   },
+   "events_provider_errors": [],
+   "fixture_id": 1545516,
+   "goals": {
+    "away": 2,
+    "home": 1
+   },
+   "home": "Internacional Palmira",
+   "home_id": 23326,
+   "league_country": "Colombia",
+   "league_id": 241,
+   "league_name": "Copa Colombia",
+   "statistics": {
+    "entries": 0,
+    "statistic_type_count_max": 0,
+    "statistic_types_offered": [],
+    "stats_present": false,
+    "teams": [],
+    "xg_present_any_team": false,
+    "xg_present_both_teams": false,
+    "xg_type_offered": false,
+    "xg_zero_valued_any": false
+   },
+   "stats_provider_errors": [],
+   "status_short": "2H",
+   "too_early": false
+  },
+  {
+   "away": "Junior",
+   "away_id": 1135,
+   "coverage_verdict": "stats_absent",
+   "elapsed": 61,
+   "events": {
+    "event_count": 3,
+    "event_kinds": {
+     "Goal/Normal Goal": 3
+    },
+    "events_present": true,
+    "red_card_count": 0,
+    "red_cards": []
+   },
+   "events_provider_errors": [],
+   "fixture_id": 1545512,
+   "goals": {
+    "away": 2,
+    "home": 1
+   },
+   "home": "Barranquilla",
+   "home_id": 1466,
+   "league_country": "Colombia",
+   "league_id": 241,
+   "league_name": "Copa Colombia",
+   "statistics": {
+    "entries": 0,
+    "statistic_type_count_max": 0,
+    "statistic_types_offered": [],
+    "stats_present": false,
+    "teams": [],
+    "xg_present_any_team": false,
+    "xg_present_both_teams": false,
+    "xg_type_offered": false,
+    "xg_zero_valued_any": false
+   },
+   "stats_provider_errors": [],
+   "status_short": "2H",
+   "too_early": false
+  },
+  {
+   "away": "FC Tulsa",
+   "away_id": 4022,
+   "coverage_verdict": "stats_absent",
+   "elapsed": 43,
+   "events": {
+    "event_count": 2,
+    "event_kinds": {
+     "Card/Yellow Card": 1,
+     "Goal/Normal Goal": 1
+    },
+    "events_present": true,
+    "red_card_count": 0,
+    "red_cards": []
+   },
+   "events_provider_errors": [],
+   "fixture_id": 1493600,
+   "goals": {
+    "away": 1,
+    "home": 0
+   },
+   "home": "Pittsburgh Riverhounds",
+   "home_id": 4010,
+   "league_country": "USA",
+   "league_id": 255,
+   "league_name": "USL Championship",
+   "statistics": {
+    "entries": 0,
+    "statistic_type_count_max": 0,
+    "statistic_types_offered": [],
+    "stats_present": false,
+    "teams": [],
+    "xg_present_any_team": false,
+    "xg_present_both_teams": false,
+    "xg_type_offered": false,
+    "xg_zero_valued_any": false
+   },
+   "stats_provider_errors": [],
+   "status_short": "1H",
+   "too_early": false
+  },
+  {
+   "away": "Birmingham Legion",
+   "away_id": 3989,
+   "coverage_verdict": "too_early_to_conclude",
+   "elapsed": 14,
+   "events": {
+    "event_count": 1,
+    "event_kinds": {
+     "Goal/Normal Goal": 1
+    },
+    "events_present": true,
+    "red_card_count": 0,
+    "red_cards": []
+   },
+   "events_provider_errors": [],
+   "fixture_id": 1493599,
+   "goals": {
+    "away": 0,
+    "home": 1
+   },
+   "home": "Louisville City",
+   "home_id": 4000,
+   "league_country": "USA",
+   "league_id": 255,
+   "league_name": "USL Championship",
+   "statistics": {
+    "entries": 0,
+    "statistic_type_count_max": 0,
+    "statistic_types_offered": [],
+    "stats_present": false,
+    "teams": [],
+    "xg_present_any_team": false,
+    "xg_present_both_teams": false,
+    "xg_type_offered": false,
+    "xg_zero_valued_any": false
+   },
+   "stats_provider_errors": [],
+   "status_short": "1H",
+   "too_early": true
+  },
+  {
+   "away": "Inca Aruba",
+   "away_id": 28019,
+   "coverage_verdict": "stats_absent",
+   "elapsed": 45,
+   "events": {
+    "event_count": 0,
+    "event_kinds": {},
+    "events_present": false,
+    "red_card_count": 0,
+    "red_cards": []
+   },
+   "events_provider_errors": [],
+   "fixture_id": 1600547,
+   "goals": {
+    "away": 0,
+    "home": 0
+   },
+   "home": "Municipal Lime\u00f1o",
+   "home_id": 4306,
+   "league_country": "El-Salvador",
+   "league_id": 370,
+   "league_name": "Primera Division",
+   "statistics": {
+    "entries": 0,
+    "statistic_type_count_max": 0,
+    "statistic_types_offered": [],
+    "stats_present": false,
+    "teams": [],
+    "xg_present_any_team": false,
+    "xg_present_both_teams": false,
+    "xg_type_offered": false,
+    "xg_zero_valued_any": false
+   },
+   "stats_provider_errors": [],
+   "status_short": "1H",
+   "too_early": false
+  },
+  {
+   "away": "Boise",
+   "away_id": 27251,
+   "coverage_verdict": "stats_absent",
+   "elapsed": 44,
+   "events": {
+    "event_count": 5,
+    "event_kinds": {
+     "Card/Yellow Card": 1,
+     "Goal/Normal Goal": 4
+    },
+    "events_present": true,
+    "red_card_count": 0,
+    "red_cards": []
+   },
+   "events_provider_errors": [],
+   "fixture_id": 1493920,
+   "goals": {
+    "away": 2,
+    "home": 2
+   },
+   "home": "Greenville Triumph",
+   "home_id": 9026,
+   "league_country": "USA",
+   "league_id": 489,
+   "league_name": "USL League One",
+   "statistics": {
+    "entries": 0,
+    "statistic_type_count_max": 0,
+    "statistic_types_offered": [],
+    "stats_present": false,
+    "teams": [],
+    "xg_present_any_team": false,
+    "xg_present_both_teams": false,
+    "xg_type_offered": false,
+    "xg_zero_valued_any": false
+   },
+   "stats_provider_errors": [],
+   "status_short": "1H",
+   "too_early": false
+  },
+  {
+   "away": "Flamengo",
+   "away_id": 127,
+   "coverage_verdict": "stats_present",
+   "elapsed": 59,
+   "events": {
+    "event_count": 3,
+    "event_kinds": {
+     "Goal/Normal Goal": 1,
+     "subst/Substitution 1": 1,
+     "subst/Substitution 2": 1
+    },
+    "events_present": true,
+    "red_card_count": 0,
+    "red_cards": []
+   },
+   "events_provider_errors": [],
+   "fixture_id": 1492316,
+   "goals": {
+    "away": 0,
+    "home": 1
+   },
+   "home": "Internacional",
+   "home_id": 119,
+   "league_country": "Brazil",
+   "league_id": 71,
+   "league_name": "Serie A",
+   "statistics": {
+    "entries": 2,
+    "statistic_type_count_max": 18,
+    "statistic_types_offered": [
+     "Shots on Goal",
+     "Shots off Goal",
+     "Total Shots",
+     "Blocked Shots",
+     "Shots insidebox",
+     "Shots outsidebox",
+     "Fouls",
+     "Corner Kicks",
+     "Offsides",
+     "Ball Possession",
+     "Yellow Cards",
+     "Red Cards",
+     "Goalkeeper Saves",
+     "Total passes",
+     "Passes accurate",
+     "Passes %",
+     "expected_goals",
+     "goals_prevented"
+    ],
+    "stats_present": true,
+    "teams": [
+     {
+      "statistic_type_count": 18,
+      "team_id": 119,
+      "team_name": "Internacional",
+      "xg_present": true,
+      "xg_raw": "0.73",
+      "xg_statistic_type": "expected_goals",
+      "xg_value": 0.73,
+      "xg_zero_valued": false
+     },
+     {
+      "statistic_type_count": 18,
+      "team_id": 127,
+      "team_name": "Flamengo",
+      "xg_present": true,
+      "xg_raw": "0.32",
+      "xg_statistic_type": "expected_goals",
+      "xg_value": 0.32,
+      "xg_zero_valued": false
+     }
+    ],
+    "xg_present_any_team": true,
+    "xg_present_both_teams": true,
+    "xg_type_offered": true,
+    "xg_zero_valued_any": false
+   },
+   "stats_provider_errors": [],
+   "status_short": "2H",
+   "too_early": false
+  },
+  {
+   "away": "Remo",
+   "away_id": 1198,
+   "coverage_verdict": "stats_present",
+   "elapsed": 58,
+   "events": {
+    "event_count": 6,
+    "event_kinds": {
+     "Card/Yellow Card": 2,
+     "Goal/Normal Goal": 2,
+     "Goal/Own Goal": 1,
+     "subst/Substitution 1": 1
+    },
+    "events_present": true,
+    "red_card_count": 0,
+    "red_cards": []
+   },
+   "events_provider_errors": [],
+   "fixture_id": 1492317,
+   "goals": {
+    "away": 1,
+    "home": 2
+   },
+   "home": "Mirassol",
+   "home_id": 7848,
+   "league_country": "Brazil",
+   "league_id": 71,
+   "league_name": "Serie A",
+   "statistics": {
+    "entries": 2,
+    "statistic_type_count_max": 18,
+    "statistic_types_offered": [
+     "Shots on Goal",
+     "Shots off Goal",
+     "Total Shots",
+     "Blocked Shots",
+     "Shots insidebox",
+     "Shots outsidebox",
+     "Fouls",
+     "Corner Kicks",
+     "Offsides",
+     "Ball Possession",
+     "Yellow Cards",
+     "Red Cards",
+     "Goalkeeper Saves",
+     "Total passes",
+     "Passes accurate",
+     "Passes %",
+     "expected_goals",
+     "goals_prevented"
+    ],
+    "stats_present": true,
+    "teams": [
+     {
+      "statistic_type_count": 18,
+      "team_id": 7848,
+      "team_name": "Mirassol",
+      "xg_present": true,
+      "xg_raw": "1.03",
+      "xg_statistic_type": "expected_goals",
+      "xg_value": 1.03,
+      "xg_zero_valued": false
+     },
+     {
+      "statistic_type_count": 18,
+      "team_id": 1198,
+      "team_name": "Remo",
+      "xg_present": true,
+      "xg_raw": "0.40",
+      "xg_statistic_type": "expected_goals",
+      "xg_value": 0.4,
+      "xg_zero_valued": false
+     }
+    ],
+    "xg_present_any_team": true,
+    "xg_present_both_teams": true,
+    "xg_type_offered": true,
+    "xg_zero_valued_any": false
+   },
+   "stats_provider_errors": [],
+   "status_short": "2H",
+   "too_early": false
+  }
+ ],
+ "records": [
+  {
+   "body": {
+    "errors": [],
+    "get": "status",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": [],
+    "response": {
+     "account": "<ACCOUNT_HOLDER_PII_DROPPED_BY_PROBE>",
+     "requests": {
+      "current": 791,
+      "limit_day": 7500
+     },
+     "subscription": {
+      "active": true,
+      "end": "2026-08-29T23:01:12+00:00",
+      "plan": "Pro"
+     }
+    },
+    "results": 0
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 253,
+   "http_status": 200,
+   "label": "status",
+   "params": {},
+   "path": "status",
+   "provider_errors": [],
+   "provider_results_field": 0,
+   "rate_limit_remaining_day": "6709",
+   "rate_limit_remaining_minute": "236",
+   "response_array_length": 0
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "live": "all"
+    },
+    "response": [
+     {
+      "events": [
+       {
+        "assist": {
+         "id": 171364,
+         "name": "A. McFadden"
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": 71141,
+         "name": "K. Lambert"
+        },
+        "team": {
+         "id": 4000,
+         "logo": "https://media.api-sports.io/football/teams/4000.png",
+         "name": "Louisville City"
+        },
+        "time": {
+         "elapsed": 6,
+         "extra": null
+        },
+        "type": "Goal"
+       }
+      ],
+      "fixture": {
+       "date": "2026-07-29T23:30:00+00:00",
+       "id": 1493599,
+       "periods": {
+        "first": 1785367800,
+        "second": null
+       },
+       "referee": null,
+       "status": {
+        "elapsed": 14,
+        "extra": null,
+        "long": "First Half",
+        "short": "1H"
+       },
+       "timestamp": 1785367800,
+       "timezone": "UTC",
+       "venue": {
+        "city": null,
+        "id": null,
+        "name": "Lynn Family Stadium"
+       }
+      },
+      "goals": {
+       "away": 0,
+       "home": 1
+      },
+      "league": {
+       "country": "USA",
+       "flag": "https://media.api-sports.io/flags/us.svg",
+       "id": 255,
+       "logo": "https://media.api-sports.io/football/leagues/255.png",
+       "name": "USL Championship",
+       "round": "Group Stage",
+       "season": 2026,
+       "standings": true
+      },
+      "score": {
+       "extratime": {
+        "away": null,
+        "home": null
+       },
+       "fulltime": {
+        "away": null,
+        "home": null
+       },
+       "halftime": {
+        "away": 0,
+        "home": 1
+       },
+       "penalty": {
+        "away": null,
+        "home": null
+       }
+      },
+      "teams": {
+       "away": {
+        "id": 3989,
+        "logo": "https://media.api-sports.io/football/teams/3989.png",
+        "name": "Birmingham Legion",
+        "winner": false
+       },
+       "home": {
+        "id": 4000,
+        "logo": "https://media.api-sports.io/football/teams/4000.png",
+        "name": "Louisville City",
+        "winner": true
+       }
+      }
+     },
+     {
+      "events": [
+       {
+        "assist": {
+         "id": 46348,
+         "name": "J. Webber"
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": 541978,
+         "name": "L. Dorsey"
+        },
+        "team": {
+         "id": 4022,
+         "logo": "https://media.api-sports.io/football/teams/4022.png",
+         "name": "FC Tulsa"
+        },
+        "time": {
+         "elapsed": 13,
+         "extra": null
+        },
+        "type": "Goal"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": "Foul",
+        "detail": "Yellow Card",
+        "player": {
+         "id": 206986,
+         "name": "A. Cissoko"
+        },
+        "team": {
+         "id": 4022,
+         "logo": "https://media.api-sports.io/football/teams/4022.png",
+         "name": "FC Tulsa"
+        },
+        "time": {
+         "elapsed": 31,
+         "extra": null
+        },
+        "type": "Card"
+       }
+      ],
+      "fixture": {
+       "date": "2026-07-29T23:00:00+00:00",
+       "id": 1493600,
+       "periods": {
+        "first": 1785366000,
+        "second": null
+       },
+       "referee": "A. Ndiaye",
+       "status": {
+        "elapsed": 43,
+        "extra": null,
+        "long": "First Half",
+        "short": "1H"
+       },
+       "timestamp": 1785366000,
+       "timezone": "UTC",
+       "venue": {
+        "city": null,
+        "id": null,
+        "name": "Highmark Stadium"
+       }
+      },
+      "goals": {
+       "away": 1,
+       "home": 0
+      },
+      "league": {
+       "country": "USA",
+       "flag": "https://media.api-sports.io/flags/us.svg",
+       "id": 255,
+       "logo": "https://media.api-sports.io/football/leagues/255.png",
+       "name": "USL Championship",
+       "round": "Group Stage",
+       "season": 2026,
+       "standings": true
+      },
+      "score": {
+       "extratime": {
+        "away": null,
+        "home": null
+       },
+       "fulltime": {
+        "away": null,
+        "home": null
+       },
+       "halftime": {
+        "away": 1,
+        "home": 0
+       },
+       "penalty": {
+        "away": null,
+        "home": null
+       }
+      },
+      "teams": {
+       "away": {
+        "id": 4022,
+        "logo": "https://media.api-sports.io/football/teams/4022.png",
+        "name": "FC Tulsa",
+        "winner": true
+       },
+       "home": {
+        "id": 4010,
+        "logo": "https://media.api-sports.io/football/teams/4010.png",
+        "name": "Pittsburgh Riverhounds",
+        "winner": false
+       }
+      }
+     },
+     {
+      "events": [
+       {
+        "assist": {
+         "id": 101499,
+         "name": "D. Kostyshyn"
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": 513023,
+         "name": "J. Barea"
+        },
+        "team": {
+         "id": 27251,
+         "logo": "https://media.api-sports.io/football/teams/27251.png",
+         "name": "Boise"
+        },
+        "time": {
+         "elapsed": 5,
+         "extra": null
+        },
+        "type": "Goal"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": 577052,
+         "name": "L. Meek"
+        },
+        "team": {
+         "id": 9026,
+         "logo": "https://media.api-sports.io/football/teams/9026.png",
+         "name": "Greenville Triumph"
+        },
+        "time": {
+         "elapsed": 13,
+         "extra": null
+        },
+        "type": "Goal"
+       },
+       {
+        "assist": {
+         "id": 513023,
+         "name": "J. Barea"
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": 101499,
+         "name": "D. Kostyshyn"
+        },
+        "team": {
+         "id": 27251,
+         "logo": "https://media.api-sports.io/football/teams/27251.png",
+         "name": "Boise"
+        },
+        "time": {
+         "elapsed": 16,
+         "extra": null
+        },
+        "type": "Goal"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": 543270,
+         "name": "C. Evans"
+        },
+        "team": {
+         "id": 9026,
+         "logo": "https://media.api-sports.io/football/teams/9026.png",
+         "name": "Greenville Triumph"
+        },
+        "time": {
+         "elapsed": 25,
+         "extra": null
+        },
+        "type": "Goal"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Yellow Card",
+        "player": {
+         "id": 645906,
+         "name": "O. Yehya"
+        },
+        "team": {
+         "id": 27251,
+         "logo": "https://media.api-sports.io/football/teams/27251.png",
+         "name": "Boise"
+        },
+        "time": {
+         "elapsed": 33,
+         "extra": null
+        },
+        "type": "Card"
+       }
+      ],
+      "fixture": {
+       "date": "2026-07-29T23:00:00+00:00",
+       "id": 1493920,
+       "periods": {
+        "first": 1785366000,
+        "second": null
+       },
+       "referee": null,
+       "status": {
+        "elapsed": 44,
+        "extra": null,
+        "long": "First Half",
+        "short": "1H"
+       },
+       "timestamp": 1785366000,
+       "timezone": "UTC",
+       "venue": {
+        "city": null,
+        "id": null,
+        "name": "Paladin Stadium"
+       }
+      },
+      "goals": {
+       "away": 2,
+       "home": 2
+      },
+      "league": {
+       "country": "USA",
+       "flag": "https://media.api-sports.io/flags/us.svg",
+       "id": 489,
+       "logo": "https://media.api-sports.io/football/leagues/489.png",
+       "name": "USL League One",
+       "round": "Group Stage",
+       "season": 2026,
+       "standings": true
+      },
+      "score": {
+       "extratime": {
+        "away": null,
+        "home": null
+       },
+       "fulltime": {
+        "away": null,
+        "home": null
+       },
+       "halftime": {
+        "away": 2,
+        "home": 2
+       },
+       "penalty": {
+        "away": null,
+        "home": null
+       }
+      },
+      "teams": {
+       "away": {
+        "id": 27251,
+        "logo": "https://media.api-sports.io/football/teams/27251.png",
+        "name": "Boise",
+        "winner": null
+       },
+       "home": {
+        "id": 9026,
+        "logo": "https://media.api-sports.io/football/teams/9026.png",
+        "name": "Greenville Triumph",
+        "winner": null
+       }
+      }
+     },
+     {
+      "events": [],
+      "fixture": {
+       "date": "2026-07-29T23:30:00+00:00",
+       "id": 1589333,
+       "periods": {
+        "first": 1785367800,
+        "second": null
+       },
+       "referee": null,
+       "status": {
+        "elapsed": 14,
+        "extra": null,
+        "long": "First Half",
+        "short": "1H"
+       },
+       "timestamp": 1785367800,
+       "timezone": "UTC",
+       "venue": {
+        "city": null,
+        "id": 0,
+        "name": null
+       }
+      },
+      "goals": {
+       "away": 0,
+       "home": 0
+      },
+      "league": {
+       "country": "England",
+       "flag": "https://media.api-sports.io/flags/gb-eng.svg",
+       "id": 1022,
+       "logo": "https://media.api-sports.io/football/leagues/1022.png",
+       "name": "Premier League - Summer Series",
+       "round": "Regular Season - 2",
+       "season": 2025,
+       "standings": true
+      },
+      "score": {
+       "extratime": {
+        "away": null,
+        "home": null
+       },
+       "fulltime": {
+        "away": null,
+        "home": null
+       },
+       "halftime": {
+        "away": 0,
+        "home": 0
+       },
+       "penalty": {
+        "away": null,
+        "home": null
+       }
+      },
+      "teams": {
+       "away": {
+        "id": 1837,
+        "logo": "https://media.api-sports.io/football/teams/1837.png",
+        "name": "Wrexham",
+        "winner": null
+       },
+       "home": {
+        "id": 40,
+        "logo": "https://media.api-sports.io/football/teams/40.png",
+        "name": "Liverpool",
+        "winner": null
+       }
+      }
+     },
+     {
+      "events": [],
+      "fixture": {
+       "date": "2026-07-29T23:00:00+00:00",
+       "id": 1600547,
+       "periods": {
+        "first": 1785366000,
+        "second": null
+       },
+       "referee": null,
+       "status": {
+        "elapsed": 45,
+        "extra": 2,
+        "long": "First Half",
+        "short": "1H"
+       },
+       "timestamp": 1785366000,
+       "timezone": "UTC",
+       "venue": {
+        "city": null,
+        "id": null,
+        "name": null
+       }
+      },
+      "goals": {
+       "away": 0,
+       "home": 0
+      },
+      "league": {
+       "country": "El-Salvador",
+       "flag": "https://media.api-sports.io/flags/sv.svg",
+       "id": 370,
+       "logo": "https://media.api-sports.io/football/leagues/370.png",
+       "name": "Primera Division",
+       "round": "Apertura - 2",
+       "season": 2026,
+       "standings": true
+      },
+      "score": {
+       "extratime": {
+        "away": null,
+        "home": null
+       },
+       "fulltime": {
+        "away": null,
+        "home": null
+       },
+       "halftime": {
+        "away": 0,
+        "home": 0
+       },
+       "penalty": {
+        "away": null,
+        "home": null
+       }
+      },
+      "teams": {
+       "away": {
+        "id": 28019,
+        "logo": "https://media.api-sports.io/football/teams/28019.png",
+        "name": "Inca Aruba",
+        "winner": null
+       },
+       "home": {
+        "id": 4306,
+        "logo": "https://media.api-sports.io/football/teams/4306.png",
+        "name": "Municipal Lime\u00f1o",
+        "winner": null
+       }
+      }
+     },
+     {
+      "events": [],
+      "fixture": {
+       "date": "2026-07-29T23:00:00+00:00",
+       "id": 1606259,
+       "periods": {
+        "first": 1785366000,
+        "second": null
+       },
+       "referee": null,
+       "status": {
+        "elapsed": 45,
+        "extra": 5,
+        "long": "First Half",
+        "short": "1H"
+       },
+       "timestamp": 1785366000,
+       "timezone": "UTC",
+       "venue": {
+        "city": null,
+        "id": null,
+        "name": null
+       }
+      },
+      "goals": {
+       "away": 0,
+       "home": 0
+      },
+      "league": {
+       "country": "Brazil",
+       "flag": "https://media.api-sports.io/flags/br.svg",
+       "id": 1030,
+       "logo": "https://media.api-sports.io/football/leagues/1030.png",
+       "name": "Goiano - 2",
+       "round": "Regular Season - 2",
+       "season": 2026,
+       "standings": true
+      },
+      "score": {
+       "extratime": {
+        "away": null,
+        "home": null
+       },
+       "fulltime": {
+        "away": null,
+        "home": null
+       },
+       "halftime": {
+        "away": 0,
+        "home": 0
+       },
+       "penalty": {
+        "away": null,
+        "home": null
+       }
+      },
+      "teams": {
+       "away": {
+        "id": 26499,
+        "logo": "https://media.api-sports.io/football/teams/26499.png",
+        "name": "Bom Jesus EC",
+        "winner": null
+       },
+       "home": {
+        "id": 18297,
+        "logo": "https://media.api-sports.io/football/teams/18297.png",
+        "name": "Morrinhos",
+        "winner": null
+       }
+      }
+     },
+     {
+      "events": [
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": 10147,
+         "name": "Vitinho"
+        },
+        "team": {
+         "id": 119,
+         "logo": "https://media.api-sports.io/football/teams/119.png",
+         "name": "Internacional"
+        },
+        "time": {
+         "elapsed": 27,
+         "extra": null
+        },
+        "type": "Goal"
+       },
+       {
+        "assist": {
+         "id": 618,
+         "name": "Danilo"
+        },
+        "comments": null,
+        "detail": "Substitution 1",
+        "player": {
+         "id": 10124,
+         "name": "Leo Pereira"
+        },
+        "team": {
+         "id": 127,
+         "logo": "https://media.api-sports.io/football/teams/127.png",
+         "name": "Flamengo"
+        },
+        "time": {
+         "elapsed": 46,
+         "extra": null
+        },
+        "type": "subst"
+       },
+       {
+        "assist": {
+         "id": 2560,
+         "name": "E. Pulgar"
+        },
+        "comments": null,
+        "detail": "Substitution 2",
+        "player": {
+         "id": 332654,
+         "name": "Evertton Araujo"
+        },
+        "team": {
+         "id": 127,
+         "logo": "https://media.api-sports.io/football/teams/127.png",
+         "name": "Flamengo"
+        },
+        "time": {
+         "elapsed": 46,
+         "extra": null
+        },
+        "type": "subst"
+       }
+      ],
+      "fixture": {
+       "date": "2026-07-29T22:30:00+00:00",
+       "id": 1492316,
+       "periods": {
+        "first": 1785364200,
+        "second": 1785367800
+       },
+       "referee": "Matheus Delgado Candan\u00e7an, Brazil",
+       "status": {
+        "elapsed": 59,
+        "extra": null,
+        "long": "Second Half",
+        "short": "2H"
+       },
+       "timestamp": 1785364200,
+       "timezone": "UTC",
+       "venue": {
+        "city": "Porto Alegre",
+        "id": null,
+        "name": "Est\u00e1dio Beira-Rio"
+       }
+      },
+      "goals": {
+       "away": 0,
+       "home": 1
+      },
+      "league": {
+       "country": "Brazil",
+       "flag": "https://media.api-sports.io/flags/br.svg",
+       "id": 71,
+       "logo": "https://media.api-sports.io/football/leagues/71.png",
+       "name": "Serie A",
+       "round": "Regular Season - 21",
+       "season": 2026,
+       "standings": true
+      },
+      "score": {
+       "extratime": {
+        "away": null,
+        "home": null
+       },
+       "fulltime": {
+        "away": null,
+        "home": null
+       },
+       "halftime": {
+        "away": 0,
+        "home": 1
+       },
+       "penalty": {
+        "away": null,
+        "home": null
+       }
+      },
+      "teams": {
+       "away": {
+        "id": 127,
+        "logo": "https://media.api-sports.io/football/teams/127.png",
+        "name": "Flamengo",
+        "winner": false
+       },
+       "home": {
+        "id": 119,
+        "logo": "https://media.api-sports.io/football/teams/119.png",
+        "name": "Internacional",
+        "winner": true
+       }
+      }
+     },
+     {
+      "events": [
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": "Tripping",
+        "detail": "Yellow Card",
+        "player": {
+         "id": 156191,
+         "name": "Igor Formiga"
+        },
+        "team": {
+         "id": 7848,
+         "logo": "https://media.api-sports.io/football/teams/7848.png",
+         "name": "Mirassol"
+        },
+        "time": {
+         "elapsed": 17,
+         "extra": null
+        },
+        "type": "Card"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": "Holding",
+        "detail": "Yellow Card",
+        "player": {
+         "id": 357888,
+         "name": "Gabriel Knesowitsch"
+        },
+        "team": {
+         "id": 7848,
+         "logo": "https://media.api-sports.io/football/teams/7848.png",
+         "name": "Mirassol"
+        },
+        "time": {
+         "elapsed": 21,
+         "extra": null
+        },
+        "type": "Card"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Own Goal",
+        "player": {
+         "id": 10232,
+         "name": "Marllon"
+        },
+        "team": {
+         "id": 7848,
+         "logo": "https://media.api-sports.io/football/teams/7848.png",
+         "name": "Mirassol"
+        },
+        "time": {
+         "elapsed": 30,
+         "extra": null
+        },
+        "type": "Goal"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": 5211,
+         "name": "L. Picco"
+        },
+        "team": {
+         "id": 1198,
+         "logo": "https://media.api-sports.io/football/teams/1198.png",
+         "name": "Remo"
+        },
+        "time": {
+         "elapsed": 45,
+         "extra": 1
+        },
+        "type": "Goal"
+       },
+       {
+        "assist": {
+         "id": 80654,
+         "name": "Willian Machado"
+        },
+        "comments": null,
+        "detail": "Substitution 1",
+        "player": {
+         "id": 357888,
+         "name": "Gabriel Knesowitsch"
+        },
+        "team": {
+         "id": 7848,
+         "logo": "https://media.api-sports.io/football/teams/7848.png",
+         "name": "Mirassol"
+        },
+        "time": {
+         "elapsed": 46,
+         "extra": null
+        },
+        "type": "subst"
+       },
+       {
+        "assist": {
+         "id": 9946,
+         "name": "Reinaldo"
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": 115525,
+         "name": "Joao Victor"
+        },
+        "team": {
+         "id": 7848,
+         "logo": "https://media.api-sports.io/football/teams/7848.png",
+         "name": "Mirassol"
+        },
+        "time": {
+         "elapsed": 54,
+         "extra": null
+        },
+        "type": "Goal"
+       }
+      ],
+      "fixture": {
+       "date": "2026-07-29T22:30:00+00:00",
+       "id": 1492317,
+       "periods": {
+        "first": 1785364200,
+        "second": 1785367800
+       },
+       "referee": "Lucas Paulo Torezin, Brazil",
+       "status": {
+        "elapsed": 58,
+        "extra": null,
+        "long": "Second Half",
+        "short": "2H"
+       },
+       "timestamp": 1785364200,
+       "timezone": "UTC",
+       "venue": {
+        "city": "Mirassol",
+        "id": null,
+        "name": "Est\u00e1dio Jos\u00e9 Maria de Campos Maia"
+       }
+      },
+      "goals": {
+       "away": 1,
+       "home": 2
+      },
+      "league": {
+       "country": "Brazil",
+       "flag": "https://media.api-sports.io/flags/br.svg",
+       "id": 71,
+       "logo": "https://media.api-sports.io/football/leagues/71.png",
+       "name": "Serie A",
+       "round": "Regular Season - 21",
+       "season": 2026,
+       "standings": true
+      },
+      "score": {
+       "extratime": {
+        "away": null,
+        "home": null
+       },
+       "fulltime": {
+        "away": null,
+        "home": null
+       },
+       "halftime": {
+        "away": 1,
+        "home": 1
+       },
+       "penalty": {
+        "away": null,
+        "home": null
+       }
+      },
+      "teams": {
+       "away": {
+        "id": 1198,
+        "logo": "https://media.api-sports.io/football/teams/1198.png",
+        "name": "Remo",
+        "winner": false
+       },
+       "home": {
+        "id": 7848,
+        "logo": "https://media.api-sports.io/football/teams/7848.png",
+        "name": "Mirassol",
+        "winner": true
+       }
+      }
+     },
+     {
+      "events": [
+       {
+        "assist": {
+         "id": 6725,
+         "name": "Fausto Vera"
+        },
+        "comments": null,
+        "detail": "Substitution 1",
+        "player": {
+         "id": 47258,
+         "name": "M. Arambarri"
+        },
+        "team": {
+         "id": 435,
+         "logo": "https://media.api-sports.io/football/teams/435.png",
+         "name": "River Plate"
+        },
+        "time": {
+         "elapsed": 46,
+         "extra": null
+        },
+        "type": "subst"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": "Foul",
+        "detail": "Yellow Card",
+        "player": {
+         "id": 657681,
+         "name": "L. Silva"
+        },
+        "team": {
+         "id": 435,
+         "logo": "https://media.api-sports.io/football/teams/435.png",
+         "name": "River Plate"
+        },
+        "time": {
+         "elapsed": 56,
+         "extra": null
+        },
+        "type": "Card"
+       },
+       {
+        "assist": {
+         "id": 538363,
+         "name": "F. Gonzalez"
+        },
+        "comments": null,
+        "detail": "Substitution 2",
+        "player": {
+         "id": 1493,
+         "name": "M. Acuna"
+        },
+        "team": {
+         "id": 435,
+         "logo": "https://media.api-sports.io/football/teams/435.png",
+         "name": "River Plate"
+        },
+        "time": {
+         "elapsed": 61,
+         "extra": null
+        },
+        "type": "subst"
+       },
+       {
+        "assist": {
+         "id": 6011,
+         "name": "R. Borre"
+        },
+        "comments": null,
+        "detail": "Substitution 3",
+        "player": {
+         "id": 6010,
+         "name": "L. Beltran"
+        },
+        "team": {
+         "id": 435,
+         "logo": "https://media.api-sports.io/football/teams/435.png",
+         "name": "River Plate"
+        },
+        "time": {
+         "elapsed": 61,
+         "extra": null
+        },
+        "type": "subst"
+       },
+       {
+        "assist": {
+         "id": 279798,
+         "name": "M. Zalazar"
+        },
+        "comments": null,
+        "detail": "Substitution 1",
+        "player": {
+         "id": 475535,
+         "name": "J. Merlo"
+        },
+        "team": {
+         "id": 434,
+         "logo": "https://media.api-sports.io/football/teams/434.png",
+         "name": "Gimnasia L.P."
+        },
+        "time": {
+         "elapsed": 65,
+         "extra": null
+        },
+        "type": "subst"
+       },
+       {
+        "assist": {
+         "id": 5678,
+         "name": "A. Max"
+        },
+        "comments": null,
+        "detail": "Substitution 2",
+        "player": {
+         "id": 357139,
+         "name": "M. Seoane"
+        },
+        "team": {
+         "id": 434,
+         "logo": "https://media.api-sports.io/football/teams/434.png",
+         "name": "Gimnasia L.P."
+        },
+        "time": {
+         "elapsed": 65,
+         "extra": null
+        },
+        "type": "subst"
+       },
+       {
+        "assist": {
+         "id": 214,
+         "name": "F. Colidio"
+        },
+        "comments": null,
+        "detail": "Substitution 4",
+        "player": {
+         "id": 53,
+         "name": "A. Correa"
+        },
+        "team": {
+         "id": 435,
+         "logo": "https://media.api-sports.io/football/teams/435.png",
+         "name": "River Plate"
+        },
+        "time": {
+         "elapsed": 71,
+         "extra": null
+        },
+        "type": "subst"
+       }
+      ],
+      "fixture": {
+       "date": "2026-07-29T22:15:00+00:00",
+       "id": 1493023,
+       "periods": {
+        "first": 1785363300,
+        "second": 1785366900
+       },
+       "referee": "Leandro Rey Hilfer, Argentina",
+       "status": {
+        "elapsed": 73,
+        "extra": null,
+        "long": "Second Half",
+        "short": "2H"
+       },
+       "timestamp": 1785363300,
+       "timezone": "UTC",
+       "venue": {
+        "city": "La Plata",
+        "id": null,
+        "name": "Estadio Juan Carmelo Zerillo"
+       }
+      },
+      "goals": {
+       "away": 0,
+       "home": 0
+      },
+      "league": {
+       "country": "Argentina",
+       "flag": "https://media.api-sports.io/flags/ar.svg",
+       "id": 128,
+       "logo": "https://media.api-sports.io/football/leagues/128.png",
+       "name": "Liga Profesional Argentina",
+       "round": "Clausura - 2",
+       "season": 2026,
+       "standings": true
+      },
+      "score": {
+       "extratime": {
+        "away": null,
+        "home": null
+       },
+       "fulltime": {
+        "away": null,
+        "home": null
+       },
+       "halftime": {
+        "away": 0,
+        "home": 0
+       },
+       "penalty": {
+        "away": null,
+        "home": null
+       }
+      },
+      "teams": {
+       "away": {
+        "id": 435,
+        "logo": "https://media.api-sports.io/football/teams/435.png",
+        "name": "River Plate",
+        "winner": null
+       },
+       "home": {
+        "id": 434,
+        "logo": "https://media.api-sports.io/football/teams/434.png",
+        "name": "Gimnasia L.P.",
+        "winner": null
+       }
+      }
+     },
+     {
+      "events": [
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": 538309,
+         "name": "S. Borja"
+        },
+        "team": {
+         "id": 1466,
+         "logo": "https://media.api-sports.io/football/teams/1466.png",
+         "name": "Barranquilla"
+        },
+        "time": {
+         "elapsed": 3,
+         "extra": null
+        },
+        "type": "Goal"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": 59441,
+         "name": "Y. Suarez"
+        },
+        "team": {
+         "id": 1135,
+         "logo": "https://media.api-sports.io/football/teams/1135.png",
+         "name": "Junior"
+        },
+        "time": {
+         "elapsed": 10,
+         "extra": null
+        },
+        "type": "Goal"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": 53128,
+         "name": "G. Paiva"
+        },
+        "team": {
+         "id": 1135,
+         "logo": "https://media.api-sports.io/football/teams/1135.png",
+         "name": "Junior"
+        },
+        "time": {
+         "elapsed": 25,
+         "extra": null
+        },
+        "type": "Goal"
+       }
+      ],
+      "fixture": {
+       "date": "2026-07-29T22:30:00+00:00",
+       "id": 1545512,
+       "periods": {
+        "first": 1785364200,
+        "second": 1785367800
+       },
+       "referee": null,
+       "status": {
+        "elapsed": 61,
+        "extra": null,
+        "long": "Second Half",
+        "short": "2H"
+       },
+       "timestamp": 1785364200,
+       "timezone": "UTC",
+       "venue": {
+        "city": "Barranquilla",
+        "id": null,
+        "name": "Estadio Romelio Martinez"
+       }
+      },
+      "goals": {
+       "away": 2,
+       "home": 1
+      },
+      "league": {
+       "country": "Colombia",
+       "flag": "https://media.api-sports.io/flags/co.svg",
+       "id": 241,
+       "logo": "https://media.api-sports.io/football/leagues/241.png",
+       "name": "Copa Colombia",
+       "round": "Play-offs",
+       "season": 2026,
+       "standings": true
+      },
+      "score": {
+       "extratime": {
+        "away": null,
+        "home": null
+       },
+       "fulltime": {
+        "away": null,
+        "home": null
+       },
+       "halftime": {
+        "away": 2,
+        "home": 1
+       },
+       "penalty": {
+        "away": null,
+        "home": null
+       }
+      },
+      "teams": {
+       "away": {
+        "id": 1135,
+        "logo": "https://media.api-sports.io/football/teams/1135.png",
+        "name": "Junior",
+        "winner": true
+       },
+       "home": {
+        "id": 1466,
+        "logo": "https://media.api-sports.io/football/teams/1466.png",
+        "name": "Barranquilla",
+        "winner": false
+       }
+      }
+     },
+     {
+      "events": [
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": 13373,
+         "name": "L. Vasquez"
+        },
+        "team": {
+         "id": 1134,
+         "logo": "https://media.api-sports.io/football/teams/1134.png",
+         "name": "Internacional de Bogota"
+        },
+        "time": {
+         "elapsed": 13,
+         "extra": null
+        },
+        "type": "Goal"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": 554920,
+         "name": "C. A. Franco Bustillo"
+        },
+        "team": {
+         "id": 23326,
+         "logo": "https://media.api-sports.io/football/teams/23326.png",
+         "name": "Internacional Palmira"
+        },
+        "time": {
+         "elapsed": 56,
+         "extra": null
+        },
+        "type": "Goal"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": null,
+         "name": null
+        },
+        "team": {
+         "id": 1134,
+         "logo": "https://media.api-sports.io/football/teams/1134.png",
+         "name": "Internacional de Bogota"
+        },
+        "time": {
+         "elapsed": 90,
+         "extra": 2
+        },
+        "type": "Goal"
+       }
+      ],
+      "fixture": {
+       "date": "2026-07-29T22:00:00+00:00",
+       "id": 1545516,
+       "periods": {
+        "first": 1785362400,
+        "second": 1785366000
+       },
+       "referee": null,
+       "status": {
+        "elapsed": 90,
+        "extra": 3,
+        "long": "Second Half",
+        "short": "2H"
+       },
+       "timestamp": 1785362400,
+       "timezone": "UTC",
+       "venue": {
+        "city": "Palmira",
+        "id": null,
+        "name": "Francisco Rivera Escobar"
+       }
+      },
+      "goals": {
+       "away": 2,
+       "home": 1
+      },
+      "league": {
+       "country": "Colombia",
+       "flag": "https://media.api-sports.io/flags/co.svg",
+       "id": 241,
+       "logo": "https://media.api-sports.io/football/leagues/241.png",
+       "name": "Copa Colombia",
+       "round": "Play-offs",
+       "season": 2026,
+       "standings": true
+      },
+      "score": {
+       "extratime": {
+        "away": null,
+        "home": null
+       },
+       "fulltime": {
+        "away": null,
+        "home": null
+       },
+       "halftime": {
+        "away": 1,
+        "home": 0
+       },
+       "penalty": {
+        "away": null,
+        "home": null
+       }
+      },
+      "teams": {
+       "away": {
+        "id": 1134,
+        "logo": "https://media.api-sports.io/football/teams/1134.png",
+        "name": "Internacional de Bogota",
+        "winner": true
+       },
+       "home": {
+        "id": 23326,
+        "logo": "https://media.api-sports.io/football/teams/23326.png",
+        "name": "Internacional Palmira",
+        "winner": false
+       }
+      }
+     },
+     {
+      "events": [
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": "Tripping",
+        "detail": "Yellow Card",
+        "player": {
+         "id": 6735,
+         "name": "C. Spinelli"
+        },
+        "team": {
+         "id": 133,
+         "logo": "https://media.api-sports.io/football/teams/133.png",
+         "name": "Vasco DA Gama"
+        },
+        "time": {
+         "elapsed": 4,
+         "extra": null
+        },
+        "type": "Card"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": "Tripping",
+        "detail": "Yellow Card",
+        "player": {
+         "id": 51483,
+         "name": "J. Varela"
+        },
+        "team": {
+         "id": 1128,
+         "logo": "https://media.api-sports.io/football/teams/1128.png",
+         "name": "Independiente Medellin"
+        },
+        "time": {
+         "elapsed": 39,
+         "extra": null
+        },
+        "type": "Card"
+       },
+       {
+        "assist": {
+         "id": 306261,
+         "name": "Adson"
+        },
+        "comments": null,
+        "detail": "Substitution 1",
+        "player": {
+         "id": 9958,
+         "name": "Tche Tche"
+        },
+        "team": {
+         "id": 133,
+         "logo": "https://media.api-sports.io/football/teams/133.png",
+         "name": "Vasco DA Gama"
+        },
+        "time": {
+         "elapsed": 57,
+         "extra": null
+        },
+        "type": "subst"
+       },
+       {
+        "assist": {
+         "id": 353034,
+         "name": "Cuiabano"
+        },
+        "comments": null,
+        "detail": "Substitution 2",
+        "player": {
+         "id": 10234,
+         "name": "Lucas Piton"
+        },
+        "team": {
+         "id": 133,
+         "logo": "https://media.api-sports.io/football/teams/133.png",
+         "name": "Vasco DA Gama"
+        },
+        "time": {
+         "elapsed": 57,
+         "extra": null
+        },
+        "type": "subst"
+       },
+       {
+        "assist": {
+         "id": 10328,
+         "name": "Yony Gonzalez"
+        },
+        "comments": null,
+        "detail": "Substitution 1",
+        "player": {
+         "id": 521710,
+         "name": "H. Loboa"
+        },
+        "team": {
+         "id": 1128,
+         "logo": "https://media.api-sports.io/football/teams/1128.png",
+         "name": "Independiente Medellin"
+        },
+        "time": {
+         "elapsed": 59,
+         "extra": null
+        },
+        "type": "subst"
+       },
+       {
+        "assist": {
+         "id": 310774,
+         "name": "A. Saldivia"
+        },
+        "comments": null,
+        "detail": "Substitution 3",
+        "player": {
+         "id": 359372,
+         "name": "Robert Renan"
+        },
+        "team": {
+         "id": 133,
+         "logo": "https://media.api-sports.io/football/teams/133.png",
+         "name": "Vasco DA Gama"
+        },
+        "time": {
+         "elapsed": 60,
+         "extra": null
+        },
+        "type": "subst"
+       },
+       {
+        "assist": {
+         "id": 9975,
+         "name": "Brenner"
+        },
+        "comments": null,
+        "detail": "Substitution 4",
+        "player": {
+         "id": 6735,
+         "name": "C. Spinelli"
+        },
+        "team": {
+         "id": 133,
+         "logo": "https://media.api-sports.io/football/teams/133.png",
+         "name": "Vasco DA Gama"
+        },
+        "time": {
+         "elapsed": 66,
+         "extra": null
+        },
+        "type": "subst"
+       },
+       {
+        "assist": {
+         "id": 9890,
+         "name": "Jair"
+        },
+        "comments": null,
+        "detail": "Substitution 5",
+        "player": {
+         "id": 614200,
+         "name": "Ramon Rique"
+        },
+        "team": {
+         "id": 133,
+         "logo": "https://media.api-sports.io/football/teams/133.png",
+         "name": "Vasco DA Gama"
+        },
+        "time": {
+         "elapsed": 66,
+         "extra": null
+        },
+        "type": "subst"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": "Tripping",
+        "detail": "Yellow Card",
+        "player": {
+         "id": 9890,
+         "name": "Jair"
+        },
+        "team": {
+         "id": 133,
+         "logo": "https://media.api-sports.io/football/teams/133.png",
+         "name": "Vasco DA Gama"
+        },
+        "time": {
+         "elapsed": 69,
+         "extra": null
+        },
+        "type": "Card"
+       },
+       {
+        "assist": {
+         "id": 13779,
+         "name": "B. Perlaza"
+        },
+        "comments": null,
+        "detail": "Substitution 2",
+        "player": {
+         "id": 46804,
+         "name": "D. Moreno"
+        },
+        "team": {
+         "id": 1128,
+         "logo": "https://media.api-sports.io/football/teams/1128.png",
+         "name": "Independiente Medellin"
+        },
+        "time": {
+         "elapsed": 80,
+         "extra": null
+        },
+        "type": "subst"
+       },
+       {
+        "assist": {
+         "id": 13366,
+         "name": "D. Catano"
+        },
+        "comments": null,
+        "detail": "Substitution 3",
+        "player": {
+         "id": 414333,
+         "name": "J. Montano"
+        },
+        "team": {
+         "id": 1128,
+         "logo": "https://media.api-sports.io/football/teams/1128.png",
+         "name": "Independiente Medellin"
+        },
+        "time": {
+         "elapsed": 80,
+         "extra": null
+        },
+        "type": "subst"
+       },
+       {
+        "assist": {
+         "id": 133910,
+         "name": "Paulo Henrique"
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": 22232,
+         "name": "Thiago Mendes"
+        },
+        "team": {
+         "id": 133,
+         "logo": "https://media.api-sports.io/football/teams/133.png",
+         "name": "Vasco DA Gama"
+        },
+        "time": {
+         "elapsed": 85,
+         "extra": null
+        },
+        "type": "Goal"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": "Delay of game",
+        "detail": "Yellow Card",
+        "player": {
+         "id": 22232,
+         "name": "Thiago Mendes"
+        },
+        "team": {
+         "id": 133,
+         "logo": "https://media.api-sports.io/football/teams/133.png",
+         "name": "Vasco DA Gama"
+        },
+        "time": {
+         "elapsed": 86,
+         "extra": null
+        },
+        "type": "Card"
+       },
+       {
+        "assist": {
+         "id": 646328,
+         "name": "K. Klinger"
+        },
+        "comments": null,
+        "detail": "Substitution 4",
+        "player": {
+         "id": 346893,
+         "name": "J. Cordoba"
+        },
+        "team": {
+         "id": 1128,
+         "logo": "https://media.api-sports.io/football/teams/1128.png",
+         "name": "Independiente Medellin"
+        },
+        "time": {
+         "elapsed": 90,
+         "extra": null
+        },
+        "type": "subst"
+       }
+      ],
+      "fixture": {
+       "date": "2026-07-29T22:00:00+00:00",
+       "id": 1547788,
+       "periods": {
+        "first": 1785362400,
+        "second": 1785366000
+       },
+       "referee": "Nicolas Ramirez, Argentina",
+       "status": {
+        "elapsed": 90,
+        "extra": 2,
+        "long": "Second Half",
+        "short": "2H"
+       },
+       "timestamp": 1785362400,
+       "timezone": "UTC",
+       "venue": {
+        "city": "Rio de Janeiro",
+        "id": null,
+        "name": "Est\u00e1dio S\u00e3o Janu\u00e1rio"
+       }
+      },
+      "goals": {
+       "away": 0,
+       "home": 1
+      },
+      "league": {
+       "country": "World",
+       "flag": null,
+       "id": 11,
+       "logo": "https://media.api-sports.io/football/leagues/11.png",
+       "name": "CONMEBOL Sudamericana",
+       "round": "Round of 32",
+       "season": 2026,
+       "standings": true
+      },
+      "score": {
+       "extratime": {
+        "away": null,
+        "home": null
+       },
+       "fulltime": {
+        "away": null,
+        "home": null
+       },
+       "halftime": {
+        "away": 0,
+        "home": 0
+       },
+       "penalty": {
+        "away": null,
+        "home": null
+       }
+      },
+      "teams": {
+       "away": {
+        "id": 1128,
+        "logo": "https://media.api-sports.io/football/teams/1128.png",
+        "name": "Independiente Medellin",
+        "winner": false
+       },
+       "home": {
+        "id": 133,
+        "logo": "https://media.api-sports.io/football/teams/133.png",
+        "name": "Vasco DA Gama",
+        "winner": true
+       }
+      }
+     },
+     {
+      "events": [
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": null,
+         "name": null
+        },
+        "team": {
+         "id": 10674,
+         "logo": "https://media.api-sports.io/football/teams/10674.png",
+         "name": "Goi\u00e2nia"
+        },
+        "time": {
+         "elapsed": 2,
+         "extra": null
+        },
+        "type": "Goal"
+       }
+      ],
+      "fixture": {
+       "date": "2026-07-29T22:30:00+00:00",
+       "id": 1606255,
+       "periods": {
+        "first": 1785364200,
+        "second": 1785367800
+       },
+       "referee": null,
+       "status": {
+        "elapsed": 62,
+        "extra": null,
+        "long": "Second Half",
+        "short": "2H"
+       },
+       "timestamp": 1785364200,
+       "timezone": "UTC",
+       "venue": {
+        "city": null,
+        "id": null,
+        "name": null
+       }
+      },
+      "goals": {
+       "away": 0,
+       "home": 1
+      },
+      "league": {
+       "country": "Brazil",
+       "flag": "https://media.api-sports.io/flags/br.svg",
+       "id": 1030,
+       "logo": "https://media.api-sports.io/football/leagues/1030.png",
+       "name": "Goiano - 2",
+       "round": "Regular Season - 2",
+       "season": 2026,
+       "standings": true
+      },
+      "score": {
+       "extratime": {
+        "away": null,
+        "home": null
+       },
+       "fulltime": {
+        "away": null,
+        "home": null
+       },
+       "halftime": {
+        "away": 0,
+        "home": 1
+       },
+       "penalty": {
+        "away": null,
+        "home": null
+       }
+      },
+      "teams": {
+       "away": {
+        "id": 13127,
+        "logo": "https://media.api-sports.io/football/teams/13127.png",
+        "name": "Gr\u00eamio An\u00e1polis",
+        "winner": false
+       },
+       "home": {
+        "id": 10674,
+        "logo": "https://media.api-sports.io/football/teams/10674.png",
+        "name": "Goi\u00e2nia",
+        "winner": true
+       }
+      }
+     },
+     {
+      "events": [
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": null,
+         "name": null
+        },
+        "team": {
+         "id": 24771,
+         "logo": "https://media.api-sports.io/football/teams/24771.png",
+         "name": "Rio Verde"
+        },
+        "time": {
+         "elapsed": 45,
+         "extra": null
+        },
+        "type": "Goal"
+       }
+      ],
+      "fixture": {
+       "date": "2026-07-29T22:30:00+00:00",
+       "id": 1606256,
+       "periods": {
+        "first": 1785364200,
+        "second": 1785367800
+       },
+       "referee": null,
+       "status": {
+        "elapsed": 62,
+        "extra": null,
+        "long": "Second Half",
+        "short": "2H"
+       },
+       "timestamp": 1785364200,
+       "timezone": "UTC",
+       "venue": {
+        "city": null,
+        "id": null,
+        "name": null
+       }
+      },
+      "goals": {
+       "away": 0,
+       "home": 1
+      },
+      "league": {
+       "country": "Brazil",
+       "flag": "https://media.api-sports.io/flags/br.svg",
+       "id": 1030,
+       "logo": "https://media.api-sports.io/football/leagues/1030.png",
+       "name": "Goiano - 2",
+       "round": "Regular Season - 2",
+       "season": 2026,
+       "standings": true
+      },
+      "score": {
+       "extratime": {
+        "away": null,
+        "home": null
+       },
+       "fulltime": {
+        "away": null,
+        "home": null
+       },
+       "halftime": {
+        "away": 0,
+        "home": 1
+       },
+       "penalty": {
+        "away": null,
+        "home": null
+       }
+      },
+      "teams": {
+       "away": {
+        "id": 24773,
+        "logo": "https://media.api-sports.io/football/teams/24773.png",
+        "name": "Tupy FC",
+        "winner": false
+       },
+       "home": {
+        "id": 24771,
+        "logo": "https://media.api-sports.io/football/teams/24771.png",
+        "name": "Rio Verde",
+        "winner": true
+       }
+      }
+     },
+     {
+      "events": [
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": null,
+         "name": null
+        },
+        "team": {
+         "id": 24769,
+         "logo": "https://media.api-sports.io/football/teams/24769.png",
+         "name": "Mineiros"
+        },
+        "time": {
+         "elapsed": 18,
+         "extra": null
+        },
+        "type": "Goal"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": null,
+         "name": null
+        },
+        "team": {
+         "id": 23307,
+         "logo": "https://media.api-sports.io/football/teams/23307.png",
+         "name": "Trindade"
+        },
+        "time": {
+         "elapsed": 36,
+         "extra": null
+        },
+        "type": "Goal"
+       }
+      ],
+      "fixture": {
+       "date": "2026-07-29T22:30:00+00:00",
+       "id": 1606257,
+       "periods": {
+        "first": 1785364200,
+        "second": 1785367800
+       },
+       "referee": null,
+       "status": {
+        "elapsed": 60,
+        "extra": null,
+        "long": "Second Half",
+        "short": "2H"
+       },
+       "timestamp": 1785364200,
+       "timezone": "UTC",
+       "venue": {
+        "city": null,
+        "id": null,
+        "name": null
+       }
+      },
+      "goals": {
+       "away": 1,
+       "home": 1
+      },
+      "league": {
+       "country": "Brazil",
+       "flag": "https://media.api-sports.io/flags/br.svg",
+       "id": 1030,
+       "logo": "https://media.api-sports.io/football/leagues/1030.png",
+       "name": "Goiano - 2",
+       "round": "Regular Season - 2",
+       "season": 2026,
+       "standings": true
+      },
+      "score": {
+       "extratime": {
+        "away": null,
+        "home": null
+       },
+       "fulltime": {
+        "away": null,
+        "home": null
+       },
+       "halftime": {
+        "away": 1,
+        "home": 1
+       },
+       "penalty": {
+        "away": null,
+        "home": null
+       }
+      },
+      "teams": {
+       "away": {
+        "id": 24769,
+        "logo": "https://media.api-sports.io/football/teams/24769.png",
+        "name": "Mineiros",
+        "winner": null
+       },
+       "home": {
+        "id": 23307,
+        "logo": "https://media.api-sports.io/football/teams/23307.png",
+        "name": "Trindade",
+        "winner": null
+       }
+      }
+     },
+     {
+      "events": [
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": null,
+         "name": null
+        },
+        "team": {
+         "id": 7873,
+         "logo": "https://media.api-sports.io/football/teams/7873.png",
+         "name": "Goian\u00e9sia"
+        },
+        "time": {
+         "elapsed": 3,
+         "extra": null
+        },
+        "type": "Goal"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": null,
+         "name": null
+        },
+        "team": {
+         "id": 26500,
+         "logo": "https://media.api-sports.io/football/teams/26500.png",
+         "name": "Crix\u00e1s EC"
+        },
+        "time": {
+         "elapsed": 8,
+         "extra": null
+        },
+        "type": "Goal"
+       },
+       {
+        "assist": {
+         "id": null,
+         "name": null
+        },
+        "comments": null,
+        "detail": "Normal Goal",
+        "player": {
+         "id": null,
+         "name": null
+        },
+        "team": {
+         "id": 7873,
+         "logo": "https://media.api-sports.io/football/teams/7873.png",
+         "name": "Goian\u00e9sia"
+        },
+        "time": {
+         "elapsed": 20,
+         "extra": null
+        },
+        "type": "Goal"
+       }
+      ],
+      "fixture": {
+       "date": "2026-07-29T23:00:00+00:00",
+       "id": 1606258,
+       "periods": {
+        "first": 1785366000,
+        "second": null
+       },
+       "referee": null,
+       "status": {
+        "elapsed": 45,
+        "extra": 2,
+        "long": "Halftime",
+        "short": "HT"
+       },
+       "timestamp": 1785366000,
+       "timezone": "UTC",
+       "venue": {
+        "city": null,
+        "id": null,
+        "name": null
+       }
+      },
+      "goals": {
+       "away": 1,
+       "home": 2
+      },
+      "league": {
+       "country": "Brazil",
+       "flag": "https://media.api-sports.io/flags/br.svg",
+       "id": 1030,
+       "logo": "https://media.api-sports.io/football/leagues/1030.png",
+       "name": "Goiano - 2",
+       "round": "Regular Season - 2",
+       "season": 2026,
+       "standings": true
+      },
+      "score": {
+       "extratime": {
+        "away": null,
+        "home": null
+       },
+       "fulltime": {
+        "away": null,
+        "home": null
+       },
+       "halftime": {
+        "away": 1,
+        "home": 2
+       },
+       "penalty": {
+        "away": null,
+        "home": null
+       }
+      },
+      "teams": {
+       "away": {
+        "id": 26500,
+        "logo": "https://media.api-sports.io/football/teams/26500.png",
+        "name": "Crix\u00e1s EC",
+        "winner": false
+       },
+       "home": {
+        "id": 7873,
+        "logo": "https://media.api-sports.io/football/teams/7873.png",
+        "name": "Goian\u00e9sia",
+        "winner": true
+       }
+      }
+     }
+    ],
+    "results": 16
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 191,
+   "http_status": 200,
+   "label": "fixtures_live_all",
+   "params": {
+    "live": "all"
+   },
+   "path": "fixtures",
+   "provider_errors": [],
+   "provider_results_field": 16,
+   "rate_limit_remaining_day": "6643",
+   "rate_limit_remaining_minute": "234",
+   "response_array_length": 16
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/statistics",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1589333"
+    },
+    "response": [],
+    "results": 0
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 194,
+   "http_status": 200,
+   "label": "stats_1589333",
+   "params": {
+    "fixture": 1589333
+   },
+   "path": "fixtures/statistics",
+   "provider_errors": [],
+   "provider_results_field": 0,
+   "rate_limit_remaining_day": "6641",
+   "rate_limit_remaining_minute": "232",
+   "response_array_length": 0
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/events",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1589333"
+    },
+    "response": [],
+    "results": 0
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 205,
+   "http_status": 200,
+   "label": "events_1589333",
+   "params": {
+    "fixture": 1589333
+   },
+   "path": "fixtures/events",
+   "provider_errors": [],
+   "provider_results_field": 0,
+   "rate_limit_remaining_day": "6639",
+   "rate_limit_remaining_minute": "230",
+   "response_array_length": 0
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/statistics",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1606255"
+    },
+    "response": [],
+    "results": 0
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 200,
+   "http_status": 200,
+   "label": "stats_1606255",
+   "params": {
+    "fixture": 1606255
+   },
+   "path": "fixtures/statistics",
+   "provider_errors": [],
+   "provider_results_field": 0,
+   "rate_limit_remaining_day": "6636",
+   "rate_limit_remaining_minute": "227",
+   "response_array_length": 0
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/events",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1606255"
+    },
+    "response": [
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": null,
+       "name": null
+      },
+      "team": {
+       "id": 10674,
+       "logo": "https://media.api-sports.io/football/teams/10674.png",
+       "name": "Goi\u00e2nia"
+      },
+      "time": {
+       "elapsed": 2,
+       "extra": null
+      },
+      "type": "Goal"
+     }
+    ],
+    "results": 1
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 208,
+   "http_status": 200,
+   "label": "events_1606255",
+   "params": {
+    "fixture": 1606255
+   },
+   "path": "fixtures/events",
+   "provider_errors": [],
+   "provider_results_field": 1,
+   "rate_limit_remaining_day": "6635",
+   "rate_limit_remaining_minute": "226",
+   "response_array_length": 1
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/statistics",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1606256"
+    },
+    "response": [],
+    "results": 0
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 198,
+   "http_status": 200,
+   "label": "stats_1606256",
+   "params": {
+    "fixture": 1606256
+   },
+   "path": "fixtures/statistics",
+   "provider_errors": [],
+   "provider_results_field": 0,
+   "rate_limit_remaining_day": "6634",
+   "rate_limit_remaining_minute": "225",
+   "response_array_length": 0
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/events",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1606256"
+    },
+    "response": [
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": null,
+       "name": null
+      },
+      "team": {
+       "id": 24771,
+       "logo": "https://media.api-sports.io/football/teams/24771.png",
+       "name": "Rio Verde"
+      },
+      "time": {
+       "elapsed": 45,
+       "extra": null
+      },
+      "type": "Goal"
+     }
+    ],
+    "results": 1
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 190,
+   "http_status": 200,
+   "label": "events_1606256",
+   "params": {
+    "fixture": 1606256
+   },
+   "path": "fixtures/events",
+   "provider_errors": [],
+   "provider_results_field": 1,
+   "rate_limit_remaining_day": "6633",
+   "rate_limit_remaining_minute": "224",
+   "response_array_length": 1
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/statistics",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1547788"
+    },
+    "response": [
+     {
+      "statistics": [
+       {
+        "type": "Shots on Goal",
+        "value": 4
+       },
+       {
+        "type": "Shots off Goal",
+        "value": 6
+       },
+       {
+        "type": "Total Shots",
+        "value": 12
+       },
+       {
+        "type": "Blocked Shots",
+        "value": 2
+       },
+       {
+        "type": "Shots insidebox",
+        "value": 7
+       },
+       {
+        "type": "Shots outsidebox",
+        "value": 5
+       },
+       {
+        "type": "Fouls",
+        "value": 15
+       },
+       {
+        "type": "Corner Kicks",
+        "value": 2
+       },
+       {
+        "type": "Offsides",
+        "value": 1
+       },
+       {
+        "type": "Ball Possession",
+        "value": "59%"
+       },
+       {
+        "type": "Yellow Cards",
+        "value": 3
+       },
+       {
+        "type": "Red Cards",
+        "value": null
+       },
+       {
+        "type": "Goalkeeper Saves",
+        "value": 0
+       },
+       {
+        "type": "Total passes",
+        "value": 409
+       },
+       {
+        "type": "Passes accurate",
+        "value": 339
+       },
+       {
+        "type": "Passes %",
+        "value": "83%"
+       },
+       {
+        "type": "expected_goals",
+        "value": "1.28"
+       },
+       {
+        "type": "goals_prevented",
+        "value": "0.36"
+       }
+      ],
+      "team": {
+       "id": 133,
+       "logo": "https://media.api-sports.io/football/teams/133.png",
+       "name": "Vasco DA Gama"
+      }
+     },
+     {
+      "statistics": [
+       {
+        "type": "Shots on Goal",
+        "value": 0
+       },
+       {
+        "type": "Shots off Goal",
+        "value": 4
+       },
+       {
+        "type": "Total Shots",
+        "value": 7
+       },
+       {
+        "type": "Blocked Shots",
+        "value": 3
+       },
+       {
+        "type": "Shots insidebox",
+        "value": 3
+       },
+       {
+        "type": "Shots outsidebox",
+        "value": 4
+       },
+       {
+        "type": "Fouls",
+        "value": 12
+       },
+       {
+        "type": "Corner Kicks",
+        "value": 4
+       },
+       {
+        "type": "Offsides",
+        "value": 0
+       },
+       {
+        "type": "Ball Possession",
+        "value": "41%"
+       },
+       {
+        "type": "Yellow Cards",
+        "value": 1
+       },
+       {
+        "type": "Red Cards",
+        "value": null
+       },
+       {
+        "type": "Goalkeeper Saves",
+        "value": 3
+       },
+       {
+        "type": "Total passes",
+        "value": 279
+       },
+       {
+        "type": "Passes accurate",
+        "value": 215
+       },
+       {
+        "type": "Passes %",
+        "value": "77%"
+       },
+       {
+        "type": "expected_goals",
+        "value": "0.24"
+       },
+       {
+        "type": "goals_prevented",
+        "value": "0.36"
+       }
+      ],
+      "team": {
+       "id": 1128,
+       "logo": "https://media.api-sports.io/football/teams/1128.png",
+       "name": "Independiente Medellin"
+      }
+     }
+    ],
+    "results": 2
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 190,
+   "http_status": 200,
+   "label": "stats_1547788",
+   "params": {
+    "fixture": 1547788
+   },
+   "path": "fixtures/statistics",
+   "provider_errors": [],
+   "provider_results_field": 2,
+   "rate_limit_remaining_day": "6631",
+   "rate_limit_remaining_minute": "222",
+   "response_array_length": 2
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/events",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1547788"
+    },
+    "response": [
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": "Tripping",
+      "detail": "Yellow Card",
+      "player": {
+       "id": 6735,
+       "name": "C. Spinelli"
+      },
+      "team": {
+       "id": 133,
+       "logo": "https://media.api-sports.io/football/teams/133.png",
+       "name": "Vasco DA Gama"
+      },
+      "time": {
+       "elapsed": 4,
+       "extra": null
+      },
+      "type": "Card"
+     },
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": "Tripping",
+      "detail": "Yellow Card",
+      "player": {
+       "id": 51483,
+       "name": "J. Varela"
+      },
+      "team": {
+       "id": 1128,
+       "logo": "https://media.api-sports.io/football/teams/1128.png",
+       "name": "Independiente Medellin"
+      },
+      "time": {
+       "elapsed": 39,
+       "extra": null
+      },
+      "type": "Card"
+     },
+     {
+      "assist": {
+       "id": 353034,
+       "name": "Cuiabano"
+      },
+      "comments": null,
+      "detail": "Substitution 1",
+      "player": {
+       "id": 10234,
+       "name": "Lucas Piton"
+      },
+      "team": {
+       "id": 133,
+       "logo": "https://media.api-sports.io/football/teams/133.png",
+       "name": "Vasco DA Gama"
+      },
+      "time": {
+       "elapsed": 57,
+       "extra": null
+      },
+      "type": "subst"
+     },
+     {
+      "assist": {
+       "id": 306261,
+       "name": "Adson"
+      },
+      "comments": null,
+      "detail": "Substitution 2",
+      "player": {
+       "id": 9958,
+       "name": "Tche Tche"
+      },
+      "team": {
+       "id": 133,
+       "logo": "https://media.api-sports.io/football/teams/133.png",
+       "name": "Vasco DA Gama"
+      },
+      "time": {
+       "elapsed": 57,
+       "extra": null
+      },
+      "type": "subst"
+     },
+     {
+      "assist": {
+       "id": 10328,
+       "name": "Yony Gonzalez"
+      },
+      "comments": null,
+      "detail": "Substitution 1",
+      "player": {
+       "id": 521710,
+       "name": "H. Loboa"
+      },
+      "team": {
+       "id": 1128,
+       "logo": "https://media.api-sports.io/football/teams/1128.png",
+       "name": "Independiente Medellin"
+      },
+      "time": {
+       "elapsed": 59,
+       "extra": null
+      },
+      "type": "subst"
+     },
+     {
+      "assist": {
+       "id": 310774,
+       "name": "A. Saldivia"
+      },
+      "comments": null,
+      "detail": "Substitution 3",
+      "player": {
+       "id": 359372,
+       "name": "Robert Renan"
+      },
+      "team": {
+       "id": 133,
+       "logo": "https://media.api-sports.io/football/teams/133.png",
+       "name": "Vasco DA Gama"
+      },
+      "time": {
+       "elapsed": 60,
+       "extra": null
+      },
+      "type": "subst"
+     },
+     {
+      "assist": {
+       "id": 9975,
+       "name": "Brenner"
+      },
+      "comments": null,
+      "detail": "Substitution 4",
+      "player": {
+       "id": 6735,
+       "name": "C. Spinelli"
+      },
+      "team": {
+       "id": 133,
+       "logo": "https://media.api-sports.io/football/teams/133.png",
+       "name": "Vasco DA Gama"
+      },
+      "time": {
+       "elapsed": 66,
+       "extra": null
+      },
+      "type": "subst"
+     },
+     {
+      "assist": {
+       "id": 9890,
+       "name": "Jair"
+      },
+      "comments": null,
+      "detail": "Substitution 5",
+      "player": {
+       "id": 614200,
+       "name": "Ramon Rique"
+      },
+      "team": {
+       "id": 133,
+       "logo": "https://media.api-sports.io/football/teams/133.png",
+       "name": "Vasco DA Gama"
+      },
+      "time": {
+       "elapsed": 66,
+       "extra": null
+      },
+      "type": "subst"
+     },
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": "Tripping",
+      "detail": "Yellow Card",
+      "player": {
+       "id": 9890,
+       "name": "Jair"
+      },
+      "team": {
+       "id": 133,
+       "logo": "https://media.api-sports.io/football/teams/133.png",
+       "name": "Vasco DA Gama"
+      },
+      "time": {
+       "elapsed": 69,
+       "extra": null
+      },
+      "type": "Card"
+     },
+     {
+      "assist": {
+       "id": 13779,
+       "name": "B. Perlaza"
+      },
+      "comments": null,
+      "detail": "Substitution 2",
+      "player": {
+       "id": 46804,
+       "name": "D. Moreno"
+      },
+      "team": {
+       "id": 1128,
+       "logo": "https://media.api-sports.io/football/teams/1128.png",
+       "name": "Independiente Medellin"
+      },
+      "time": {
+       "elapsed": 80,
+       "extra": null
+      },
+      "type": "subst"
+     },
+     {
+      "assist": {
+       "id": 13366,
+       "name": "D. Catano"
+      },
+      "comments": null,
+      "detail": "Substitution 3",
+      "player": {
+       "id": 414333,
+       "name": "J. Montano"
+      },
+      "team": {
+       "id": 1128,
+       "logo": "https://media.api-sports.io/football/teams/1128.png",
+       "name": "Independiente Medellin"
+      },
+      "time": {
+       "elapsed": 80,
+       "extra": null
+      },
+      "type": "subst"
+     },
+     {
+      "assist": {
+       "id": 133910,
+       "name": "Paulo Henrique"
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": 22232,
+       "name": "Thiago Mendes"
+      },
+      "team": {
+       "id": 133,
+       "logo": "https://media.api-sports.io/football/teams/133.png",
+       "name": "Vasco DA Gama"
+      },
+      "time": {
+       "elapsed": 85,
+       "extra": null
+      },
+      "type": "Goal"
+     },
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": "Delay of game",
+      "detail": "Yellow Card",
+      "player": {
+       "id": 22232,
+       "name": "Thiago Mendes"
+      },
+      "team": {
+       "id": 133,
+       "logo": "https://media.api-sports.io/football/teams/133.png",
+       "name": "Vasco DA Gama"
+      },
+      "time": {
+       "elapsed": 86,
+       "extra": null
+      },
+      "type": "Card"
+     },
+     {
+      "assist": {
+       "id": 646328,
+       "name": "K. Klinger"
+      },
+      "comments": null,
+      "detail": "Substitution 4",
+      "player": {
+       "id": 346893,
+       "name": "J. Cordoba"
+      },
+      "team": {
+       "id": 1128,
+       "logo": "https://media.api-sports.io/football/teams/1128.png",
+       "name": "Independiente Medellin"
+      },
+      "time": {
+       "elapsed": 90,
+       "extra": null
+      },
+      "type": "subst"
+     }
+    ],
+    "results": 14
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 193,
+   "http_status": 200,
+   "label": "events_1547788",
+   "params": {
+    "fixture": 1547788
+   },
+   "path": "fixtures/events",
+   "provider_errors": [],
+   "provider_results_field": 14,
+   "rate_limit_remaining_day": "6629",
+   "rate_limit_remaining_minute": "220",
+   "response_array_length": 14
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/statistics",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1493023"
+    },
+    "response": [
+     {
+      "statistics": [
+       {
+        "type": "Shots on Goal",
+        "value": 1
+       },
+       {
+        "type": "Shots off Goal",
+        "value": 6
+       },
+       {
+        "type": "Total Shots",
+        "value": 8
+       },
+       {
+        "type": "Blocked Shots",
+        "value": 1
+       },
+       {
+        "type": "Shots insidebox",
+        "value": 6
+       },
+       {
+        "type": "Shots outsidebox",
+        "value": 2
+       },
+       {
+        "type": "Fouls",
+        "value": 7
+       },
+       {
+        "type": "Corner Kicks",
+        "value": 2
+       },
+       {
+        "type": "Offsides",
+        "value": 0
+       },
+       {
+        "type": "Ball Possession",
+        "value": "26%"
+       },
+       {
+        "type": "Yellow Cards",
+        "value": 0
+       },
+       {
+        "type": "Red Cards",
+        "value": null
+       },
+       {
+        "type": "Goalkeeper Saves",
+        "value": 2
+       },
+       {
+        "type": "Total passes",
+        "value": 168
+       },
+       {
+        "type": "Passes accurate",
+        "value": 104
+       },
+       {
+        "type": "Passes %",
+        "value": "62%"
+       },
+       {
+        "type": "expected_goals",
+        "value": "0.65"
+       },
+       {
+        "type": "goals_prevented",
+        "value": "0.03"
+       }
+      ],
+      "team": {
+       "id": 434,
+       "logo": "https://media.api-sports.io/football/teams/434.png",
+       "name": "Gimnasia L.P."
+      }
+     },
+     {
+      "statistics": [
+       {
+        "type": "Shots on Goal",
+        "value": 2
+       },
+       {
+        "type": "Shots off Goal",
+        "value": 2
+       },
+       {
+        "type": "Total Shots",
+        "value": 6
+       },
+       {
+        "type": "Blocked Shots",
+        "value": 2
+       },
+       {
+        "type": "Shots insidebox",
+        "value": 3
+       },
+       {
+        "type": "Shots outsidebox",
+        "value": 3
+       },
+       {
+        "type": "Fouls",
+        "value": 7
+       },
+       {
+        "type": "Corner Kicks",
+        "value": 7
+       },
+       {
+        "type": "Offsides",
+        "value": 2
+       },
+       {
+        "type": "Ball Possession",
+        "value": "74%"
+       },
+       {
+        "type": "Yellow Cards",
+        "value": 1
+       },
+       {
+        "type": "Red Cards",
+        "value": null
+       },
+       {
+        "type": "Goalkeeper Saves",
+        "value": 1
+       },
+       {
+        "type": "Total passes",
+        "value": 486
+       },
+       {
+        "type": "Passes accurate",
+        "value": 427
+       },
+       {
+        "type": "Passes %",
+        "value": "88%"
+       },
+       {
+        "type": "expected_goals",
+        "value": "0.18"
+       },
+       {
+        "type": "goals_prevented",
+        "value": "0.03"
+       }
+      ],
+      "team": {
+       "id": 435,
+       "logo": "https://media.api-sports.io/football/teams/435.png",
+       "name": "River Plate"
+      }
+     }
+    ],
+    "results": 2
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 192,
+   "http_status": 200,
+   "label": "stats_1493023",
+   "params": {
+    "fixture": 1493023
+   },
+   "path": "fixtures/statistics",
+   "provider_errors": [],
+   "provider_results_field": 2,
+   "rate_limit_remaining_day": "6628",
+   "rate_limit_remaining_minute": "219",
+   "response_array_length": 2
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/events",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1493023"
+    },
+    "response": [
+     {
+      "assist": {
+       "id": 6725,
+       "name": "Fausto Vera"
+      },
+      "comments": null,
+      "detail": "Substitution 1",
+      "player": {
+       "id": 47258,
+       "name": "M. Arambarri"
+      },
+      "team": {
+       "id": 435,
+       "logo": "https://media.api-sports.io/football/teams/435.png",
+       "name": "River Plate"
+      },
+      "time": {
+       "elapsed": 46,
+       "extra": null
+      },
+      "type": "subst"
+     },
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": "Foul",
+      "detail": "Yellow Card",
+      "player": {
+       "id": 657681,
+       "name": "L. Silva"
+      },
+      "team": {
+       "id": 435,
+       "logo": "https://media.api-sports.io/football/teams/435.png",
+       "name": "River Plate"
+      },
+      "time": {
+       "elapsed": 56,
+       "extra": null
+      },
+      "type": "Card"
+     },
+     {
+      "assist": {
+       "id": 538363,
+       "name": "F. Gonzalez"
+      },
+      "comments": null,
+      "detail": "Substitution 2",
+      "player": {
+       "id": 1493,
+       "name": "M. Acuna"
+      },
+      "team": {
+       "id": 435,
+       "logo": "https://media.api-sports.io/football/teams/435.png",
+       "name": "River Plate"
+      },
+      "time": {
+       "elapsed": 61,
+       "extra": null
+      },
+      "type": "subst"
+     },
+     {
+      "assist": {
+       "id": 6011,
+       "name": "R. Borre"
+      },
+      "comments": null,
+      "detail": "Substitution 3",
+      "player": {
+       "id": 6010,
+       "name": "L. Beltran"
+      },
+      "team": {
+       "id": 435,
+       "logo": "https://media.api-sports.io/football/teams/435.png",
+       "name": "River Plate"
+      },
+      "time": {
+       "elapsed": 61,
+       "extra": null
+      },
+      "type": "subst"
+     },
+     {
+      "assist": {
+       "id": 5678,
+       "name": "A. Max"
+      },
+      "comments": null,
+      "detail": "Substitution 1",
+      "player": {
+       "id": 357139,
+       "name": "M. Seoane"
+      },
+      "team": {
+       "id": 434,
+       "logo": "https://media.api-sports.io/football/teams/434.png",
+       "name": "Gimnasia L.P."
+      },
+      "time": {
+       "elapsed": 65,
+       "extra": null
+      },
+      "type": "subst"
+     },
+     {
+      "assist": {
+       "id": 279798,
+       "name": "M. Zalazar"
+      },
+      "comments": null,
+      "detail": "Substitution 2",
+      "player": {
+       "id": 475535,
+       "name": "J. Merlo"
+      },
+      "team": {
+       "id": 434,
+       "logo": "https://media.api-sports.io/football/teams/434.png",
+       "name": "Gimnasia L.P."
+      },
+      "time": {
+       "elapsed": 65,
+       "extra": null
+      },
+      "type": "subst"
+     },
+     {
+      "assist": {
+       "id": 214,
+       "name": "F. Colidio"
+      },
+      "comments": null,
+      "detail": "Substitution 4",
+      "player": {
+       "id": 53,
+       "name": "A. Correa"
+      },
+      "team": {
+       "id": 435,
+       "logo": "https://media.api-sports.io/football/teams/435.png",
+       "name": "River Plate"
+      },
+      "time": {
+       "elapsed": 71,
+       "extra": null
+      },
+      "type": "subst"
+     }
+    ],
+    "results": 7
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 186,
+   "http_status": 200,
+   "label": "events_1493023",
+   "params": {
+    "fixture": 1493023
+   },
+   "path": "fixtures/events",
+   "provider_errors": [],
+   "provider_results_field": 7,
+   "rate_limit_remaining_day": "6626",
+   "rate_limit_remaining_minute": "217",
+   "response_array_length": 7
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/statistics",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1545516"
+    },
+    "response": [],
+    "results": 0
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 189,
+   "http_status": 200,
+   "label": "stats_1545516",
+   "params": {
+    "fixture": 1545516
+   },
+   "path": "fixtures/statistics",
+   "provider_errors": [],
+   "provider_results_field": 0,
+   "rate_limit_remaining_day": "6624",
+   "rate_limit_remaining_minute": "215",
+   "response_array_length": 0
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/events",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1545516"
+    },
+    "response": [
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": 13373,
+       "name": "L. Vasquez"
+      },
+      "team": {
+       "id": 1134,
+       "logo": "https://media.api-sports.io/football/teams/1134.png",
+       "name": "Internacional de Bogota"
+      },
+      "time": {
+       "elapsed": 13,
+       "extra": null
+      },
+      "type": "Goal"
+     },
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": 554920,
+       "name": "C. A. Franco Bustillo"
+      },
+      "team": {
+       "id": 23326,
+       "logo": "https://media.api-sports.io/football/teams/23326.png",
+       "name": "Internacional Palmira"
+      },
+      "time": {
+       "elapsed": 56,
+       "extra": null
+      },
+      "type": "Goal"
+     },
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": null,
+       "name": null
+      },
+      "team": {
+       "id": 1134,
+       "logo": "https://media.api-sports.io/football/teams/1134.png",
+       "name": "Internacional de Bogota"
+      },
+      "time": {
+       "elapsed": 90,
+       "extra": 2
+      },
+      "type": "Goal"
+     }
+    ],
+    "results": 3
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 189,
+   "http_status": 200,
+   "label": "events_1545516",
+   "params": {
+    "fixture": 1545516
+   },
+   "path": "fixtures/events",
+   "provider_errors": [],
+   "provider_results_field": 3,
+   "rate_limit_remaining_day": "6622",
+   "rate_limit_remaining_minute": "213",
+   "response_array_length": 3
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/statistics",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1545512"
+    },
+    "response": [],
+    "results": 0
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 189,
+   "http_status": 200,
+   "label": "stats_1545512",
+   "params": {
+    "fixture": 1545512
+   },
+   "path": "fixtures/statistics",
+   "provider_errors": [],
+   "provider_results_field": 0,
+   "rate_limit_remaining_day": "6567",
+   "rate_limit_remaining_minute": "211",
+   "response_array_length": 0
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/events",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1545512"
+    },
+    "response": [
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": 538309,
+       "name": "S. Borja"
+      },
+      "team": {
+       "id": 1466,
+       "logo": "https://media.api-sports.io/football/teams/1466.png",
+       "name": "Barranquilla"
+      },
+      "time": {
+       "elapsed": 3,
+       "extra": null
+      },
+      "type": "Goal"
+     },
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": 59441,
+       "name": "Y. Suarez"
+      },
+      "team": {
+       "id": 1135,
+       "logo": "https://media.api-sports.io/football/teams/1135.png",
+       "name": "Junior"
+      },
+      "time": {
+       "elapsed": 10,
+       "extra": null
+      },
+      "type": "Goal"
+     },
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": 53128,
+       "name": "G. Paiva"
+      },
+      "team": {
+       "id": 1135,
+       "logo": "https://media.api-sports.io/football/teams/1135.png",
+       "name": "Junior"
+      },
+      "time": {
+       "elapsed": 25,
+       "extra": null
+      },
+      "type": "Goal"
+     }
+    ],
+    "results": 3
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 188,
+   "http_status": 200,
+   "label": "events_1545512",
+   "params": {
+    "fixture": 1545512
+   },
+   "path": "fixtures/events",
+   "provider_errors": [],
+   "provider_results_field": 3,
+   "rate_limit_remaining_day": "6565",
+   "rate_limit_remaining_minute": "209",
+   "response_array_length": 3
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/statistics",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1493600"
+    },
+    "response": [],
+    "results": 0
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 191,
+   "http_status": 200,
+   "label": "stats_1493600",
+   "params": {
+    "fixture": 1493600
+   },
+   "path": "fixtures/statistics",
+   "provider_errors": [],
+   "provider_results_field": 0,
+   "rate_limit_remaining_day": "6563",
+   "rate_limit_remaining_minute": "207",
+   "response_array_length": 0
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/events",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1493600"
+    },
+    "response": [
+     {
+      "assist": {
+       "id": 46348,
+       "name": "J. Webber"
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": 541978,
+       "name": "L. Dorsey"
+      },
+      "team": {
+       "id": 4022,
+       "logo": "https://media.api-sports.io/football/teams/4022.png",
+       "name": "FC Tulsa"
+      },
+      "time": {
+       "elapsed": 13,
+       "extra": null
+      },
+      "type": "Goal"
+     },
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": "Foul",
+      "detail": "Yellow Card",
+      "player": {
+       "id": 206986,
+       "name": "A. Cissoko"
+      },
+      "team": {
+       "id": 4022,
+       "logo": "https://media.api-sports.io/football/teams/4022.png",
+       "name": "FC Tulsa"
+      },
+      "time": {
+       "elapsed": 31,
+       "extra": null
+      },
+      "type": "Card"
+     }
+    ],
+    "results": 2
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 191,
+   "http_status": 200,
+   "label": "events_1493600",
+   "params": {
+    "fixture": 1493600
+   },
+   "path": "fixtures/events",
+   "provider_errors": [],
+   "provider_results_field": 2,
+   "rate_limit_remaining_day": "6562",
+   "rate_limit_remaining_minute": "206",
+   "response_array_length": 2
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/statistics",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1493599"
+    },
+    "response": [],
+    "results": 0
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 193,
+   "http_status": 200,
+   "label": "stats_1493599",
+   "params": {
+    "fixture": 1493599
+   },
+   "path": "fixtures/statistics",
+   "provider_errors": [],
+   "provider_results_field": 0,
+   "rate_limit_remaining_day": "6560",
+   "rate_limit_remaining_minute": "204",
+   "response_array_length": 0
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/events",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1493599"
+    },
+    "response": [
+     {
+      "assist": {
+       "id": 171364,
+       "name": "A. McFadden"
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": 71141,
+       "name": "K. Lambert"
+      },
+      "team": {
+       "id": 4000,
+       "logo": "https://media.api-sports.io/football/teams/4000.png",
+       "name": "Louisville City"
+      },
+      "time": {
+       "elapsed": 6,
+       "extra": null
+      },
+      "type": "Goal"
+     }
+    ],
+    "results": 1
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 190,
+   "http_status": 200,
+   "label": "events_1493599",
+   "params": {
+    "fixture": 1493599
+   },
+   "path": "fixtures/events",
+   "provider_errors": [],
+   "provider_results_field": 1,
+   "rate_limit_remaining_day": "6558",
+   "rate_limit_remaining_minute": "202",
+   "response_array_length": 1
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/statistics",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1600547"
+    },
+    "response": [],
+    "results": 0
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 191,
+   "http_status": 200,
+   "label": "stats_1600547",
+   "params": {
+    "fixture": 1600547
+   },
+   "path": "fixtures/statistics",
+   "provider_errors": [],
+   "provider_results_field": 0,
+   "rate_limit_remaining_day": "6556",
+   "rate_limit_remaining_minute": "200",
+   "response_array_length": 0
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/events",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1600547"
+    },
+    "response": [],
+    "results": 0
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 206,
+   "http_status": 200,
+   "label": "events_1600547",
+   "params": {
+    "fixture": 1600547
+   },
+   "path": "fixtures/events",
+   "provider_errors": [],
+   "provider_results_field": 0,
+   "rate_limit_remaining_day": "6554",
+   "rate_limit_remaining_minute": "198",
+   "response_array_length": 0
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/statistics",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1493920"
+    },
+    "response": [],
+    "results": 0
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 199,
+   "http_status": 200,
+   "label": "stats_1493920",
+   "params": {
+    "fixture": 1493920
+   },
+   "path": "fixtures/statistics",
+   "provider_errors": [],
+   "provider_results_field": 0,
+   "rate_limit_remaining_day": "6552",
+   "rate_limit_remaining_minute": "196",
+   "response_array_length": 0
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/events",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1493920"
+    },
+    "response": [
+     {
+      "assist": {
+       "id": 101499,
+       "name": "D. Kostyshyn"
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": 513023,
+       "name": "J. Barea"
+      },
+      "team": {
+       "id": 27251,
+       "logo": "https://media.api-sports.io/football/teams/27251.png",
+       "name": "Boise"
+      },
+      "time": {
+       "elapsed": 5,
+       "extra": null
+      },
+      "type": "Goal"
+     },
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": 577052,
+       "name": "L. Meek"
+      },
+      "team": {
+       "id": 9026,
+       "logo": "https://media.api-sports.io/football/teams/9026.png",
+       "name": "Greenville Triumph"
+      },
+      "time": {
+       "elapsed": 13,
+       "extra": null
+      },
+      "type": "Goal"
+     },
+     {
+      "assist": {
+       "id": 513023,
+       "name": "J. Barea"
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": 101499,
+       "name": "D. Kostyshyn"
+      },
+      "team": {
+       "id": 27251,
+       "logo": "https://media.api-sports.io/football/teams/27251.png",
+       "name": "Boise"
+      },
+      "time": {
+       "elapsed": 16,
+       "extra": null
+      },
+      "type": "Goal"
+     },
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": 543270,
+       "name": "C. Evans"
+      },
+      "team": {
+       "id": 9026,
+       "logo": "https://media.api-sports.io/football/teams/9026.png",
+       "name": "Greenville Triumph"
+      },
+      "time": {
+       "elapsed": 25,
+       "extra": null
+      },
+      "type": "Goal"
+     },
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": null,
+      "detail": "Yellow Card",
+      "player": {
+       "id": 645906,
+       "name": "O. Yehya"
+      },
+      "team": {
+       "id": 27251,
+       "logo": "https://media.api-sports.io/football/teams/27251.png",
+       "name": "Boise"
+      },
+      "time": {
+       "elapsed": 33,
+       "extra": null
+      },
+      "type": "Card"
+     }
+    ],
+    "results": 5
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 192,
+   "http_status": 200,
+   "label": "events_1493920",
+   "params": {
+    "fixture": 1493920
+   },
+   "path": "fixtures/events",
+   "provider_errors": [],
+   "provider_results_field": 5,
+   "rate_limit_remaining_day": "6551",
+   "rate_limit_remaining_minute": "195",
+   "response_array_length": 5
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/statistics",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1492316"
+    },
+    "response": [
+     {
+      "statistics": [
+       {
+        "type": "Shots on Goal",
+        "value": 2
+       },
+       {
+        "type": "Shots off Goal",
+        "value": 5
+       },
+       {
+        "type": "Total Shots",
+        "value": 9
+       },
+       {
+        "type": "Blocked Shots",
+        "value": 2
+       },
+       {
+        "type": "Shots insidebox",
+        "value": 7
+       },
+       {
+        "type": "Shots outsidebox",
+        "value": 2
+       },
+       {
+        "type": "Fouls",
+        "value": 8
+       },
+       {
+        "type": "Corner Kicks",
+        "value": 1
+       },
+       {
+        "type": "Offsides",
+        "value": 1
+       },
+       {
+        "type": "Ball Possession",
+        "value": "25%"
+       },
+       {
+        "type": "Yellow Cards",
+        "value": null
+       },
+       {
+        "type": "Red Cards",
+        "value": null
+       },
+       {
+        "type": "Goalkeeper Saves",
+        "value": 2
+       },
+       {
+        "type": "Total passes",
+        "value": 151
+       },
+       {
+        "type": "Passes accurate",
+        "value": 115
+       },
+       {
+        "type": "Passes %",
+        "value": "76%"
+       },
+       {
+        "type": "expected_goals",
+        "value": "0.73"
+       },
+       {
+        "type": "goals_prevented",
+        "value": "-0.35"
+       }
+      ],
+      "team": {
+       "id": 119,
+       "logo": "https://media.api-sports.io/football/teams/119.png",
+       "name": "Internacional"
+      }
+     },
+     {
+      "statistics": [
+       {
+        "type": "Shots on Goal",
+        "value": 2
+       },
+       {
+        "type": "Shots off Goal",
+        "value": 3
+       },
+       {
+        "type": "Total Shots",
+        "value": 7
+       },
+       {
+        "type": "Blocked Shots",
+        "value": 2
+       },
+       {
+        "type": "Shots insidebox",
+        "value": 4
+       },
+       {
+        "type": "Shots outsidebox",
+        "value": 3
+       },
+       {
+        "type": "Fouls",
+        "value": 8
+       },
+       {
+        "type": "Corner Kicks",
+        "value": 3
+       },
+       {
+        "type": "Offsides",
+        "value": 0
+       },
+       {
+        "type": "Ball Possession",
+        "value": "75%"
+       },
+       {
+        "type": "Yellow Cards",
+        "value": null
+       },
+       {
+        "type": "Red Cards",
+        "value": null
+       },
+       {
+        "type": "Goalkeeper Saves",
+        "value": 1
+       },
+       {
+        "type": "Total passes",
+        "value": 472
+       },
+       {
+        "type": "Passes accurate",
+        "value": 436
+       },
+       {
+        "type": "Passes %",
+        "value": "92%"
+       },
+       {
+        "type": "expected_goals",
+        "value": "0.32"
+       },
+       {
+        "type": "goals_prevented",
+        "value": "-0.35"
+       }
+      ],
+      "team": {
+       "id": 127,
+       "logo": "https://media.api-sports.io/football/teams/127.png",
+       "name": "Flamengo"
+      }
+     }
+    ],
+    "results": 2
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 207,
+   "http_status": 200,
+   "label": "stats_1492316",
+   "params": {
+    "fixture": 1492316
+   },
+   "path": "fixtures/statistics",
+   "provider_errors": [],
+   "provider_results_field": 2,
+   "rate_limit_remaining_day": "6549",
+   "rate_limit_remaining_minute": "193",
+   "response_array_length": 2
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/events",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1492316"
+    },
+    "response": [
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": 10147,
+       "name": "Vitinho"
+      },
+      "team": {
+       "id": 119,
+       "logo": "https://media.api-sports.io/football/teams/119.png",
+       "name": "Internacional"
+      },
+      "time": {
+       "elapsed": 27,
+       "extra": null
+      },
+      "type": "Goal"
+     },
+     {
+      "assist": {
+       "id": 618,
+       "name": "Danilo"
+      },
+      "comments": null,
+      "detail": "Substitution 1",
+      "player": {
+       "id": 10124,
+       "name": "Leo Pereira"
+      },
+      "team": {
+       "id": 127,
+       "logo": "https://media.api-sports.io/football/teams/127.png",
+       "name": "Flamengo"
+      },
+      "time": {
+       "elapsed": 46,
+       "extra": null
+      },
+      "type": "subst"
+     },
+     {
+      "assist": {
+       "id": 2560,
+       "name": "E. Pulgar"
+      },
+      "comments": null,
+      "detail": "Substitution 2",
+      "player": {
+       "id": 332654,
+       "name": "Evertton Araujo"
+      },
+      "team": {
+       "id": 127,
+       "logo": "https://media.api-sports.io/football/teams/127.png",
+       "name": "Flamengo"
+      },
+      "time": {
+       "elapsed": 46,
+       "extra": null
+      },
+      "type": "subst"
+     }
+    ],
+    "results": 3
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 194,
+   "http_status": 200,
+   "label": "events_1492316",
+   "params": {
+    "fixture": 1492316
+   },
+   "path": "fixtures/events",
+   "provider_errors": [],
+   "provider_results_field": 3,
+   "rate_limit_remaining_day": "6548",
+   "rate_limit_remaining_minute": "192",
+   "response_array_length": 3
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/statistics",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1492317"
+    },
+    "response": [
+     {
+      "statistics": [
+       {
+        "type": "Shots on Goal",
+        "value": 3
+       },
+       {
+        "type": "Shots off Goal",
+        "value": 2
+       },
+       {
+        "type": "Total Shots",
+        "value": 5
+       },
+       {
+        "type": "Blocked Shots",
+        "value": 0
+       },
+       {
+        "type": "Shots insidebox",
+        "value": 4
+       },
+       {
+        "type": "Shots outsidebox",
+        "value": 1
+       },
+       {
+        "type": "Fouls",
+        "value": 11
+       },
+       {
+        "type": "Corner Kicks",
+        "value": 4
+       },
+       {
+        "type": "Offsides",
+        "value": 2
+       },
+       {
+        "type": "Ball Possession",
+        "value": "62%"
+       },
+       {
+        "type": "Yellow Cards",
+        "value": 2
+       },
+       {
+        "type": "Red Cards",
+        "value": null
+       },
+       {
+        "type": "Goalkeeper Saves",
+        "value": 1
+       },
+       {
+        "type": "Total passes",
+        "value": 318
+       },
+       {
+        "type": "Passes accurate",
+        "value": 281
+       },
+       {
+        "type": "Passes %",
+        "value": "88%"
+       },
+       {
+        "type": "expected_goals",
+        "value": "1.03"
+       },
+       {
+        "type": "goals_prevented",
+        "value": "-0.36"
+       }
+      ],
+      "team": {
+       "id": 7848,
+       "logo": "https://media.api-sports.io/football/teams/7848.png",
+       "name": "Mirassol"
+      }
+     },
+     {
+      "statistics": [
+       {
+        "type": "Shots on Goal",
+        "value": 2
+       },
+       {
+        "type": "Shots off Goal",
+        "value": 6
+       },
+       {
+        "type": "Total Shots",
+        "value": 9
+       },
+       {
+        "type": "Blocked Shots",
+        "value": 1
+       },
+       {
+        "type": "Shots insidebox",
+        "value": 4
+       },
+       {
+        "type": "Shots outsidebox",
+        "value": 5
+       },
+       {
+        "type": "Fouls",
+        "value": 3
+       },
+       {
+        "type": "Corner Kicks",
+        "value": 3
+       },
+       {
+        "type": "Offsides",
+        "value": 1
+       },
+       {
+        "type": "Ball Possession",
+        "value": "38%"
+       },
+       {
+        "type": "Yellow Cards",
+        "value": 0
+       },
+       {
+        "type": "Red Cards",
+        "value": null
+       },
+       {
+        "type": "Goalkeeper Saves",
+        "value": 2
+       },
+       {
+        "type": "Total passes",
+        "value": 192
+       },
+       {
+        "type": "Passes accurate",
+        "value": 148
+       },
+       {
+        "type": "Passes %",
+        "value": "77%"
+       },
+       {
+        "type": "expected_goals",
+        "value": "0.40"
+       },
+       {
+        "type": "goals_prevented",
+        "value": "-0.36"
+       }
+      ],
+      "team": {
+       "id": 1198,
+       "logo": "https://media.api-sports.io/football/teams/1198.png",
+       "name": "Remo"
+      }
+     }
+    ],
+    "results": 2
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 189,
+   "http_status": 200,
+   "label": "stats_1492317",
+   "params": {
+    "fixture": 1492317
+   },
+   "path": "fixtures/statistics",
+   "provider_errors": [],
+   "provider_results_field": 2,
+   "rate_limit_remaining_day": "6547",
+   "rate_limit_remaining_minute": "191",
+   "response_array_length": 2
+  },
+  {
+   "body": {
+    "errors": [],
+    "get": "fixtures/events",
+    "paging": {
+     "current": 1,
+     "total": 1
+    },
+    "parameters": {
+     "fixture": "1492317"
+    },
+    "response": [
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": "Tripping",
+      "detail": "Yellow Card",
+      "player": {
+       "id": 156191,
+       "name": "Igor Formiga"
+      },
+      "team": {
+       "id": 7848,
+       "logo": "https://media.api-sports.io/football/teams/7848.png",
+       "name": "Mirassol"
+      },
+      "time": {
+       "elapsed": 17,
+       "extra": null
+      },
+      "type": "Card"
+     },
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": "Holding",
+      "detail": "Yellow Card",
+      "player": {
+       "id": 357888,
+       "name": "Gabriel Knesowitsch"
+      },
+      "team": {
+       "id": 7848,
+       "logo": "https://media.api-sports.io/football/teams/7848.png",
+       "name": "Mirassol"
+      },
+      "time": {
+       "elapsed": 21,
+       "extra": null
+      },
+      "type": "Card"
+     },
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": null,
+      "detail": "Own Goal",
+      "player": {
+       "id": 10232,
+       "name": "Marllon"
+      },
+      "team": {
+       "id": 7848,
+       "logo": "https://media.api-sports.io/football/teams/7848.png",
+       "name": "Mirassol"
+      },
+      "time": {
+       "elapsed": 30,
+       "extra": null
+      },
+      "type": "Goal"
+     },
+     {
+      "assist": {
+       "id": null,
+       "name": null
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": 5211,
+       "name": "L. Picco"
+      },
+      "team": {
+       "id": 1198,
+       "logo": "https://media.api-sports.io/football/teams/1198.png",
+       "name": "Remo"
+      },
+      "time": {
+       "elapsed": 45,
+       "extra": 1
+      },
+      "type": "Goal"
+     },
+     {
+      "assist": {
+       "id": 80654,
+       "name": "Willian Machado"
+      },
+      "comments": null,
+      "detail": "Substitution 1",
+      "player": {
+       "id": 357888,
+       "name": "Gabriel Knesowitsch"
+      },
+      "team": {
+       "id": 7848,
+       "logo": "https://media.api-sports.io/football/teams/7848.png",
+       "name": "Mirassol"
+      },
+      "time": {
+       "elapsed": 46,
+       "extra": null
+      },
+      "type": "subst"
+     },
+     {
+      "assist": {
+       "id": 9946,
+       "name": "Reinaldo"
+      },
+      "comments": null,
+      "detail": "Normal Goal",
+      "player": {
+       "id": 115525,
+       "name": "Joao Victor"
+      },
+      "team": {
+       "id": 7848,
+       "logo": "https://media.api-sports.io/football/teams/7848.png",
+       "name": "Mirassol"
+      },
+      "time": {
+       "elapsed": 54,
+       "extra": null
+      },
+      "type": "Goal"
+     }
+    ],
+    "results": 6
+   },
+   "count_disagreement": null,
+   "elapsed_ms": 199,
+   "http_status": 200,
+   "label": "events_1492317",
+   "params": {
+    "fixture": 1492317
+   },
+   "path": "fixtures/events",
+   "provider_errors": [],
+   "provider_results_field": 6,
+   "rate_limit_remaining_day": "6546",
+   "rate_limit_remaining_minute": "190",
+   "response_array_length": 6
+  }
+ ],
+ "requests_used": 28,
+ "rule": {
+  "absence_below_min_elapsed": "absence at elapsed < MIN_HONEST_ELAPSED is recorded as too_early_to_conclude, NEVER as absence",
+  "competition_verdict": "UNION over probed fixtures, always reported WITH the denominator (fixtures probed, and the elapsed minute of each)",
+  "events_present_means": "len(response) > 0 on fixtures/events",
+  "governing_rule": "Assert a non-zero COUNT, never a status code. An HTTP 200 carrying an empty payload is ABSENCE and is reported as absence.",
+  "registered_before_any_live_payload_was_seen": true,
+  "registered_utc": "2026-07-29",
+  "stats_present_means": "len(response) > 0 AND at least one entry carries at least one statistic with a non-empty `type`",
+  "version": "1.0",
+  "xg_present_means": "a non-against expected-goals type exists AND at least one of its values parses as a number; null/''/'-'/non-numeric is ABSENT, never zero",
+  "xg_type_accept_exact": [
+   "xg"
+  ],
+  "xg_type_accept_substring": "expectedgoals",
+  "xg_type_reject_substrings": [
+   "against",
+   "conceded",
+   "prevented",
+   "allowed",
+   "opponent",
+   "xga"
+  ],
+  "xg_zero_handling": "a parseable 0.0 is PRESENT-but-zero, recorded separately as xg_zero_valued; this probe cannot distinguish a genuine early-match 0.0 from a placeholder and does not pretend to"
+ },
+ "run_utc": "2026-07-29T23:50:28.559459+00:00",
+ "status": {
+  "_account_block_dropped": true,
+  "requests": {
+   "current": 791,
+   "limit_day": 7500
+  },
+  "subscription": {
+   "active": true,
+   "end": "2026-08-29T23:01:12+00:00",
+   "plan": "Pro"
+  }
+ },
+ "stdout": [
+  "API-FOOTBALL LIVE IN-PLAY COVERAGE PROBE",
+  "rule version 1.0 registered 2026-07-29 before any live payload was seen",
+  "key source: .apifootball_key",
+  "\u2500\u2500 plan / quota \u2500\u2500",
+  "    plan: {\"plan\": \"Pro\", \"end\": \"2026-08-29T23:01:12+00:00\", \"active\": true}",
+  "    quota: {\"current\": 791, \"limit_day\": 7500}",
+  "",
+  "\u2500\u2500 live fixtures (one request for the whole world) \u2500\u2500",
+  "    live fixtures: 16",
+  "    across 9 competitions",
+  "",
+  "\u2500\u2500 per-fixture statistics + events \u2500\u2500",
+  "    England        Premier League - Summer Se   14'   0 types    0 events  xg=None   too_early_to_conclude",
+  "    Brazil         Goiano - 2                   62'   0 types    1 events  xg=None   stats_absent",
+  "    Brazil         Goiano - 2                   62'   0 types    1 events  xg=None   stats_absent",
+  "    World          CONMEBOL Sudamericana        90'  18 types   14 events  xg=1.28   stats_present",
+  "    Argentina      Liga Profesional Argentina   73'  18 types    7 events  xg=0.65   stats_present",
+  "    Colombia       Copa Colombia                90'   0 types    3 events  xg=None   stats_absent",
+  "    Colombia       Copa Colombia                61'   0 types    3 events  xg=None   stats_absent",
+  "    USA            USL Championship             43'   0 types    2 events  xg=None   stats_absent",
+  "    USA            USL Championship             14'   0 types    1 events  xg=None   too_early_to_conclude",
+  "    El-Salvador    Primera Division             45'   0 types    0 events  xg=None   stats_absent",
+  "    USA            USL League One               44'   0 types    5 events  xg=None   stats_absent",
+  "    Brazil         Serie A                      59'  18 types    3 events  xg=0.73   stats_present",
+  "    Brazil         Serie A                      58'  18 types    6 events  xg=1.03   stats_present",
+  "",
+  "\u2500\u2500 coverage by competition (UNION over probed fixtures) \u2500\u2500",
+  "  [LIVE_STATS_ABSENT     ] Brazil         Goiano - 2                   n=2 at [62, 62]' types<=0 XG_ABSENT",
+  "  [LIVE_STATS_ABSENT     ] Colombia       Copa Colombia                n=2 at [90, 61]' types<=0 XG_ABSENT",
+  "  [LIVE_STATS_ABSENT     ] El-Salvador    Primera Division             n=1 at [45]' types<=0 XG_ABSENT",
+  "  [LIVE_STATS_ABSENT     ] USA            USL Championship             n=2 at [43, 14]' types<=0 XG_ABSENT",
+  "  [LIVE_STATS_ABSENT     ] USA            USL League One               n=1 at [44]' types<=0 XG_ABSENT",
+  "  [LIVE_STATS_PRESENT    ] Argentina      Liga Profesional Argentina   n=1 at [73]' types<=18 XG_PRESENT",
+  "  [LIVE_STATS_PRESENT    ] Brazil         Serie A                      n=2 at [59, 58]' types<=18 XG_PRESENT",
+  "  [LIVE_STATS_PRESENT    ] World          CONMEBOL Sudamericana        n=1 at [90]' types<=18 XG_PRESENT",
+  "  [TOO_EARLY_TO_CONCLUDE ] England        Premier League - Summer Seri n=1 at [14]' types<=0 XG_ABSENT",
+  "",
+  "requests used: 28 of a 60 cap (plan: 7500/day, 300/min)"
+ ]
+}

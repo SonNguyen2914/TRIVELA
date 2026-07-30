@@ -439,6 +439,28 @@ def mls_readiness_watch() -> None:
         print(f"[mls-readiness] watch error: {exc}")
 
 
+# --- Kalshi market hunter (observational scanner; shadow mode) -------------
+# Scans the soccer GAME-series taxonomy for structurally mispriced books
+# and records findings. OBSERVATIONAL ONLY: no order path, no advice;
+# alerts (rule-based src.alerts path) state arithmetic, never imperatives.
+# Lazy import + instant no-op when disabled or the live DB is dormant,
+# like every other live-plane job.
+
+def hunter_job() -> None:
+    """One hunter scan cycle. The cycle row it writes is the heartbeat:
+    a scanner that dies is visible as dead (stale last-cycle age on
+    /api/hunter/findings), never as a quiet market."""
+    try:
+        from src.live import hunter
+        r = hunter.scan_cycle()
+        if r.get("findings_new") or r.get("findings_expired") \
+                or r.get("error") or ("status" in r
+                                      and r["status"] != "complete"):
+            print(f"[hunter] {r}")
+    except Exception as exc:
+        print(f"[hunter] cycle error: {exc}")
+
+
 def mls_t10_job() -> None:
     """The atomic T-10 lock sweep (book freeze + canonical run)."""
     try:
@@ -645,6 +667,12 @@ def start_scheduler() -> BackgroundScheduler:
                       id="mls_stats", coalesce=True, max_instances=1)
     scheduler.add_job(mls_t10_job, "interval", seconds=60,
                       id="mls_t10", coalesce=True, max_instances=1)
+    # Kalshi market hunter: observational soccer-wide scan. Cadence is
+    # config (HUNTER_POLL_MINUTES); coalesce + max_instances=1 because a
+    # cycle can span several rate-limited provider pages.
+    scheduler.add_job(hunter_job, "interval",
+                      minutes=config.HUNTER_POLL_MINUTES,
+                      id="hunter", coalesce=True, max_instances=1)
     # The one thing no other alert covers: shadow collection stopped and
     # nobody noticed. Every other alert fires on MLS events, so silence
     # reads as a quiet evening rather than as a halt.

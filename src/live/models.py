@@ -21,8 +21,9 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Index,
-                        Integer, String, Text, UniqueConstraint, text)
+from sqlalchemy import (Boolean, CheckConstraint, Column, DateTime, Float,
+                        ForeignKey, Index, Integer, String, Text,
+                        UniqueConstraint, text)
 from sqlalchemy.orm import declarative_base
 
 LiveBase = declarative_base()
@@ -899,6 +900,183 @@ class MlsPlayerMatchStat(LiveBase):
     )
 
 
+class HunterFinding(LiveBase):
+    """One observational market-structure finding from the Kalshi soccer
+    hunter. APPEND-ONLY: a later cycle that no longer sees the anomaly
+    marks the row expired with a second capture timestamp — it never
+    deletes or rewrites the original observation.
+
+    Every price in legs_json carries OUR capture clock; Kalshi publishes
+    no quote timestamp (updated_time is the definition clock, ~30h stale
+    on active markets — see markets.QUOTE_FRESHNESS_NOTE). Margins are
+    exact Decimal net of the exact versioned fee policy, serialized as
+    strings. Provider-controlled strings (series/event/market tickers)
+    get generous widths — a 26-char fee-policy string in a 24-char
+    column once silently destroyed a night of production fills.
+
+    Cross-process idempotency: finding_key is the provider-stable
+    identity (type|series|event|market) and a PARTIAL unique index
+    enforces at most ONE OPEN row per key at the database — Railway
+    keeps the old container serving while the new one boots, so two
+    hunter processes legitimately overlap and an in-Python dedup check
+    alone is a race. Alert delivery is a durable claim on the row
+    (alert_claimed_at, leased) taken BEFORE any bytes leave the process;
+    alerted_at is set only on a confirmed transport acceptance and
+    alert_results_json retains the per-transport outcome either way."""
+    __tablename__ = "hunter_finding"
+    id = Column(Integer, primary_key=True)
+    # competition slug when the event maps to a known fixture (mls-2026);
+    # otherwise NULL and the series ticker is the grouping key
+    competition_slug = Column(String(32))
+    series = Column(String(64), nullable=False)          # KXUCLGAME ...
+    event_ticker = Column(String(128))
+    market_ticker = Column(String(128))    # market-level findings only
+    finding_type = Column(String(32), nullable=False)
+    # provider-stable identity: finding_type|series|event|market. The
+    # partial unique index below makes "one open finding per key" a
+    # database invariant, not a process-local one.
+    finding_key = Column(String(384), nullable=False)
+    # SUM_BELOW_ONE | CROSSED_BOOK | POST_CERTAINTY |
+    # WIDE_SPREAD | THIN_BOOK | IN_PLAY_OVERREACTION | MODEL_EDGE
+    # liquidity/repricing flags are CONTEXT, never wins: labelled so,
+    # never alerted
+    is_context = Column(Boolean, nullable=False, default=False)
+    # the full arithmetic: legs, exact prices, exact fee per leg, margin
+    legs_json = Column(Text, nullable=False)
+    net_margin_dollars = Column(String(24))       # exact Decimal, string
+    fee_policy_version = Column(String(64))
+    # MODEL_EDGE only: the standing approval qualifier (edge, n, CI,
+    # significance) copied verbatim from the active approval decision
+    model_qualifier_json = Column(Text)
+    fixture_id = Column(Integer, ForeignKey("fixture.id"))
+    # the per-series Kalshi fetch-COMPLETION clock — the only timing
+    # evidence a quote gets (Kalshi publishes no quote timestamp), so it
+    # is preserved verbatim, never replaced by a later cycle-end clock
+    first_captured_at = Column(DateTime(timezone=True), nullable=False)
+    last_seen_at = Column(DateTime(timezone=True))
+    observed_cycles = Column(Integer, default=1)
+    # the separate clocks, kept apart on purpose: when the detector
+    # evaluated, and when the row reached the persistence phase
+    detected_at = Column(DateTime(timezone=True))
+    persisted_at = Column(DateTime(timezone=True))
+    # POST_CERTAINTY only: when the ESPN state was (re-)read — always at
+    # detection time, never cached from a previous cycle
+    espn_captured_at = Column(DateTime(timezone=True))
+    status = Column(String(16), nullable=False, default="open")
+    # open | expired
+    expired_at = Column(DateTime(timezone=True))
+    alerted_at = Column(DateTime(timezone=True))
+    # durable alert claim (leased) + retained per-transport outcomes
+    alert_claimed_at = Column(DateTime(timezone=True))
+    alert_results_json = Column(Text)
+    __table_args__ = (
+        Index("ix_hunter_finding_status_type", "status", "finding_type"),
+        # at most ONE open row per provider-stable key, enforced by the
+        # DATABASE on both dialects (same pattern as the canonical-lock
+        # partial unique index — the real cross-container guard)
+        Index("uq_hunter_finding_open_key", "finding_key", unique=True,
+              postgresql_where=text("status = 'open'"),
+              sqlite_where=text("status = 'open'")),
+        # observation clocks may never regress on a row: last_seen_at is
+        # a LATER observation of the same anomaly, never an earlier one.
+        # Overlapping Railway containers commit out of order, so this is
+        # a database invariant, not a process-local one (P0-3).
+        CheckConstraint("last_seen_at IS NULL OR "
+                        "last_seen_at >= first_captured_at",
+                        name="ck_hunter_finding_clock_monotonic"),
+        # POST_CERTAINTY only: the quote must have been captured AFTER
+        # finality was observed. A pre-final price paired with a settled
+        # outcome manufactures a margin that never existed, so the
+        # ordering is enforced by the TABLE and not merely by the
+        # detector that happens to write it (P0-2).
+        CheckConstraint("espn_captured_at IS NULL OR "
+                        "first_captured_at >= espn_captured_at",
+                        name="ck_hunter_finding_quote_after_finality"),
+    )
+
+
+class HunterObservationWatermark(LiveBase):
+    """The newest observation clock any process has applied to one
+    hunter finding_key — the cross-process chronological reconciliation
+    point (P0-3).
+
+    Railway deploys overlap old and new containers deliberately
+    (teardown is OFF), so an OLDER container's scan can legitimately
+    commit AFTER a newer one's. Without a watermark that straggler
+    re-opens a finding a newer clean scan already expired, and can send
+    an alert about a book that no longer exists. Advancing this row is
+    an atomic `UPDATE ... WHERE observed_through < :clock`: the DATABASE
+    decides which write is newest — exactly like the leased alert claim
+    — and a losing (stale) write is ignored rather than applied.
+
+    Keyed by finding_key rather than by finding id on purpose: the
+    watermark has to OUTLIVE the row it guards, or the straggler would
+    simply insert a fresh open row after the expiry.
+
+    Growth: one row per DISTINCT finding key ever observed (type x
+    series x event x market) — the same order as hunter_finding itself
+    and far smaller per row, written only when a key's observation
+    clock actually advances, never once per cycle."""
+    __tablename__ = "hunter_observation_watermark"
+    id = Column(Integer, primary_key=True)
+    finding_key = Column(String(384), nullable=False, unique=True)
+    # the newest per-series capture clock (OURS) applied to this key
+    observed_through = Column(DateTime(timezone=True), nullable=False)
+    updated_at = Column(DateTime(timezone=True))
+
+
+class HunterCycle(LiveBase):
+    """One hunter scan cycle — the heartbeat AND the denominator. A count
+    of findings without cycles-run/markets-scanned is a defect in this
+    repo, and a scanner that dies silently must be visible as dead, not
+    as a quiet market. One row per cycle, including failed ones.
+
+    Completeness is fail-closed: series_outcomes_json records the
+    per-series outcome (SUCCESS / REQUEST_FAILED / PAGINATION_CAP /
+    DETECTION_FAILED with detail), and any non-SUCCESS outcome makes the
+    cycle 'degraded' — "didn't look" is never recordable as "no
+    anomaly", and only a SUCCESS pass for a series may expire that
+    series' open findings."""
+    __tablename__ = "hunter_cycle"
+    id = Column(Integer, primary_key=True)
+    started_at = Column(DateTime(timezone=True), nullable=False)
+    completed_at = Column(DateTime(timezone=True))
+    status = Column(String(16), nullable=False, default="running")
+    # running | complete | degraded | failed
+    series_scanned = Column(Integer)
+    # series whose scan was NOT a complete success this cycle
+    series_failed = Column(Integer)
+    # per-series outcome map: {ticker: {outcome, detail?}}
+    series_outcomes_json = Column(Text)
+    events_scanned = Column(Integer)
+    markets_scanned = Column(Integer)
+    findings_new = Column(Integer)
+    findings_expired = Column(Integer)
+    # writes this cycle produced that a NEWER process had already
+    # superseded — ignored at the watermark rather than applied. A
+    # silent rejection would be its own kind of missing evidence, so
+    # the count rides on the heartbeat.
+    stale_writes_rejected = Column(Integer)
+    request_count = Column(Integer)
+    # the SECOND provider's spend (API-Football live in-play statistics),
+    # counted apart from Kalshi's. One combined number would hide which
+    # provider a budget problem came from, and the two have different
+    # limits and different failure modes.
+    live_stats_request_count = Column(Integer)
+    # what the live-evidence pass did this cycle: whether it ran at all,
+    # how many overreaction candidates it saw, which joins resolved or
+    # refused, the conditioning-state histogram, and the budget block. A
+    # cycle that spent nothing records WHY it spent nothing.
+    live_stats_json = Column(Text)
+    roster_size = Column(Integer)          # discovered soccer GAME series
+    active_series = Column(Integer)        # series with open markets
+    # when the roster was last (re-)discovered, and whether a DUE
+    # discovery failed this cycle (stale roster scanned instead)
+    discovery_at = Column(DateTime(timezone=True))
+    discovery_error = Column(Text)
+    error = Column(Text)
+
+
 class CorpusExport(LiveBase):
     """An IMMUTABLE published corpus version (V9 eval F3). build_corpus
     reads live state, so its bytes legitimately drift as the database
@@ -1077,3 +1255,64 @@ class ApiFootballClubLeague(LiveBase):
     match_tier = Column(String(24))       # exact | token_set | alias
     candidates_json = Column(Text)        # what was refused, and why
     resolved_at = Column(DateTime(timezone=True), nullable=False)
+
+class ApiFootballLiveCoverage(LiveBase):
+    """Per-competition verdict on whether API-Football serves LIVE in-play
+    data — MEASURED, dated, and one row per competition.
+
+    The hunter's in-play conditioning inference is only as honest as its
+    knowledge of what the provider actually covers, and coverage is uneven
+    and undocumented: measured 2026-07-29, CONMEBOL Sudamericana served 18
+    statistic types at 90' while Copa Colombia served ZERO at 90'. So the
+    verdict is measured from readings the scanner actually took, never
+    assumed and never read off the provider's own coverage flag (which the
+    trial harness found declaring `False` for two leagues whose payloads
+    carried xG).
+
+    STATISTICS AND EVENTS ARE SEPARATE COLUMNS, not one "has live data"
+    flag, because event coverage is strictly BROADER: competitions with
+    zero statistic types still served goal events. Collapsing them would
+    have made the broader signal invisible.
+
+    `fixtures_probed` is the DENOMINATOR and travels with the verdict: a
+    verdict from one fixture at 20' and one from ten fixtures at 70' are
+    not the same evidence. `too_early_reads` counts readings taken before
+    a match had time to generate statistics — those never downgrade an
+    already-measured PRESENT verdict, because letting one early read erase
+    a measured presence would convert missing evidence into a conclusion.
+
+    Growth is bounded by the number of competitions, updated IN PLACE —
+    deliberately not one row per reading. Per-reading payloads with no
+    reader are what filled the production volume on 2026-07-25.
+
+    NOT A MODEL INPUT. Nothing here may reach a T-10 lock, a
+    PredictionRun, a paper signal, or a fitted/scored feature; live xG
+    carries information from after a lock. Enforced by
+    tests/test_hunter_live_stats.py."""
+    __tablename__ = "apifootball_live_coverage"
+    id = Column(Integer, primary_key=True)
+    # the PROVIDER's own league id — a provider-stable identity, never a
+    # competition name
+    league_id = Column(Integer, nullable=False, unique=True)
+    league_name = Column(String(128))
+    league_country = Column(String(64))
+    # LIVE_STATS_PRESENT | LIVE_STATS_ABSENT | TOO_EARLY_TO_CONCLUDE
+    verdict = Column(String(32))
+    statistic_type_count = Column(Integer)
+    statistic_types_json = Column(Text)
+    # xG presence means a PARSEABLE number for both teams; a present-but-
+    # null xG (several leagues serve one) is ABSENT, never zero
+    xg_present = Column(Boolean, default=False)
+    xg_type_offered = Column(Boolean, default=False)
+    # tracked separately from statistics on purpose — see the class note
+    events_present = Column(Boolean, default=False)
+    event_count_last = Column(Integer)
+    fixtures_probed = Column(Integer, default=0)
+    too_early_reads = Column(Integer, default=0)
+    last_elapsed_observed = Column(Integer)
+    first_measured_at = Column(DateTime(timezone=True))
+    last_measured_at = Column(DateTime(timezone=True))
+    # when a PRESENT verdict was last actually observed, kept apart from
+    # last_measured_at so a long run of absences cannot make a stale
+    # presence look current
+    last_present_at = Column(DateTime(timezone=True))
