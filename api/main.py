@@ -645,6 +645,58 @@ def friendlies_markets(date: str | None = Query(None, pattern=r"^\d{8}$")):
 # cross-league strength read, because an ECL club's strength lives in its
 # DOMESTIC league. See src/ecl.py.
 
+# --- viewer competitions (additive, 2026-07-30) ---------------------------
+# Competitions served as fixtures + Kalshi + the cross-league strength read,
+# with NO model. One parameterized surface over src/competitions.py rather
+# than a route family per league — the three league match pages in the
+# frontend already show what copy-per-league costs.
+
+@app.get("/api/comp")
+def comp_list():
+    """Which viewer competitions exist, and why each has no model."""
+    from src import competitions
+    return competitions.listing()
+
+
+@app.get("/api/comp/{key}/fixtures")
+def comp_fixtures(key: str, season: int = Query(2026, ge=2020, le=2030),
+                  days: int | None = Query(None, ge=1, le=60),
+                  include_finished: bool = Query(False)):
+    """Upcoming fixtures with the strength read. Finished and past matches
+    are hidden by default — a fixture list that opens on yesterday's
+    results is not a fixture list."""
+    from src import competitions
+    out = competitions.fixtures(key, season, days, include_finished)
+    if out is None:
+        raise HTTPException(404, "unknown competition")
+    return out
+
+
+@app.get("/api/comp/{key}/markets")
+def comp_markets(key: str):
+    """Kalshi books. Every series ticker was PROBED, not guessed from the
+    competition name — KXSERIEAGAME is ITALY's Serie A, so the plausible
+    guess for Brasileirão would have attached Italian markets to Brazilian
+    fixtures."""
+    from src import competitions
+    out = competitions.markets(key)
+    if out is None:
+        raise HTTPException(404, "unknown competition")
+    return out
+
+
+@app.get("/api/comp/{key}/status")
+def comp_status(key: str):
+    """What this competition IS here, including WHY it has no model —
+    'by design' (a cup, permanently) and 'not built' (a league where one is
+    viable) are different claims and are never collapsed."""
+    from src import competitions
+    out = competitions.status(key)
+    if out is None:
+        raise HTTPException(404, "unknown competition")
+    return out
+
+
 @app.get("/api/ecl/fixtures")
 def ecl_fixtures(season: int = Query(2026, ge=2020, le=2030),
                  days: int | None = Query(None, ge=1, le=30)):

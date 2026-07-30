@@ -136,6 +136,34 @@ def day_ranking(day: str) -> dict:
 _idx_cache: tuple[int, dict, list] | None = None
 
 
+def _prefix_ok(query_tokens, row_tokens, query: str, row: str) -> bool:
+    """Whether a query CONTAINED IN a longer row name may match it.
+
+    Both containment directions are needed, but they carry very different
+    risk:
+
+      row ⊂ query   "Leeds United" -> "Leeds". The provider simply uses a
+                    shorter canonical name. Safe.
+      query ⊂ row   "Al Nassr" -> "Al Nassr Riyadh" is right, but
+                    "Miami FC" -> "Inter Miami" is a DIFFERENT CLUB — a
+                    USL side matched to an MLS one, found live on
+                    2026-07-30. {miami} is a strict subset of
+                    {inter, miami}, so plain containment accepted it.
+
+    The distinguishing fact is POSITION. A club's own name normally starts
+    its full name: "Estrela" begins "Estrela Amadora", "Al Nassr" begins
+    "Al Nassr Riyadh". A club whose name merely CONTAINS another club's is
+    a different club: "Inter Miami" does not begin with "Miami".
+
+    So the query must be a PREFIX of the row when the row is the longer
+    one. Cheap, explainable, and it keeps every match that was already
+    correct while refusing the one that was not.
+    """
+    if row_tokens < query_tokens:            # row is shorter: safe direction
+        return True
+    return row.startswith(query)
+
+
 def _indexes(table: dict):
     """(normalised-name map, (tokens, key) list), computed once per table —
     both were previously rebuilt on EVERY lookup. See the same fix in
@@ -184,7 +212,10 @@ def lookup(name: str, day: str) -> dict | None:
         ts = [k for toks, k in index if toks == want]
         if len(ts) == 1:
             return {**table[ts[0]], "match_tier": "token_set"}
-        uc = [k for toks, k in index if toks < want]
+        nq = _norm(name)
+        uc = [k for toks, k in index
+              if toks < want or (want < toks and _prefix_ok(
+                  want, toks, nq, _norm(k)))]
         if len(uc) == 1:
             return {**table[uc[0]], "match_tier": "unique_containment"}
     return None

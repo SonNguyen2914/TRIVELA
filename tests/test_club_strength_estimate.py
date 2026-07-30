@@ -388,3 +388,46 @@ class TestClubEloIsPreferredWhenBothCover:
         # both canned tables, so worldclubratings covers that pair on its
         # own without needing one rating from each provider.
         assert rated == 4
+
+
+class TestContainmentDirectionMatters:
+    """`Miami FC` matched `Inter Miami` — a USL club resolved to an MLS one,
+    found live on 2026-07-30 while building the USL viewer.
+
+    Both containment directions are needed, but they carry different risk.
+    row ⊂ query ("Leeds United" -> "Leeds") is the provider using a shorter
+    canonical name, and is safe. query ⊂ row is right for "Al Nassr" ->
+    "Al Nassr Riyadh" and WRONG for "Miami" -> "Inter Miami". Position
+    separates them: a club's own name normally STARTS its full name, while
+    a club that merely contains another's does not.
+    """
+
+    def _table(self, monkeypatch, rows):
+        monkeypatch.setattr(wcr, "ratings", lambda force=False: rows)
+        wcr._index_cache = None
+
+    def test_a_prefixed_different_club_is_refused(self, monkeypatch):
+        self._table(monkeypatch, {"a": {
+            "id": "a", "club": "Inter Miami", "country": "United States",
+            "country_code": "us", "points": 1500.0, "rank": 100}})
+        assert wcr.lookup("Miami FC") is None
+        assert wcr.lookup("Miami") is None
+
+    def test_a_genuine_suffix_still_matches(self, monkeypatch):
+        """The CONTROL. Without it the refusal above would also pass if
+        containment had simply been deleted."""
+        self._table(monkeypatch, {"b": {
+            "id": "b", "club": "Al Nassr Riyadh", "country": "Saudi Arabia",
+            "country_code": "sa", "points": 1548.0, "rank": 79}})
+        r = wcr.lookup("Al Nassr")
+        assert r is not None and r["club"] == "Al Nassr Riyadh"
+        assert r["match_tier"] == "unique_containment"
+
+    def test_the_shorter_row_direction_is_untouched(self, monkeypatch):
+        """"Leeds United" -> "Leeds": the row is shorter, which is the safe
+        direction and must keep working."""
+        self._table(monkeypatch, {"c": {
+            "id": "c", "club": "Leeds", "country": "England",
+            "country_code": "gb-eng", "points": 1708.0, "rank": 48}})
+        r = wcr.lookup("Leeds United")
+        assert r is not None and r["club"] == "Leeds"
