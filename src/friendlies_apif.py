@@ -461,6 +461,11 @@ def parse_fixture(row: object) -> dict | None:
         "league_name": lg.get("name"),
         "league_season": lg.get("season"),
         "is_classified_friendly": lg.get("id") in FRIENDLY_LEAGUES,
+        # the league's country, when the provider gives one. Used ONLY to
+        # disambiguate a club name across countries (Al-Sadd SC in Qatar
+        # vs Al Sadd in Yemen); frequently "World" on a friendly, which
+        # disambiguates nothing and correctly leaves the pair refused.
+        "league_country": lg.get("country"),
         # crest comes free in the same payload; venue is frequently
         # {id: None, name: None, city: None} on this feed, so it is
         # reported as ABSENT rather than as an empty string
