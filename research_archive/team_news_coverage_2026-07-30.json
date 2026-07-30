@@ -1,0 +1,1063 @@
+{
+ "_governing_rule": "ASSERT A NON-ZERO COUNT, NEVER A STATUS CODE. A 200 with an empty response array is NOT coverage. empty != unavailable != ok.",
+ "_states": {
+  "empty": "the request succeeded, the array was empty. For a lineup this means NOT RELEASED, never 'no players'. For injuries it means the provider listed none, which is NOT the same as 'nobody is injured'.",
+  "ok": "the response array had elements",
+  "unavailable": "the request did not succeed (transport/HTTP)"
+ },
+ "_what": "team-news coverage measurement: injuries, lineups, events",
+ "apifootball": {
+  "friendlies": {
+   "candidates": [],
+   "discovery_count": 0,
+   "discovery_state": "empty"
+  },
+  "per_league": {
+   "epl": {
+    "apif_league_id": 39,
+    "display": "English Premier League",
+    "events_on_completed_fixture": {
+     "count": 0,
+     "note": "no completed fixture found in this season to probe",
+     "state": "empty"
+    },
+    "fixture_window": {
+     "count": 0,
+     "from": "2026-07-30",
+     "note": null,
+     "state": "empty",
+     "to": "2026-08-09"
+    },
+    "fixtures": [],
+    "season": 2026,
+    "upcoming_not_started_count": 0
+   },
+   "laliga": {
+    "apif_league_id": 140,
+    "display": "Spanish LALIGA",
+    "events_on_completed_fixture": {
+     "count": 0,
+     "note": "no completed fixture found in this season to probe",
+     "state": "empty"
+    },
+    "fixture_window": {
+     "count": 0,
+     "from": "2026-07-30",
+     "note": null,
+     "state": "empty",
+     "to": "2026-08-09"
+    },
+    "fixtures": [],
+    "season": 2026,
+    "upcoming_not_started_count": 0
+   },
+   "ligamx": {
+    "apif_league_id": 262,
+    "display": "Mexican Liga BBVA MX",
+    "events_on_completed_fixture": {
+     "count": 17,
+     "fixture_id": 1550911,
+     "note": null,
+     "sample": [
+      {
+       "assist": {
+        "id": 2723,
+        "name": "Oussama Idrissi"
+       },
+       "comments": null,
+       "detail": "Normal Goal",
+       "player": {
+        "id": 2461,
+        "name": "Salom\u00f3n Rond\u00f3n"
+       },
+       "team": {
+        "id": 2292,
+        "logo": "https://media.api-sports.io/football/teams/2292.png",
+        "name": "CF Pachuca"
+       },
+       "time": {
+        "elapsed": 3,
+        "extra": null
+       },
+       "type": "Goal"
+      },
+      {
+       "assist": {
+        "id": null,
+        "name": null
+       },
+       "comments": "Foul",
+       "detail": "Yellow Card",
+       "player": {
+        "id": 441051,
+        "name": "Bayron Duarte"
+       },
+       "team": {
+        "id": 2290,
+        "logo": "https://media.api-sports.io/football/teams/2290.png",
+        "name": "Club Queretaro"
+       },
+       "time": {
+        "elapsed": 34,
+        "extra": null
+       },
+       "type": "Card"
+      },
+      {
+       "assist": {
+        "id": null,
+        "name": null
+       },
+       "comments": "Foul",
+       "detail": "Yellow Card",
+       "player": {
+        "id": 18902,
+        "name": "Kenedy"
+       },
+       "team": {
+        "id": 2292,
+        "logo": "https://media.api-sports.io/football/teams/2292.png",
+        "name": "CF Pachuca"
+       },
+       "time": {
+        "elapsed": 49,
+        "extra": null
+       },
+       "type": "Card"
+      }
+     ],
+     "state": "ok",
+     "types": {
+      "Card/Yellow Card": 5,
+      "Goal/Normal Goal": 3,
+      "subst/Substitution 1": 2,
+      "subst/Substitution 2": 2,
+      "subst/Substitution 3": 2,
+      "subst/Substitution 4": 2,
+      "subst/Substitution 5": 1
+     }
+    },
+    "fixture_window": {
+     "count": 9,
+     "from": "2026-07-30",
+     "note": null,
+     "state": "ok",
+     "to": "2026-08-09"
+    },
+    "fixtures": [
+     {
+      "away": "Guadalajara Chivas",
+      "fixture_id": 1550912,
+      "home": "Puebla",
+      "hours_to_kickoff": 48.3,
+      "injuries": {
+       "count": 0,
+       "note": null,
+       "records": [],
+       "state": "empty"
+      },
+      "kickoff_utc": "2026-08-01T01:00:00+00:00",
+      "lineups": {
+       "count": 0,
+       "interpretation": "not_released",
+       "note": null,
+       "sides": [],
+       "state": "empty"
+      }
+     },
+     {
+      "away": "U.N.A.M. - Pumas",
+      "fixture_id": 1550914,
+      "home": "FC Juarez",
+      "hours_to_kickoff": 50.3,
+      "injuries": {
+       "count": 0,
+       "note": null,
+       "records": [],
+       "state": "empty"
+      },
+      "kickoff_utc": "2026-08-01T03:00:00+00:00",
+      "lineups": {
+       "count": 0,
+       "interpretation": "not_released",
+       "note": null,
+       "sides": [],
+       "state": "empty"
+      }
+     },
+     {
+      "away": "Club Tijuana",
+      "fixture_id": 1550913,
+      "home": "Atletico San Luis",
+      "hours_to_kickoff": 50.3,
+      "injuries": {
+       "count": 0,
+       "note": null,
+       "records": [],
+       "state": "empty"
+      },
+      "kickoff_utc": "2026-08-01T03:00:00+00:00",
+      "lineups": {
+       "count": 0,
+       "interpretation": "not_released",
+       "note": null,
+       "sides": [],
+       "state": "empty"
+      }
+     }
+    ],
+    "season": 2026,
+    "upcoming_not_started_count": 9
+   },
+   "mls": {
+    "apif_league_id": 253,
+    "display": "Major League Soccer",
+    "events_on_completed_fixture": {
+     "count": 16,
+     "fixture_id": 1490360,
+     "note": null,
+     "sample": [
+      {
+       "assist": {
+        "id": null,
+        "name": null
+       },
+       "comments": null,
+       "detail": "Yellow Card",
+       "player": {
+        "id": 51312,
+        "name": "C. Bassett"
+       },
+       "team": {
+        "id": 1617,
+        "logo": "https://media.api-sports.io/football/teams/1617.png",
+        "name": "Portland Timbers"
+       },
+       "time": {
+        "elapsed": 10,
+        "extra": null
+       },
+       "type": "Card"
+      },
+      {
+       "assist": {
+        "id": 23643,
+        "name": "M. Guilavogui"
+       },
+       "comments": null,
+       "detail": "Normal Goal",
+       "player": {
+        "id": 162891,
+        "name": "J. Sanabria"
+       },
+       "team": {
+        "id": 1606,
+        "logo": "https://media.api-sports.io/football/teams/1606.png",
+        "name": "Real Salt Lake"
+       },
+       "time": {
+        "elapsed": 18,
+        "extra": null
+       },
+       "type": "Goal"
+      },
+      {
+       "assist": {
+        "id": null,
+        "name": null
+       },
+       "comments": null,
+       "detail": "Red Card",
+       "player": {
+        "id": 23643,
+        "name": "M. Guilavogui"
+       },
+       "team": {
+        "id": 1606,
+        "logo": "https://media.api-sports.io/football/teams/1606.png",
+        "name": "Real Salt Lake"
+       },
+       "time": {
+        "elapsed": 34,
+        "extra": null
+       },
+       "type": "Card"
+      }
+     ],
+     "state": "ok",
+     "types": {
+      "Card/Red Card": 1,
+      "Card/Yellow Card": 3,
+      "Goal/Normal Goal": 3,
+      "subst/Substitution 1": 2,
+      "subst/Substitution 2": 2,
+      "subst/Substitution 3": 2,
+      "subst/Substitution 4": 2,
+      "subst/Substitution 5": 1
+     }
+    },
+    "fixture_window": {
+     "count": 16,
+     "from": "2026-07-30",
+     "note": null,
+     "state": "ok",
+     "to": "2026-08-09"
+    },
+    "fixtures": [
+     {
+      "away": "Toronto FC",
+      "fixture_id": 1490361,
+      "home": "New York City FC",
+      "hours_to_kickoff": 46.8,
+      "injuries": {
+       "count": 26,
+       "note": null,
+       "records": [
+        {
+         "player": "D. Baiera",
+         "player_id": 422794,
+         "provider_reason": "Knee Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "A. Martinez",
+         "player_id": 79678,
+         "provider_reason": "Knee Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "M. Moralez",
+         "player_id": 50859,
+         "provider_reason": "Knee Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "A. O'Neill",
+         "player_id": 7050,
+         "provider_reason": "Ankle Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "K. O'Toole",
+         "player_id": 103167,
+         "provider_reason": "Leg Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "K. Parks",
+         "player_id": 50854,
+         "provider_reason": "Groin Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "Raul Gustavo",
+         "player_id": 14390,
+         "provider_reason": "Leg Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "K. Trewin",
+         "player_id": 153622,
+         "provider_reason": "Ankle Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "M. Cimermancic",
+         "player_id": 365964,
+         "provider_reason": "Thigh Injury",
+         "provider_type": "Missing Fixture",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "N. Gomis",
+         "player_id": 342659,
+         "provider_reason": "Thigh Injury",
+         "provider_type": "Missing Fixture",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "Matheus Pereira",
+         "player_id": 195091,
+         "provider_reason": "Groin Injury",
+         "provider_type": "Missing Fixture",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "N. Palacio",
+         "player_id": 197557,
+         "provider_reason": "Lower-Body Injury",
+         "provider_type": "Missing Fixture",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "A. Bossenberry",
+         "player_id": 541970,
+         "provider_reason": "Injury",
+         "provider_type": "Questionable",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "D. Baiera",
+         "player_id": 422794,
+         "provider_reason": "Knee Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "A. Martinez",
+         "player_id": 79678,
+         "provider_reason": "Knee Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "M. Moralez",
+         "player_id": 50859,
+         "provider_reason": "Knee Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "A. O'Neill",
+         "player_id": 7050,
+         "provider_reason": "Ankle Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "K. O'Toole",
+         "player_id": 103167,
+         "provider_reason": "Leg Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "K. Parks",
+         "player_id": 50854,
+         "provider_reason": "Groin Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "Raul Gustavo",
+         "player_id": 14390,
+         "provider_reason": "Leg Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "K. Trewin",
+         "player_id": 153622,
+         "provider_reason": "Ankle Injury",
+         "provider_type": "Missing Fixture",
+         "team": "New York City FC",
+         "team_id": 1604
+        },
+        {
+         "player": "M. Cimermancic",
+         "player_id": 365964,
+         "provider_reason": "Thigh Injury",
+         "provider_type": "Missing Fixture",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "N. Gomis",
+         "player_id": 342659,
+         "provider_reason": "Thigh Injury",
+         "provider_type": "Missing Fixture",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "Matheus Pereira",
+         "player_id": 195091,
+         "provider_reason": "Groin Injury",
+         "provider_type": "Missing Fixture",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "N. Palacio",
+         "player_id": 197557,
+         "provider_reason": "Lower-Body Injury",
+         "provider_type": "Missing Fixture",
+         "team": "Toronto FC",
+         "team_id": 1601
+        },
+        {
+         "player": "A. Bossenberry",
+         "player_id": 541970,
+         "provider_reason": "Injury",
+         "provider_type": "Questionable",
+         "team": "Toronto FC",
+         "team_id": 1601
+        }
+       ],
+       "state": "ok"
+      },
+      "kickoff_utc": "2026-07-31T23:30:00+00:00",
+      "lineups": {
+       "count": 0,
+       "interpretation": "not_released",
+       "note": null,
+       "sides": [],
+       "state": "empty"
+      }
+     },
+     {
+      "away": "Atlanta United FC",
+      "fixture_id": 1490364,
+      "home": "Philadelphia Union",
+      "hours_to_kickoff": 70.8,
+      "injuries": {
+       "count": 0,
+       "note": null,
+       "records": [],
+       "state": "empty"
+      },
+      "kickoff_utc": "2026-08-01T23:30:00+00:00",
+      "lineups": {
+       "count": 0,
+       "interpretation": "not_released",
+       "note": null,
+       "sides": [],
+       "state": "empty"
+      }
+     },
+     {
+      "away": "Orlando City SC",
+      "fixture_id": 1490365,
+      "home": "New York Red Bulls",
+      "hours_to_kickoff": 70.8,
+      "injuries": {
+       "count": 0,
+       "note": null,
+       "records": [],
+       "state": "empty"
+      },
+      "kickoff_utc": "2026-08-01T23:30:00+00:00",
+      "lineups": {
+       "count": 0,
+       "interpretation": "not_released",
+       "note": null,
+       "sides": [],
+       "state": "empty"
+      }
+     }
+    ],
+    "season": 2026,
+    "upcoming_not_started_count": 16
+   }
+  },
+  "plan_status": {
+   "requests": {
+    "current": 826,
+    "limit_day": 7500
+   },
+   "subscription": {
+    "active": true,
+    "end": "2026-08-29T23:01:12+00:00",
+    "plan": "Pro"
+   }
+  }
+ },
+ "coverage_summary": {
+  "apifootball_friendlies_lineups": null,
+  "apifootball_leagues": {
+   "epl": {
+    "events_on_completed": "empty/0",
+    "fixtures_probed": 0,
+    "injuries_fixtures_with_records": "0/0",
+    "injury_records_total": 0,
+    "lineups_released_pre_match": "0/0"
+   },
+   "laliga": {
+    "events_on_completed": "empty/0",
+    "fixtures_probed": 0,
+    "injuries_fixtures_with_records": "0/0",
+    "injury_records_total": 0,
+    "lineups_released_pre_match": "0/0"
+   },
+   "ligamx": {
+    "events_on_completed": "ok/17",
+    "fixtures_probed": 3,
+    "injuries_fixtures_with_records": "0/3",
+    "injury_records_total": 0,
+    "lineups_released_pre_match": "0/3"
+   },
+   "mls": {
+    "events_on_completed": "ok/16",
+    "fixtures_probed": 3,
+    "injuries_fixtures_with_records": "1/3",
+    "injury_records_total": 26,
+    "lineups_released_pre_match": "0/3"
+   }
+  },
+  "espn_friendly_rosters": {
+   "by_state": {
+    "not_released": 5,
+    "released": 3
+   },
+   "denominator_on_board": 8,
+   "probed": 8
+  }
+ },
+ "espn_friendlies": {
+  "board_count": 8,
+  "coverage": {
+   "by_state": {
+    "not_released": 5,
+    "released": 3
+   },
+   "denominator_on_board": 8,
+   "probed": 8
+  },
+  "fixtures": [
+   {
+    "detail": "HT",
+    "espn_event_id": "401863532",
+    "name": "Wrexham at Liverpool",
+    "roster_containers": 2,
+    "roster_state": "released",
+    "sides": {
+     "away": {
+      "formation": "3-4-3",
+      "named": 24,
+      "released": true,
+      "starters": 11
+     },
+     "home": {
+      "formation": "4-2-3-1",
+      "named": 22,
+      "released": true,
+      "starters": 11
+     }
+    },
+    "state": "in",
+    "teams": [
+     "Liverpool",
+     "Wrexham"
+    ]
+   },
+   {
+    "detail": "FT",
+    "espn_event_id": "401872736",
+    "name": "Borussia Dortmund at Cerezo Osaka",
+    "roster_containers": 2,
+    "roster_state": "released",
+    "sides": {
+     "away": {
+      "formation": "3-4-2-1",
+      "named": 22,
+      "released": true,
+      "starters": 11
+     },
+     "home": {
+      "formation": "3-4-2-1",
+      "named": 24,
+      "released": true,
+      "starters": 11
+     }
+    },
+    "state": "post",
+    "teams": [
+     "Cerezo Osaka",
+     "Borussia Dortmund"
+    ]
+   },
+   {
+    "detail": "Scheduled",
+    "espn_event_id": "401886550",
+    "name": "Barcelona at Birmingham City",
+    "roster_containers": 2,
+    "roster_state": "not_released",
+    "sides": {
+     "away": {
+      "formation": null,
+      "named": 0,
+      "released": false,
+      "starters": 0
+     },
+     "home": {
+      "formation": null,
+      "named": 0,
+      "released": false,
+      "starters": 0
+     }
+    },
+    "state": "pre",
+    "teams": [
+     "Birmingham City",
+     "Barcelona"
+    ]
+   },
+   {
+    "detail": "Scheduled",
+    "espn_event_id": "401887800",
+    "name": "Nice at Juventus",
+    "roster_containers": 2,
+    "roster_state": "not_released",
+    "sides": {
+     "away": {
+      "formation": null,
+      "named": 0,
+      "released": false,
+      "starters": 0
+     },
+     "home": {
+      "formation": null,
+      "named": 0,
+      "released": false,
+      "starters": 0
+     }
+    },
+    "state": "pre",
+    "teams": [
+     "Juventus",
+     "Nice"
+    ]
+   },
+   {
+    "detail": "FT",
+    "espn_event_id": "401896388",
+    "name": "Getafe at Atl\u00e9tico Madrid",
+    "roster_containers": 2,
+    "roster_state": "not_released",
+    "sides": {
+     "away": {
+      "formation": null,
+      "named": 0,
+      "released": false,
+      "starters": 0
+     },
+     "home": {
+      "formation": null,
+      "named": 0,
+      "released": false,
+      "starters": 0
+     }
+    },
+    "state": "post",
+    "teams": [
+     "Atl\u00e9tico Madrid",
+     "Getafe"
+    ]
+   },
+   {
+    "detail": "Scheduled",
+    "espn_event_id": "401897750",
+    "name": "Leeds United at Sunderland",
+    "roster_containers": 2,
+    "roster_state": "not_released",
+    "sides": {
+     "away": {
+      "formation": null,
+      "named": 0,
+      "released": false,
+      "starters": 0
+     },
+     "home": {
+      "formation": null,
+      "named": 0,
+      "released": false,
+      "starters": 0
+     }
+    },
+    "state": "pre",
+    "teams": [
+     "Sunderland",
+     "Leeds United"
+    ]
+   },
+   {
+    "detail": "Scheduled",
+    "espn_event_id": "401898691",
+    "name": "Al Sadd at Trabzonspor",
+    "roster_containers": 2,
+    "roster_state": "not_released",
+    "sides": {
+     "away": {
+      "formation": null,
+      "named": 0,
+      "released": false,
+      "starters": 0
+     },
+     "home": {
+      "formation": null,
+      "named": 0,
+      "released": false,
+      "starters": 0
+     }
+    },
+    "state": "pre",
+    "teams": [
+     "Trabzonspor",
+     "Al Sadd"
+    ]
+   },
+   {
+    "detail": "FT",
+    "espn_event_id": "401902669",
+    "name": "Newcastle United at Bristol City",
+    "roster_containers": 2,
+    "roster_state": "released",
+    "sides": {
+     "away": {
+      "formation": "4-3-3",
+      "named": 23,
+      "released": true,
+      "starters": 11
+     },
+     "home": {
+      "formation": "4-2-3-1",
+      "named": 25,
+      "released": true,
+      "starters": 11
+     }
+    },
+    "state": "post",
+    "teams": [
+     "Bristol City",
+     "Newcastle United"
+    ]
+   }
+  ],
+  "request_log": [
+   {
+    "label": "espn_scoreboard:20260729",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_scoreboard:20260730",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_scoreboard:20260731",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_summary:401863532",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_summary:401872736",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_summary:401886550",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_summary:401887800",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_summary:401896388",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_summary:401897750",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_summary:401898691",
+    "note": null,
+    "state": "ok"
+   },
+   {
+    "label": "espn_summary:401902669",
+    "note": null,
+    "state": "ok"
+   }
+  ],
+  "slug": "club.friendly"
+ },
+ "key_problems": [],
+ "key_source": ".apifootball_key",
+ "request_log": [
+  {
+   "count": 0,
+   "label": "status",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 16,
+   "label": "fixtures:mls",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 26,
+   "label": "injuries:mls:1490361",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 0,
+   "label": "lineups:mls:1490361",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "injuries:mls:1490364",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:mls:1490364",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "injuries:mls:1490365",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:mls:1490365",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 1,
+   "label": "fixtures_ft:mls",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 16,
+   "label": "events:mls:1490360",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 0,
+   "label": "fixtures:epl",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "fixtures_ft:epl",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "fixtures:laliga",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "fixtures_ft:laliga",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 9,
+   "label": "fixtures:ligamx",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 0,
+   "label": "injuries:ligamx:1550912",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:ligamx:1550912",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "injuries:ligamx:1550914",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:ligamx:1550914",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "injuries:ligamx:1550913",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 0,
+   "label": "lineups:ligamx:1550913",
+   "note": null,
+   "state": "empty"
+  },
+  {
+   "count": 1,
+   "label": "fixtures_ft:ligamx",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 17,
+   "label": "events:ligamx:1550911",
+   "note": null,
+   "state": "ok"
+  },
+  {
+   "count": 0,
+   "label": "leagues:friendlies",
+   "note": null,
+   "state": "empty"
+  }
+ ],
+ "requests_used": 24,
+ "run_utc": "2026-07-30T00:39:45.184738+00:00"
+}
