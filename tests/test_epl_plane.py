@@ -785,6 +785,12 @@ class TestEplT10LockIsFullyEplKeyed:
         assert st["decision_id"] == before_id
         # the FLAG is fail-closed on boot, by design
         assert st["approved_for_shadow"] is False
+        # the note is user-facing text an operator reads directly (it is
+        # what /api/epl/approval showed in production on 2026-07-30 right
+        # after activation) — it must not keep asserting "no approval
+        # decision exists" next to a live decision_id in the same payload
+        assert "UNAPPROVED" not in st["note"]
+        assert str(before_id) in st["note"]
 
 
 # --- P0-2: corpus / observability / audit are competition-scoped ----------
