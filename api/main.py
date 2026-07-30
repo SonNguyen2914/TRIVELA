@@ -1633,15 +1633,50 @@ def ligamx_approval():
 @app.get("/api/ligamx/status")
 def ligamx_status():
     """One honest page of what this competition IS right now: the
-    tournament ESPN is serving (split-season identity), the dark model
-    contract, the goals-only/no-xG verdict, and the plane switch state.
-    Everything here is derived or configured — nothing asserted."""
+    tournament ESPN is serving (split-season identity), the model's
+    approval state, the goals-only/no-xG verdict, and the plane switch
+    state. Everything here is derived or configured — nothing asserted.
+
+    `model.mode` is TAKEN FROM approval_status() rather than recomputed,
+    so this summary and /api/ligamx/approval cannot disagree about the
+    same decision. It was a hardcoded "dark" until 2026-07-30, when
+    activating Liga MX's first real approval (decision 214) left this
+    endpoint reporting a dark model while /api/ligamx/approval reported
+    the decision — same defect shape as the stale `note` in 724ef54.
+    A FAILED approval read reports "unavailable", never "dark": a
+    failure that renders as a deliberate design decision (the model is
+    off on purpose) is the one nobody investigates.
+    """
     from src import ligamx
     tournament = None
     try:
         tournament = ligamx.current_tournament()
     except Exception as exc:
         print(f"[ligamx] tournament read failed: {exc}")
+    approval = None
+    try:
+        from src.live import ligamx_plane
+        approval = ligamx_plane.approval_status()
+    except Exception as exc:
+        print(f"[ligamx] approval read failed: {exc}")
+    model = {
+        "name": "liga-mx-2026-v0",
+        "mode": (approval or {}).get("mode") or "unavailable",
+        "goals_only": True,
+        "xg_source": None,
+        # the xG verdict is about DATA availability, independent of
+        # approval — it stays true whatever mode says
+        "xg_note": ("no trustworthy public xG source exists for "
+                    "Liga MX (ESPN mex.1 carries no team-level "
+                    "match xG; the official ligamx.net surface has "
+                    "no public contract) — the model is goals-only "
+                    "and says so"),
+    }
+    if approval is not None:
+        model["approved_for_shadow"] = bool(
+            approval.get("approved_for_shadow"))
+        if approval.get("decision_id") is not None:
+            model["approval_decision_id"] = approval["decision_id"]
     return {
         "competition": "liga-mx-2026",
         "competition_note": ("liga-mx-2026 spans the ESPN season year: "
@@ -1650,17 +1685,7 @@ def ligamx_status():
                              "derived from provider data"),
         "tournament": tournament,
         "shadow_enabled": config.LIGAMX_SHADOW_ENABLED,
-        "model": {
-            "name": "liga-mx-2026-v0",
-            "mode": "dark",
-            "goals_only": True,
-            "xg_source": None,
-            "xg_note": ("no trustworthy public xG source exists for "
-                        "Liga MX (ESPN mex.1 carries no team-level "
-                        "match xG; the official ligamx.net surface has "
-                        "no public contract) — the model is goals-only "
-                        "and says so"),
-        },
+        "model": model,
         "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
         "generated_at": utcnow().isoformat(),
     }

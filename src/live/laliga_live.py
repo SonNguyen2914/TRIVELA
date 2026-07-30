@@ -194,18 +194,43 @@ def latest_odds() -> list[dict]:
 def shadow_status() -> dict:
     """The public posture read: pipeline counts + blockers (including
     the unmapped_upcoming metric) + the Kalshi coverage probe + the
-    explicit statements a reader needs to not over-trust this surface."""
+    explicit statements a reader needs to not over-trust this surface.
+
+    `model_dark` and its note are DERIVED from the same two approval
+    facts `counts` already reports, not asserted. They were hardcoded
+    to the dark state — right only for as long as La Liga stayed
+    unapproved, and the identical defect that had /api/ligamx/status
+    reporting a dark model next to Liga MX's live approval decision on
+    2026-07-30 (and, before that, the stale `note` fixed in 724ef54).
+    Derived, the day a La Liga ladder earns an approval this surface
+    moves with it instead of contradicting the counts printed directly
+    beneath it. Dark stays the fail-closed answer whenever the approval
+    facts cannot be read at all."""
     counts = runs.shadow_counts(spec=RUNS_SPEC) or {}
     from src import laliga as laliga_data
+    approved = bool(counts.get("model_approved_for_shadow")
+                    and counts.get("approval_decision_present"))
+    if not counts:
+        note = ("the live plane is dormant, so no approval state for "
+                f"{model_laliga.MODEL_NAME} can be read here; runs and "
+                "T-10 locks cannot run at all")
+    elif approved:
+        note = (f"{model_laliga.MODEL_NAME} has an approved "
+                "model-approval decision — shadow runs and T-10 locks "
+                "are permitted. This does NOT mean real money signals "
+                "are enabled (they stay server-side gated) or that an "
+                "edge is established")
+    else:
+        note = ("no approval decision exists for "
+                f"{model_laliga.MODEL_NAME}; runs and T-10 "
+                "locks are structurally refused until a "
+                "La Liga evaluation ladder earns one")
     return {
         "competition": SLUG,
         "enabled": config.LALIGA_SHADOW_ENABLED,
         "model_version": model_laliga.MODEL_NAME,
-        "model_dark": True,
-        "model_dark_note": ("no approval decision exists for "
-                            f"{model_laliga.MODEL_NAME}; runs and T-10 "
-                            "locks are structurally refused until a "
-                            "La Liga evaluation ladder earns one"),
+        "model_dark": not approved,
+        "model_dark_note": note,
         "xg_source": None,
         "xg_note": ("no trustworthy public La Liga xG source exists "
                     "(researched 2026-07-28) — ratings are goals-only"),
