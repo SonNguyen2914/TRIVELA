@@ -123,6 +123,43 @@ MLS_WIN_BLEND_ALPHA = float(os.getenv("MLS_WIN_BLEND_ALPHA", "0.0"))
 # goals for any fixture the mls_stats ingestion hasn't populated with xG.
 MLS_XG_RATING_ALPHA = float(os.getenv("MLS_XG_RATING_ALPHA", "1.0"))
 
+# --- Provider xG plausibility guard (Sportec internal consistency) --------
+# Sportec's own xG collapsed on the 2026-07-22/23 MLS restart slates while
+# its own shot volume held: total match xG per own shot on target sat at
+# 0.328-0.334 Feb-May, then 0.246 in July. Seven matches carry xG that the
+# SAME payload's shot and goal counts contradict (4:3 on 1.37 total xG;
+# 2:1 on 0.33). The provider labels all of them data_status="postmatch" —
+# final, not provisional — so there is no provider flag to reject them by.
+# The guard is therefore DERIVED from the payload's own internals.
+#
+# Both thresholds are set BELOW the clean Feb-May window's empirical
+# extreme, so they are not tuned to the anomaly they detect:
+#   match xG / own SoT   clean min 0.1443 (n=218)  -> threshold 0.12
+#   P(goals | total xG)  clean min 0.0228 (n=218)  -> threshold 0.02
+# Measured: 0/218 clean matches flagged, 7/35 July matches flagged, all
+# seven on 2026-07-22 and 2026-07-23 exactly.
+MLS_XG_GUARD_ENABLED = os.getenv("MLS_XG_GUARD_ENABLED", "true") \
+    .lower() in ("1", "true", "yes")
+MLS_XG_GUARD_MIN_XG_PER_SOT = float(
+    os.getenv("MLS_XG_GUARD_MIN_XG_PER_SOT", "0.12"))
+MLS_XG_GUARD_MIN_GOALS_TAIL_P = float(
+    os.getenv("MLS_XG_GUARD_MIN_GOALS_TAIL_P", "0.02"))
+# a sparse match carries little evidence either way: below this many total
+# shots on target the ratio test is not applied (the clean window's minimum
+# total SoT is 3, and its sparse matches have HIGH ratios, not low ones)
+MLS_XG_GUARD_MIN_SOT = int(os.getenv("MLS_XG_GUARD_MIN_SOT", "3"))
+
+# Whether the ratings actually EXCLUDE quarantined xG. Default false, which
+# preserves exactly what the deployed M3 rung consumes today: detection and
+# observability land without changing a single model output. Flipping this
+# changes what the ratings are fitted on — a modelling change owed an
+# evaluation and sequenced between slates (AGENTS.md §12), not a refactor.
+# When true, a quarantined fixture contributes only to the goals rating,
+# which is the fallback model_mls.fit() already degrades to for a fixture
+# with no xG at all.
+MLS_XG_QUARANTINE_EXCLUDE = os.getenv(
+    "MLS_XG_QUARANTINE_EXCLUDE", "false").lower() in ("1", "true", "yes")
+
 # --- Model humility (market anchoring) -----------------------------------
 # Final probability = MODEL_WEIGHT * model + (1-MODEL_WEIGHT) * market-implied.
 # Liquid markets are usually right; only large, genuine disagreements should

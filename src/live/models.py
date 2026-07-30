@@ -866,6 +866,23 @@ class MlsTeamMatchStat(LiveBase):
     source_observation_id = Column(
         Integer, ForeignKey("source_observation.id"))
     observed_at = Column(DateTime(timezone=True))
+    # the provider's OWN claim about this payload, recorded so it is
+    # auditable rather than assumed: data_status is "postmatch" (final) on
+    # every match measured — including the seven whose xG is provably wrong
+    # — which is exactly why the plausibility guard has to be DERIVED from
+    # the payload's internals instead of read off a provider flag.
+    # (Declared after observed_at to match the order migration
+    # c4e8a91f27b6 produces by appending them to an existing table.)
+    data_status = Column(String(24))                  # postmatch | ...
+    scope = Column(String(24))                        # match | ...
+    # verdict of that derived guard (mls_stats.xg_plausibility): the xG on
+    # this row is contradicted by the shot/goal counts in the SAME payload.
+    # Quarantined rows are still STORED — never rewritten, never deleted;
+    # historical evidence is not edited to improve a result (AGENTS.md §3).
+    # NULL means "never screened", which is NOT the same claim as False
+    # ("screened and passed") — quarantine_report keeps the two apart.
+    xg_quarantined = Column(Boolean)
+    xg_quarantine_reason = Column(String(160))        # which check + measured
     __table_args__ = (UniqueConstraint("fixture_id", "side"),)
 
 
