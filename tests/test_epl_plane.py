@@ -9,6 +9,7 @@ production requires the operator approval path that does not exist for
 EPL; no code path in this build can do it."""
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -132,6 +133,122 @@ class TestEplIngest:
                 .filter_by(competition_slug="mls-2026").count()) == 0
 
 
+class TestSeasonIsPinnedAndValidated:
+    """The provider decides which season it calls "current"; we must not
+    let it decide which season the ratings are fitted on."""
+
+    def _run(self, s, monkeypatch, events, expect_year=2026):
+        identity.seed_league_teams(
+            "epl-2026", epl_plane.ESPN_TEAMS_URL,
+            epl_plane.KALSHI_BRIDGES, espn_teams=CANNED_EPL[:1])
+        seen: list[dict] = []
+
+        class _R:
+            status_code = 200
+
+            @staticmethod
+            def raise_for_status():
+                return None
+
+            @staticmethod
+            def json():
+                return {"season": {"year": 2026,
+                                   "displayName":
+                                   "2026-27 English Premier League"},
+                        "events": events}
+
+        def fake(url, params=None, timeout=None):
+            seen.append(params or {})
+            return _R()
+        monkeypatch.setattr(ingest.requests, "get", fake)
+        out = epl_plane.ingest_season()
+        return out, seen
+
+    def _event(self, eid, year, label):
+        now = datetime.now(UTC) + timedelta(days=30)
+        return {"id": eid, "date": now.isoformat(),
+                "season": {"year": year, "displayName": label},
+                "competitions": [{"competitors": [
+                    {"homeAway": "home", "score": None,
+                     "team": {"displayName": "Arsenal"}},
+                    {"homeAway": "away", "score": None,
+                     "team": {"displayName": "Arsenal"}}],
+                    "status": {"type": {"state": "pre"}}}]}
+
+    def test_the_request_is_pinned_to_the_configured_season(
+            self, epl_session, monkeypatch):
+        out, seen = self._run(epl_session, monkeypatch, [
+            self._event("1", 2026, "2026-27 English Premier League")])
+        assert seen and all(p.get("season") == "2026" for p in seen)
+        assert out["season_pinned"] == 2026
+        assert out["season_label"] == "2026-27"
+        assert "error" not in out
+        assert out["created"] == 1
+
+    def test_a_wrong_season_event_is_refused_explicitly(
+            self, epl_session, monkeypatch):
+        """(Proven to fail: without validation the 2025-26 fixture is
+        ingested as epl-2026 history and silently becomes training
+        data.)"""
+        out, _ = self._run(epl_session, monkeypatch, [
+            self._event("1", 2026, "2026-27 English Premier League"),
+            self._event("2", 2025, "2025-26 English Premier League")])
+        assert out["created"] == 1
+        # two requests per club (played + fixture=true), so the
+        # same refused event is counted once per answer
+        assert out["season_rejected"] == {"season_2025": 2}
+        assert "provider season mismatch" in out["error"]
+        assert (epl_session.query(Fixture)
+                .filter_by(competition_slug="epl-2026",
+                           espn_event_id="2").count()) == 0
+
+    def test_an_event_with_no_season_block_is_refused_not_assumed(
+            self, epl_session, monkeypatch):
+        ev = self._event("3", 2026, "2026-27")
+        ev.pop("season")
+        out, _ = self._run(epl_session, monkeypatch, [ev])
+        assert out["created"] == 0
+        assert out["season_rejected"] == {"season_unknown": 2}
+        assert "error" in out
+
+    def test_a_mismatched_season_label_is_refused(self, epl_session,
+                                                  monkeypatch):
+        """The year alone is not the season: ESPN labels 2026-27 under
+        year 2026, so a payload whose label disagrees with the pin is a
+        provider change we must not absorb."""
+        out, _ = self._run(epl_session, monkeypatch, [
+            self._event("4", 2026, "2027-28 English Premier League")])
+        assert out["created"] == 0
+        assert out["season_rejected"] == {"season_label_mismatch": 2}
+
+    def test_mls_ingest_is_unpinned_and_unchanged(self, epl_session,
+                                                  monkeypatch):
+        """CONTROL: the pin is opt-in. The MLS call site passes no
+        expected season, so nothing about its behaviour moves."""
+        captured: list[dict] = []
+
+        class _R:
+            @staticmethod
+            def raise_for_status():
+                return None
+
+            @staticmethod
+            def json():
+                return {"events": []}
+
+        def fake(url, params=None, timeout=None):
+            captured.append(params or {})
+            return _R()
+        identity.seed_teams([{"id": 1, "displayName": "Austin FC",
+                              "shortDisplayName": "Austin",
+                              "abbreviation": "ATX"}])
+        monkeypatch.setattr(ingest.requests, "get", fake)
+        out = ingest.ingest_season_schedules()
+        assert all("season" not in p for p in captured)
+        assert out["season_pinned"] is None
+        assert "error" not in out
+
+
 def _fake_kalshi_paged(events_by_series, markets_by_event):
     """A cursor-complete _kalshi_paged double for both the events and
     markets endpoints, always reporting a clean full sweep."""
@@ -197,6 +314,81 @@ class TestEplDiscovery:
                .order_by(RegistryDiscovery.id.desc()).first())
         assert reg.competition_slug == "epl-2026"
         assert reg.complete is True
+
+    def test_archived_history_creates_no_rows(self, epl_session,
+                                              monkeypatch):
+        """P0-1, the persistence half: the provider answers with a full
+        archived season (387 real KXEPLGAME events, 2025-26) and no
+        current listings. Discovery must record NOTHING — a settled event
+        is not registry material, and writing 387 of them costs the rate
+        budget the slate needs. (Proven to fail: without the horizon
+        bound this writes 387 MarketEvent rows.)"""
+        from tests.test_epl import _archived_game_events
+        events = _archived_game_events()
+        assert len(events) == 387
+        monkeypatch.setattr(markets, "_kalshi_paged",
+                            _fake_kalshi_paged({"KXEPLGAME": events}, {}))
+        out = epl_plane.discover_and_map()
+        assert out["events_seen"] == 387
+        assert out["historical_skipped"] == 387
+        assert out["newly_mapped"] == 0 and out["unmapped"] == 0
+        assert out["contracts_filled"] == 0
+        assert epl_session.query(MarketEvent).count() == 0
+
+    def test_a_current_event_in_the_same_sweep_is_recorded(
+            self, epl_session, monkeypatch):
+        """CONTROL for the test above: the bound is the DATE, not the
+        sweep — one current event inside the same archived answer is
+        recorded normally."""
+        from datetime import date as _date
+        from tests.test_epl import _archived_game_events, _ticker_for
+        cur = _ticker_for(_date.today(), "ARSMUN")
+        monkeypatch.setattr(
+            markets, "_kalshi_paged",
+            _fake_kalshi_paged(
+                {"KXEPLGAME": _archived_game_events() + [
+                    {"event_ticker": cur, "title": "Arsenal vs Man Utd"}]},
+                {cur: []}))
+        out = epl_plane.discover_and_map()
+        assert out["historical_skipped"] == 387
+        assert epl_session.query(MarketEvent).count() == 1
+        assert (epl_session.query(MarketEvent).one()
+                .kalshi_event_ticker) == cur
+
+    def test_two_same_date_fixtures_refuse_to_attach(self, epl_session,
+                                                     monkeypatch):
+        """P0-4, the persistence half: (teams, date) is not a unique key
+        by construction, and the mapping loop took the FIRST hit. Two
+        fixtures for the same clubs on the same ET date must leave the
+        event unmapped. (Proven to fail: the first-hit loop attaches to
+        whichever fixture the query returned first.)"""
+        identity.seed_league_teams(
+            "epl-2026", epl_plane.ESPN_TEAMS_URL,
+            epl_plane.KALSHI_BRIDGES, espn_teams=CANNED_EPL)
+        ars = identity.resolve_espn_name("Arsenal",
+                                         competition_slug="epl-2026")
+        mun = identity.resolve_espn_name("Manchester United",
+                                         competition_slug="epl-2026")
+        from datetime import date as _date
+        day = _date.today()
+        for n, hour in (("dup1", 12), ("dup2", 17)):
+            ko = datetime(day.year, day.month, day.day, hour, tzinfo=UTC)
+            epl_session.add(Fixture(
+                competition_slug="epl-2026", espn_event_id=n,
+                home_team_id=ars.id, away_team_id=mun.id,
+                current_kickoff_utc=ko, original_kickoff_utc=ko,
+                status="pre"))
+        epl_session.commit()
+        from tests.test_epl import _ticker_for
+        et = _ticker_for(day, "ARSMUN")
+        monkeypatch.setattr(markets, "_kalshi_paged", _fake_kalshi_paged(
+            {"KXEPLGAME": [{"event_ticker": et,
+                            "title": "Arsenal vs Man Utd"}]}, {et: []}))
+        out = epl_plane.discover_and_map()
+        assert out["newly_mapped"] == 0 and out["unmapped"] == 1
+        ev = (epl_session.query(MarketEvent)
+              .filter_by(kalshi_event_ticker=et).one())
+        assert ev.fixture_id is None and not ev.mapping_approved
 
     def test_unbridged_promoted_club_stays_unmapped(
             self, epl_session, monkeypatch):
@@ -352,3 +544,461 @@ class TestCompetitionIsolation:
         from src.live import model_mls
         assert (model_epl.seed_for(fx, "t10")
                 != model_mls.seed_for(fx, "t10"))
+
+
+# --- P0-3: the COMPOSED EPL T-10 lock path --------------------------------
+# The dark contract stops EPL locks today, so the future path was never
+# exercised end to end. These tests grant EPL an approval decision (the
+# one thing production cannot do) and then walk the whole chain, asserting
+# that every frozen artefact is EPL's and no MLS state is consulted.
+
+_ENG1_SUMMARY = {
+    # reduced from research_archive/epl/espn_summary_740966_*.json —
+    # eng.1 summaries carry `rosters` with the same shape usa.1 does
+    "rosters": [
+        {"homeAway": "home", "formation": "4-3-3", "roster": [
+            {"starter": i == 0, "jersey": str(i + 1),
+             "position": {"abbreviation": "G" if i == 0 else "M"},
+             "athlete": {"id": f"e{i}", "displayName": f"EPL Home {i}"}}
+            for i in range(11)]},
+        {"homeAway": "away", "formation": "4-2-3-1", "roster": [
+            {"starter": i == 0, "jersey": str(i + 1),
+             "position": {"abbreviation": "G" if i == 0 else "M"},
+             "athlete": {"id": f"a{i}", "displayName": f"EPL Away {i}"}}
+            for i in range(11)]},
+    ],
+}
+
+
+def _epl_approval_decision(s):
+    """The immutable EPL approval decision. Production has NO path that
+    can create one — this is the test granting what the dark contract
+    withholds, so the future T-10 path can be exercised at all."""
+    import hashlib as _h
+
+    from src.live.models import ModelApprovalDecision, ModelVersion
+    mv = s.query(ModelVersion).filter_by(
+        name=model_epl.MODEL_NAME).one()
+    doc = ('{"model":"epl-2026-v0","mode":"shadow",'
+           '"note":"test-only approval"}')
+    dec = ModelApprovalDecision(
+        model_version_id=mv.id, model_version_name=model_epl.MODEL_NAME,
+        approved_mode="shadow", approved=True, decision_document=doc,
+        content_hash=_h.sha256(doc.encode()).hexdigest(),
+        created_at=datetime.now(UTC) - timedelta(hours=1))
+    s.add(dec)
+    s.commit()
+    return dec
+
+
+def _mls_decoy(s):
+    """MLS state that a competition-blind path would reach for: an
+    approved MLS model version and its own approval decision."""
+    import hashlib as _h
+
+    from src.live.models import ModelApprovalDecision, ModelVersion
+    from src.live import model_mls
+    mv = ModelVersion(name=model_mls.MODEL_NAME, description="decoy",
+                      approved_for_shadow=True,
+                      created_at=datetime.now(UTC))
+    s.add(mv)
+    s.flush()
+    doc = '{"model":"mls-2026-v0","mode":"shadow","note":"decoy"}'
+    dec = ModelApprovalDecision(
+        model_version_id=mv.id, model_version_name=model_mls.MODEL_NAME,
+        approved_mode="shadow", approved=True, decision_document=doc,
+        content_hash=_h.sha256(doc.encode()).hexdigest(),
+        created_at=datetime.now(UTC) - timedelta(hours=2))
+    s.add(dec)
+    s.commit()
+    return mv, dec
+
+
+class TestEplT10LockIsFullyEplKeyed:
+    TICKER = "KXEPLGAME-26AUG21ARSMUN"
+    LEGS = (("-ARS", "home_win"), ("-TIE", "draw"), ("-MUN", "away_win"))
+
+    def _arm(self, s, monkeypatch):
+        from src.live.models import (MarketContract, MarketEvent,
+                                     RegistryDiscovery)
+        monkeypatch.setattr(config, "N_SIMULATIONS", 400)
+        monkeypatch.setattr(config, "PAPER_TRADING_ENABLED", True)
+        up = _seed_epl_history(s, upcoming_in_hours=0.15)
+        model_epl.ensure_model_version(approved_for_shadow=True)
+        _epl_approval_decision(s)
+        _mls_decoy(s)
+        ev = MarketEvent(competition_slug="epl-2026",
+                         kalshi_event_ticker=self.TICKER,
+                         series="KXEPLGAME", fixture_id=up.id,
+                         mapping_approved=True, mapped_via="alias",
+                         title="Arsenal vs Man Utd")
+        s.add(ev)
+        s.flush()
+        for tail, okey in self.LEGS:
+            s.add(MarketContract(market_event_id=ev.id,
+                                 ticker=f"{self.TICKER}{tail}",
+                                 outcome_key=okey))
+        s.add(RegistryDiscovery(competition_slug="epl-2026",
+                                provider="kalshi", complete=True,
+                                events_seen=1,
+                                completed_at=datetime.now(UTC)))
+        s.commit()
+
+        def fake_get(url, **kw):
+            if "orderbook" in url:
+                return {"orderbook": {"yes": [[24, 500], [25, 900]],
+                                      "no": [[70, 400], [74, 800]]}}
+            return {"markets": [
+                {"ticker": f"{self.TICKER}{tail}", "yes_bid": 25,
+                 "yes_ask": 26, "no_bid": 74, "no_ask": 75,
+                 "yes_bid_size": 500, "yes_ask_size": 500,
+                 "status": "active"}
+                for tail, _k in self.LEGS]}
+        monkeypatch.setattr(markets, "_kalshi_get", fake_get)
+
+        seen_urls: list[str] = []
+
+        class _R:
+            status_code = 200
+
+            @staticmethod
+            def raise_for_status():
+                return None
+
+            @staticmethod
+            def json():
+                return _ENG1_SUMMARY
+
+        def fake_espn(url, **kw):
+            seen_urls.append(url)
+            return _R()
+        from src.live import lineups
+        monkeypatch.setattr(lineups.requests, "get", fake_espn)
+        from src import alerts
+        monkeypatch.setattr(alerts, "send_alert", lambda *a, **kw: None)
+        return up, seen_urls
+
+    def test_the_lock_freezes_epl_approval_engine_lineup_and_paper(
+            self, epl_session, monkeypatch):
+        """(Proven to fail: with the MLS league restored in lineups.py
+        the lineup is fetched from usa.1; with the MLS engine restored in
+        paper.capture_evaluation_context the frozen context carries the
+        MLS signature.)"""
+        from src.live.models import (LineupSnapshot, ModelApprovalDecision,
+                                     PaperEvaluationContext, PredictionRun)
+        up, seen_urls = self._arm(epl_session, monkeypatch)
+        assert epl_plane.t10_locks() == {"locked": 1}
+
+        lock = (epl_session.query(PredictionRun)
+                .filter_by(fixture_id=up.id, run_type="t10",
+                           canonical=True, status="complete").one())
+        # 1. the EPL approval decision, not the MLS decoy
+        epl_dec = (epl_session.query(ModelApprovalDecision)
+                   .filter_by(model_version_name="epl-2026-v0").one())
+        assert lock.model_approval_decision_id == epl_dec.id
+        # 2. the EPL engine signature, frozen in the input artifact
+        from src.live.models import ModelInputArtifact
+        art = epl_session.get(ModelInputArtifact,
+                              lock.model_input_artifact_id)
+        doc = json.loads(art.document_json)
+        assert doc["model"] == "epl-2026-v0"
+        assert doc["schema_version"] == model_epl.INPUT_ARTIFACT_SCHEMA
+        assert (doc["engine"]["signature_hash"]
+                == model_epl.engine_signature()["signature_hash"])
+        from src.live import model_mls
+        assert (doc["engine"]["signature_hash"]
+                != model_mls.engine_signature()["signature_hash"])
+        # 3. the EPL lineup source — eng.1, and recorded as such
+        assert seen_urls and all("eng.1" in u for u in seen_urls)
+        assert not any("usa.1" in u for u in seen_urls)
+        snap = epl_session.get(LineupSnapshot, lock.lineup_snapshot_id)
+        assert snap is not None
+        from src.live.models import SourceObservation
+        obs = epl_session.get(SourceObservation, snap.source_observation_id)
+        assert "league=eng.1" in obs.endpoint
+        # 4. the EPL paper context
+        ctx = (epl_session.query(PaperEvaluationContext)
+               .filter_by(prediction_run_id=lock.id).one())
+        assert (ctx.engine_signature_hash
+                == model_epl.engine_signature()["signature_hash"])
+        assert ctx.model_approval_decision_id == epl_dec.id
+        assert json.loads(ctx.exec_policy_json)["version"]
+
+    def test_epl_replay_and_audit_pass_under_the_epl_engine(
+            self, epl_session, monkeypatch):
+        from src.live import audit as live_audit
+        self._arm(epl_session, monkeypatch)
+        assert epl_plane.t10_locks() == {"locked": 1}
+        from src.live.models import PredictionRun
+        lock = (epl_session.query(PredictionRun)
+                .filter_by(run_type="t10", canonical=True).one())
+
+        rep = live_audit.verify_replay(lock.id)
+        assert rep["competition_slug"] == "epl-2026"
+        assert rep["model_version"] == "epl-2026-v0"
+        assert rep["engine_match"] is True
+        assert rep["replayable"] is True, rep
+
+        aud = live_audit.lock_audit(competition_slug="epl-2026")
+        assert aud["competition_slug"] == "epl-2026"
+        assert aud["model_version"] == "epl-2026-v0"
+        assert aud["summary"]["canonical_locks"] == 1
+        failures = {k: v for k, v
+                    in aud["locks"][0]["checks"].items() if not v}
+        assert failures == {}, failures
+        assert aud["summary"]["clean"] is True
+        # the MLS audit must not see the EPL lock at all
+        mls = live_audit.lock_audit(competition_slug="mls-2026")
+        assert mls["summary"]["canonical_locks"] == 0
+
+    def test_a_reboot_preserves_the_valid_approval(self, epl_session,
+                                                   monkeypatch):
+        """A restart must not destroy the immutable decision. It DOES
+        reset ModelVersion.approved_for_shadow — the fail-closed boot
+        rule (AGENTS.md §4), deliberate and asserted here so the
+        distinction between the durable DECISION and the runtime FLAG
+        stays explicit."""
+        import hashlib as _h
+
+        from src.live.models import ModelApprovalDecision
+        self._arm(epl_session, monkeypatch)
+        before = (epl_session.query(ModelApprovalDecision)
+                  .filter_by(model_version_name="epl-2026-v0").one())
+        before_id, before_hash = before.id, before.content_hash
+
+        monkeypatch.setattr(epl_plane, "seed_teams", lambda: {"ok": True})
+        monkeypatch.setattr(epl_plane, "ingest_season",
+                            lambda: {"ok": True})
+        monkeypatch.setattr(epl_plane, "discover_and_map",
+                            lambda: {"ok": True})
+        epl_plane.boot()
+        epl_session.expire_all()
+
+        after = (epl_session.query(ModelApprovalDecision)
+                 .filter_by(model_version_name="epl-2026-v0").one())
+        assert after.id == before_id
+        assert after.content_hash == before_hash
+        assert (_h.sha256(after.decision_document.encode()).hexdigest()
+                == after.content_hash)
+        st = epl_plane.approval_status()
+        assert st["approval_decision_missing"] is False
+        assert st["decision_id"] == before_id
+        # the FLAG is fail-closed on boot, by design
+        assert st["approved_for_shadow"] is False
+
+
+# --- P0-2: corpus / observability / audit are competition-scoped ----------
+# Nine corpus sections were whole-table dumps, and every metric was a
+# whole-table count. With two competitions in one database that means EPL
+# state inside MLS outputs — and a changing MLS manifest hash.
+
+def _seed_league(s, slug, *, team_name, alias, model_name, espn_id,
+                 ticker, hashseed):
+    """One competition's minimum end-to-end row set, disjoint from any
+    other league's: team + approved alias, fixture, model version +
+    approval decision, market event, lock snapshot, registry sweep,
+    prediction run, paper context + signal + fill, and a player."""
+    from src.live.models import (MarketEvent, MarketSnapshot,
+                                 ModelApprovalDecision, ModelVersion,
+                                 PaperEvaluationContext, PaperFill,
+                                 PaperSignal, Player, PredictionRun,
+                                 RegistryDiscovery, TeamAlias)
+    now = datetime.now(UTC)
+    team = Team(competition_slug=slug, canonical_name=team_name,
+                abbrev=team_name[:3].upper(), espn_id=espn_id)
+    s.add(team)
+    s.flush()
+    s.add(TeamAlias(team_id=team.id, alias=alias, source="kalshi",
+                    approved=True))
+    fx = Fixture(competition_slug=slug, espn_event_id=f"{espn_id}001",
+                 home_team_id=team.id, away_team_id=team.id,
+                 current_kickoff_utc=now - timedelta(hours=2),
+                 original_kickoff_utc=now - timedelta(hours=2),
+                 status="post", home_goals=1, away_goals=0)
+    s.add(fx)
+    mv = ModelVersion(name=model_name, description=slug, created_at=now)
+    s.add(mv)
+    s.add(Player(competition_slug=slug, espn_id=f"p{espn_id}",
+                 name=f"{team_name} Keeper", position="G"))
+    s.flush()
+    dec = ModelApprovalDecision(
+        model_version_id=mv.id, model_version_name=model_name,
+        approved_mode="shadow", approved=True,
+        decision_document=f"decision for {slug}",
+        content_hash=f"{hashseed}" * 8, created_at=now)
+    s.add(dec)
+    s.add(MarketEvent(competition_slug=slug, kalshi_event_ticker=ticker,
+                      series=ticker.split("-")[0], title=f"{team_name} vs X",
+                      mapping_approved=True, fixture_id=fx.id))
+    s.add(RegistryDiscovery(competition_slug=slug, provider="kalshi",
+                            complete=True, events_seen=1,
+                            completed_at=now))
+    s.flush()
+    snap = MarketSnapshot(fixture_id=fx.id, captured_at=now,
+                          status="failed", policy_version=f"{slug}-lock",
+                          failure_reason=f"{slug} snapshot failure")
+    s.add(snap)
+    run = PredictionRun(fixture_id=fx.id, run_type="t10", canonical=True,
+                        status="complete", captured_at=now,
+                        created_at=now, model_version_id=mv.id,
+                        model_approval_decision_id=dec.id,
+                        seconds_before_kickoff=600)
+    s.add(run)
+    s.flush()
+    ctx = PaperEvaluationContext(prediction_run_id=run.id, captured_at=now,
+                                 model_approved=True,
+                                 engine_signature_hash=f"{hashseed}" * 8,
+                                 content_hash=f"{hashseed}" * 8)
+    s.add(ctx)
+    s.flush()
+    sig = PaperSignal(prediction_run_id=run.id, fixture_id=fx.id,
+                      outcome_key="home_win", policy_version=f"{slug}-exec",
+                      decision="fill", created_at=now,
+                      paper_evaluation_context_id=ctx.id)
+    s.add(sig)
+    s.flush()
+    s.add(PaperFill(paper_signal_id=sig.id, requested_contracts=100,
+                    filled_contracts=100, status="settled", pnl_c=11,
+                    cost_dollars="1.00", pnl_dollars="0.11",
+                    execution_class="bounded_depth", created_at=now))
+    s.commit()
+    return {"team": team, "fixture": fx, "run": run, "model": mv}
+
+
+class TestCompetitionScopedOutputs:
+    """P0-2 acceptance. Disjoint MLS and EPL state; the MLS corpus must
+    contain no EPL identifier, stay referentially closed, keep its
+    manifest hash when EPL-only rows land, and keep its metrics."""
+
+    EPL_MARKERS = ("epl-2026", "Everton FC EPL", "Everton EPL",
+                   "KXEPLGAME-26AUG21EVEARS", "epl-2026-v0",
+                   "epl-2026-lock", "epl-2026-exec")
+
+    def _both(self, s):
+        _seed_league(s, "mls-2026", team_name="Austin FC MLS",
+                     alias="Austin MLS", model_name="mls-2026-v0",
+                     espn_id="9001", ticker="KXMLSGAME-26AUG21AUSPOR",
+                     hashseed="a")
+        _seed_league(s, "epl-2026", team_name="Everton FC EPL",
+                     alias="Everton EPL", model_name="epl-2026-v0",
+                     espn_id="9002", ticker="KXEPLGAME-26AUG21EVEARS",
+                     hashseed="b")
+
+    def test_mls_corpus_holds_no_epl_identifier_and_stays_closed(
+            self, epl_session):
+        """(Proven to fail: with the whole-table dumps restored, the MLS
+        corpus carries the EPL alias, model version, approval decision,
+        registry sweep, player, paper context, signal and fill.)"""
+        import json as _json
+
+        from src.live import corpus
+        self._both(epl_session)
+        bundle = corpus.build_corpus("scope-test",
+                                     competition_slug="mls-2026")
+        body = _json.dumps(bundle["sections"], sort_keys=True,
+                           default=str)
+        for marker in self.EPL_MARKERS:
+            assert marker not in body, marker
+        assert bundle["manifest"]["competition_slug"] == "mls-2026"
+        assert bundle["manifest"]["model_versions"] == ["mls-2026-v0"]
+
+        sec = bundle["sections"]
+        ids = {name: {r["id"] for r in rows}
+               for name, rows in sec.items()
+               if isinstance(rows, list) and rows and "id" in rows[0]}
+
+        def resolves(section, rows, field, target):
+            for r in rows:
+                if r.get(field) is not None:
+                    assert r[field] in ids.get(target, set()), \
+                        f"{section}.{field}={r[field]} dangles"
+
+        resolves("team_aliases.json", sec["team_aliases.json"],
+                 "team_id", "teams.json")
+        resolves("fixtures.json", sec["fixtures.json"],
+                 "home_team_id", "teams.json")
+        resolves("prediction_runs.json", sec["prediction_runs.json"],
+                 "model_version_id", "model_versions.json")
+        resolves("prediction_runs.json", sec["prediction_runs.json"],
+                 "model_approval_decision_id",
+                 "model_approval_decisions.json")
+        resolves("paper_signals.json", sec["paper_signals.json"],
+                 "paper_evaluation_context_id",
+                 "paper_evaluation_contexts.json")
+        resolves("paper_fills.json", sec["paper_fills.json"],
+                 "paper_signal_id", "paper_signals.json")
+        # the audit's retained failure evidence must be MLS's, not both
+        reasons = [f["failure_reason"] for f in
+                   sec["audit.json"]["failed_snapshots"]]
+        assert reasons == ["mls-2026 snapshot failure"]
+
+    def test_an_epl_only_row_leaves_the_mls_manifest_hash_unchanged(
+            self, epl_session):
+        from src.live import corpus
+        from src.live.models import RegistryDiscovery, TeamAlias
+        self._both(epl_session)
+        before = corpus.build_corpus(
+            "scope-test", competition_slug="mls-2026")["manifest"]
+        epl_team = (epl_session.query(Team)
+                    .filter_by(competition_slug="epl-2026").one())
+        epl_session.add(TeamAlias(team_id=epl_team.id,
+                                  alias="Everton EPL 2", source="kalshi",
+                                  approved=True))
+        epl_session.add(RegistryDiscovery(
+            competition_slug="epl-2026", provider="kalshi", complete=True,
+            events_seen=7, completed_at=datetime.now(UTC)))
+        epl_session.commit()
+        after = corpus.build_corpus(
+            "scope-test", competition_slug="mls-2026")["manifest"]
+        assert after["manifest_hash"] == before["manifest_hash"]
+        # CONTROL: an MLS-only row DOES move it — the hash is not inert
+        mls_team = (epl_session.query(Team)
+                    .filter_by(competition_slug="mls-2026").one())
+        epl_session.add(TeamAlias(team_id=mls_team.id, alias="Austin MLS 2",
+                                  source="kalshi", approved=True))
+        epl_session.commit()
+        moved = corpus.build_corpus(
+            "scope-test", competition_slug="mls-2026")["manifest"]
+        assert moved["manifest_hash"] != before["manifest_hash"]
+
+    def test_mls_metrics_are_unchanged_by_epl_state(self, epl_session):
+        from src.live import observability
+        _seed_league(epl_session, "mls-2026", team_name="Austin FC MLS",
+                     alias="Austin MLS", model_name="mls-2026-v0",
+                     espn_id="9001", ticker="KXMLSGAME-26AUG21AUSPOR",
+                     hashseed="a")
+        before = observability.metrics(competition_slug="mls-2026")
+        _seed_league(epl_session, "epl-2026", team_name="Everton FC EPL",
+                     alias="Everton EPL", model_name="epl-2026-v0",
+                     espn_id="9002", ticker="KXEPLGAME-26AUG21EVEARS",
+                     hashseed="b")
+        after = observability.metrics(competition_slug="mls-2026")
+        for key in ("data", "locks", "runs", "paper"):
+            assert after[key] == before[key], key
+        # and the EPL surface reports its own, non-zero state
+        epl = observability.metrics(competition_slug="epl-2026")
+        assert epl["data"]["mapped_market_events"] == 1
+        assert epl["paper"]["signals"] == 1
+        assert epl["locks"]["failed_snapshots"] == 1
+
+    def test_the_manifest_hash_is_stable_for_an_unchanged_database(
+            self, epl_session):
+        """corpus.py promises "the same database state exports to the
+        same manifest_hash". It did not: the embedded lock audit carried
+        its own wall-clock `generated_at`, so two back-to-back builds of
+        an UNCHANGED database hashed differently. Found while proving
+        P0-2 — the EPL-isolation assertion could not distinguish
+        contamination from clock drift. (Proven to fail: restore
+        generated_at inside the exported audit section.)"""
+        from src.live import corpus
+        self._both(epl_session)
+        a = corpus.build_corpus("scope-test",
+                                competition_slug="mls-2026")["manifest"]
+        b = corpus.build_corpus("scope-test",
+                                competition_slug="mls-2026")["manifest"]
+        assert a["manifest_hash"] == b["manifest_hash"]
+
+    def test_an_unknown_competition_fails_explicitly(self):
+        from src.live import competitions
+        with pytest.raises(KeyError):
+            competitions.spec("serie-a-2026")

@@ -24,27 +24,69 @@
   "kalshi": {
     "game_series": {
       "ticker": "KXEPLGAME",
-      "status": "VERIFIED to exist as a series definition AND to have 387 historical events (2025-26 season). 0 open events for 2026-27 as of today — listings for the new season have not appeared yet.",
+      "status": "VERIFIED to exist as a series definition AND to have 387 historical events (2025-26 season). NO 2026-27 fixture is listed as of today. Precisely what the archive shows: a status=open probe returned TEN events (kalshi_events_KXEPLGAME_2026-07-28T1015Z.json), and every one is dated 26MAY24 — the settled final matchday of 2025-26. status=open does NOT mean 'current' at this venue.",
       "files": [
         "kalshi_series_KXEPLGAME_2026-07-28T1015Z.json",
         "kalshi_events_KXEPLGAME_full_2026-07-28T1015Z.json",
-        "kalshi_markets_KXEPLGAME-26MAY24WHULEE_2026-07-28T1015Z.json"
+        "kalshi_markets_KXEPLGAME-26MAY24WHULEE_2026-07-28T1015Z.json",
+        "kalshi_events_KXEPLGAME_2026-07-28T1015Z.json"
       ],
       "ticker_grammar": "KXEPLGAME-{YYMONDD}{HOME3}{AWAY3}, market tails = home code / TIE / away code — same shape as KXMLSGAME (verified on the settled 26MAY24WHULEE event: -WHU/-TIE/-LEE, price_level_structure linear_cent)",
-      "title_join": "event title is '{Home} vs {Away}' — same ' vs ' join as MLS. CAUTION: some events title as '{Team}: Game Winner?' instead, and BOTH 'Man Utd' AND 'Manchester United' appear across the season (provider name drift within one series)."
+      "title_join": "event title is '{Home} vs {Away}' — same ' vs ' join as MLS, in ALL 387 archived events without exception. CAUTION: 7 of them append ': Game Winner?' to the AWAY side ('Manchester City vs Bournemouth: Game Winner?'), which still splits on ' vs ' but yields a side string that is not a club name. BOTH 'Man Utd' AND 'Manchester United' appear across the season (provider name drift within one series)."
     },
     "family_series_probes": {
       "method": "GET /trade-api/v2/series/{ticker}, one probe per candidate, throttled",
-      "exist_200": ["KXEPLGAME", "KXEPLTOTAL", "KXEPLBTTS", "KXEPLSPREAD", "KXEPLTEAMTOTAL", "KXEPLSCORE", "KXEPLFTTS", "KXEPL1H", "KXEPL1HTOTAL", "KXEPL1HSPREAD", "KXEPL1HBTTS", "KXEPLTOP4"],
-      "not_found_404": ["KXEPLMOV", "KXEPLWINNER", "KXEPLCUP", "KXEPLTITLE", "KXEPLCHAMP", "KXEPLLEAGUE"],
-      "files": "probe_KX*.json (raw series definitions / 404 bodies)",
+      "exist_200": [
+        "KXEPLGAME",
+        "KXEPLTOTAL",
+        "KXEPLBTTS",
+        "KXEPLSPREAD",
+        "KXEPLTEAMTOTAL",
+        "KXEPLSCORE",
+        "KXEPLFTTS",
+        "KXEPL1H",
+        "KXEPL1HTOTAL",
+        "KXEPL1HSPREAD",
+        "KXEPL1HBTTS",
+        "KXEPLTOP4"
+      ],
+      "not_found_404": [
+        "KXEPLMOV",
+        "KXEPLWINNER",
+        "KXEPLCUP",
+        "KXEPLTITLE",
+        "KXEPLCHAMP",
+        "KXEPLLEAGUE"
+      ],
+      "files": "kalshi_series_KXEPL*.json (raw series definitions for the 200s; {'error': {'code': 'not_found'}} bodies for the 404s)",
       "caveats": "existence of a SERIES DEFINITION is not evidence that per-match markets will list for 2026-27, nor that the ticker-tail grammar matches MLS's for every family. The non-game families ship as config, unverified-flagged, and the model_key parser is exercised only when real markets appear. No league-winner futures series found under the probed names; EPL futures are omitted from v1 (KXEPLTOP4 exists but is a different product from MLS's cup winner)."
     },
     "verified_name_bridges": {
       "source": "distinct title sides across all 387 KXEPLGAME events of 2025-26",
-      "bridges_needed": {"Man Utd": "Manchester United"},
-      "substring_sufficient": ["Bournemouth->AFC Bournemouth", "Brighton->Brighton & Hove Albion", "Newcastle->Newcastle United", "Nottingham->Nottingham Forest", "Tottenham->Tottenham Hotspur"],
-      "exact": ["Arsenal", "Aston Villa", "Brentford", "Chelsea", "Crystal Palace", "Everton", "Fulham", "Leeds United", "Liverpool", "Manchester City", "Manchester United", "Sunderland"],
+      "bridges_needed": {
+        "Man Utd": "Manchester United"
+      },
+      "substring_sufficient": [
+        "Bournemouth->AFC Bournemouth",
+        "Brighton->Brighton & Hove Albion",
+        "Newcastle->Newcastle United",
+        "Nottingham->Nottingham Forest",
+        "Tottenham->Tottenham Hotspur"
+      ],
+      "exact": [
+        "Arsenal",
+        "Aston Villa",
+        "Brentford",
+        "Chelsea",
+        "Crystal Palace",
+        "Everton",
+        "Fulham",
+        "Leeds United",
+        "Liverpool",
+        "Manchester City",
+        "Manchester United",
+        "Sunderland"
+      ],
       "unverifiable": "Coventry City, Hull City, Ipswich Town have no Kalshi history; their Kalshi names are UNKNOWN until 26/27 events list. They stay honestly unmapped until then."
     }
   },
@@ -60,5 +102,34 @@
   },
   "api_football": {
     "status": "NOT probed in this session (free-plan season blindness makes it unusable for current-season EPL club data without a paid upgrade; per-league visibility must be verified before any reliance)."
+  },
+  "corrections_2026-07-29": {
+    "why": "An independent review found this record asserting things its own archived bytes do not show. The raw payload files are UNCHANGED; only the CLAIMS above were corrected, and each correction is recorded here rather than silently rewritten.",
+    "corrections": [
+      {
+        "field": "kalshi.game_series.status",
+        "was": "VERIFIED to exist as a series definition AND to have 387 historical events (2025-26 season). 0 open events for 2026-27 as of today — listings for the new season have not appeared yet.",
+        "archived_truth": "kalshi_events_KXEPLGAME_2026-07-28T1015Z.json holds 10 events under status=open, all dated 26MAY24 (settled 2025-26). '0 open events' described the conclusion, not the response.",
+        "consequence": "A status filter cannot be used as a freshness filter for this series; market retrieval is now bounded by the ticker DATE (src/epl.py, P0-1)."
+      },
+      {
+        "field": "kalshi.game_series.title_join",
+        "was": "event title is '{Home} vs {Away}' — same ' vs ' join as MLS. CAUTION: some events title as '{Team}: Game Winner?' instead, and BOTH 'Man Utd' AND 'Manchester United' appear across the season (provider name drift within one series).",
+        "archived_truth": "0 of 387 titles lack ' vs '. The 7 ': Game Winner?' events append the suffix to the AWAY side and DO carry the join.",
+        "consequence": "A reduced test asserted the opposite and exercised a branch real payloads never reach; corrected in tests/test_epl.py. What actually refuses these events is the identity tier, not the title split."
+      },
+      {
+        "field": "kalshi.family_series_probes.files",
+        "was": "probe_KX*.json (raw series definitions / 404 bodies)",
+        "archived_truth": "No file named probe_KX*.json exists in this directory. The probes are the 18 kalshi_series_KXEPL*.json files.",
+        "consequence": "A reader following the citation would have found nothing and concluded the probes were never archived."
+      }
+    ],
+    "verified_unchanged": [
+      "espn.scoreboard: default bucket = 1 event, 401879301, 2026-08-21",
+      "espn.standings: 1 child, 20 all-zero rows, AFC Bournemouth rank 1.0",
+      "espn.summary: event 740966 is Brighton 0-3 Manchester United; zero occurrences of xG/expectedGoals/xg in the payload",
+      "kalshi 387 historical events; exist_200 / not_found_404 lists both match the archived series bodies (6 x error.code=not_found)"
+    ]
   }
 }

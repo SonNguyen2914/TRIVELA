@@ -350,18 +350,27 @@ def _try_map(s, row: MarketEvent, tdate: str | None,
                             competition_slug=spec.slug)
     if not (home and away):
         return False
-    for f in (s.query(Fixture)
-              .filter_by(competition_slug=spec.slug,
-                         home_team_id=home.id,
-                         away_team_id=away.id).all()):
-        if (f.current_kickoff_utc and _fixture_et_date(
+    hits = [f for f in (s.query(Fixture)
+                        .filter_by(competition_slug=spec.slug,
+                                   home_team_id=home.id,
+                                   away_team_id=away.id).all())
+            if (f.current_kickoff_utc and _fixture_et_date(
                 f.current_kickoff_utc.replace(
                     tzinfo=f.current_kickoff_utc.tzinfo
-                    or timezone.utc)) == tdate):
-            row.fixture_id = f.id
-            row.mapped_via = "alias"
-            row.mapping_approved = True
-            return True
+                    or timezone.utc)) == tdate)]
+    if len(hits) > 1:
+        # P0-4: (teams, date) is not a unique key by construction. Taking
+        # the first hit is exactly the silent pick AGENTS.md §6 forbids;
+        # an ambiguous identity match must fail loudly and stay unmapped.
+        print(f"[markets] AMBIGUOUS fixture match for {row.title!r} on "
+              f"{tdate}: fixtures {[f.espn_event_id for f in hits]} — "
+              f"refusing to attach")
+        return False
+    if hits:
+        row.fixture_id = hits[0].id
+        row.mapped_via = "alias"
+        row.mapping_approved = True
+        return True
     return False
 
 
@@ -429,13 +438,21 @@ def discover_and_map(spec: CompetitionMarketSpec | None = None) -> dict:
     the approved-alias rule; all other families share the game event's
     ticker suffix ({date}{HOME}{AWAY}), so they inherit its fixture by
     exact suffix join — no name resolution at all. Contract rows exist
-    (and heal) for every current or future event; historical events are
-    recorded without contract fetches (rate budget goes to the slate)."""
+    (and heal) for every current or future event.
+
+    Bounded to a fixture horizon (P0-1): an event whose ticker date is
+    already settled creates NO row and costs NO contract fetch. A series
+    can carry a whole archived season — KXEPLGAME served 387 events from
+    2025-26 with zero current listings — and recording all of it writes a
+    registry nothing reads while spending the rate budget the slate
+    needs. `historical_skipped` reports how many the provider returned
+    and this sweep deliberately declined."""
     spec = spec or MLS_SPEC
     if not plane_ready():
         return {"skipped": "dormant"}
     s = get_session()
     seen = mapped = unmapped = contracts_filled = 0
+    historical_skipped = 0
     truncated_series: list[str] = []
     # V9.5 eval C2: one recorded outcome per REQUIRED family. Completeness
     # is the AND of these, never pagination alone.
@@ -481,9 +498,22 @@ def discover_and_map(spec: CompetitionMarketSpec | None = None) -> dict:
                 if not ticker:
                     continue
                 tdate = _ticker_date_any(ticker, spec.ticker_prefix)
+                day = _ticker_day(tdate)
                 row = s.query(MarketEvent).filter_by(
                     kalshi_event_ticker=ticker).first()
                 if row is None:
+                    # P0-1: a settled, pre-horizon event creates NO row.
+                    # KXEPLGAME serves 387 archived 2025-26 events, and
+                    # recording every one of them writes a registry of
+                    # history nothing reads while inflating the sweep's
+                    # own cost. An UNPARSEABLE date is not evidence of
+                    # age, so those still record (missing evidence is
+                    # never silently converted into a conclusion), and
+                    # rows that already exist keep their handling —
+                    # nothing is deleted or orphaned by this bound.
+                    if day is not None and day < horizon_floor:
+                        historical_skipped += 1
+                        continue
                     row = MarketEvent(competition_slug=spec.slug,
                                       kalshi_event_ticker=ticker,
                                       series=series,
@@ -513,7 +543,6 @@ def discover_and_map(spec: CompetitionMarketSpec | None = None) -> dict:
                     mapped += int(ok)
                     unmapped += int(not ok)
                 s.flush()
-                day = _ticker_day(tdate)
                 existing = s.query(MarketContract).filter_by(
                     market_event_id=row.id).all()
                 needs = (not existing
@@ -559,6 +588,9 @@ def discover_and_map(spec: CompetitionMarketSpec | None = None) -> dict:
         return {"events_seen": seen, "newly_mapped": mapped,
                 "unmapped": unmapped,
                 "contracts_filled": contracts_filled,
+                # P0-1: pre-horizon events the provider returned and this
+                # sweep deliberately did NOT record
+                "historical_skipped": historical_skipped,
                 "discovery_complete": complete,
                 "family_outcomes": family_outcomes,
                 "incomplete_reasons": incomplete,

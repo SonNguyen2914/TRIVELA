@@ -1356,9 +1356,17 @@ def epl_markets():
     """Open EPL game books. Empty until Kalshi lists 2026-27 events —
     see /api/epl/markets/discovery for the live probe. No futures
     section: no EPL winner-futures series was found under any probed
-    name (research_archive/epl/), and none is invented."""
+    name (research_archive/epl/), and none is invented.
+
+    Retrieval is bounded to a fixture horizon with an explicit
+    provider-call budget (P0-1): KXEPLGAME lists a whole archived
+    season, and a per-event market fan-out across it costs the rate
+    budget the slate needs. `retrieval` reports what the bound did, so a
+    truncated answer names itself instead of looking complete."""
     from src import epl
-    return {"games": epl.game_books(),
+    state = epl.game_books_state()
+    return {"games": state["games"],
+            "retrieval": {k: v for k, v in state.items() if k != "games"},
             "generated_at": utcnow().isoformat()}
 
 
@@ -1387,13 +1395,22 @@ def epl_match(event_id: str):
         raise HTTPException(502, "summary unavailable")
     book = None
     books = []
+    # P0-4: WHY there is no book is part of the answer. An ambiguous or
+    # only-loosely-named candidate is a refusal to decide, not an absence
+    # of markets, and the two must never render identically.
+    book_match = {"status": "unknown"}
     try:
-        books = epl.find_all_books(
-            out.get("date"),
-            (out.get("home") or {}).get("name") or "",
-            (out.get("away") or {}).get("name") or "")
-        book = next((f for f in books if f.get("key") == "winner"), None)
+        home_name = (out.get("home") or {}).get("name") or ""
+        away_name = (out.get("away") or {}).get("name") or ""
+        matched = epl.match_book(out.get("date"), home_name, away_name)
+        book_match = {k: v for k, v in matched.items() if k != "book"}
+        if matched["book"] is not None:
+            books = epl.find_all_books(out.get("date"), home_name,
+                                       away_name)
+            book = next((f for f in books if f.get("key") == "winner"),
+                        None)
     except Exception as exc:            # the hub must not die on the book
+        book_match = {"status": "unavailable", "error": str(exc)[:120]}
         print(f"[epl] book match failed for {event_id}: {exc}")
     model = None
     try:                                # nor on the live plane
@@ -1409,26 +1426,63 @@ def epl_match(event_id: str):
             lineup = lineup_view.build(raw)
     except Exception as exc:
         print(f"[epl] lineup section failed for {event_id}: {exc}")
-    return {"match": out, "book": book, "books": books, "model": model,
+    return {"match": out, "book": book, "books": books,
+            "book_match": book_match, "model": model,
             "lineups": lineup, "generated_at": utcnow().isoformat()}
 
 
 @app.get("/api/epl/odds")
 def epl_odds():
-    """The EPL shadow odds board. EMPTY while epl-2026-v0 is dark (no
-    approval decision exists; runs are structurally refused) — the
-    response says so explicitly rather than serving a zero that could
-    read as a forecast."""
-    odds = []
+    """The EPL shadow odds board, with the reason it is empty (P0-5).
+
+    `model_dark` used to be `len(odds) == 0`, which collapsed three
+    different states into the most reassuring one: an approved model
+    that simply has no runs yet read as "dark", and so did a FAILED
+    read. A failure that renders as a deliberate design decision is the
+    worst kind — nobody investigates it.
+
+    model_state is one of:
+      dark              the approval response EXPLICITLY says unapproved
+      approved_no_runs  approved, but no complete run exists yet
+      approved          approved, with runs
+      unavailable       the approval or odds read FAILED — we do not
+                        know, and must not claim to
+    """
+    approval = None
+    errors: dict[str, str] = {}
+    try:
+        from src.live import epl_plane
+        approval = epl_plane.approval_status()
+    except Exception as exc:
+        errors["approval"] = str(exc)[:160]
+        print(f"[epl] approval read failed: {exc}")
+    odds = None
     try:
         from src.live import epl_plane
         odds = epl_plane.latest_odds()
     except Exception as exc:
+        errors["odds"] = str(exc)[:160]
         print(f"[epl] odds board failed: {exc}")
-    return {"odds": odds, "shadow": True,
-            "model_dark": len(odds) == 0,
-            "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
-            "generated_at": utcnow().isoformat()}
+
+    if approval is None or odds is None:
+        state = "unavailable"
+    elif (approval.get("approval_decision_missing", True)
+            or not approval.get("approved_for_shadow")):
+        state = "dark"
+    elif not odds:
+        state = "approved_no_runs"
+    else:
+        state = "approved"
+    out = {"odds": odds or [], "shadow": True,
+           "model_state": state,
+           # kept for compatibility, but now it means what it says
+           "model_dark": state == "dark",
+           "model_version": (approval or {}).get("model_version"),
+           "real_money_signals": config.REAL_MONEY_SIGNALS_ENABLED,
+           "generated_at": utcnow().isoformat()}
+    if errors:
+        out["errors"] = errors
+    return out
 
 
 @app.get("/api/epl/approval")

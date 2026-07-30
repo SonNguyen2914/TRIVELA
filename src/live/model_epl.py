@@ -242,6 +242,29 @@ def engine_signature(code_revision: str | None = None) -> dict:
     }
 
 
+def engine_matches(stored_hash: str | None,
+                   run_revision: str | None) -> tuple[bool, bool]:
+    """(matches, revision_only_drift) for a stored EPL engine signature —
+    the same contract as model_mls.engine_matches (V9.1 eval F4), so the
+    shared audit/replay machinery can validate an EPL lock against the
+    EPL engine instead of reaching for the MLS one (EPL P0-3).
+
+    matches=True when the stored hash equals the current engine's, OR
+    when recomputing under the revision the run RECORDED reproduces it —
+    which proves only the build revision moved. revision_only_drift flags
+    that second case so the distinction stays visible. A genuine source,
+    constant or runtime change fails both arms."""
+    if not stored_hash:
+        return False, False
+    if stored_hash == engine_signature()["signature_hash"]:
+        return True, False
+    if run_revision:
+        rehashed = engine_signature(code_revision=run_revision)
+        if rehashed["signature_hash"] == stored_hash:
+            return True, True
+    return False, False
+
+
 def build_input_artifact(fixture, model: dict,
                          run_type: str) -> tuple[dict, str, str]:
     """The exact, RETRIEVABLE input document a run simulates from.

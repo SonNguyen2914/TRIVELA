@@ -23,14 +23,22 @@ from datetime import datetime, timezone
 import requests
 
 import config
+from src.live import competitions
 from src.live.evidence import pack_payload as _pack
 from src.live.db import get_session, plane_ready
 from src.live.models import (Fixture, LineupEntry, LineupSnapshot, Player,
                              SourceObservation)
 
 PARSER_VERSION = "espn-lineup-v1"
-SUMMARY_URL = ("https://site.api.espn.com/apis/site/v2/sports/soccer/"
-               "usa.1/summary")
+SUMMARY_URL_TEMPLATE = ("https://site.api.espn.com/apis/site/v2/sports/"
+                        "soccer/{league}/summary")
+# Kept so existing MLS callers/tests referencing the constant are
+# untouched. The LEAGUE is no longer baked into the capture path: it is
+# resolved from the fixture's own competition (EPL P0-3), because an EPL
+# T-10 lock was fetching its lineup from usa.1 — which answers for a
+# different event id entirely, so the lock froze either nothing or
+# another league's team sheet.
+SUMMARY_URL = SUMMARY_URL_TEMPLATE.format(league="usa.1")
 
 
 def _now():
@@ -100,7 +108,7 @@ def _empty_quality() -> dict:
 
 
 def _record_unavailable(s, fixture_id: int, status: str,
-                        note: str) -> dict:
+                        note: str, source: str | None = None) -> dict:
     """Persist a snapshot for a NON-observation — a fetch failure or an
     unavailable lineup (V9 eval F2). The model doesn't consume lineups,
     so this does not block the market/model lock, but the lock must still
@@ -116,18 +124,25 @@ def _record_unavailable(s, fixture_id: int, status: str,
     s.flush()
     s.commit()
     return {"snapshot_id": snap.id, "status": status,
-            "quality": _empty_quality(), "note": note[:200]}
+            "quality": _empty_quality(), "note": note[:200],
+            "source": source}
 
 
-def capture_lineup(fixture_id: int, summary: dict | None = None
-                   ) -> dict | None:
+def capture_lineup(fixture_id: int, summary: dict | None = None,
+                   espn_league: str | None = None) -> dict | None:
     """Fetch (or accept a canned) ESPN summary, parse the selection
     state, and write a provenance-complete LineupSnapshot + entries.
-    Returns {'snapshot_id', 'status', 'quality'}; None only when the plane
-    is dormant or the fixture is unknown. ALWAYS records a snapshot when
-    the fixture exists — a pending lineup, an unavailable one, and a fetch
-    FAILURE are all evidence, and each gets an explicit snapshot (V9 eval
-    F2) so a T-10 lock never references a null lineup."""
+    Returns {'snapshot_id', 'status', 'quality', 'source'}; None only when
+    the plane is dormant or the fixture is unknown. ALWAYS records a
+    snapshot when the fixture exists — a pending lineup, an unavailable
+    one, and a fetch FAILURE are all evidence, and each gets an explicit
+    snapshot (V9 eval F2) so a T-10 lock never references a null lineup.
+
+    The provider league comes from the FIXTURE'S OWN competition unless
+    a caller overrides it (EPL P0-3). It used to be the hardcoded MLS
+    league for every competition, and the recorded source_observation
+    endpoint did not name a league at all — so the frozen evidence could
+    not even show which feed a lineup came from."""
     if not plane_ready():
         return None
     s = get_session()
@@ -135,22 +150,27 @@ def capture_lineup(fixture_id: int, summary: dict | None = None
         fx = s.get(Fixture, fixture_id)
         if fx is None:
             return None
+        league = espn_league or competitions.espn_league(
+            fx.competition_slug)
+        url = SUMMARY_URL_TEMPLATE.format(league=league)
+        endpoint = (f"summary?league={league}"
+                    f"&event={fx.espn_event_id}#rosters")
         if summary is None:
             try:
-                r = requests.get(SUMMARY_URL,
+                r = requests.get(url,
                                  params={"event": fx.espn_event_id},
                                  timeout=15)
                 r.raise_for_status()
                 summary = r.json()
             except requests.RequestException as exc:
-                print(f"[lineups] fetch {fx.espn_event_id}: {exc}")
+                print(f"[lineups] fetch {league}/{fx.espn_event_id}: {exc}")
                 return _record_unavailable(
-                    s, fixture_id, "fetch_failed", str(exc))
+                    s, fixture_id, "fetch_failed", str(exc),
+                    source=endpoint)
         parsed = parse_lineup(summary)
         raw = json.dumps(summary.get("rosters") or [], sort_keys=True)
         obs = SourceObservation(
-            source="espn",
-            endpoint=f"summary?event={fx.espn_event_id}#rosters",
+            source="espn", endpoint=endpoint,
             observed_at=_now(), **_pack(raw))
         s.add(obs)
         s.flush()
@@ -181,7 +201,7 @@ def capture_lineup(fixture_id: int, summary: dict | None = None
         quality = lineup_quality(parsed)
         s.commit()
         return {"snapshot_id": snap.id, "status": snap.status,
-                "quality": quality}
+                "quality": quality, "source": endpoint}
     except Exception as exc:
         s.rollback()
         print(f"[lineups] capture failed: {exc}")
