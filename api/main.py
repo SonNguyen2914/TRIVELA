@@ -729,17 +729,44 @@ def friendlies_fixture_detail(fixture_id: str, days: int = Query(3, ge=1, le=8))
     out = {"fixture": f, "framing": getattr(friendlies, "FRAMING", None),
            "generated_at": utcnow().isoformat()}
     out["strength"] = friendlies_apif._strength_for(f)
-    book = None
+
+    # The BRIDGE, not ESPN-style name matching. The list already resolves
+    # Kalshi events to apif fixture ids via `bridge_event`, and it works: 20
+    # of 22 tradeable events bridge. This route previously called
+    # `find_all_books(date, home_name, away_name)`, which matches on ESPN's
+    # naming — so FC Augsburg v Bournemouth and Parma v Arezzo both rendered
+    # "no kalshi book matched" on their own pages while appearing WITH a book
+    # in the list two clicks earlier. Same fixture, two answers.
+    out["books"] = {"status": "unavailable",
+                    "means": ("the Kalshi registry could not be read — this "
+                              "is not 'no book exists'")}
     try:
-        ko = (f.get("kickoff_utc") or "")[:10]
-        book = friendlies.find_all_books(
-            ko, (f.get("home") or {}).get("name") or "",
-            (f.get("away") or {}).get("name") or "")
+        swept = friendlies_apif.sweep(days)
+        reg = friendlies_apif.tradeable_events()
+        bridged = friendlies_apif._bridge_by_fixture_id(swept, reg["events"])
+        b = bridged.get(int(fixture_id))
+        if b is None:
+            out["books"] = {
+                "status": "no_event_bridged",
+                "means": ("no tradeable Kalshi event bridges to this "
+                          "fixture. Most friendlies are not priced at all, "
+                          "so this is the common case, not a failure")}
+        else:
+            out["kalshi_event"] = {"event_ticker": b.get("event_ticker"),
+                                   "title": b.get("title")}
+            book, freshness = friendlies_apif._book_for(b)
+            if book is None:
+                out["books"] = {
+                    "status": "unavailable",
+                    "event_ticker": b.get("event_ticker"),
+                    "means": ("the event bridged but its book could not be "
+                              "read — not 'no book exists'")}
+            else:
+                out["books"] = {"status": "mapped",
+                                "event_ticker": b.get("event_ticker"),
+                                "book": book, "freshness": freshness}
     except Exception as exc:
         print(f"[friendlies] book for {fixture_id} failed: {exc}")
-        book = {"status": "unavailable",
-                "means": "the book could not be read — not 'no book exists'"}
-    out["books"] = book
     return out
 
 
