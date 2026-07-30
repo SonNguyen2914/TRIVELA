@@ -732,3 +732,19 @@ LEAGUE_XG_SHRINK_GAMES = float(os.getenv("LEAGUE_XG_SHRINK_GAMES", "6.0"))
 # Below it the surface says 'not enough fixtures', never a number: mirrors
 # model_mls.MIN_GAMES rather than inventing a second standard.
 LEAGUE_XG_MIN_FIXTURES = int(os.getenv("LEAGUE_XG_MIN_FIXTURES", "5"))
+
+# === Team playstyle vectors (team_style) — additive block, 2026-07-29 ======
+# Partial-pooling weight, in games, for a style axis shrunk toward its own
+# league-season mean. Defaults to the league xG value on purpose: the whole
+# claim is that style is fitted with the SAME recency/shrinkage discipline as
+# the ratings, so the starting point is carried rather than reinvented. It is
+# a separate knob because the axes are on different scales from an xG ratio
+# (a percentage, two shares, two counts) and may eventually want their own
+# sweep. NOT swept on style data — nothing prices off these vectors.
+TEAM_STYLE_SHRINK_GAMES = float(os.getenv("TEAM_STYLE_SHRINK_GAMES", "6.0"))
+# A team needs this many fixtures CARRYING A GIVEN AXIS before it is placed on
+# that axis. Applied per axis, not per team: a team can be placed on shot
+# location and refused on possession in the same league-season, because the
+# provider's coverage of the two statistics is not the same. Below the floor
+# the surface says 'not enough fixtures', never a number.
+TEAM_STYLE_MIN_FIXTURES = int(os.getenv("TEAM_STYLE_MIN_FIXTURES", "5"))

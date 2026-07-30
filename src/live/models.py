@@ -1540,3 +1540,75 @@ class TeamNewsEvent(LiveBase):
                          name="uq_team_news_event_subject_key"),
         Index("ix_team_news_event_fixture", "fixture_id"),
     )
+
+
+class TeamStyleObservation(LiveBase):
+    """One team's RAW playstyle inputs in one league fixture, as read at one
+    instant. The per-fixture evidence the style vectors are fitted from.
+
+    WHY A SEPARATE TABLE, not columns on `apifootball_fixture_xg`. That table
+    is append-only against a `value_hash` computed over the xG tuple ALONE. A
+    style value changing while the xG stayed the same would produce an
+    identical hash, collide with the existing row, and be silently dropped —
+    the exact overwrite the hash exists to prevent, reintroduced through a
+    widened row. So style gets its own table with its own hash over its own
+    values, and the two evidence trails stay independently auditable.
+
+    APPEND-ONLY, on the same reasoning as the xG store: a stored statistic is
+    evidence of what the provider said WHEN WE ASKED. A re-read returning the
+    same values collides and writes nothing (idempotent, cheap to resume); a
+    re-read returning DIFFERENT values inserts a second row, so a retroactive
+    provider correction becomes visible and countable instead of replacing the
+    evidence.
+
+    `source` is part of the identity, not a label. API-Football and Sportec
+    measure different quantities under similar names and carry DIFFERENT SETS
+    of axes at all (Sportec publishes no possession, no offsides and no
+    goalkeeper saves), so pooling two sources into one population would both
+    mix measurement systems and silently change which axes exist.
+
+    EVERY RAW COLUMN IS NULLABLE AND NULL MEANS ABSENT, NEVER ZERO. The
+    provider ships a statistic type with a null value routinely, and a null
+    read as 0 would make a team look like it never won possession, never drew
+    an offside and never forced a save. `team_style.parse_count` /
+    `parse_percent` return None for null, '', '-' and non-numeric alike.
+
+    `offsides_drawn` is the OPPONENT's offside count in this fixture — a high
+    defensive line is what forces it, so it belongs to the team that forced it
+    rather than to the team that committed it. Both teams' statistics arrive in
+    the same `fixtures/statistics` response, so it is derivable without an
+    extra request. `offsides_own` is the team's OWN offside count and is a
+    DIFFERENT quantity (a verticality proxy); both are stored so the sixth
+    candidate axis can be measured rather than assumed."""
+    __tablename__ = "team_style_observation"
+    id = Column(Integer, primary_key=True)
+    source = Column(String(16), nullable=False)       # api-football | sportec
+    league_id = Column(Integer, nullable=False)
+    season = Column(Integer, nullable=False)
+    provider_fixture_id = Column(String(48), nullable=False)
+    side = Column(String(8), nullable=False)          # home | away
+    provider_team_id = Column(Integer, nullable=False)
+    team_name = Column(String(96))
+    opponent_team_id = Column(Integer)
+    kickoff_utc = Column(DateTime(timezone=True))
+    round_label = Column(String(64))
+    # --- raw axis inputs: NULL == ABSENT, never zero ---
+    possession_pct = Column(Float)          # 0-100, provider's '%' stripped
+    shots_total = Column(Integer)
+    shots_inside_box = Column(Integer)
+    xg = Column(Float)
+    offsides_drawn = Column(Integer)        # the OPPONENT's offsides
+    offsides_own = Column(Integer)          # this team's own — 6th candidate
+    gk_saves = Column(Integer)
+    # the provider's own strings, so any parse can be re-audited later
+    raw_json = Column(Text)
+    # sha256 over the canonical raw tuple — the discriminator that turns a
+    # silent overwrite into a new row
+    value_hash = Column(String(64), nullable=False)
+    read_at = Column(DateTime(timezone=True), nullable=False)
+    __table_args__ = (
+        UniqueConstraint("source", "provider_fixture_id", "side",
+                         "value_hash"),
+        Index("ix_style_scope", "source", "league_id", "season"),
+        Index("ix_style_team", "source", "provider_team_id"),
+    )
