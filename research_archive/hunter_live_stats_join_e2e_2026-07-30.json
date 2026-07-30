@@ -1,0 +1,532 @@
+{
+ "budget": {
+  "cycle_cap": 40,
+  "day": {
+   "cap": 1200,
+   "count": 3,
+   "date": "2026-07-30"
+  },
+  "failures": [],
+  "note": "a cycle spends ZERO requests unless an overreaction candidate exists; when one does it pays 1 for the whole world's live fixtures plus 2 per distinct RESOLVED fixture",
+  "plan_limits": "API-Football PRO: 300/min, 7500/day",
+  "provider_quota_remaining_day": "6693",
+  "provider_quota_remaining_minute": "297",
+  "requests_used_this_cycle": 3
+ },
+ "classifications": [
+  {
+   "conditioning_state": "conditioning_observed",
+   "elapsed": 90,
+   "event_ticker": "KXBRASILEIROGAME-26JUL29INTFLA",
+   "events": 13,
+   "fixture_id": 1492316,
+   "goals_seen": 2,
+   "reason": "2 explaining event(s) observed (goal) at or before this move",
+   "reds_seen": 0,
+   "statistic_types": 18,
+   "strength_rank": 0,
+   "xg_available": true,
+   "xg_differential": -0.07
+  }
+ ],
+ "competition_map": {
+  "KXARGPREMDIVGAME": {
+   "basis": "league id and live-statistics coverage MEASURED 2026-07-29 (73', 18 statistic types, xG 0.65); Kalshi series present with 36 open markets in the 2026-07-28 taxonomy snapshot",
+   "league_id": 128,
+   "league_name": "Liga Profesional Argentina"
+  },
+  "KXBRASILEIROGAME": {
+   "basis": "league id and live-statistics coverage MEASURED 2026-07-29 (59' and 58', 18 statistic types, xG 0.73 and 1.03); Kalshi series present in the 2026-07-28 taxonomy snapshot",
+   "league_id": 71,
+   "league_name": "Brazil Serie A"
+  },
+  "KXCONMEBOLSUDGAME": {
+   "basis": "league id and live-statistics coverage MEASURED 2026-07-29 (90', 18 statistic types, xG 1.28); Kalshi series present in the 2026-07-28 taxonomy snapshot",
+   "league_id": 11,
+   "league_name": "CONMEBOL Sudamericana"
+  }
+ },
+ "competition_map_fingerprint": "12ece4bbc44a8848d6643399d3b8b8dd4e5e0b05a5cb34b2f633bd166978db4b",
+ "join_results": [
+  {
+   "detail": "no fixture is currently live in this competition, so the market's move cannot be attributed to an observed match",
+   "elapsed": null,
+   "event_ticker": "KXARGPREMDIVGAME-26AUG01CABARG",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXARGPREMDIVGAME-26AUG01CABARG-TIE",
+    "KXARGPREMDIVGAME-26AUG01CABARG-CAB",
+    "KXARGPREMDIVGAME-26AUG01CABARG-ARG"
+   ],
+   "matched": null,
+   "series": "KXARGPREMDIVGAME",
+   "status": "unresolved_no_live_fixture_in_competition",
+   "team_codes": null
+  },
+  {
+   "detail": "no fixture is currently live in this competition, so the market's move cannot be attributed to an observed match",
+   "elapsed": null,
+   "event_ticker": "KXARGPREMDIVGAME-26AUG01ELPDYJ",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXARGPREMDIVGAME-26AUG01ELPDYJ-TIE",
+    "KXARGPREMDIVGAME-26AUG01ELPDYJ-ELP",
+    "KXARGPREMDIVGAME-26AUG01ELPDYJ-DYJ"
+   ],
+   "matched": null,
+   "series": "KXARGPREMDIVGAME",
+   "status": "unresolved_no_live_fixture_in_competition",
+   "team_codes": null
+  },
+  {
+   "detail": "no fixture is currently live in this competition, so the market's move cannot be attributed to an observed match",
+   "elapsed": null,
+   "event_ticker": "KXARGPREMDIVGAME-26AUG01GEMUNI",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXARGPREMDIVGAME-26AUG01GEMUNI-UNI",
+    "KXARGPREMDIVGAME-26AUG01GEMUNI-TIE",
+    "KXARGPREMDIVGAME-26AUG01GEMUNI-GEM"
+   ],
+   "matched": null,
+   "series": "KXARGPREMDIVGAME",
+   "status": "unresolved_no_live_fixture_in_competition",
+   "team_codes": null
+  },
+  {
+   "detail": "no fixture is currently live in this competition, so the market's move cannot be attributed to an observed match",
+   "elapsed": null,
+   "event_ticker": "KXARGPREMDIVGAME-26AUG01RACTIG",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXARGPREMDIVGAME-26AUG01RACTIG-TIG",
+    "KXARGPREMDIVGAME-26AUG01RACTIG-TIE",
+    "KXARGPREMDIVGAME-26AUG01RACTIG-RAC"
+   ],
+   "matched": null,
+   "series": "KXARGPREMDIVGAME",
+   "status": "unresolved_no_live_fixture_in_competition",
+   "team_codes": null
+  },
+  {
+   "detail": "no fixture is currently live in this competition, so the market's move cannot be attributed to an observed match",
+   "elapsed": null,
+   "event_ticker": "KXARGPREMDIVGAME-26AUG01RCUBAN",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXARGPREMDIVGAME-26AUG01RCUBAN-TIE",
+    "KXARGPREMDIVGAME-26AUG01RCUBAN-RCU",
+    "KXARGPREMDIVGAME-26AUG01RCUBAN-BAN"
+   ],
+   "matched": null,
+   "series": "KXARGPREMDIVGAME",
+   "status": "unresolved_no_live_fixture_in_competition",
+   "team_codes": null
+  },
+  {
+   "detail": "no fixture is currently live in this competition, so the market's move cannot be attributed to an observed match",
+   "elapsed": null,
+   "event_ticker": "KXARGPREMDIVGAME-26JUL29GLPRIV",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXARGPREMDIVGAME-26JUL29GLPRIV-TIE",
+    "KXARGPREMDIVGAME-26JUL29GLPRIV-RIV",
+    "KXARGPREMDIVGAME-26JUL29GLPRIV-GLP"
+   ],
+   "matched": null,
+   "series": "KXARGPREMDIVGAME",
+   "status": "unresolved_no_live_fixture_in_competition",
+   "team_codes": null
+  },
+  {
+   "detail": "no fixture is currently live in this competition, so the market's move cannot be attributed to an observed match",
+   "elapsed": null,
+   "event_ticker": "KXARGPREMDIVGAME-26JUL29IACCPLA",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXARGPREMDIVGAME-26JUL29IACCPLA-TIE",
+    "KXARGPREMDIVGAME-26JUL29IACCPLA-PLA",
+    "KXARGPREMDIVGAME-26JUL29IACCPLA-IACC"
+   ],
+   "matched": null,
+   "series": "KXARGPREMDIVGAME",
+   "status": "unresolved_no_live_fixture_in_competition",
+   "team_codes": null
+  },
+  {
+   "detail": "no fixture is currently live in this competition, so the market's move cannot be attributed to an observed match",
+   "elapsed": null,
+   "event_ticker": "KXARGPREMDIVGAME-26JUL30CAINOB",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXARGPREMDIVGAME-26JUL30CAINOB-TIE",
+    "KXARGPREMDIVGAME-26JUL30CAINOB-NOB",
+    "KXARGPREMDIVGAME-26JUL30CAINOB-CAI"
+   ],
+   "matched": null,
+   "series": "KXARGPREMDIVGAME",
+   "status": "unresolved_no_live_fixture_in_competition",
+   "team_codes": null
+  },
+  {
+   "detail": "no fixture is currently live in this competition, so the market's move cannot be attributed to an observed match",
+   "elapsed": null,
+   "event_ticker": "KXARGPREMDIVGAME-26JUL30CATVEL",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXARGPREMDIVGAME-26JUL30CATVEL-VEL",
+    "KXARGPREMDIVGAME-26JUL30CATVEL-TIE",
+    "KXARGPREMDIVGAME-26JUL30CATVEL-CAT"
+   ],
+   "matched": null,
+   "series": "KXARGPREMDIVGAME",
+   "status": "unresolved_no_live_fixture_in_competition",
+   "team_codes": null
+  },
+  {
+   "detail": "no fixture is currently live in this competition, so the market's move cannot be attributed to an observed match",
+   "elapsed": null,
+   "event_ticker": "KXARGPREMDIVGAME-26JUL30CCTUC",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXARGPREMDIVGAME-26JUL30CCTUC-TUC",
+    "KXARGPREMDIVGAME-26JUL30CCTUC-TIE",
+    "KXARGPREMDIVGAME-26JUL30CCTUC-CC"
+   ],
+   "matched": null,
+   "series": "KXARGPREMDIVGAME",
+   "status": "unresolved_no_live_fixture_in_competition",
+   "team_codes": null
+  },
+  {
+   "detail": "no fixture is currently live in this competition, so the market's move cannot be attributed to an observed match",
+   "elapsed": null,
+   "event_ticker": "KXARGPREMDIVGAME-26JUL30IRMHUR",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXARGPREMDIVGAME-26JUL30IRMHUR-TIE",
+    "KXARGPREMDIVGAME-26JUL30IRMHUR-IRM",
+    "KXARGPREMDIVGAME-26JUL30IRMHUR-HUR"
+   ],
+   "matched": null,
+   "series": "KXARGPREMDIVGAME",
+   "status": "unresolved_no_live_fixture_in_competition",
+   "team_codes": null
+  },
+  {
+   "detail": "codes ['FLU', 'BAH'] matched none of the 2 live fixtures in Brazil Serie A: [('Internacional', 'Flamengo'), ('Mirassol', 'Remo')]",
+   "elapsed": null,
+   "event_ticker": "KXBRASILEIROGAME-26JUL29FLUBAH",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXBRASILEIROGAME-26JUL29FLUBAH-TIE",
+    "KXBRASILEIROGAME-26JUL29FLUBAH-FLU",
+    "KXBRASILEIROGAME-26JUL29FLUBAH-BAH"
+   ],
+   "matched": null,
+   "series": "KXBRASILEIROGAME",
+   "status": "unresolved_no_candidate_matched",
+   "team_codes": [
+    "FLU",
+    "BAH"
+   ]
+  },
+  {
+   "detail": null,
+   "elapsed": 90,
+   "event_ticker": "KXBRASILEIROGAME-26JUL29INTFLA",
+   "fixture_id": 1492316,
+   "leg_tickers": [
+    "KXBRASILEIROGAME-26JUL29INTFLA-TIE",
+    "KXBRASILEIROGAME-26JUL29INTFLA-INT",
+    "KXBRASILEIROGAME-26JUL29INTFLA-FLA"
+   ],
+   "matched": "Internacional vs Flamengo",
+   "series": "KXBRASILEIROGAME",
+   "status": "resolved",
+   "team_codes": [
+    "INT",
+    "FLA"
+   ]
+  },
+  {
+   "detail": "codes ['MIR', 'CR'] matched none of the 2 live fixtures in Brazil Serie A: [('Internacional', 'Flamengo'), ('Mirassol', 'Remo')]",
+   "elapsed": null,
+   "event_ticker": "KXBRASILEIROGAME-26JUL29MIRCR",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXBRASILEIROGAME-26JUL29MIRCR-TIE",
+    "KXBRASILEIROGAME-26JUL29MIRCR-MIR",
+    "KXBRASILEIROGAME-26JUL29MIRCR-CR"
+   ],
+   "matched": null,
+   "series": "KXBRASILEIROGAME",
+   "status": "unresolved_no_candidate_matched",
+   "team_codes": [
+    "MIR",
+    "CR"
+   ]
+  },
+  {
+   "detail": "codes ['VIT', 'PAL'] matched none of the 2 live fixtures in Brazil Serie A: [('Internacional', 'Flamengo'), ('Mirassol', 'Remo')]",
+   "elapsed": null,
+   "event_ticker": "KXBRASILEIROGAME-26JUL29VITPAL",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXBRASILEIROGAME-26JUL29VITPAL-VIT",
+    "KXBRASILEIROGAME-26JUL29VITPAL-TIE",
+    "KXBRASILEIROGAME-26JUL29VITPAL-PAL"
+   ],
+   "matched": null,
+   "series": "KXBRASILEIROGAME",
+   "status": "unresolved_no_candidate_matched",
+   "team_codes": [
+    "VIT",
+    "PAL"
+   ]
+  },
+  {
+   "detail": "codes ['RBB', 'ATL'] matched none of the 2 live fixtures in Brazil Serie A: [('Internacional', 'Flamengo'), ('Mirassol', 'Remo')]",
+   "elapsed": null,
+   "event_ticker": "KXBRASILEIROGAME-26JUL30ATLRBB",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXBRASILEIROGAME-26JUL30ATLRBB-TIE",
+    "KXBRASILEIROGAME-26JUL30ATLRBB-RBB",
+    "KXBRASILEIROGAME-26JUL30ATLRBB-ATL"
+   ],
+   "matched": null,
+   "series": "KXBRASILEIROGAME",
+   "status": "unresolved_no_candidate_matched",
+   "team_codes": [
+    "RBB",
+    "ATL"
+   ]
+  },
+  {
+   "detail": "codes ['GPA', 'BOT'] matched none of the 2 live fixtures in Brazil Serie A: [('Internacional', 'Flamengo'), ('Mirassol', 'Remo')]",
+   "elapsed": null,
+   "event_ticker": "KXBRASILEIROGAME-26JUL30BOTGPA",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXBRASILEIROGAME-26JUL30BOTGPA-TIE",
+    "KXBRASILEIROGAME-26JUL30BOTGPA-GPA",
+    "KXBRASILEIROGAME-26JUL30BOTGPA-BOT"
+   ],
+   "matched": null,
+   "series": "KXBRASILEIROGAME",
+   "status": "unresolved_no_candidate_matched",
+   "team_codes": [
+    "GPA",
+    "BOT"
+   ]
+  },
+  {
+   "detail": "codes ['CRU', 'CFC'] matched none of the 2 live fixtures in Brazil Serie A: [('Internacional', 'Flamengo'), ('Mirassol', 'Remo')]",
+   "elapsed": null,
+   "event_ticker": "KXBRASILEIROGAME-26JUL30CFCCRU",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXBRASILEIROGAME-26JUL30CFCCRU-TIE",
+    "KXBRASILEIROGAME-26JUL30CFCCRU-CRU",
+    "KXBRASILEIROGAME-26JUL30CFCCRU-CFC"
+   ],
+   "matched": null,
+   "series": "KXBRASILEIROGAME",
+   "status": "unresolved_no_candidate_matched",
+   "team_codes": [
+    "CRU",
+    "CFC"
+   ]
+  },
+  {
+   "detail": "codes ['VDG', 'CHA'] matched none of the 2 live fixtures in Brazil Serie A: [('Internacional', 'Flamengo'), ('Mirassol', 'Remo')]",
+   "elapsed": null,
+   "event_ticker": "KXBRASILEIROGAME-26JUL30CHAVDG",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXBRASILEIROGAME-26JUL30CHAVDG-VDG",
+    "KXBRASILEIROGAME-26JUL30CHAVDG-TIE",
+    "KXBRASILEIROGAME-26JUL30CHAVDG-CHA"
+   ],
+   "matched": null,
+   "series": "KXBRASILEIROGAME",
+   "status": "unresolved_no_candidate_matched",
+   "team_codes": [
+    "VDG",
+    "CHA"
+   ]
+  },
+  {
+   "detail": "codes ['COR', 'CAP'] matched none of the 2 live fixtures in Brazil Serie A: [('Internacional', 'Flamengo'), ('Mirassol', 'Remo')]",
+   "elapsed": null,
+   "event_ticker": "KXBRASILEIROGAME-26JUL30CORCAP",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXBRASILEIROGAME-26JUL30CORCAP-TIE",
+    "KXBRASILEIROGAME-26JUL30CORCAP-COR",
+    "KXBRASILEIROGAME-26JUL30CORCAP-CAP"
+   ],
+   "matched": null,
+   "series": "KXBRASILEIROGAME",
+   "status": "unresolved_no_candidate_matched",
+   "team_codes": [
+    "COR",
+    "CAP"
+   ]
+  },
+  {
+   "detail": "codes ['SPA', 'SAN'] matched none of the 2 live fixtures in Brazil Serie A: [('Internacional', 'Flamengo'), ('Mirassol', 'Remo')]",
+   "elapsed": null,
+   "event_ticker": "KXBRASILEIROGAME-26JUL30SPASAN",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXBRASILEIROGAME-26JUL30SPASAN-TIE",
+    "KXBRASILEIROGAME-26JUL30SPASAN-SPA",
+    "KXBRASILEIROGAME-26JUL30SPASAN-SAN"
+   ],
+   "matched": null,
+   "series": "KXBRASILEIROGAME",
+   "status": "unresolved_no_candidate_matched",
+   "team_codes": [
+    "SPA",
+    "SAN"
+   ]
+  },
+  {
+   "detail": "no fixture is currently live in this competition, so the market's move cannot be attributed to an observed match",
+   "elapsed": null,
+   "event_ticker": "KXCONMEBOLSUDGAME-26JUL29CIELAN",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXCONMEBOLSUDGAME-26JUL29CIELAN-TIE",
+    "KXCONMEBOLSUDGAME-26JUL29CIELAN-LAN",
+    "KXCONMEBOLSUDGAME-26JUL29CIELAN-CIE"
+   ],
+   "matched": null,
+   "series": "KXCONMEBOLSUDGAME",
+   "status": "unresolved_no_live_fixture_in_competition",
+   "team_codes": null
+  },
+  {
+   "detail": "no fixture is currently live in this competition, so the market's move cannot be attributed to an observed match",
+   "elapsed": null,
+   "event_ticker": "KXCONMEBOLSUDGAME-26JUL29RBBCRI",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXCONMEBOLSUDGAME-26JUL29RBBCRI-TIE",
+    "KXCONMEBOLSUDGAME-26JUL29RBBCRI-RBB",
+    "KXCONMEBOLSUDGAME-26JUL29RBBCRI-CRI"
+   ],
+   "matched": null,
+   "series": "KXCONMEBOLSUDGAME",
+   "status": "unresolved_no_live_fixture_in_competition",
+   "team_codes": null
+  },
+  {
+   "detail": "no fixture is currently live in this competition, so the market's move cannot be attributed to an observed match",
+   "elapsed": null,
+   "event_ticker": "KXCONMEBOLSUDGAME-26JUL30CARSFE",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXCONMEBOLSUDGAME-26JUL30CARSFE-TIE",
+    "KXCONMEBOLSUDGAME-26JUL30CARSFE-SFE",
+    "KXCONMEBOLSUDGAME-26JUL30CARSFE-CAR"
+   ],
+   "matched": null,
+   "series": "KXCONMEBOLSUDGAME",
+   "status": "unresolved_no_live_fixture_in_competition",
+   "team_codes": null
+  },
+  {
+   "detail": "no fixture is currently live in this competition, so the market's move cannot be attributed to an observed match",
+   "elapsed": null,
+   "event_ticker": "KXCONMEBOLSUDGAME-26JUL30GPABOL",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXCONMEBOLSUDGAME-26JUL30GPABOL-TIE",
+    "KXCONMEBOLSUDGAME-26JUL30GPABOL-GPA",
+    "KXCONMEBOLSUDGAME-26JUL30GPABOL-BOL"
+   ],
+   "matched": null,
+   "series": "KXCONMEBOLSUDGAME",
+   "status": "unresolved_no_live_fixture_in_competition",
+   "team_codes": null
+  },
+  {
+   "detail": "no fixture is currently live in this competition, so the market's move cannot be attributed to an observed match",
+   "elapsed": null,
+   "event_ticker": "KXCONMEBOLSUDGAME-26JUL30OHFBOC",
+   "fixture_id": null,
+   "leg_tickers": [
+    "KXCONMEBOLSUDGAME-26JUL30OHFBOC-TIE",
+    "KXCONMEBOLSUDGAME-26JUL30OHFBOC-OHF",
+    "KXCONMEBOLSUDGAME-26JUL30OHFBOC-BOC"
+   ],
+   "matched": null,
+   "series": "KXCONMEBOLSUDGAME",
+   "status": "unresolved_no_live_fixture_in_competition",
+   "team_codes": null
+  }
+ ],
+ "live_index": {
+  "competitions": 12,
+  "fixtures_live_total": 19,
+  "per_mapped_series": {
+   "KXARGPREMDIVGAME": 0,
+   "KXBRASILEIROGAME": 2,
+   "KXCONMEBOLSUDGAME": 0
+  }
+ },
+ "requests_used": 3,
+ "run_utc": "2026-07-30T00:22:00.850841+00:00",
+ "stdout": [
+  "HUNTER LIVE-JOIN END-TO-END PROBE",
+  "key source: APIFOOTBALL_KEY",
+  "competition map fingerprint: 12ece4bbc44a8848\u2026",
+  "mapped series: ['KXARGPREMDIVGAME', 'KXBRASILEIROGAME', 'KXCONMEBOLSUDGAME']",
+  "",
+  "live fixtures worldwide: 19 across 12 competitions",
+  "  KXARGPREMDIVGAME       league 128   Liga Profesional Argentina   0 live now",
+  "  KXBRASILEIROGAME       league 71    Brazil Serie A               2 live now",
+  "  KXCONMEBOLSUDGAME      league 11    CONMEBOL Sudamericana        0 live now",
+  "",
+  "\u2500\u2500 resolving real Kalshi events against the live index \u2500\u2500",
+  "  KXARGPREMDIVGAME: 33 open markets in 11 events",
+  "    KXARGPREMDIVGAME-26AUG01CABARG             codes=None             \u2014         unresolved_no_live_fixture_in_competition",
+  "    KXARGPREMDIVGAME-26AUG01ELPDYJ             codes=None             \u2014         unresolved_no_live_fixture_in_competition",
+  "    KXARGPREMDIVGAME-26AUG01GEMUNI             codes=None             \u2014         unresolved_no_live_fixture_in_competition",
+  "    KXARGPREMDIVGAME-26AUG01RACTIG             codes=None             \u2014         unresolved_no_live_fixture_in_competition",
+  "    KXARGPREMDIVGAME-26AUG01RCUBAN             codes=None             \u2014         unresolved_no_live_fixture_in_competition",
+  "    KXARGPREMDIVGAME-26JUL29GLPRIV             codes=None             \u2014         unresolved_no_live_fixture_in_competition",
+  "    KXARGPREMDIVGAME-26JUL29IACCPLA            codes=None             \u2014         unresolved_no_live_fixture_in_competition",
+  "    KXARGPREMDIVGAME-26JUL30CAINOB             codes=None             \u2014         unresolved_no_live_fixture_in_competition",
+  "    KXARGPREMDIVGAME-26JUL30CATVEL             codes=None             \u2014         unresolved_no_live_fixture_in_competition",
+  "    KXARGPREMDIVGAME-26JUL30CCTUC              codes=None             \u2014         unresolved_no_live_fixture_in_competition",
+  "    KXARGPREMDIVGAME-26JUL30IRMHUR             codes=None             \u2014         unresolved_no_live_fixture_in_competition",
+  "  KXBRASILEIROGAME: 30 open markets in 10 events",
+  "    KXBRASILEIROGAME-26JUL29FLUBAH             codes=['FLU', 'BAH']   \u2014         unresolved_no_candidate_matched",
+  "    KXBRASILEIROGAME-26JUL29INTFLA             codes=['INT', 'FLA']   RESOLVED  resolved  -> Internacional vs Flamengo @90'",
+  "    KXBRASILEIROGAME-26JUL29MIRCR              codes=['MIR', 'CR']    \u2014         unresolved_no_candidate_matched",
+  "    KXBRASILEIROGAME-26JUL29VITPAL             codes=['VIT', 'PAL']   \u2014         unresolved_no_candidate_matched",
+  "    KXBRASILEIROGAME-26JUL30ATLRBB             codes=['RBB', 'ATL']   \u2014         unresolved_no_candidate_matched",
+  "    KXBRASILEIROGAME-26JUL30BOTGPA             codes=['GPA', 'BOT']   \u2014         unresolved_no_candidate_matched",
+  "    KXBRASILEIROGAME-26JUL30CFCCRU             codes=['CRU', 'CFC']   \u2014         unresolved_no_candidate_matched",
+  "    KXBRASILEIROGAME-26JUL30CHAVDG             codes=['VDG', 'CHA']   \u2014         unresolved_no_candidate_matched",
+  "    KXBRASILEIROGAME-26JUL30CORCAP             codes=['COR', 'CAP']   \u2014         unresolved_no_candidate_matched",
+  "    KXBRASILEIROGAME-26JUL30SPASAN             codes=['SPA', 'SAN']   \u2014         unresolved_no_candidate_matched",
+  "  KXCONMEBOLSUDGAME: 15 open markets in 5 events",
+  "    KXCONMEBOLSUDGAME-26JUL29CIELAN            codes=None             \u2014         unresolved_no_live_fixture_in_competition",
+  "    KXCONMEBOLSUDGAME-26JUL29RBBCRI            codes=None             \u2014         unresolved_no_live_fixture_in_competition",
+  "    KXCONMEBOLSUDGAME-26JUL30CARSFE            codes=None             \u2014         unresolved_no_live_fixture_in_competition",
+  "    KXCONMEBOLSUDGAME-26JUL30GPABOL            codes=None             \u2014         unresolved_no_live_fixture_in_competition",
+  "    KXCONMEBOLSUDGAME-26JUL30OHFBOC            codes=None             \u2014         unresolved_no_live_fixture_in_competition",
+  "",
+  "\u2500\u2500 1 event(s) resolved \u2500\u2500",
+  "  KXBRASILEIROGAME-26JUL29INTFLA              18 types  13 events  goals=2 reds=0  -> conditioning_observed (rank 0)",
+  "",
+  "requests used: 3 (API-Football) + 3 (Kalshi)",
+  "provider quota remaining today: 6693"
+ ],
+ "what_this_does_not_establish": "the join is name-based and this run is ONE slate on ONE day. A run with no ambiguous case says nothing about how ambiguity behaves in the wild, and fixture-level identity remains unproven in this repo (docs/APIFOOTBALL-TRIAL.md section 8.6). Resolution here licenses an OBSERVATIONAL row and nothing more"
+}

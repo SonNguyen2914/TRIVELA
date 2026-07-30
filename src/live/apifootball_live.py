@@ -126,6 +126,38 @@ attach another match's red card to this market, and report
 where nothing happened. That is why refusing is cheap here and guessing
 is not.
 
+MEASURED JOIN PERFORMANCE, AND THE ALIAS THAT IS DELIBERATELY NOT HERE
+======================================================================
+End-to-end against the live provider, 2026-07-30 (archived in
+`research_archive/hunter_live_stats_join_e2e_2026-07-30.json`): of the two
+fixtures genuinely live in a mapped competition, ONE resolved and one did
+not.
+
+    KXBRASILEIROGAME-26JUL29INTFLA  codes ['INT','FLA']
+        -> Internacional vs Flamengo at 90', 18 statistic types,
+           13 events, 2 goals -> conditioning_observed (rank 0)
+    KXBRASILEIROGAME-26JUL29MIRCR   codes ['MIR','CR']
+        -> Mirassol vs Remo was LIVE. 'MIR' matched Mirassol; 'CR'
+           (Clube do Remo) did not match the provider's short name
+           'Remo'. UNRESOLVED.
+
+That miss is a real gap and it is reported rather than closed, for a
+specific reason. Adding a `CR -> Remo` alias now would be adding, to a
+fingerprinted reference table, precisely the one string that had just
+failed — after seeing it fail. That is the definition of tuning the
+instrument to the data, and it is the exact mistake recorded as amendment
+A2 in `docs/APIFOOTBALL-TRIAL.md`: two aliases appeared in the trial's
+frozen roster within an hour of the harness first running, containing
+exactly the two names that had just failed, and flipped a DROP into a
+KEEP. Any alias added here must be a recorded, pre-registered amendment
+with its own measurement, not a reaction to this run.
+
+Note also the SHAPE of the failure: it failed CLOSED. An unresolved join
+degrades the finding to `conditioning_unobserved_no_stats`, which is
+today's behaviour, honestly labelled. A miss costs evidence; it never
+manufactures a wrong explanation. One resolution out of two is not a rate
+to generalise from — n=2, one slate, one day.
+
 MONEY
 =====
 Observational. No order path, no sizing, no advice. Money stays locked.
