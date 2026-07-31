@@ -150,3 +150,16 @@ def test_a_named_side_always_states_what_the_draw_does_to_it():
     assert "pays nothing on a draw" in p["draw_note"]
     # the stated draw must be the DE-VIGGED one, not the raw ask
     assert abs(p["draw_probability"] - 0.25) < 0.02
+
+
+def test_market_share_is_given_per_side_so_columns_can_align():
+    """The UI aligns market and read by team. It needs the market's share
+    for BOTH sides, or it can only line our two-way read up against the
+    market's win legs — where subtracting down a column is meaningless."""
+    out = mp.compare(_read(0.62), _book(0.50, 0.25, 0.25), "Alpha FC",
+                     "Beta FC")
+    ms = out["market_share_by_side"]
+    assert abs(ms["home"] + ms["away"] - 1.0) < 1e-3
+    assert abs(ms["home"] - out["market_points_share"]) < 1e-6
+    # and it is NOT the same as the win leg — the whole reason it exists
+    assert abs(ms["home"] - out["market_three_way"]["home"]["p"]) > 0.01
