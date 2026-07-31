@@ -1496,7 +1496,7 @@ def ratings_name_probe(q: str, day: str = "", request: Request = None):
         out["worldclubratings"] = worldclubratings.near_misses(q)
     except AttributeError:
         out["worldclubratings"] = {
-            "unavailable": "no near_misses on this provider yet"}
+            "unavailable": "this provider exposes no near_misses"}
     except Exception as exc:
         out["worldclubratings"] = {
             "error": f"{type(exc).__name__}: {str(exc)[:160]}"}
