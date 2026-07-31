@@ -347,14 +347,16 @@ def clubelo_watch_job() -> None:
                 f"clubelo is answering again — {rows} clubs. Cross-league "
                 f"ratings coverage should recover on the next sweep, and "
                 f"the last-good table is now persisted.",
-                title="clubelo RECOVERED", kind="info")
+                title="clubelo RECOVERED", kind="info",
+                dispatch_class=OPERATIONAL)
         else:
             alerts.send_alert(
                 "clubelo stopped answering. Friendly and viewer-competition "
                 "strength reads will fall back to worldclubratings only, "
                 "which is top-flight-only — expect second-tier clubs to read "
                 "as unrated. This is a provider outage, not a code fault.",
-                title="clubelo DOWN", kind="action")
+                title="clubelo DOWN", kind="action",
+                dispatch_class=OPERATIONAL)
         print(f"[clubelo-watch] TRANSITION -> {'up' if up else 'down'}, "
               f"alerted")
     except Exception as exc:
