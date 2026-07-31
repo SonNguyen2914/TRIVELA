@@ -101,21 +101,45 @@ def _tokens(s: str) -> frozenset[str]:
     return frozenset(_norm(s).split())
 
 
+# A FAILED read is cached too, for much less time than a good one. Without
+# this, an outage at the provider takes THIS service down with it: the
+# failure path returned {} without caching, so every club lookup re-tried
+# a fresh fetch and paid the full timeout again. The friendlies board asks
+# for ~650 clubs, so a 20s timeout became hours of blocking and the
+# endpoint stopped answering at all while /api/health stayed green.
+#
+# The cached value is still {}, so callers keep reading it as "could not
+# look" rather than "no coverage" — the negative cache changes only how
+# often we ask, never what an empty table MEANS.
+FAILURE_TTL_SECONDS = 120.0
+
+
 def day_ranking(day: str) -> dict:
     """{club -> row} for one date, cached. `{}` when the fetch fails —
     callers must treat that as "could not look", never "no coverage"."""
+    now = time.monotonic()
     with _lock:
         hit = _cache.get(day)
-        if hit and time.monotonic() - hit[0] < TTL_SECONDS:
-            return hit[1]
+        if hit:
+            age, table = now - hit[0], hit[1]
+            ttl = TTL_SECONDS if table else FAILURE_TTL_SECONDS
+            if age < ttl:
+                return table
+
+    def _remember_failure():
+        with _lock:
+            _cache[day] = (now, {})
+        return {}
+
     try:
         r = requests.get(f"{BASE}/{day}", timeout=TIMEOUT)
         if r.status_code != 200:
-            return {}
+            print(f"[clubelo] {day}: HTTP {r.status_code}")
+            return _remember_failure()
         rows = list(csv.DictReader(io.StringIO(r.text)))
     except (requests.RequestException, csv.Error, ValueError) as exc:
         print(f"[clubelo] {day}: {type(exc).__name__}: {str(exc)[:120]}")
-        return {}
+        return _remember_failure()
     out = {}
     for row in rows:
         club = (row.get("Club") or "").strip()
