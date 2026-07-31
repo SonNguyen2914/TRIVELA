@@ -181,6 +181,47 @@ def fixtures(key: str, season: int = 2026, days: int | None = None,
         cut = (now + timedelta(days=days)).isoformat()
         rows = [r for r in rows if (r.get("kickoff_utc") or "") <= cut]
 
+    # The market beside the read. Bridged HERE rather than client-side: the
+    # fixture list and the Kalshi event list are two different id spaces, and
+    # joining them in the browser is the fragile pattern the friendlies
+    # dashboard was rewired away from.
+    try:
+        mk = markets(key) or {}
+        events = mk.get("events") or []
+        if events:
+            from src.live import match_pick
+            from src import friendlies as _fr
+            # BOTH sides must match, never one. A single shared token
+            # attaches Real Sociedad's book to Real Madrid — the exact
+            # mis-bridge this repo refuses in three other places. One
+            # matched side is NOT evidence the event is this fixture.
+            titled = [(e, _fr._identity_tokens(e.get("title") or ""))
+                      for e in events]
+            for r in rows:
+                hn = (r.get("home") or {}).get("name") or ""
+                an = (r.get("away") or {}).get("name") or ""
+                ht, at = _fr._identity_tokens(hn), _fr._identity_tokens(an)
+                if not ht or not at:
+                    continue
+                hits = [e for e, toks in titled
+                        if (ht & toks) and (at & toks)]
+                # ambiguity is a refusal, not a coin flip between books
+                if len(hits) != 1:
+                    if len(hits) > 1:
+                        r["market_vs_read"] = {
+                            "available": False,
+                            "market_unavailable_reason": (
+                                f"{len(hits)} Kalshi events match both clubs "
+                                f"by name; none is attached rather than one "
+                                f"guessed")}
+                    continue
+                ev = hits[0]
+                r["market_vs_read"] = match_pick.compare(
+                    r.get("strength"), ev, hn, an)
+                r["kalshi_event"] = ev.get("event_ticker")
+    except Exception as exc:
+        print(f"[comp {key}] market_vs_read: {exc}")
+
     from src.friendlies_apif import strength_notes
     return {
         "competition": v.key, "display": v.display,

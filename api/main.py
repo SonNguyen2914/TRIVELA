@@ -792,6 +792,7 @@ def friendlies_fixture_detail(fixture_id: str, days: int = Query(3, ge=1, le=8))
     out["books"] = {"status": "unavailable",
                     "means": ("the Kalshi registry could not be read — this "
                               "is not 'no book exists'")}
+    out["market_vs_read"] = None
     try:
         swept = friendlies_apif.sweep(days)
         reg = friendlies_apif.tradeable_events()
@@ -817,6 +818,14 @@ def friendlies_fixture_detail(fixture_id: str, days: int = Query(3, ge=1, le=8))
                 out["books"] = {"status": "mapped",
                                 "event_ticker": b.get("event_ticker"),
                                 "book": book, "freshness": freshness}
+                try:
+                    from src.live import match_pick
+                    out["market_vs_read"] = match_pick.compare(
+                        out.get("strength"), book,
+                        (f.get("home") or {}).get("name") or "",
+                        (f.get("away") or {}).get("name") or "")
+                except Exception as exc:
+                    print(f"[friendlies] compare {fixture_id}: {exc}")
     except Exception as exc:
         print(f"[friendlies] book for {fixture_id} failed: {exc}")
     return out
