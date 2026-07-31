@@ -161,7 +161,9 @@ def compare(strength: dict | None, book: dict | None,
     out["direction"] = ("agree" if abs(gap) <= AGREE_BAND
                         else ("read_higher_on_home" if gap > 0
                               else "read_lower_on_home"))
-    out["pick"] = _pick(gap, ours, theirs, home_name, away_name, strength)
+    out["pick"] = _pick(gap, ours, theirs, home_name, away_name, strength,
+                        (out.get("market_three_way") or {}).get("tie", {})
+                        .get("p"))
     return out
 
 
@@ -179,7 +181,8 @@ def _no_pick(ours, theirs, out) -> dict:
 
 
 def _pick(gap: float, ours: float, theirs: float,
-          home: str, away: str, strength: dict | None) -> dict:
+          home: str, away: str, strength: dict | None,
+          draw_p: float | None = None) -> dict:
     """What the numbers actually support, and how weakly.
 
     Deliberately NOT a bet. It names a side only when the two sources
@@ -193,10 +196,27 @@ def _pick(gap: float, ours: float, theirs: float,
             "moderate" if lean < 0.70 else "strong")
 
     if abs(gap) <= AGREE_BAND:
+        # THE DRAW IS NOT A DETAIL. Both numbers above are points shares,
+        # in which a draw counts as HALF. A Kalshi contract on a side pays
+        # NOTHING on a draw. So a side that looks strong on points share
+        # can still lose outright a quarter of the time, and a pick that
+        # omits this is quietly answering a different question from the
+        # one a reader is asking.
+        draw_note = None
+        if draw_p is not None:
+            draw_note = (
+                f"the market prices a draw at {draw_p:.0%}. That is folded "
+                f"in at HALF weight on both numbers above, because both "
+                f"are points shares. A contract on {side_us} pays nothing "
+                f"on a draw, so {draw_p:.0%} of outcomes beat this side "
+                f"outright — the points share does not say otherwise, it "
+                f"asks a different question")
         return {
             "has_pick": True, "side": side_us,
             "confidence": conf,
             "agreement": "market agrees",
+            "draw_probability": draw_p,
+            "draw_note": draw_note,
             "reasoning": (
                 f"the strength read makes {side_us} the stronger side "
                 f"({lean:.0%} expected points share) and the market prices "

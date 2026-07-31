@@ -136,3 +136,17 @@ def test_the_read_never_gains_a_draw_number():
     ours = {k: v for k, v in out.items() if k.startswith("our_")}
     assert not any("draw" in str(v).lower() or "tie" in str(v).lower()
                    for v in ours.values()), ours
+
+
+def test_a_named_side_always_states_what_the_draw_does_to_it():
+    """A points share counts a draw as half; a Kalshi contract pays zero
+    on one. A pick that names a side without saying so is answering a
+    different question from the one being asked."""
+    out = mp.compare(_read(0.62), _book(0.50, 0.25, 0.25), "Alpha FC",
+                     "Beta FC")
+    p = out["pick"]
+    assert p["has_pick"] is True
+    assert p["draw_probability"] is not None
+    assert "pays nothing on a draw" in p["draw_note"]
+    # the stated draw must be the DE-VIGGED one, not the raw ask
+    assert abs(p["draw_probability"] - 0.25) < 0.02
