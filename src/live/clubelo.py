@@ -230,3 +230,48 @@ def expected_points_share(elo_home: float, elo_away: float) -> float:
     """
     dr = float(elo_home) - float(elo_away)
     return 1.0 / (10.0 ** (-dr / ELO_DIVISOR) + 1.0)
+
+
+def near_misses(name: str, day: str, limit: int = 12) -> dict:
+    """Candidate rows for a name `lookup` REFUSED, ranked by token overlap.
+
+    Diagnostic only — it never resolves anything and nothing in the
+    pricing path calls it. Its purpose is the rule this module already
+    states: the alias table grows only from MEASURED misses, never from
+    intuition. Without a way to see what the provider actually calls a
+    club, the only way to add an alias is to guess at the spelling, which
+    is how a wrong club gets attached to a fixture.
+
+    Returns the raw provider strings, deliberately unfiltered by any
+    confidence bar — a human reads them and decides.
+    """
+    table = day_ranking(day)
+    if not table:
+        return {"query": name, "day": day, "table_rows": 0,
+                "candidates": [],
+                "means": ("the provider table could not be read, so whether "
+                          "this club is covered is UNKNOWN — not 'absent'")}
+    q = _tokens(name)
+    scored = []
+    for club in table:
+        t = _tokens(club)
+        if not t:
+            continue
+        overlap = len(q & t)
+        if not overlap:
+            continue
+        scored.append({
+            "provider_name": club,
+            "shared_tokens": sorted(q & t),
+            "jaccard": round(overlap / len(q | t), 3),
+            "elo": (table[club] or {}).get("elo"),
+            "country": (table[club] or {}).get("country"),
+            "would_lookup_resolve": lookup(club, day) is not None,
+        })
+    scored.sort(key=lambda r: -r["jaccard"])
+    return {"query": name, "day": day, "table_rows": len(table),
+            "resolved": lookup(name, day) is not None,
+            "candidates": scored[:limit],
+            "means": ("candidates share at least one token with the query. "
+                      "This is NOT a match and must not be treated as one — "
+                      "an alias is added by a human who recognises the club")}
