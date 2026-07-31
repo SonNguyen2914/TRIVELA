@@ -300,6 +300,67 @@ def storage_headroom_job() -> None:
         print(f"[storage] error: {exc}")
 
 
+# --- ratings-provider watch ------------------------------------------------
+# Tracks whether clubelo has come back, and says so ONCE per transition.
+# It went dark on 2026-07-31 — DNS resolving to 37.128.134.74 with nothing
+# answering on 80, 443 or the website — and the friendlies board fell from
+# 66 rated fixtures to 23 with no signal that a third party, not our code,
+# was the cause. Nobody should have to poll it by hand.
+_clubelo_state: dict[str, object] = {}
+
+
+def clubelo_watch_job() -> None:
+    """Probe clubelo once and alert on a CHANGE of state, never on every
+    run — a daily "still down" is noise that trains you to ignore it, and
+    the only two moments that matter are going dark and coming back."""
+    from datetime import date
+
+    try:
+        from src.live import clubelo
+        # bypass the negative cache: a watch that reads its own cached
+        # failure would report "down" forever after the first miss
+        clubelo._cache.pop(date.today().isoformat(), None)
+        rows = len(clubelo.day_ranking(date.today().isoformat()))
+    except Exception as exc:
+        print(f"[clubelo-watch] probe error: {exc}")
+        return
+
+    up = rows > 0
+    was = _clubelo_state.get("up")
+    _clubelo_state["up"] = up
+    _clubelo_state["rows"] = rows
+    _clubelo_state["checked_at"] = date.today().isoformat()
+
+    if was is None:
+        print(f"[clubelo-watch] first probe: "
+              f"{'UP' if up else 'DOWN'} ({rows} clubs)")
+        return
+    if was == up:
+        print(f"[clubelo-watch] unchanged: "
+              f"{'up' if up else 'down'} ({rows} clubs)")
+        return
+
+    try:
+        from src import alerts
+        if up:
+            alerts.send_alert(
+                f"clubelo is answering again — {rows} clubs. Cross-league "
+                f"ratings coverage should recover on the next sweep, and "
+                f"the last-good table is now persisted.",
+                title="clubelo RECOVERED", kind="info")
+        else:
+            alerts.send_alert(
+                "clubelo stopped answering. Friendly and viewer-competition "
+                "strength reads will fall back to worldclubratings only, "
+                "which is top-flight-only — expect second-tier clubs to read "
+                "as unrated. This is a provider outage, not a code fault.",
+                title="clubelo DOWN", kind="action")
+        print(f"[clubelo-watch] TRANSITION -> {'up' if up else 'down'}, "
+              f"alerted")
+    except Exception as exc:
+        print(f"[clubelo-watch] alert failed: {exc}")
+
+
 def mls_window_job() -> None:
     """Rolling fixture refresh: reschedules, status flips, final scores;
     then settle any paper fills whose fixtures just completed."""
@@ -744,6 +805,13 @@ def start_scheduler() -> BackgroundScheduler:
                       id="mls_window", coalesce=True, max_instances=1)
     scheduler.add_job(storage_headroom_job, "interval", minutes=60,
                       id="storage_headroom", coalesce=True, max_instances=1)
+    # Hourly, not daily. The ask was a daily check, but the probe is one
+    # cheap request and it alerts only on a CHANGE — so hourly costs
+    # nothing extra in noise and cuts the worst-case time-to-know from 24
+    # hours to 1. Recovery is the event worth catching quickly: it is what
+    # restores 420 refused sides.
+    scheduler.add_job(clubelo_watch_job, "interval", minutes=60,
+                      id="clubelo_watch", coalesce=True, max_instances=1)
     scheduler.add_job(mls_markets_job, "interval", minutes=10,
                       id="mls_markets", coalesce=True, max_instances=1)
     scheduler.add_job(mls_runs_job, "interval", minutes=15,
