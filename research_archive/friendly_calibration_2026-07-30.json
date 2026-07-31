@@ -1,0 +1,68 @@
+{
+  "measured_at": "2026-07-30",
+  "window_days": 45,
+  "completed_friendlies": 3421,
+  "scored": 626,
+  "coverage": 0.183,
+  "method": "fitted on the OLDER half, scored on the NEWER half, bootstrap CI (2000 resamples) on the improvement",
+  "fitted_shrink_k": 0.56,
+  "out_of_sample": {
+    "n_test": 313,
+    "brier_raw": 0.2027,
+    "brier_coin_flip": 0.1973,
+    "brier_calibrated": 0.1892,
+    "improvement_vs_raw": 0.0134,
+    "ci95": [
+      0.004,
+      0.0233
+    ],
+    "significant": true
+  },
+  "calibration_buckets": [
+    {
+      "range": [
+        0.0,
+        0.35
+      ],
+      "n": 120,
+      "mean_predicted": 0.2345,
+      "mean_actual": 0.4125
+    },
+    {
+      "range": [
+        0.35,
+        0.5
+      ],
+      "n": 148,
+      "mean_predicted": 0.4292,
+      "mean_actual": 0.5574
+    },
+    {
+      "range": [
+        0.5,
+        0.65
+      ],
+      "n": 196,
+      "mean_predicted": 0.5688,
+      "mean_actual": 0.5714
+    },
+    {
+      "range": [
+        0.65,
+        1.01
+      ],
+      "n": 162,
+      "mean_predicted": 0.7657,
+      "mean_actual": 0.6821
+    }
+  ],
+  "home_term_REJECTED": {
+    "why": "adds only ~+0.004 Brier, and the apparent edge is LARGER where the venue is unknown than where it is known \u2014 backwards for a real home effect. Pre-season friendlies are often at neutral or touring grounds, so the provider's home label frequently does not mean home.",
+    "edge_venue_known": 0.0184,
+    "edge_venue_null": 0.045,
+    "n_venue_known": 32,
+    "n_venue_null": 594
+  },
+  "scope_limit": "fitted on PRE-SEASON friendlies. Mid-season international-break friendlies are a different population; re-run before trusting these there.",
+  "what_this_does_NOT_do": "direction accuracy is ~59-61% before and after \u2014 calibration corrects CONFIDENCE, not skill. It stops the read overclaiming; it does not make friendlies predictable."
+}

@@ -269,6 +269,36 @@ def for_fixture(f: dict, day: str | None = None) -> dict:
         out["pair_confidence_words"] = PAIR_WORDS[tier]
         out["expected_points_share"] = {
             "home": round(e, 4), "away": round(1.0 - e, 4)}
+        # BOTH numbers, never a silent replacement. The raw value above is
+        # the PROVIDER's published expectation and stays citable as such.
+        # The calibrated one below is OURS — a locally fitted shrink, which
+        # makes it a different kind of claim, so it is labelled and shown
+        # beside the original rather than quietly standing in for it.
+        import config as _cfg
+        k = _cfg.FRIENDLY_CALIBRATION_SHRINK
+        ce = 0.5 + k * (e - 0.5)
+        out["calibrated"] = {
+            "expected_points_share": {"home": round(ce, 4),
+                                      "away": round(1.0 - ce, 4)},
+            "shrink_k": k,
+            "source": "measured on this platform, not published by the provider",
+            "measured_at": _cfg.FRIENDLY_CALIBRATION_MEASURED_AT,
+            "archive": _cfg.FRIENDLY_CALIBRATION_ARCHIVE,
+            "basis": (
+                "the raw read is overconfident on friendlies: measured over "
+                "626 completed matches it is slightly WORSE than a coin flip "
+                "(Brier 0.2027 vs 0.1973). Shrinking toward 0.5 by k gives "
+                "0.1892 out of sample, +0.0134 with a bootstrap 95% CI of "
+                "[+0.0040, +0.0233]."),
+            "corrects": (
+                "CONFIDENCE, not skill — direction accuracy is ~59-61% "
+                "before and after. This stops the read overclaiming; it does "
+                "not make friendlies predictable."),
+            "scope": (
+                "fitted on PRE-SEASON friendlies only; a different "
+                "population needs a re-measure "
+                "(scripts/measure_friendly_calibration.py)"),
+        }
         out["rating_difference"] = round(h["rating"] - a["rating"], 1)
         # kept under the old name too: the frontend shipped against it
         out["elo_difference"] = out["rating_difference"]

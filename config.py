@@ -792,3 +792,35 @@ TEAM_STYLE_SHRINK_GAMES = float(os.getenv("TEAM_STYLE_SHRINK_GAMES", "6.0"))
 # provider's coverage of the two statistics is not the same. Below the floor
 # the surface says 'not enough fixtures', never a number.
 TEAM_STYLE_MIN_FIXTURES = int(os.getenv("TEAM_STYLE_MIN_FIXTURES", "5"))
+
+# --- friendlies calibration (measured 2026-07-30) --------------------------
+# The strength read is an EXTERNAL published expectation. Measured against
+# 626 completed friendlies, the RAW read is slightly WORSE than a coin flip
+# out of sample (Brier 0.2027 vs 0.1973) — not noise, but systematic
+# OVERCONFIDENCE: it predicted 0.235 where reality was 0.412 and 0.766
+# where reality was 0.682. Club ratings are fitted on full-strength league
+# football; friendlies are rotation-heavy, so real outcomes compress toward
+# the middle.
+#
+# k shrinks the read toward 0.5. Fitted on the OLDER half of the window and
+# scored on the NEWER half: Brier 0.2027 -> 0.1892, improvement +0.0134
+# with a bootstrap 95% CI of [+0.0040, +0.0233] — excludes zero, the same
+# bar every approval here carries.
+# research_archive/friendly_calibration_2026-07-30.json,
+# scripts/measure_friendly_calibration.py re-measures it.
+#
+# A HOME term was measured and REJECTED: it adds only ~+0.004, and its
+# apparent edge is LARGER where the venue is unknown (+0.045) than where it
+# is known (+0.018) — backwards for a real home effect, and explained by
+# pre-season friendlies being played at neutral and touring grounds where
+# the provider's "home" label does not mean home.
+#
+# SCOPE: fitted on PRE-SEASON friendlies. Mid-season international-break
+# friendlies are a different population — re-measure before trusting this
+# there. It corrects CONFIDENCE, not skill: direction accuracy is ~59-61%
+# before and after.
+FRIENDLY_CALIBRATION_SHRINK = float(
+    os.getenv("FRIENDLY_CALIBRATION_SHRINK", "0.56"))
+FRIENDLY_CALIBRATION_MEASURED_AT = "2026-07-30"
+FRIENDLY_CALIBRATION_ARCHIVE = (
+    "research_archive/friendly_calibration_2026-07-30.json")
