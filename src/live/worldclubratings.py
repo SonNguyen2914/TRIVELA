@@ -311,3 +311,36 @@ def expected_points_share(points_home: float, points_away: float) -> float:
     """
     dr = float(points_home) - float(points_away)
     return 1.0 / (10.0 ** (-dr / FIFA_ADAPTED_DIVISOR) + 1.0)
+
+
+def near_misses(name: str, limit: int = 10) -> dict:
+    """Candidate rows for a name `lookup` refused, ranked by token overlap.
+
+    Diagnostic only — nothing in the pricing path calls it, and it
+    resolves nothing. It exists so the alias table can grow from MEASURED
+    misses: without a way to see what this provider actually calls a club,
+    the only way to add an alias is to guess the spelling, and a wrong
+    guess attaches another club's rating to a fixture.
+    """
+    table = ratings()
+    if not table:
+        return {"query": name, "table_rows": 0, "candidates": [],
+                "means": ("the provider table could not be read, so whether "
+                          "this club is covered is UNKNOWN — not 'absent'")}
+    q = _tokens(name)
+    out = []
+    for club, row in table.items():
+        t = _tokens(club)
+        if not t or not (q & t):
+            continue
+        out.append({"provider_name": club,
+                    "country": (row or {}).get("country"),
+                    "points": (row or {}).get("points"),
+                    "shared": sorted(q & t),
+                    "jaccard": round(len(q & t) / len(q | t), 3)})
+    out.sort(key=lambda r: -r["jaccard"])
+    return {"query": name, "table_rows": len(table),
+            "resolved": lookup(name) is not None,
+            "candidates": out[:limit],
+            "means": ("candidates share a token with the query. This is NOT "
+                      "a match — a human recognises the club, or does not")}

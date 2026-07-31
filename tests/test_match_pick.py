@@ -218,3 +218,19 @@ def test_league_surfaces_get_no_draw_because_none_was_measured():
                       "Beta FC", draw_rate=0.19)
     assert out2["read_three_way"]["tie"] == 0.19
     assert out2["read_is_two_way"]["has_draw"] is True
+
+
+def test_both_providers_expose_a_near_miss_probe():
+    """The probe is how an alias is added from evidence rather than a
+    guess. A provider without one forces guessing on exactly the days the
+    OTHER provider is down."""
+    from src.live import clubelo, worldclubratings
+    for mod in (clubelo, worldclubratings):
+        assert hasattr(mod, "near_misses"), mod.__name__
+
+
+def test_wcr_near_misses_reports_absence_as_absence_not_as_a_match():
+    from src.live import worldclubratings
+    d = worldclubratings.near_misses("Zzzz Nonexistent United FC")
+    assert d["candidates"] == []
+    assert "NOT a match" in d["means"] or d["table_rows"] == 0
