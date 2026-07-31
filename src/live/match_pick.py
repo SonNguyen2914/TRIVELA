@@ -134,6 +134,19 @@ def compare(strength: dict | None, book: dict | None,
             # draw already folded in at half weight, and ClubElo's own 1X2
             # split comes from an unpublished histogram. A draw number
             # here would be invented, not derived.
+            # The market's per-side POINTS SHARE — the away side too, not
+            # just the home one. Without it the UI can only align our
+            # two-way read against the market's three-way win legs, and a
+            # reader subtracting down that column gets a number that means
+            # nothing (57% win vs 61% points share is not -4).
+            out["market_share_by_side"] = {
+                "home": round(theirs, 4),
+                "away": round(1.0 - theirs, 4),
+                "means": ("expected points share per side, draw counted as "
+                          "half — the SAME quantity as the read, and the "
+                          "only pair on this surface that may be compared "
+                          "directly"),
+            }
             out["read_is_two_way"] = {
                 "has_draw": False,
                 "why": ("the strength read is an expected POINTS share, "
