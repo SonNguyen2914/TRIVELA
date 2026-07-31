@@ -184,3 +184,37 @@ def test_the_name_probe_resolves_nothing():
     src = inspect.getsource(clubelo.near_misses)
     for banned in ("ALIASES[", "ALIASES.update", "ALIASES.setdefault"):
         assert banned not in src, f"near_misses mutates the alias table via {banned}"
+
+
+def test_our_three_way_sums_to_one_and_reconstructs_the_share():
+    import config
+    for e in (0.05, 0.2, 0.5, 0.62, 0.93):
+        tw = mp.read_three_way(e, config.FRIENDLY_DRAW_RATE)
+        assert abs(tw["home"] + tw["tie"] + tw["away"] - 1.0) < 1e-3, e
+        # a draw is half a win in E, by definition — this must round-trip
+        assert abs(tw["home"] + 0.5 * tw["tie"] - e) < 1e-3, e
+
+
+def test_no_leg_ever_goes_negative_at_the_extremes():
+    """A flat 19% draw on a 0.93 share implies P(away) = -0.025 without
+    the clip, which is why the clip is not optional."""
+    import config
+    for e in (0.01, 0.03, 0.05, 0.95, 0.97, 0.99):
+        tw = mp.read_three_way(e, config.FRIENDLY_DRAW_RATE)
+        assert min(tw["home"], tw["tie"], tw["away"]) >= 0.0, (e, tw)
+        assert tw["clipped"] is True, e
+
+
+def test_league_surfaces_get_no_draw_because_none_was_measured():
+    """The draw rate is measured on FRIENDLIES. A caller that passes none
+    must stay two-way rather than borrow a number from another sport-shape.
+    """
+    out = mp.compare(_read(0.62), _book(0.50, 0.25, 0.25), "Alpha FC",
+                     "Beta FC")                      # no draw_rate
+    assert "read_three_way" not in out
+    assert out["read_is_two_way"]["has_draw"] is False
+
+    out2 = mp.compare(_read(0.62), _book(0.50, 0.25, 0.25), "Alpha FC",
+                      "Beta FC", draw_rate=0.19)
+    assert out2["read_three_way"]["tie"] == 0.19
+    assert out2["read_is_two_way"]["has_draw"] is True

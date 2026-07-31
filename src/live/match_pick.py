@@ -87,8 +87,31 @@ def market_points_share(book: dict | None) -> dict | None:
                      "is distributed, not a measurement")}
 
 
+def read_three_way(e: float, draw_rate: float) -> dict:
+    """Our own 1X2 from a points share and a measured draw rate.
+
+    The decomposition has no free parameters once d is chosen:
+    P(home)=E-d/2 and P(away)=1-E-d/2, because a draw is worth half a
+    win in E by definition. d is clipped to 2*min(E,1-E) so no leg goes
+    negative — without that a 0.93 share and a flat 19% draw implies
+    P(away) = -0.025.
+    """
+    d = max(0.0, min(draw_rate, 2 * min(e, 1 - e)))
+    home, away = e - d / 2, 1 - e - d / 2
+    return {"home": round(max(home, 0.0), 4),
+            "tie": round(d, 4),
+            "away": round(max(away, 0.0), 4),
+            "draw_rate_used": round(d, 4),
+            "clipped": d < draw_rate - 1e-9,
+            "basis": ("our own measured friendly draw rate, constant by "
+                      "measurement — a mismatch-dependent form was fitted "
+                      "and did NOT beat it out of sample, so this says "
+                      "nothing about how evenly matched the clubs are")}
+
+
 def compare(strength: dict | None, book: dict | None,
-            home_name: str = "", away_name: str = "") -> dict:
+            home_name: str = "", away_name: str = "",
+            draw_rate: float | None = None) -> dict:
     """Market and read on one scale, plus the stated pick."""
     out = {"available": False, "note": DISAGREEMENT_NOTE}
     ours = None
@@ -100,6 +123,10 @@ def compare(strength: dict | None, book: dict | None,
             ours = float(src["home"])
             out["our_points_share"] = round(ours, 4)
             out["our_basis"] = ("calibrated" if cal else "raw")
+            # Only where a draw rate has been MEASURED for this kind of
+            # fixture. League surfaces pass none and stay two-way.
+            if draw_rate is not None:
+                out["read_three_way"] = read_three_way(ours, draw_rate)
 
     mk = market_points_share(book)
     theirs = None
@@ -148,7 +175,7 @@ def compare(strength: dict | None, book: dict | None,
                           "directly"),
             }
             out["read_is_two_way"] = {
-                "has_draw": False,
+                "has_draw": bool(out.get("read_three_way")),
                 "why": ("the strength read is an expected POINTS share, "
                         "draws already counted as half — not a 1X2 split. "
                         "Neither ratings provider publishes a usable draw "
