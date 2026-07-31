@@ -19,11 +19,19 @@ from src.live import clubelo, worldclubratings
 
 
 @pytest.fixture(autouse=True)
-def _clear():
+def _clear(tmp_path, monkeypatch):
+    # _DISK MUST be redirected. These tests were written before the
+    # last-good-table cache existed and passed only because no cache file
+    # was on disk yet. The moment clubelo recovered and wrote one, the
+    # outage path started finding a real table and three of them failed —
+    # a test whose premise the environment falsified, not a code defect.
+    monkeypatch.setattr(clubelo, "_DISK", str(tmp_path / "none.json"))
     clubelo._cache.clear()
+    clubelo._stale.clear()
     worldclubratings._cache = None
     yield
     clubelo._cache.clear()
+    clubelo._stale.clear()
     worldclubratings._cache = None
 
 
