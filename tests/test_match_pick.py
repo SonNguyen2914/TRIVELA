@@ -86,3 +86,27 @@ def test_no_recommendation_vocabulary_anywhere(word):
         # the module may NAME the banned word to say it refuses it
         if word in low and "never" not in low and "not a verified" not in low:
             raise AssertionError(f"{word!r} used as a claim in: {b[:200]}")
+
+
+def test_dormant_competition_declines_with_409_not_500(monkeypatch):
+    """A dormant league has nothing to approve. That must read as a
+    refusal, not a server fault and not a silent 200 with a null id.
+
+    `_admin_ok` is patched deliberately: without it this test passes on a
+    403 and never reaches the branch it claims to cover — which is exactly
+    what it did on the first attempt.
+    """
+    import config
+    config.PUBLIC_READ_ONLY = False
+    config.RATE_LIMIT_SECONDS = 0
+    from fastapi.testclient import TestClient
+
+    import api.main as main
+    monkeypatch.setattr(main, "_admin_ok", lambda request: True)
+    c = TestClient(main.app)
+    r = c.post("/api/admin/la-liga-2026/replay-approval/activate")
+    assert r.status_code == 409, (r.status_code, r.text[:200])
+    d = r.json()["detail"]
+    assert d["activated"] is False
+    assert d["declined"] == "dormant"
+    assert "nothing to approve" in d["means"]

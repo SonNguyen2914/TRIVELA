@@ -1484,9 +1484,28 @@ def competition_activate_replay_approval(competition: str, request: Request,
     if competition in ladder_replay.APPROVAL_FORBIDDEN:
         raise HTTPException(
             409, ladder_replay.APPROVAL_FORBIDDEN[competition])
-    res = ladder_replay.ensure_replay_approval(
-        competition, n_boot=max(1, min(n_boot, 5000)),
-        allow_create=True, force=True)
+    try:
+        res = ladder_replay.ensure_replay_approval(
+            competition, n_boot=max(1, min(n_boot, 5000)),
+            allow_create=True, force=True)
+    except Exception as exc:
+        # An operator running the post-deploy reactivation needs to know
+        # WHICH competition failed and why. A bare 500 sent them to read
+        # server logs to find out that a league simply had no data yet.
+        raise HTTPException(500, f"{competition}: replay ladder failed: "
+                                 f"{type(exc).__name__}: {str(exc)[:200]}")
+    # `ensure_replay_approval` reports a refusal as {"error": ...} rather
+    # than raising — "dormant" (the season has not started, so the ladder
+    # has nothing to score) is the common one. Returning HTTP 200 with a
+    # null decision_id read as a silent success; 409 says it declined.
+    if res.get("error"):
+        raise HTTPException(409, {
+            "competition": competition, "declined": res["error"],
+            "means": ("no approval was created or activated. This is the "
+                      "ladder refusing, not a failure to reach it — a "
+                      "dormant competition has no prior-season history to "
+                      "score, so there is nothing to approve"),
+            "activated": False})
     return {**res, "activated_by": "operator",
             "evidence_class": ladder_replay.EVIDENCE_CLASS,
             "generated_at": utcnow().isoformat()}
