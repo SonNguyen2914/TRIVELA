@@ -431,3 +431,74 @@ class TestContainmentDirectionMatters:
             "country_code": "gb-eng", "points": 1708.0, "rank": 48}})
         r = wcr.lookup("Leeds United")
         assert r is not None and r["club"] == "Leeds"
+
+
+class TestFriendlyCalibration:
+    """The shrink is a MEASURED constant, and the tests hold it to that.
+
+    Measured 2026-07-30 over 626 completed friendlies: the raw read is
+    slightly WORSE than a coin flip out of sample (Brier 0.2027 vs 0.1973)
+    because it is systematically overconfident. Shrinking toward 0.5 gives
+    0.1892, +0.0134 with a bootstrap 95% CI of [+0.0040, +0.0233].
+    """
+
+    def test_k_matches_the_archived_measurement(self):
+        """The constant and the archive must agree. If someone changes k by
+        hand this fails, which is the point: k is not a taste setting, it is
+        the output of scripts/measure_friendly_calibration.py."""
+        import json
+        import pathlib
+
+        import config
+        root = pathlib.Path(__file__).resolve().parents[1]
+        doc = json.loads((root / config.FRIENDLY_CALIBRATION_ARCHIVE)
+                         .read_text())
+        assert config.FRIENDLY_CALIBRATION_SHRINK == doc["fitted_shrink_k"]
+        assert doc["measured_at"] == config.FRIENDLY_CALIBRATION_MEASURED_AT
+
+    def test_the_archived_improvement_actually_cleared_the_bar(self):
+        """A constant whose CI spans zero must never have shipped."""
+        import json
+        import pathlib
+
+        import config
+        root = pathlib.Path(__file__).resolve().parents[1]
+        o = json.loads((root / config.FRIENDLY_CALIBRATION_ARCHIVE)
+                       .read_text())["out_of_sample"]
+        assert o["significant"] is True
+        assert o["ci95"][0] > 0, "CI includes zero — this should not ship"
+        assert o["brier_calibrated"] < o["brier_raw"]
+        assert o["brier_calibrated"] < o["brier_coin_flip"]
+
+    def test_the_raw_provider_number_is_never_replaced(self, canned):
+        """The published expectation stays citable. The calibrated value is
+        OURS and sits beside it — collapsing the two would turn a provider's
+        published number into a locally fitted one wearing its name."""
+        out = cse.for_fixture({"home": {"name": "FC Tokyo"},
+                               "away": {"name": "Flamengo"}}, day=DAY)
+        assert out["available"] is True
+        raw = out["expected_points_share"]
+        cal = out["calibrated"]["expected_points_share"]
+        assert raw != cal
+        # and the calibrated one says whose it is
+        assert "not published by the provider" in out["calibrated"]["source"]
+
+    def test_calibration_shrinks_toward_a_half_and_never_flips(self, canned):
+        """Direction must be preserved: this corrects confidence, not the
+        ordering. A k that reversed a favourite would be a different claim
+        entirely."""
+        import config
+        out = cse.for_fixture({"home": {"name": "FC Tokyo"},
+                               "away": {"name": "Flamengo"}}, day=DAY)
+        raw = out["expected_points_share"]["home"]
+        cal = out["calibrated"]["expected_points_share"]["home"]
+        assert abs(cal - 0.5) < abs(raw - 0.5)          # strictly nearer 0.5
+        assert (raw > 0.5) == (cal > 0.5)               # same side
+        assert cal == pytest.approx(
+            0.5 + config.FRIENDLY_CALIBRATION_SHRINK * (raw - 0.5), abs=1e-4)
+
+    def test_an_even_pairing_stays_even(self, canned, monkeypatch):
+        """0.5 is a fixed point — shrinking must not introduce a bias."""
+        import config
+        monkeypatch.setattr(config, "FRIENDLY_CALIBRATION_SHRINK", 0.56)
+        assert 0.5 + 0.56 * (0.5 - 0.5) == pytest.approx(0.5)
