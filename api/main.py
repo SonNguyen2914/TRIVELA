@@ -183,15 +183,40 @@ def mls_match(event_id: str):
         raise HTTPException(502, "summary unavailable")
     book = None
     books = []
+    # WHY the freshness variant: the plain call returns [] for three
+    # different reasons — no Kalshi event bridges this fixture, the
+    # bundle failed CLOSED because a price aged past
+    # MLS_PRICE_MAX_AGE_SECONDS, or the lookup raised. All three
+    # rendered as "no book", which is the "unavailable presented as a
+    # deliberate state" pattern this codebase refuses everywhere else.
+    #
+    # Found the expensive way on 2026-07-31: two of fifteen slate
+    # fixtures served no book in production while returning 11 families
+    # locally on identical inputs, and the payload could not say which
+    # of the three had happened. Naming the reason does not fix that
+    # bridge — it makes the next occurrence diagnosable in one request
+    # instead of an hour of bisection.
+    book_meta = {"status": "unavailable",
+                 "means": ("the book lookup did not run — this is not "
+                           "'no book exists'")}
     try:
-        books = mls.find_all_books(
+        books, book_meta = mls.find_all_books_with_freshness(
             out.get("date"),
             (out.get("home") or {}).get("name") or "",
             (out.get("away") or {}).get("name") or "")
+        if not books:
+            book_meta = dict(book_meta or {}, means=(
+                "no book is presented. `status` says which: 'unavailable' "
+                "means the prices failed the freshness gate or no Kalshi "
+                "event bridged this fixture — NOT that the exchange lists "
+                "none"))
         # legacy shape (deploy-skew safety): the winner family alone
         book = next((f for f in books if f.get("key") == "winner"), None)
     except Exception as exc:            # the hub must not die on the book
         print(f"[mls] book match failed for {event_id}: {exc}")
+        book_meta = {"status": "unavailable",
+                     "error": f"{type(exc).__name__}: {str(exc)[:120]}",
+                     "means": "the lookup RAISED — not 'no book exists'"}
     model = None
     try:                                # nor on the live plane
         from src.live import runs as live_runs
@@ -207,7 +232,8 @@ def mls_match(event_id: str):
             lineup = lineup_view.build(raw)
     except Exception as exc:
         print(f"[mls] lineup section failed for {event_id}: {exc}")
-    return {"match": out, "book": book, "books": books, "model": model,
+    return {"match": out, "book": book, "books": books,
+            "book_meta": book_meta, "model": model,
             "lineups": lineup, "generated_at": utcnow().isoformat()}
 
 
