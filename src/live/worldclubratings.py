@@ -50,6 +50,7 @@ import requests
 URL = "http://worldclubratings.com/rankings/elo_men/index.html"
 TIMEOUT = 40
 TTL_SECONDS = 6 * 3600.0        # the source itself refreshes weekly
+FAILURE_TTL_SECONDS = 120.0   # see clubelo.FAILURE_TTL_SECONDS
 
 # Published at worldclubratings.com/rankings/methods/elo_men.html. NOT 400
 # — see the module docstring. Named so a reader cannot mistake which
@@ -108,13 +109,28 @@ def ratings(force: bool = False) -> dict:
     them.
     """
     global _cache
+    now = time.monotonic()
     with _lock:
-        if _cache and not force and time.monotonic() - _cache[0] < TTL_SECONDS:
-            return _cache[1]
+        if _cache and not force:
+            # a FAILED read is remembered too, briefly — see the note on
+            # clubelo.FAILURE_TTL_SECONDS. Without it every club lookup
+            # re-tries a fresh fetch during an outage and the caller pays
+            # the full timeout hundreds of times over.
+            ttl = TTL_SECONDS if _cache[1] else FAILURE_TTL_SECONDS
+            if now - _cache[0] < ttl:
+                return _cache[1]
+
+    def _remember_failure():
+        global _cache
+        with _lock:
+            _cache = (now, {})
+        return {}
+
     try:
         r = requests.get(URL, timeout=TIMEOUT)
         if r.status_code != 200:
-            return {}
+            print(f"[wcr] HTTP {r.status_code}")
+            return _remember_failure()
         # EXPLICIT utf-8. The response omits a charset in its Content-Type,
         # and requests then falls back to Latin-1 for text/html per RFC
         # 2616 — which turned "AS Saint-Étienne" into "AS Saint-Ã‰tienne".
@@ -128,7 +144,7 @@ def ratings(force: bool = False) -> dict:
             r.text, re.S)
     except requests.RequestException as exc:
         print(f"[wcr] fetch failed: {type(exc).__name__}: {str(exc)[:120]}")
-        return {}
+        return _remember_failure()
     for b in blobs:
         try:
             data = ((json.loads(b).get("x") or {}).get("data"))
