@@ -175,7 +175,31 @@ def for_fixture(f: dict, day: str | None = None) -> dict:
     # separates Al-Sadd SC (Qatar) from Al Sadd (Yemen). Often "World" on a
     # friendly, which disambiguates nothing — and then the pairing is
     # refused as ambiguous rather than guessed.
-    hint = f.get("league_country")
+    # `league_country` is the COMPETITION's country and reads "World" on
+    # 314 of 316 club friendlies, so it disambiguates nothing on the one
+    # surface that needs it. Prefer the CLUB's own country, resolved by
+    # API-Football team id — see friendlies_apif.club_country. Falls back
+    # to the competition's country for league fixtures, where it is
+    # meaningful.
+    comp_hint = f.get("league_country")
+    if comp_hint == "World":
+        comp_hint = None
+
+    # LAZY on purpose. Resolving every club's country up front costs one
+    # provider request per club — about 630 on a full slate — to fix the
+    # FOUR fixtures actually blocked by an ambiguous name (measured
+    # 2026-07-31: 420 sides refused for a provider outage, 79 unmapped, 4
+    # ambiguous). So the country is fetched only when a lookup has already
+    # come back ambiguous, which is the only case it can change.
+    def _club_hint(side: str) -> str | None:
+        try:
+            from src.friendlies_apif import club_country
+            c = club_country((f.get(side) or {}).get("apif_team_id"))
+        except Exception:
+            c = None
+        return c or comp_hint
+
+    home_hint = away_hint = comp_hint
 
     # PAIR-LEVEL source choice: find a provider that rates BOTH clubs and
     # use only that one. Never one side from each — the divisors differ
@@ -206,8 +230,14 @@ def for_fixture(f: dict, day: str | None = None) -> dict:
     attempts = []
     h = a = None
     for src in (SRC_CLUBELO, SRC_WCR):
-        hh = _side_from(src, home_name, day, hint)
-        aa = _side_from(src, away_name, day, hint)
+        hh = _side_from(src, home_name, day, home_hint)
+        if hh.get("reason") == "name_ambiguous":
+            home_hint = _club_hint("home") or home_hint
+            hh = _side_from(src, home_name, day, home_hint)
+        aa = _side_from(src, away_name, day, away_hint)
+        if aa.get("reason") == "name_ambiguous":
+            away_hint = _club_hint("away") or away_hint
+            aa = _side_from(src, away_name, day, away_hint)
         attempts.append((src, hh, aa))
         if hh.get("rated") and aa.get("rated"):
             h, a = hh, aa

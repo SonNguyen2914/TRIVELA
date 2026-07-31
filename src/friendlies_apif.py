@@ -1319,3 +1319,55 @@ def _strength_for(f: dict) -> dict:
         return {"available": False, "reason": "estimate_unavailable",
                 "reason_words": "the strength read could not be computed",
                 "detail": str(exc)[:160]}
+
+
+# --- club country, by PROVIDER-STABLE ID -----------------------------------
+#
+# The country hint that disambiguates a ratings lookup came from
+# `league_country`, which is "World" on 314 of 316 club friendlies — it is
+# the COMPETITION's country, not the club's, so it disambiguated nothing
+# exactly where friendlies need it most. "Barcelona" then matched FC
+# Barcelona (Spain) and Barcelona SC (Ecuador) and was refused as
+# ambiguous, while sitting in the ratings table all along.
+#
+# Resolved by API-Football team ID, never by name search. The fixture
+# already carries `apif_team_id` for both sides, so this is the strongest
+# identity available and carries no collision surface at all: id 529 IS
+# Barcelona of Spain, and id 1152 IS Barcelona SC of Ecuador. A name search
+# would reintroduce the very ambiguity this exists to remove.
+_country_cache: dict[int, str | None] = {}
+_country_lock = threading.Lock()
+
+
+def club_country(team_id: int | None) -> str | None:
+    """Country for one API-Football team id, cached. None when unknown.
+
+    None means "could not resolve", NOT "no country" — callers must treat
+    it as an absent hint and keep refusing an ambiguous name, never as
+    licence to pick a candidate.
+    """
+    if not team_id:
+        return None
+    tid = int(team_id)
+    with _country_lock:
+        if tid in _country_cache:
+            return _country_cache[tid]
+    key, _s, _p = load_key()
+    if not key:
+        return None
+    try:
+        r = requests.get(f"{APIF_BASE}/teams", params={"id": str(tid)},
+                         headers={"x-apisports-key": key},
+                         timeout=APIF_TIMEOUT)
+        if r.status_code != 200:
+            return None
+        items = response_items(r.json())
+        country = ((items[0].get("team") or {}).get("country")
+                   if items else None)
+    except (requests.RequestException, ValueError, AttributeError,
+            IndexError) as exc:
+        print(f"[apif] club_country {tid}: {redact(str(exc), key)[:120]}")
+        return None
+    with _country_lock:
+        _country_cache[tid] = country
+    return country
