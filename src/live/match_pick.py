@@ -110,10 +110,40 @@ def compare(strength: dict | None, book: dict | None,
                          if k != tie and home_name
                          and k.lower() in home_name.lower()), None)
         if tie and home_leg:
+            away_leg = next((k for k in norm if k not in (tie, home_leg)),
+                            None)
             theirs = norm[home_leg] + 0.5 * norm[tie]
             out["market_points_share"] = round(theirs, 4)
             out["market_vig"] = mk["vig"]
             out["market_legs"] = norm
+            # The three legs resolved to home/tie/away HERE, once. The
+            # frontend previously would have had to re-derive which label
+            # was which by name-matching, which is the same guess made
+            # twice — and the two copies could disagree about the same
+            # book.
+            out["market_three_way"] = {
+                "home": {"club": home_name or home_leg,
+                         "label": home_leg, "p": norm[home_leg]},
+                "tie": {"club": "Draw", "label": tie, "p": norm[tie]},
+                "away": {"club": away_name or away_leg,
+                         "label": away_leg,
+                         "p": norm[away_leg] if away_leg else None},
+            }
+            # Our side has NO third number and must not appear to. Both
+            # ratings providers publish an expected POINTS share with the
+            # draw already folded in at half weight, and ClubElo's own 1X2
+            # split comes from an unpublished histogram. A draw number
+            # here would be invented, not derived.
+            out["read_is_two_way"] = {
+                "has_draw": False,
+                "why": ("the strength read is an expected POINTS share, "
+                        "draws already counted as half — not a 1X2 split. "
+                        "Neither ratings provider publishes a usable draw "
+                        "probability, so none is shown rather than one "
+                        "invented"),
+                "comparable_on": ("expected points share, which is the one "
+                                  "scale both sources genuinely produce"),
+            }
         else:
             out["market_unavailable_reason"] = (
                 "could not map the book's legs onto home/draw/away by name, "
@@ -131,7 +161,9 @@ def compare(strength: dict | None, book: dict | None,
     out["direction"] = ("agree" if abs(gap) <= AGREE_BAND
                         else ("read_higher_on_home" if gap > 0
                               else "read_lower_on_home"))
-    out["pick"] = _pick(gap, ours, theirs, home_name, away_name, strength)
+    out["pick"] = _pick(gap, ours, theirs, home_name, away_name, strength,
+                        (out.get("market_three_way") or {}).get("tie", {})
+                        .get("p"))
     return out
 
 
@@ -149,7 +181,8 @@ def _no_pick(ours, theirs, out) -> dict:
 
 
 def _pick(gap: float, ours: float, theirs: float,
-          home: str, away: str, strength: dict | None) -> dict:
+          home: str, away: str, strength: dict | None,
+          draw_p: float | None = None) -> dict:
     """What the numbers actually support, and how weakly.
 
     Deliberately NOT a bet. It names a side only when the two sources
@@ -163,10 +196,27 @@ def _pick(gap: float, ours: float, theirs: float,
             "moderate" if lean < 0.70 else "strong")
 
     if abs(gap) <= AGREE_BAND:
+        # THE DRAW IS NOT A DETAIL. Both numbers above are points shares,
+        # in which a draw counts as HALF. A Kalshi contract on a side pays
+        # NOTHING on a draw. So a side that looks strong on points share
+        # can still lose outright a quarter of the time, and a pick that
+        # omits this is quietly answering a different question from the
+        # one a reader is asking.
+        draw_note = None
+        if draw_p is not None:
+            draw_note = (
+                f"the market prices a draw at {draw_p:.0%}. That is folded "
+                f"in at HALF weight on both numbers above, because both "
+                f"are points shares. A contract on {side_us} pays nothing "
+                f"on a draw, so {draw_p:.0%} of outcomes beat this side "
+                f"outright — the points share does not say otherwise, it "
+                f"asks a different question")
         return {
             "has_pick": True, "side": side_us,
             "confidence": conf,
             "agreement": "market agrees",
+            "draw_probability": draw_p,
+            "draw_note": draw_note,
             "reasoning": (
                 f"the strength read makes {side_us} the stronger side "
                 f"({lean:.0%} expected points share) and the market prices "

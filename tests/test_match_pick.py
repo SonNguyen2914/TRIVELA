@@ -110,3 +110,43 @@ def test_dormant_competition_declines_with_409_not_500(monkeypatch):
     assert d["activated"] is False
     assert d["declined"] == "dormant"
     assert "nothing to approve" in d["means"]
+
+
+def test_three_way_detail_resolves_each_leg_to_a_side():
+    out = mp.compare(_read(0.62), _book(0.50, 0.25, 0.25), "Alpha FC",
+                     "Beta FC")
+    tw = out["market_three_way"]
+    assert tw["home"]["club"] == "Alpha FC"
+    assert tw["away"]["club"] == "Beta FC"
+    assert tw["tie"]["club"] == "Draw"
+    # the three legs are a partition of 1 after the vig comes out
+    assert abs(sum(x["p"] for x in tw.values()) - 1.0) < 1e-3
+    # and the home share is reconstructible from them
+    assert abs((tw["home"]["p"] + 0.5 * tw["tie"]["p"])
+               - out["market_points_share"]) < 1e-3
+
+
+def test_the_read_never_gains_a_draw_number():
+    """Our side has two numbers and must not appear to have three."""
+    out = mp.compare(_read(0.62), _book(0.50, 0.25, 0.25), "Alpha FC",
+                     "Beta FC")
+    assert out["read_is_two_way"]["has_draw"] is False
+    assert "invented" in out["read_is_two_way"]["why"]
+    # nothing anywhere in our half of the payload looks like a draw
+    ours = {k: v for k, v in out.items() if k.startswith("our_")}
+    assert not any("draw" in str(v).lower() or "tie" in str(v).lower()
+                   for v in ours.values()), ours
+
+
+def test_a_named_side_always_states_what_the_draw_does_to_it():
+    """A points share counts a draw as half; a Kalshi contract pays zero
+    on one. A pick that names a side without saying so is answering a
+    different question from the one being asked."""
+    out = mp.compare(_read(0.62), _book(0.50, 0.25, 0.25), "Alpha FC",
+                     "Beta FC")
+    p = out["pick"]
+    assert p["has_pick"] is True
+    assert p["draw_probability"] is not None
+    assert "pays nothing on a draw" in p["draw_note"]
+    # the stated draw must be the DE-VIGGED one, not the raw ask
+    assert abs(p["draw_probability"] - 0.25) < 0.02
