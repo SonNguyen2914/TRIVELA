@@ -1460,6 +1460,43 @@ def competition_replay_approval_preview(competition: str,
         raise HTTPException(503, "replay approval preview unavailable")
 
 
+@app.get("/api/admin/friendlies/name-probe")
+def friendlies_name_probe(q: str, day: str = "", request: Request = None):
+    """Operator-only: what does the ratings provider actually CALL this club?
+
+    Exists because the alias tables may only grow from measured misses.
+    When a club reads `name_unmapped`, the alternative to this route is
+    guessing at the provider's spelling — and a wrong guess attaches
+    another club's rating to a fixture, which is worse than no rating.
+
+    Resolves nothing and is read-only. It reports candidates sharing a
+    token with the query, and says plainly that a candidate is not a
+    match."""
+    if not _admin_ok(request):
+        raise HTTPException(403, "operator credentials required")
+    from datetime import date
+
+    from src.live import clubelo, worldclubratings
+    d = day or date.today().isoformat()
+    out = {"query": q, "day": d}
+    try:
+        out["clubelo"] = clubelo.near_misses(q, d)
+    except Exception as exc:
+        out["clubelo"] = {"error": f"{type(exc).__name__}: {str(exc)[:160]}"}
+    try:
+        out["worldclubratings"] = worldclubratings.near_misses(q)
+    except AttributeError:
+        out["worldclubratings"] = {
+            "unavailable": "no near_misses on this provider yet"}
+    except Exception as exc:
+        out["worldclubratings"] = {
+            "error": f"{type(exc).__name__}: {str(exc)[:160]}"}
+    out["means"] = ("candidates are NOT matches. A shared token is not "
+                    "evidence — a human recognises the club and adds the "
+                    "alias, or does not")
+    return out
+
+
 @app.post("/api/admin/{competition}/replay-approval/activate")
 def competition_activate_replay_approval(competition: str, request: Request,
                                          n_boot: int = Query(1000)):
