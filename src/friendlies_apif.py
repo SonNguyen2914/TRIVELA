@@ -1121,6 +1121,11 @@ def _bridge_by_fixture_id(swept: dict, events: list[dict]) -> dict:
         # events were in fact bridging correctly.
         fid = ((b.get("fixture") or {}).get("fixture_id"))
         if fid is not None:
+            # carry the event itself: the caller needs its priced legs to
+            # put the market on the same scale as the read, and re-fetching
+            # it per fixture would spend the provider budget on data we
+            # already hold.
+            b = dict(b, event=ev)
             out[int(fid)] = b
     return out
 
@@ -1173,6 +1178,18 @@ def fixture_rows(horizon_days: int | None = None,
                        "this fixture is listed is UNKNOWN — not 'unlisted'")})
         if with_strength:
             row["strength"] = _slim_strength(_strength_for(f))
+            # The market beside the read, for the ~20 fixtures that bridge.
+            # Uses the event ALREADY fetched for the bridge — no extra
+            # request, so the list stays inside the provider budget.
+            if b and b.get("event"):
+                try:
+                    from src.live import match_pick
+                    row["market_vs_read"] = match_pick.compare(
+                        row["strength"], b["event"],
+                        (f.get("home") or {}).get("name") or "",
+                        (f.get("away") or {}).get("name") or "")
+                except Exception as exc:
+                    print(f"[friendlies-apif] compare {fid}: {exc}")
         rows.append(row)
     rows.sort(key=lambda r: (r.get("kickoff_utc") or ""))
 
