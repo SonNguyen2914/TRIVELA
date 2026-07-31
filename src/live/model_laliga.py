@@ -462,13 +462,27 @@ def backtest(n_sims: int = 4000) -> dict:
     }
 
 
-def ensure_model_version() -> None:
-    """Upsert the model_version ROW ONLY — approved_for_shadow is NEVER
-    set here, unlike the MLS twin (which takes an earned flag): this
-    model is dark by design, and the only path that could ever approve
-    it is a future La Liga evaluation ladder + an explicit operator
-    activation. approved_for_real_money likewise belongs to the
-    evidence-review gate alone."""
+def ensure_model_version(approved_for_shadow: bool = False) -> None:
+    """Upsert the model_version row, and set the shadow flag to whatever
+    the caller earned — defaulting to False, so every boot and every
+    unqualified call leaves the model DARK.
+
+    This signature is not cosmetic. It previously took no argument at
+    all, while its three siblings (MLS, EPL, Liga MX) all take the flag,
+    and `model_eval` calls every one of them as
+    `ensure_model_version(approved_for_shadow=...)`. So the La Liga
+    branch raised TypeError the moment an evaluation reached it — which
+    only happened in production, where the plane has data; locally the
+    ladder short-circuits on "dormant" first and never gets here. The
+    operator activation route answered a bare 500 for it.
+
+    The second defect was quieter: the flag was assigned INSIDE the
+    `row is None` branch, so an existing row's approval could never be
+    changed in either direction. A revocation would have reported
+    success and left the model approved.
+
+    approved_for_real_money is still never set here, by any path.
+    """
     if not plane_ready():
         return
     from datetime import datetime
@@ -481,9 +495,9 @@ def ensure_model_version() -> None:
                                            "no approval; no La Liga xG "
                                            "source exists",
                                created_at=datetime.now(timezone.utc))
-            row.approved_for_shadow = False
             s.add(row)
-            s.commit()
+        row.approved_for_shadow = bool(approved_for_shadow)
+        s.commit()
     finally:
         s.close()
 
