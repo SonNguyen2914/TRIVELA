@@ -163,3 +163,24 @@ def test_market_share_is_given_per_side_so_columns_can_align():
     assert abs(ms["home"] - out["market_points_share"]) < 1e-6
     # and it is NOT the same as the win leg — the whole reason it exists
     assert abs(ms["home"] - out["market_three_way"]["home"]["p"]) > 0.01
+
+
+def test_the_name_probe_stays_off_the_friendlies_admin_surface():
+    """A guard forbids /api/admin/friendlies/*. The probe belongs to the
+    ratings providers, which every league reads — not to friendlies."""
+    from api.main import app
+    paths = [str(getattr(r, "path", "")) for r in app.routes]
+    assert "/api/admin/ratings/name-probe" in paths
+    assert not any(p.startswith("/api/admin/friendlies") for p in paths)
+
+
+def test_the_name_probe_resolves_nothing():
+    """It is a diagnostic. If it ever starts returning a resolution, an
+    alias could enter the pricing path without a human recognising the
+    club — the failure mode the whole route exists to prevent."""
+    import inspect
+
+    from src.live import clubelo
+    src = inspect.getsource(clubelo.near_misses)
+    for banned in ("ALIASES[", "ALIASES.update", "ALIASES.setdefault"):
+        assert banned not in src, f"near_misses mutates the alias table via {banned}"

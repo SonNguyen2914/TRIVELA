@@ -1460,9 +1460,16 @@ def competition_replay_approval_preview(competition: str,
         raise HTTPException(503, "replay approval preview unavailable")
 
 
-@app.get("/api/admin/friendlies/name-probe")
-def friendlies_name_probe(q: str, day: str = "", request: Request = None):
+@app.get("/api/admin/ratings/name-probe")
+def ratings_name_probe(q: str, day: str = "", request: Request = None):
     """Operator-only: what does the ratings provider actually CALL this club?
+
+    Deliberately under /api/admin/ratings, NOT /api/admin/friendlies. A
+    guard forbids any admin surface under friendlies — "the evidence
+    machinery does not exist here and no route should suggest otherwise"
+    — and it caught this route's first home. The guard is right twice
+    over: this is a question about the ratings PROVIDERS, which every
+    league reads, not about friendlies.
 
     Exists because the alias tables may only grow from measured misses.
     When a club reads `name_unmapped`, the alternative to this route is
