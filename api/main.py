@@ -820,10 +820,12 @@ def friendlies_fixture_detail(fixture_id: str, days: int = Query(3, ge=1, le=8))
                                 "book": book, "freshness": freshness}
                 try:
                     from src.live import match_pick
+                    import config as _cfg
                     out["market_vs_read"] = match_pick.compare(
                         out.get("strength"), book,
                         (f.get("home") or {}).get("name") or "",
-                        (f.get("away") or {}).get("name") or "")
+                        (f.get("away") or {}).get("name") or "",
+                        draw_rate=_cfg.FRIENDLY_DRAW_RATE)
                 except Exception as exc:
                     print(f"[friendlies] compare {fixture_id}: {exc}")
     except Exception as exc:

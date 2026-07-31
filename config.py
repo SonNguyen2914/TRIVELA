@@ -824,3 +824,33 @@ FRIENDLY_CALIBRATION_SHRINK = float(
 FRIENDLY_CALIBRATION_MEASURED_AT = "2026-07-30"
 FRIENDLY_CALIBRATION_ARCHIVE = (
     "research_archive/friendly_calibration_2026-07-30.json")
+
+
+# Our own draw rate for FRIENDLIES, measured — not a provider's number.
+#
+# Neither ratings provider publishes a 1X2 split, so this surface only
+# ever showed a two-way points share and could not be compared with the
+# exchange leg by leg. This closes that, on our own results.
+#
+# MEASURED 2026-07-31 on 358 settled friendlies carrying a strength read,
+# fitted on the older half and scored on the newer half it never saw:
+#
+#   draw rate (fit half)  0.1899      (held-out half 0.2179)
+#   three-way Brier, held out:
+#     uninformed 1/3 each   0.6667
+#     our share + this draw 0.6052   gain +0.0615, 95% CI [+0.0095,+0.1160]
+#
+# It is a CONSTANT on purpose. A mismatch-dependent form d(E) =
+# dmax*(4E(1-E))**gamma was fitted and did NOT beat this out of sample
+# (three-way Brier +0.0001, and its apparent logloss win came from a
+# single upset where the constant implied a clipped near-zero leg). So
+# this number says nothing about how evenly matched two clubs are.
+#
+# The split it implies is forced: P(home)=E-d/2, P(away)=1-E-d/2. That
+# requires d <= 2*min(E,1-E) or a leg goes negative, so the value is
+# clipped per fixture; the clip binds on ~2% of them.
+#
+# FRIENDLIES ONLY. Not measured for league play, and league surfaces do
+# not pass it.
+FRIENDLY_DRAW_RATE = 0.1899
+FRIENDLY_DRAW_ARCHIVE = "research_archive/friendly_draw_rate_2026-07-31.json"

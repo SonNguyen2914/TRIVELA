@@ -1184,10 +1184,12 @@ def fixture_rows(horizon_days: int | None = None,
             if b and b.get("event"):
                 try:
                     from src.live import match_pick
+                    import config as _cfg
                     row["market_vs_read"] = match_pick.compare(
                         row["strength"], b["event"],
                         (f.get("home") or {}).get("name") or "",
-                        (f.get("away") or {}).get("name") or "")
+                        (f.get("away") or {}).get("name") or "",
+                        draw_rate=_cfg.FRIENDLY_DRAW_RATE)
                 except Exception as exc:
                     print(f"[friendlies-apif] compare {fid}: {exc}")
         rows.append(row)
