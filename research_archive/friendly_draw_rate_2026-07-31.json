@@ -1,0 +1,24 @@
+{
+  "measured_at": "2026-07-31",
+  "n": 358,
+  "fit_n": 179,
+  "held_n": 179,
+  "unconditional_draw_rate": 0.1899,
+  "fitted": {
+    "dmax": 0.19,
+    "gamma": 0.5,
+    "form": "d(E) = dmax * (4E(1-E))**gamma"
+  },
+  "held_out": {
+    "constant_logloss": 1.1335,
+    "fitted_logloss": 1.026,
+    "constant_brier3": 0.6052,
+    "fitted_brier3": 0.6052
+  },
+  "constant_invalid_share": 0.014,
+  "logloss_gap_top5_share": 1.0335,
+  "fitted_worse_on": 44,
+  "verdict": "NOT BETTER THAN A CONSTANT \u2014 do not ship a fitted draw",
+  "why_brier_decides": "logloss is unbounded and was dominated by a single 0.069-share underdog that won, where the constant implied a near-zero leg; Brier is bounded and showed no gain",
+  "population_caveat": "measured while clubelo was unreachable, so the corpus is worldclubratings-only and NOT the population this would serve"
+}
