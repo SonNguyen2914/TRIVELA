@@ -31,6 +31,8 @@ NOT published, so never invented here:
 from __future__ import annotations
 
 import csv
+import json as _json
+import os as _os
 import io
 import re
 import threading
@@ -51,6 +53,37 @@ TTL_SECONDS = 3600.0            # the ranking moves once a day at most
 ELO_DIVISOR = 400.0
 
 _cache: dict[str, tuple[float, dict]] = {}
+_stale: dict[str, object] = {}
+
+# Where the last good table is kept so it survives a RESTART. An outage on
+# a fresh deploy is exactly the case an in-memory cache cannot help with:
+# the process has never read the provider, so it has nothing to fall back
+# on and every club reads as unrated.
+_DISK = _os.path.join(
+    _os.path.dirname(_os.path.dirname(_os.path.dirname(
+        _os.path.abspath(__file__)))), "var", "clubelo_last.json")
+
+
+def _save_last_good(day: str, table: dict) -> None:
+    try:
+        _os.makedirs(_os.path.dirname(_DISK), exist_ok=True)
+        tmp = _DISK + ".tmp"
+        with open(tmp, "w") as fh:
+            _json.dump({"day": day, "table": table}, fh)
+        _os.replace(tmp, _DISK)      # atomic — never a half-written file
+    except OSError as exc:
+        print(f"[clubelo] could not persist table: {exc}")
+
+
+def _load_last_good() -> dict | None:
+    try:
+        with open(_DISK) as fh:
+            d = _json.load(fh)
+        if isinstance(d.get("table"), dict) and d["table"]:
+            return d
+    except (OSError, ValueError):
+        pass
+    return None
 _lock = threading.Lock()
 
 # Aliases added ONLY from measured misses, never from intuition — the same
@@ -127,7 +160,25 @@ def day_ranking(day: str) -> dict:
                 return table
 
     def _remember_failure():
+        """Serve the last table we successfully read, if we have one.
+
+        An Elo ranking moves once a day at most, so yesterday's table is a
+        far better answer than none — on 2026-07-31 clubelo was
+        unreachable all day and the board fell from 66 rated fixtures to
+        23, not because those clubs are unrated but because nothing
+        remembered ever having read them.
+
+        NEVER passed off as fresh: `served_vintage()` reports the day the
+        table was actually fetched.
+        """
+        disk = _load_last_good()
         with _lock:
+            if disk:
+                _cache[day] = (now, disk["table"])
+                _stale["day"] = disk["day"]
+                print(f"[clubelo] {day}: serving last good table from "
+                      f"{disk['day']} ({len(disk['table'])} clubs)")
+                return disk["table"]
             _cache[day] = (now, {})
         return {}
 
@@ -154,7 +205,23 @@ def day_ranking(day: str) -> dict:
                      "level": (row.get("Level") or "").strip() or None}
     with _lock:
         _cache[day] = (time.monotonic(), out)
+        _stale.pop("day", None)
+        _stale.pop("since", None)
+    if out:
+        _save_last_good(day, out)
     return out
+
+
+def served_vintage() -> dict:
+    """Which day's table is actually being served, and whether it is the
+    one asked for. A stale rating presented as current is the failure this
+    module exists to avoid, so callers can put this in front of a reader."""
+    with _lock:
+        stale_day = _stale.get("day")
+    return {"stale": bool(stale_day), "table_day": stale_day,
+            "means": (f"the provider is unreachable; ratings are the last "
+                      f"good read, from {stale_day}" if stale_day else
+                      "ratings are today's published table")}
 
 
 _idx_cache: tuple[int, dict, list] | None = None
