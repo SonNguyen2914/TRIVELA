@@ -753,7 +753,11 @@ def _parse_h2h(d: dict) -> list[dict]:
 # cannot cross. Verified against the live KXMLSGAME slate 2026-07-22.
 _KALSHI_ALIASES = {
     "los angeles g": "la galaxy",
-    "los angeles f": "los angeles fc",
+    # ESPN's displayName is "LAFC" — NOT "Los Angeles FC". The old
+    # target never matched anything, so every LAFC fixture showed no
+    # book (VAN-LAFC, Aug 1 slate). Same defect as the RBNY line below,
+    # written against an assumed ESPN name instead of a measured one.
+    "los angeles f": "lafc",
     "saint louis": "st louis city",
     # ESPN's displayName is "Red Bull New York", NOT "New York Red
     # Bulls" — the old alias never matched, so every RBNY fixture
