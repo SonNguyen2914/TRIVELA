@@ -161,7 +161,15 @@ def _compare(sheet: dict) -> dict:
         "market_legs_devigged": {k: round(v / total, 4)
                                  for k, v in legs.items()},
         "market_vig": round(total - 1.0, 4),
-        "model_outcomes": (md.get("outcomes") or md.get("model") or {}),
+        # The run's outcomes live at model.primary.outcomes. The first
+        # version read md["outcomes"], which does not exist — and its
+        # test PASSED because the test invented the payload shape instead
+        # of using the real one, so the comparison rendered empty in
+        # production on the single thing it exists to show.
+        "model_outcomes": ((md.get("primary") or {}).get("outcomes")
+                           or (md.get("latest") or {}).get("outcomes")
+                           or {}),
+        "model_run_id": (md.get("primary") or {}).get("run_id"),
         "means": ("two observed numbers side by side. A gap is a "
                   "DISAGREEMENT, not a verified mispricing — the market's "
                   "accuracy on this competition is the baseline our own "
