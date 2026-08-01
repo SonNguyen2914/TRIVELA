@@ -237,6 +237,22 @@ def mls_match(event_id: str):
             "lineups": lineup, "generated_at": utcnow().isoformat()}
 
 
+@app.get("/api/mls/decision-sheet/{event_id}")
+def mls_decision_sheet(event_id: str):
+    """Everything known about one fixture, at one instant, in one call.
+
+    A BRIEFING, NOT A RECOMMENDATION — there is no field naming a side to
+    back. Built because assembling this by hand across six endpoints
+    before kickoff is how the numbers drift, and because each of those
+    endpoints reported absence differently. Here every section either
+    carries data or says WHY it does not, in words.
+    """
+    if not event_id.isdigit() or len(event_id) > 12:
+        raise HTTPException(404, "unknown event")
+    from src.live import decision_sheet
+    return decision_sheet.build(event_id, "mls")
+
+
 @app.get("/api/mls/briefing/{event_id}")
 def mls_briefing(event_id: str):
     """Everything needed to reason about one fixture RIGHT NOW, in one
