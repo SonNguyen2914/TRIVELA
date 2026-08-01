@@ -366,6 +366,23 @@ def _normalize_pg_url(url: str) -> str:
 
 LIVE_DATABASE_URL = _normalize_pg_url(os.getenv("LIVE_DATABASE_URL", ""))
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "").strip()
+
+# A SECOND credential that may write the personal journal and NOTHING
+# else. It exists so the pick loop can run somewhere the operator token
+# must not go — a phone, a cloud session, any environment that should be
+# able to record a bet but must never be able to arm or disarm a model
+# plane.
+#
+# ADMIN_TOKEN reaches every admin route, approval activation included.
+# Handing that to a pick-logger so it can append a row is the classic
+# over-grant: the credential's blast radius is decided by its weakest
+# holder, and this one lives on a phone.
+#
+# Unset disables journal-scoped access entirely — it never falls back to
+# ADMIN_TOKEN, because a silent widening of scope is exactly the failure
+# this constant exists to prevent. The operator token still works on
+# journal routes; this only ADDS a narrower key.
+JOURNAL_TOKEN = os.getenv("JOURNAL_TOKEN", "").strip()
 RATE_LIMIT_SECONDS = float(os.getenv("RATE_LIMIT_SECONDS", "30"))
 
 # --- Journal: interactive-session capability (journal-P0-G) ---------------
