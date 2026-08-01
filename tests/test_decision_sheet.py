@@ -29,6 +29,18 @@ def _sheet(monkeypatch, *, match=None, books=None, meta=None, model=None,
 MATCH = {"id": "1", "date": "2026-08-01T23:30Z",
          "home": {"name": "Cincinnati"}, "away": {"name": "San Jose"}}
 
+# THE REAL SHAPE `runs.model_for_event` returns. The first version of
+# these tests invented `{"outcomes": ...}`, which the code then read —
+# and both were wrong together, so the suite was green while production
+# showed an empty comparison. A fixture that mirrors the real payload is
+# the only thing that catches that.
+REAL_MODEL = {"model_version": "mls-2026-v0", "shadow": True,
+              "real_money_signals": False,
+              "primary": {"run_id": "0db302fa", "run_type": "scheduled",
+                          "seed": 968592928, "n_simulations": 10000,
+                          "outcomes": {"home_win": 0.6, "draw": 0.2,
+                                       "away_win": 0.2}}}
+
 
 def test_every_absent_section_says_why(monkeypatch):
     s = _sheet(monkeypatch, match=MATCH)
@@ -56,8 +68,7 @@ def test_no_side_is_ever_named(monkeypatch):
         {"label": "San Jose", "yes_ask": 0.25}]}]
     s = _sheet(monkeypatch, match=MATCH, books=book,
                meta={"status": "live"},
-               model={"outcomes": {"home_win": 0.6, "draw": 0.2,
-                                   "away_win": 0.2}})
+               model=REAL_MODEL)
     assert s["market_vs_model"]["available"] is True
     # the comparison exists, but nothing picks a winner
     for banned in ("pick", "recommended_side", "best_side", "bet"):
@@ -71,7 +82,7 @@ def test_the_vig_is_removed_and_reported(monkeypatch):
         {"label": "Tie", "yes_ask": 0.25},
         {"label": "San Jose", "yes_ask": 0.25}]}]
     s = _sheet(monkeypatch, match=MATCH, books=book,
-               meta={"status": "live"}, model={"outcomes": {}})
+               meta={"status": "live"}, model={"primary": {"outcomes": {}, "run_id": "r1"}})
     c = s["market_vs_model"]
     assert abs(sum(c["market_legs_devigged"].values()) - 1.0) < 1e-3
     assert c["market_vig"] > 0
@@ -82,7 +93,7 @@ def test_a_two_way_book_refuses_rather_than_normalising(monkeypatch):
         {"label": "Cincinnati", "yes_ask": 0.6},
         {"label": "San Jose", "yes_ask": 0.4}]}]
     s = _sheet(monkeypatch, match=MATCH, books=book,
-               meta={"status": "live"}, model={"outcomes": {}})
+               meta={"status": "live"}, model={"primary": {"outcomes": {}, "run_id": "r1"}})
     assert s["market_vs_model"]["available"] is False
     assert "three" in s["market_vs_model"]["means"].lower()
 
@@ -106,7 +117,23 @@ def test_one_dead_provider_does_not_kill_the_sheet(monkeypatch):
     monkeypatch.setattr(mls, "find_all_books_with_freshness", boom)
     from src.live import runs
     monkeypatch.setattr(runs, "model_for_event",
-                        lambda e, **k: {"outcomes": {"home_win": 0.5}})
+                        lambda e, **k: REAL_MODEL)
     s = ds.build("401877024", "mls")
     assert s["market"]["available"] is False
     assert s["model"]["available"] is True, "a dead book killed the model"
+
+
+def test_the_comparison_actually_carries_the_model_numbers(monkeypatch):
+    """The bug this file missed once: available=True with an EMPTY
+    model_outcomes is worse than a refusal, because it looks fine."""
+    book = [{"key": "winner", "markets": [
+        {"label": "Cincinnati", "yes_ask": 0.55},
+        {"label": "Tie", "yes_ask": 0.25},
+        {"label": "San Jose", "yes_ask": 0.25}]}]
+    s = _sheet(monkeypatch, match=MATCH, books=book,
+               meta={"status": "live"}, model=REAL_MODEL)
+    c = s["market_vs_model"]
+    assert c["available"] is True
+    assert c["model_outcomes"], "comparison available but model empty"
+    assert abs(sum(c["model_outcomes"].values()) - 1.0) < 1e-6
+    assert c["model_run_id"] == "0db302fa", "the run is not identified"
