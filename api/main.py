@@ -93,6 +93,34 @@ def _admin_ok(request) -> bool:
             and _secrets.compare_digest(token, config.ADMIN_TOKEN))
 
 
+def _journal_ok(request) -> bool:
+    """May this caller WRITE THE JOURNAL — and nothing else?
+
+    True for the operator token (which outranks it) or for
+    JOURNAL_TOKEN. Deliberately NOT a general admin check: it is used
+    only on journal write routes, so a holder of JOURNAL_TOKEN cannot
+    activate an approval, trigger a sweep, or read an admin surface.
+
+    The narrow key exists because the pick loop runs on a phone. A
+    credential's blast radius is set by its weakest holder, and
+    ADMIN_TOKEN arms and disarms model planes.
+
+    An unset JOURNAL_TOKEN grants nothing — it never falls back to the
+    operator token, since silently widening scope is the failure this
+    guards against.
+    """
+    import secrets as _secrets
+    if _admin_ok(request):
+        return True
+    token = request.headers.get("x-journal-token", "")
+    if not token:
+        auth = request.headers.get("authorization", "")
+        if auth.lower().startswith("bearer "):
+            token = auth[7:].strip()
+    return (bool(config.JOURNAL_TOKEN) and bool(token)
+            and _secrets.compare_digest(token, config.JOURNAL_TOKEN))
+
+
 @app.middleware("http")
 async def _public_guard(request, call_next):
     """Post-tournament lockdown (Jul 21 evaluation, P0):
@@ -458,7 +486,7 @@ def mls_admin_journal(request: Request,
     settlement and reconciliation state. The public surfaces serve a
     redacted projection (journal-P0 F2); this is where the full record
     lives, behind the token."""
-    if not _admin_ok(request):
+    if not _journal_ok(request):
         raise HTTPException(403, "operator credentials required")
     from src.live import journal
     return {"entries": journal.full_entries(fixture_id),
@@ -480,7 +508,7 @@ def mls_journal_record_view(request: Request, body: JournalViewIn):
     `stated_only`, and it then counts nowhere. A quote that exists but
     belongs to a DIFFERENT fixture, contract or outcome is refused
     outright with the mismatch named (journal-P0 F3)."""
-    if not _admin_ok(request):
+    if not _journal_ok(request):
         raise HTTPException(403, "operator credentials required")
     from src.live import journal
     return journal.record_view(
@@ -496,7 +524,7 @@ def mls_journal_resolve(request: Request, body: JournalResolveIn):
     """Operator-only: resolve a recorded view to `taken` or `passed`.
     A resolution is immutable once set — a correction is a NEW view
     citing `corrects_bet_id`, never a rewrite (journal-P0 F5)."""
-    if not _admin_ok(request):
+    if not _journal_ok(request):
         raise HTTPException(403, "operator credentials required")
     from src.live import journal
     return journal.resolve_view(body.bet_id, body.status)
@@ -512,7 +540,7 @@ def mls_journal_execution(request: Request, body: JournalExecutionIn):
     server refuses to invent one. A `not_filled` row is as valuable as a
     fill: it is evidence about liquidity, half of what this pilot
     measures."""
-    if not _admin_ok(request):
+    if not _journal_ok(request):
         raise HTTPException(403, "operator credentials required")
     from src.live import journal
     return _journal_write(journal.record_execution(
@@ -535,7 +563,7 @@ def mls_journal_settlement(request: Request, body: JournalSettlementIn):
     once — a retried identical call is a no-op, a conflicting one is
     refused. The columns existed without any writer (journal-P0 F5);
     this is the writer."""
-    if not _admin_ok(request):
+    if not _journal_ok(request):
         raise HTTPException(403, "operator credentials required")
     from src.live import journal
     return _journal_write(journal.settle_execution(
@@ -550,7 +578,7 @@ def mls_journal_reconcile(request: Request, body: JournalReconcileIn):
     Requires settlement first; repeat calls are no-ops. This is also
     where `publication_consent` can be granted explicitly for the
     corpus (journal-P0 F2)."""
-    if not _admin_ok(request):
+    if not _journal_ok(request):
         raise HTTPException(403, "operator credentials required")
     from src.live import journal
     return _journal_write(journal.reconcile_execution(
