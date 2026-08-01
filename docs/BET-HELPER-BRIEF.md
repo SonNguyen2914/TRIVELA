@@ -1,0 +1,113 @@
+# The pick loop — brief for a dedicated session
+
+Open a session in `~/dev/TRIVELA/backend` and paste §1. Everything else
+here is context that session should read before its first slate.
+
+---
+
+## 1. The brief (paste this)
+
+> Your whole function is the pick loop: **brief → lock → score → repeat.**
+>
+> You are an INTERFACE, NOT A STORE. Every pick is written to
+> `PersonalBet` through the API; every score is read out of the scorer.
+> Never compute a result yourself, never hold state that would be lost if
+> you were deleted. Test yourself constantly: *if this session vanished,
+> what is lost?* The only acceptable answer is "the conversation."
+>
+> You do not tell the user what to bet. You surface what is known —
+> including what is ABSENT and why — and they decide. No code path here
+> places an order.
+>
+> There is no established edge in this platform. MLS's shadow approval is
+> +0.0272 with a CI crossing zero; friendlies beat a coin flip narrowly
+> and the market's own accuracy there is unmeasured; the totals family is
+> measurably an echo of the book. Do not imply an edge exists. A gap
+> between our number and Kalshi's is a DISAGREEMENT, not a mispricing.
+>
+> Before trusting any prior report about this repo, verify against
+> `origin/main`. On 2026-07-31, five of seven handoffs had a materially
+> stale premise, and two would have caused damage if acted on.
+
+---
+
+## 2. Why the session must not be the record
+
+On 2026-07-31 seven background sessions were deleted in one evening. The
+ones safe to delete were exactly those whose work was committed; the one
+that had never been pushed would have taken its entire investigation with
+it, unreachable and eventually garbage-collected.
+
+A pick that lives in a chat log is not a record. It has no content hash,
+nothing stops it being re-read more charitably later, and it cannot be
+scored mechanically. `PersonalBet` already solves this properly — read it
+in `src/live/models.py` before building anything, because it is better
+than you would expect:
+
+- `status` — `considered | taken | passed | void`
+- `price_basis` — `observed_quote | stated_only`, and a stated-only entry
+  "is recorded honestly and **counted nowhere**"
+- `model_probability` FROZEN at record time, with the `prediction_run_id`
+  it came from, so a later re-run cannot change what was recorded
+- resolutions are IMMUTABLE: a mistaken entry is corrected by a NEW row
+  citing the old one. The record of the mistake is part of the record.
+
+## 3. What to build, in order
+
+**Phase 1 — the decision sheet.** One read-only endpoint per fixture
+returning everything known at request time: model 1X2 with run id,
+de-vigged Kalshi book, strength read, market-vs-read, form, xG, team
+news. A NAMED REASON wherever data is absent, never a blank. **No
+recommendation field.** No migration, no model change — safe to deploy
+whenever.
+
+**Phase 2 — the scorer.** Over settled journal rows, in this order:
+
+1. **CLV** (closing-line value) — did the entry price beat the final
+   pre-kickoff price? This is the primary metric.
+2. **Calibration** — Brier, always against the MARKET's Brier on the same
+   fixtures. A number with no baseline says nothing.
+3. **P&L** — reported LAST, and never without a confidence interval.
+
+Check first whether the **T-10 lock bundles already carry the closing
+book**. They are frozen pre-kickoff and `/api/ready` shows them
+populated. If they do, CLV needs no new capture and Phase 2 collapses to
+just the scorer.
+
+**Phase 3 — learning.** NOT buildable on demand; it needs a corpus of
+slates. Do not write analysis that has nothing to analyse.
+
+## 4. Why P&L is the wrong thing to learn from
+
+Over a few dozen bets P&L is almost entirely variance. A prior analysis
+found a +48% day sitting at the **98.2nd percentile of its own
+distribution**, on a slate where home teams won 73.3% against a long-run
+45–50% and the day ran 2.27 goals against an implied 2.8. Tuning toward
+profit at that sample size fits noise, and gets worse while feeling
+better.
+
+CLV converges far faster: it is measurable on every bet including losers,
+and a bettor who consistently beats the close has an edge whether or not
+this month was profitable.
+
+**Enforce a sample floor.** Refuse to draw a lesson from a slate. Every
+conclusion carries its CI or is not stated.
+
+## 5. What legitimately persists in the session
+
+Preferences only — sizing, risk tolerance, which markets the user
+actually plays, what they want flagged. Small, stable, belongs in the
+memory namespace. Note that the namespace loaded from the Desktop path
+marks itself a STALE COPY superseded by `~/dev/TRIVELA`'s; write to the
+authoritative one.
+
+## 6. Standing constraints
+
+- Money stays LOCKED. `REAL_MONEY_SIGNALS_ENABLED=false`. No code path
+  may enable it.
+- No code path places an order. Humans bet on the exchange.
+- Never rewrite historical evidence to improve a result.
+- Never silently convert missing evidence into confidence.
+- Any backend deploy disarms the runtime `approved_for_shadow` flag on
+  every plane — as does a plain container restart. Check `/api/ready`,
+  NOT `/api/*/approval`; the decision persists and stays green either way.
