@@ -34,12 +34,26 @@ def _open(monkeypatch):
 
 
 def _routes_using(name: str) -> set[str]:
+    """Paths of ROUTES whose handler names `name`.
+
+    `app.middleware(...)` is deliberately excluded: a middleware is not a
+    route and has no path, so it used to be collected under the literal
+    string "http" and fail the "is it a journal path?" assertion. It also
+    legitimately consults `_journal_ok` — `_public_guard` must, to let a
+    journal write through the read-only door (journal-P0-K) — and that
+    use is bounded by an explicit allowlist, asserted in
+    tests/test_journal_write_through_read_only.py rather than here.
+    Excluding it keeps THIS test about routes without weakening what it
+    checks about them.
+    """
     t = ast.parse(open(main.__file__).read())
     out = set()
     for x in ast.walk(t):
         if isinstance(x, (ast.FunctionDef, ast.AsyncFunctionDef)):
             decs = [ast.unparse(d) for d in x.decorator_list]
-            route = next((d for d in decs if d.startswith("app.")), None)
+            route = next((d for d in decs
+                          if d.startswith("app.")
+                          and not d.startswith("app.middleware")), None)
             if route and name in ast.unparse(x):
                 out.add(route.split("'")[1] if "'" in route else route)
     return out

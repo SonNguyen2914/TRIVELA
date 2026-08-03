@@ -121,6 +121,20 @@ def _journal_ok(request) -> bool:
             and _secrets.compare_digest(token, config.JOURNAL_TOKEN))
 
 
+# The journal write routes, listed one by one ON PURPOSE (journal-P0-K).
+# A prefix match would be shorter, and would silently hand write access
+# through the read-only door to any future route that happened to live
+# under the same path. Adding a route here is a decision someone makes;
+# inheriting the exemption is not a decision at all.
+_JOURNAL_WRITE_PATHS = frozenset({
+    "/api/admin/mls/journal/view",
+    "/api/admin/mls/journal/resolve",
+    "/api/admin/mls/journal/execution",
+    "/api/admin/mls/journal/settlement",
+    "/api/admin/mls/journal/reconcile",
+})
+
+
 @app.middleware("http")
 async def _public_guard(request, call_next):
     """Post-tournament lockdown (Jul 21 evaluation, P0):
@@ -142,7 +156,24 @@ async def _public_guard(request, call_next):
             and config.PUBLIC_READ_ONLY:
         # Auth is evaluated BEFORE the rate bucket so an unauthenticated
         # caller can never exhaust the limiter and lock the operator out.
-        if not _admin_ok(request):
+        #
+        # journal-P0-K: this guard outranked JOURNAL_TOKEN and made it
+        # useless. #51 built a narrow key so the pick loop would not have
+        # to carry ADMIN_TOKEN — which arms and disarms model planes —
+        # but every journal POST died HERE, before reaching the route
+        # that knows about the narrow key. The only credential that could
+        # write the journal was the one the design existed to avoid.
+        # Verified against production 2026-08-03: a journal write with no
+        # token and with a bogus token both returned this middleware's
+        # message, never the route's.
+        #
+        # This exemption LETS THROUGH; it does not authorize. Nothing is
+        # stamped on the request and the route re-runs `_journal_ok`
+        # itself, so the decision still belongs to the route. Two layers,
+        # both checking — the middleware never becomes the thing that
+        # grants.
+        exempt = (path in _JOURNAL_WRITE_PATHS and _journal_ok(request))
+        if not exempt and not _admin_ok(request):
             return JSONResponse(
                 {"detail": "read-only mode: the tournament is over; "
                            "mutations require operator credentials"},
