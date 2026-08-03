@@ -178,6 +178,16 @@ class ModelApprovalDecision(LiveBase):
     decision_document = Column(Text)
     approved_by = Column(String(32))
     content_hash = Column(String(64), unique=True, nullable=False)
+    # the git revision this decision was computed under, so a later boot
+    # can rehash the engine signature the way replay already does
+    # (model_mls.engine_matches) and tell "the repo moved" apart from
+    # "the engine changed". NOT covered by content_hash and NOT in
+    # decision_document: it is provenance ABOUT the decision, not part of
+    # what was decided — putting it in the hash would make two decisions
+    # identical in every approved fact hash differently merely because
+    # they shipped from different commits. NULL on rows written before
+    # this column existed, which the second arm refuses (fail closed).
+    code_revision = Column(String(40))
     created_at = Column(DateTime(timezone=True))
 
 
