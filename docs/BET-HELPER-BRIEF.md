@@ -111,3 +111,70 @@ authoritative one.
 - Any backend deploy disarms the runtime `approved_for_shadow` flag on
   every plane — as does a plain container restart. Check `/api/ready`,
   NOT `/api/*/approval`; the decision persists and stays green either way.
+
+---
+
+## 7. The write path, and what actually blocks it
+
+Written after the 2026-08-01 slate, where **fourteen fixtures were
+analysed and zero were recorded**. Eleven then became permanently
+unrecordable. Nothing about that failure was conceptual — the session had
+the analysis hours early — so the mechanics belong here rather than being
+rediscovered.
+
+### The flow
+
+One briefing call supplies everything the write needs:
+
+```text
+GET  /api/mls/briefing/{espn_event_id}
+       -> fixture_id                                 (INTERNAL id)
+       -> market_frozen_t10.contracts[].market_quote_id
+       -> market_persisted.quotes[].market_quote_id
+POST /api/admin/mls/journal/view      X-Journal-Token
+POST /api/admin/mls/journal/resolve   -> taken | passed
+```
+
+`scripts/journal_pick.py` wraps it. `show` needs no credential:
+
+```bash
+python scripts/journal_pick.py show 761696          # ids + the clock
+python scripts/journal_pick.py record 761696 home_win --rationale "..."
+python scripts/journal_pick.py resolve 1234 taken
+```
+
+### Four ways a write is silently worthless
+
+Each of these returns a stored row and looks like success:
+
+- **`fixture_id` is not the ESPN event id.** `record_view` takes the
+  internal `fixture.id` (761696 → 431). The briefing hands it over; there
+  is no other public route to it.
+- **After kickoff the row is `void`** (`journal.py`, "after kickoff a
+  view is not a forecast"). Kept, counted nowhere, irreversible.
+- **No `market_quote_id` means `stated_only`**, which "is recorded
+  honestly and counted nowhere". `record_view` NEVER resolves a quote for
+  you — an omitted id is a downgrade, not a lookup.
+- **A quote older than `JOURNAL_QUOTE_MAX_AGE_SECONDS` (900s)** is
+  refused as the price basis. Same downgrade, different cause, and the
+  reason lands on the row rather than in an absent field.
+
+### Timing
+
+**The T-10 sweep is the window.** It writes frozen quotes ~10 minutes
+before kickoff, and `market_frozen_t10` then carries a `market_quote_id`
+per contract with the model probability beside it. Recording there gets
+`observed_quote` against the same book the platform's own evidence uses —
+which is what CLV will later be measured from. Outside that window the
+newest persisted quote ages past 900s and the entry stops counting.
+
+A fixture days out has **no citable quote at all** — Kalshi has not
+opened the book and no sweep has run. `show` says so rather than
+implying an id exists.
+
+### Credentials
+
+`JOURNAL_TOKEN` only. It is deliberately not a general admin check
+(`api/main.py`): a holder cannot arm a model plane. **Never put
+`ADMIN_TOKEN` in a pick-loop session** — it activates approvals. An unset
+`JOURNAL_TOKEN` grants nothing and never falls back.
