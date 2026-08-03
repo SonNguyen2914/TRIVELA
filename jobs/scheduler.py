@@ -363,6 +363,77 @@ def clubelo_watch_job() -> None:
         print(f"[clubelo-watch] alert failed: {exc}")
 
 
+# --- team news --------------------------------------------------------------
+# `capture_absences` has existed since the team-news work landed and
+# NOTHING has ever called it outside probe scripts — so every fixture read
+# `never_captured` and the whole feed was dead. Measured 2026-07-31: zero
+# announced XI across all 15 slate fixtures, all day, including T-5 on a
+# fixture whose strength read was available.
+#
+# This is the one input on this platform the market demonstrably reprices
+# on, and it was producing nothing.
+TEAM_NEWS_WINDOW_HOURS = 3.0
+
+
+def team_news_job() -> None:
+    """Capture absences for fixtures kicking off soon.
+
+    Windowed, not a full sweep: absences matter close to kickoff and each
+    capture is a provider request against a budgeted key. A fixture is
+    captured repeatedly as its window closes — an XI released at T-60
+    replaces a projection made at T-180, and the record keeps both.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    try:
+        from src.live import team_news
+        from src.live.db import get_session
+        from src.live.models import Fixture
+    except Exception as exc:
+        print(f"[team-news] import failed: {exc}")
+        return
+    try:
+        if not team_news.plane_ready():
+            print("[team-news] plane dormant, skipping")
+            return
+        now = datetime.now(timezone.utc)
+        cut = now + timedelta(hours=TEAM_NEWS_WINDOW_HOURS)
+        s = get_session()
+        try:
+            rows = (s.query(Fixture)
+                    .filter(Fixture.current_kickoff_utc >= now,
+                            Fixture.current_kickoff_utc <= cut).all())
+            # the API-Football fixture id, NOT the ESPN one:
+            # capture_absences queries the injuries endpoint by
+            # `fixture`, so an ESPN id returns nothing forever and
+            # silently — the same id-space confusion that made
+            # capture_friendly_lineup unusable.
+            refs = [(r.provider_fixture_id, r.id) for r in rows
+                    if r.provider_fixture_id]
+        finally:
+            s.close()
+    except Exception as exc:
+        print(f"[team-news] fixture read failed: {exc}")
+        return
+
+    if not refs:
+        print("[team-news] no fixtures in the window")
+        return
+    ok = failed = 0
+    for ref, fid in refs:
+        try:
+            r = team_news.capture_absences(ref, fixture_id=fid)
+            # a dormant or empty return is NOT a success — counting it as
+            # one is how a dead feed reports healthy
+            ok += 1 if (r or {}).get("stored") is not None else 0
+            failed += 0 if (r or {}).get("stored") is not None else 1
+        except Exception as exc:
+            failed += 1
+            print(f"[team-news] {ref}: {type(exc).__name__}: {str(exc)[:90]}")
+    print(f"[team-news] window {TEAM_NEWS_WINDOW_HOURS}h: "
+          f"{len(refs)} fixtures, {ok} captured, {failed} failed")
+
+
 def mls_window_job() -> None:
     """Rolling fixture refresh: reschedules, status flips, final scores;
     then settle any paper fills whose fixtures just completed."""
@@ -814,6 +885,10 @@ def start_scheduler() -> BackgroundScheduler:
     # restores 420 refused sides.
     scheduler.add_job(clubelo_watch_job, "interval", minutes=60,
                       id="clubelo_watch", coalesce=True, max_instances=1)
+    # every 20 min: an XI lands ~60 min out, and a 3h window means a
+    # fixture is seen ~9 times as its news firms up
+    scheduler.add_job(team_news_job, "interval", minutes=20,
+                      id="team_news", coalesce=True, max_instances=1)
     scheduler.add_job(mls_markets_job, "interval", minutes=10,
                       id="mls_markets", coalesce=True, max_instances=1)
     scheduler.add_job(mls_runs_job, "interval", minutes=15,
