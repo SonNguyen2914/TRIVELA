@@ -230,7 +230,13 @@ def test_both_providers_expose_a_near_miss_probe():
 
 
 def test_wcr_near_misses_reports_absence_as_absence_not_as_a_match():
+    """The query must share NO token with any real club. The first
+    version used "Zzzz Nonexistent United FC" — and passed, because the
+    probe was tokenizing the provider's ID keys and returned zero
+    candidates for EVERYTHING. When the probe was fixed (2026-08-03),
+    "united" matched Manchester United and this test went red: it had
+    been asserting the bug, not the behaviour."""
     from src.live import worldclubratings
-    d = worldclubratings.near_misses("Zzzz Nonexistent United FC")
+    d = worldclubratings.near_misses("Zzzzq Xxxxw Vvvvk")
     assert d["candidates"] == []
     assert "NOT a match" in d["means"] or d["table_rows"] == 0

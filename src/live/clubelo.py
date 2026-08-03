@@ -90,6 +90,17 @@ _lock = threading.Lock()
 # rule the Kalshi bridges carry. Each was confirmed present in the
 # 2026-07-30 day ranking under the mapped name.
 ALIASES = {
+    # the five unique-containment matches measured 2026-07-30, promoted to
+    # aliases so the containment tier below could be tightened. Each was a
+    # SINGLE-TOKEN row absorbed into a longer query — the exact shape that
+    # also matched Inter (ITA) to "Inter Miami" and Atletico (ESP) to
+    # "Atletico San Luis" on the 2026-08-03 Leagues Cup slate, publishing
+    # two European giants' ratings under two North American clubs.
+    "leeds united": "Leeds",
+    "birmingham city": "Birmingham",
+    "borussia dortmund": "Dortmund",
+    "atletico madrid": "Atletico",
+    "cardiff city": "Cardiff",
     "manchester city": "Man City",          # ENG L1, Elo 1971
     "manchester united": "Man United",      # ENG L1, Elo 1915
     # containment CORRECTLY refused this one: "Inter" also substring-
@@ -304,9 +315,18 @@ def lookup(name: str, day: str) -> dict | None:
         if len(ts) == 1:
             return {**table[ts[0]], "match_tier": "token_set"}
         nq = _norm(name)
+        # row ⊂ query was treated as the safe direction ("Leeds United"
+        # -> "Leeds"). It is NOT safe when the row is a single token: a
+        # one-word canonical name absorbed into a longer name is
+        # indistinguishable from a DIFFERENT club sharing the word.
+        # Measured 2026-08-03: "Inter Miami" -> Inter (ITA, 1888.6) and
+        # "Atletico San Luis" -> Atletico (ESP, 1827.7), live on the
+        # Leagues Cup board. The five legitimate single-token matches are
+        # pinned in ALIASES above; anything else falls through to the
+        # other provider rather than borrowing a European club's rating.
         uc = [k for toks, k in index
-              if toks < want or (want < toks and _prefix_ok(
-                  want, toks, nq, _norm(k)))]
+              if (toks < want and len(toks) > 1)
+              or (want < toks and _prefix_ok(want, toks, nq, _norm(k)))]
         if len(uc) == 1:
             return {**table[uc[0]], "match_tier": "unique_containment"}
     return None

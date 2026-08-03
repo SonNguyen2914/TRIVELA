@@ -69,6 +69,11 @@ class Viewer:
         # the UNITS, not the sample. One wrong sentence under a heading
         # is worse than none.
         self.why = why
+        # which ratings providers may serve this competition's strength
+        # read. None = all. Leagues Cup and the non-European leagues pin
+        # to worldclubratings: ClubElo is European club football only, so
+        # consulting it there can only produce a false match.
+        self.strength_sources = None
 
     def model_block(self) -> dict:
         return {
@@ -121,6 +126,12 @@ VIEWERS: dict[str, Viewer] = {
               "the MLS fit is scoped to competition_slug='mls-2026', so "
               "these cross-league results cannot leak into its ratings")),
 }
+
+# ClubElo is European club football only. For these competitions every
+# entrant is non-European, so the read runs on worldclubratings alone —
+# a false ClubElo match cannot even be attempted.
+for _k in ("leagues-cup", "brasileirao", "argentina", "usl"):
+    VIEWERS[_k].strength_sources = ("worldclubratings",)
 
 FRAMING = (
     "Fixtures, real Kalshi prices, and an EXTERNAL strength read. No model "
@@ -187,7 +198,8 @@ def fixtures(key: str, season: int = 2026, days: int | None = None,
             try:
                 from src.live import club_strength_estimate as cse
                 from src.friendlies_apif import _slim_strength
-                row["strength"] = _slim_strength(cse.for_fixture(f))
+                row["strength"] = _slim_strength(
+                    cse.for_fixture(f, sources=v.strength_sources))
             except Exception as exc:
                 row["strength"] = {"available": False,
                                    "reason": "estimate_unavailable",
