@@ -325,6 +325,32 @@ def mls_journal(fixture_id: int | None = Query(None)):
         raise HTTPException(503, "journal unavailable")
 
 
+@app.get("/api/mls/scorer")
+def mls_scorer():
+    """Phase 2 — settled journal rows scored in the order that survives
+    a small sample: CLV, then calibration against the MARKET's Brier on
+    the same entries, then P&L last and never without an interval.
+
+    An EMPTY corpus reports as empty. It does not report 0.0 CLV or an
+    ROI of zero, neither of which is a result and both of which read
+    like one. Below the policy minimum the rows are listed and no
+    aggregate is computed at all.
+
+    The closing price is the canonical T-10 lock's frozen quote — the
+    lock bundles already carry it, so nothing new is captured here. An
+    entry citing the lock's OWN quote has no gap to measure and is
+    excluded by name, never averaged in as a genuine zero.
+
+    Public read-only; computes nothing the journal does not already
+    store."""
+    try:
+        from src.live import scorer
+        return scorer.score(competition_slug="mls-2026")
+    except Exception as exc:
+        print(f"[mls] scorer failed: {exc}")
+        raise HTTPException(503, "scorer unavailable")
+
+
 # Journal mutation payloads travel as typed JSON bodies (journal-P1 F8).
 # They used to ride the query string, which URL-decodes: a rationale
 # containing `&`, `%`, newlines or unencoded Unicode was silently
