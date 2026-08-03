@@ -61,6 +61,29 @@ def capture_window_job() -> None:
     except Exception as exc:
         print(f"[news-capture] fixture read failed: {exc}")
         return
+    # viewer competitions too: their fixtures live outside the plane's
+    # Fixture table but carry the same provider ids the injuries endpoint
+    # keys on. Same window, same budget discipline.
+    try:
+        from src import competitions
+        from datetime import datetime as _dt, timezone as _utz
+        for key in competitions.VIEWERS:
+            d = competitions.fixtures(key, days=1) or {}
+            for r in d.get("fixtures") or []:
+                fid = r.get("fixture_id")
+                ko = r.get("kickoff_utc") or ""
+                if fid and ko:
+                    kod = _dt.fromisoformat(ko)
+                    if now <= kod <= cut:
+                        refs.append((str(fid), None))
+    except Exception as exc:
+        print(f"[news-capture] comp sweep failed: {exc}")
+
+    # dedup by provider id: each capture spends a budgeted request, and
+    # the same fixture must never be swept twice in one window
+    seen_ids = set()
+    refs = [r for r in refs
+            if r[0] not in seen_ids and not seen_ids.add(r[0])]
     if not refs:
         print("[news-capture] no fixtures in the window")
         return

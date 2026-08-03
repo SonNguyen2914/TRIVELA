@@ -28,7 +28,13 @@ def test_the_fixture_stub_matches_real_columns():
         assert a in cols
 
 
-def _wire(monkeypatch, fixtures, capture):
+def _wire(monkeypatch, fixtures, capture, comp_rows=None):
+    # the comp sweep would otherwise hit the live registry (network) and
+    # append real fixture ids — three tests failed exactly that way
+    from src import competitions
+    monkeypatch.setattr(
+        competitions, "fixtures",
+        lambda key, **k: {"fixtures": comp_rows or []})
     from src.live import db, team_news
     monkeypatch.setattr(team_news, "plane_ready", lambda: True)
     monkeypatch.setattr(team_news, "capture_absences", capture)
@@ -101,3 +107,19 @@ def test_scheduler_still_never_names_team_news():
     src = inspect.getsource(scheduler)
     assert "team_news" not in src
     assert 'id="news_capture"' in src
+
+
+def test_the_comp_sweep_joins_the_window(monkeypatch):
+    """Viewer-competition fixtures inside the window are captured too —
+    their provider ids key the same injuries endpoint."""
+    from datetime import datetime, timedelta, timezone
+    seen = []
+    now = datetime.now(timezone.utc)
+    comp = [{"fixture_id": 9001,
+             "kickoff_utc": (now + timedelta(hours=1)).isoformat()},
+            {"fixture_id": 9002,          # outside the window: skipped
+             "kickoff_utc": (now + timedelta(hours=30)).isoformat()}]
+    _wire(monkeypatch, [], lambda ref, **k: seen.append(ref) or {"stored": 1},
+          comp_rows=comp)
+    news_capture.capture_window_job()
+    assert seen == ["9001"], seen

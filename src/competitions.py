@@ -205,6 +205,25 @@ def fixtures(key: str, season: int = 2026, days: int | None = None,
                                    "reason": "estimate_unavailable",
                                    "detail": str(exc)[:140]}
             rows.append(row)
+        from datetime import datetime, timedelta, timezone as _tz
+        soon = (datetime.now(_tz.utc) + timedelta(hours=48)).isoformat()
+        now_s = datetime.now(_tz.utc).isoformat()
+        for r in rows:
+            # captured absences, for near fixtures only — a read, never a
+            # fetch; `never_captured` is passed through honestly
+            if now_s <= (r.get("kickoff_utc") or "") <= soon:
+                try:
+                    from src.live import team_news
+                    n = team_news.fixture_news(str(r.get("fixture_id")))
+                    if n:
+                        r["news"] = n
+                except Exception:
+                    pass
+            try:
+                r["meaning"] = _meaning(r, rows, v.key)
+            except Exception as exc:
+                r["meaning"] = {"available": False,
+                                "reason": f"{type(exc).__name__}"}
         rows.sort(key=lambda r: (r.get("kickoff_utc") or ""))
         return rows
 
@@ -333,3 +352,86 @@ def listing() -> dict:
         {"key": v.key, "display": v.display, "accent": v.accent,
          "kalshi_series": v.kalshi_series,
          "model_state": v.no_model} for v in VIEWERS.values()]}
+
+
+# --- what the match MEANS -----------------------------------------------
+# "Friendly", "second leg, 3-1 down", "must win to stay alive" — the
+# context a price sits inside. Derived ONLY from the season's own fixture
+# list (already fetched for the board), never asserted: an aggregate is
+# the sum of two real scorelines or it is absent; a group record is
+# counted from finished fixtures or it is absent.
+
+def _meaning(row: dict, season_rows: list[dict], comp_key: str) -> dict:
+    rnd = (row.get("round") or "")
+    out = {"round": rnd or None}
+    hid = (row.get("home") or {}).get("apif_team_id")
+    aid = (row.get("away") or {}).get("apif_team_id")
+
+    if "qualif" in rnd.lower() or "leg" in rnd.lower():
+        # two-legged tie: find the FINISHED reverse fixture this season
+        rev = next((f for f in season_rows
+                    if f.get("status") in FINISHED - {"CANC", "PST", "ABD"}
+                    and (f.get("home") or {}).get("apif_team_id") == aid
+                    and (f.get("away") or {}).get("apif_team_id") == hid
+                    and (f.get("goals") or {}).get("home") is not None),
+                   None)
+        if rev:
+            g = rev["goals"]
+            # aggregate from THIS fixture's home side's view
+            out["tie"] = {
+                "leg": 2,
+                "first_leg": f"{g['home']}-{g['away']}",
+                "aggregate_before": f"{g['away']}-{g['home']}",
+                "means": (f"second leg. First leg finished "
+                          f"{g['home']}-{g['away']} away — "
+                          f"{row['home']['name']} "
+                          + ("lead" if g['away'] > g['home'] else
+                             "trail" if g['away'] < g['home'] else
+                             "are level")
+                          + " on aggregate"),
+            }
+        else:
+            out["tie"] = {"leg": 1,
+                          "means": "first leg of a two-legged tie — the "
+                                   "return leg decides it"}
+        return out
+
+    if comp_key == "leagues-cup":
+        # group-phase records counted from finished fixtures. Leagues Cup
+        # awards a SHOOTOUT bonus point on draws which the scoreline
+        # alone cannot attribute, so a drawn match widens the range
+        # rather than fabricating a rank.
+        def record(tid):
+            w = l = d = 0
+            for f in season_rows:
+                if f.get("status") not in ("FT", "AET", "PEN"):
+                    continue
+                g = f.get("goals") or {}
+                if g.get("home") is None:
+                    continue
+                fh = (f.get("home") or {}).get("apif_team_id")
+                fa = (f.get("away") or {}).get("apif_team_id")
+                if tid not in (fh, fa):
+                    continue
+                mine = g["home"] if tid == fh else g["away"]
+                theirs = g["away"] if tid == fh else g["home"]
+                if mine > theirs: w += 1
+                elif mine < theirs: l += 1
+                else: d += 1
+            lo = 3 * w + d          # shootout lost every draw
+            hi = 3 * w + 2 * d      # shootout won every draw
+            return {"played": w + l + d, "w": w, "d_shootout": d, "l": l,
+                    "points": lo if lo == hi else None,
+                    "points_range": [lo, hi] if lo != hi else None}
+        out["stakes"] = {
+            "format": ("group phase: top four per league advance to the "
+                       "knockouts; a drawn match goes to a shootout for a "
+                       "bonus point, which the scoreline alone cannot "
+                       "attribute — so a drawn record shows a points RANGE "
+                       "rather than an invented rank"),
+            "home": record(hid), "away": record(aid),
+        }
+        return out
+
+    out["stakes"] = {"means": "league/group match — three points at stake"}
+    return out
