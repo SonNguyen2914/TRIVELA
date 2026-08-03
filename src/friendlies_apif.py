@@ -1176,6 +1176,11 @@ def fixture_rows(horizon_days: int | None = None,
                        if reg_ok else
                        "the Kalshi registry could not be read, so whether "
                        "this fixture is listed is UNKNOWN — not 'unlisted'")})
+        row["meaning"] = {"stakes": {
+            "means": ("pre-season friendly — no competitive stakes; squads "
+                      "rotate heavily and results compress toward the "
+                      "middle (measured: the raw strength read is "
+                      "overconfident here, which is why it is shrunk)")}}
         if with_strength:
             row["strength"] = _slim_strength(_strength_for(f))
             # The market beside the read, for the ~20 fixtures that bridge.
