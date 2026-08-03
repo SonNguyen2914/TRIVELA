@@ -84,6 +84,14 @@ _STOP = {"fc", "cf", "afc", "sc", "ac", "as", "ss", "ssc", "club", "de",
          "the", "cd", "sd", "ca", "cs", "sk", "fk", "ks", "if", "bk"}
 
 
+# apif/ESPN name -> the provider's OWN club string, verbatim from its
+# table. Grown only from measured misses (2026-08-03, Leagues Cup slate).
+ALIASES = {
+    "u n a m pumas": "UNAM Pumas",
+    "toluca": "Deportivo Toluca",
+}
+
+
 def _norm(s: str) -> str:
     s = unicodedata.normalize("NFKD", s or "").encode("ascii", "ignore")
     s = s.decode().lower()
@@ -265,6 +273,16 @@ def lookup(name: str, country_hint: str | None = None) -> dict | None:
     table = ratings()
     if not table:
         return None
+    # evidence-backed aliases, measured against the provider's own rows —
+    # never intuition. Each entry exists because the tokenizer cannot
+    # bridge it: "U.N.A.M." splits into single letters, and "Toluca" ⊂
+    # "Deportivo Toluca" fails the prefix guard built for Miami FC.
+    alias = ALIASES.get(_norm(name))
+    if alias:
+        row = next((r for r in table.values()
+                    if (r or {}).get("club") == alias), None)
+        if row:
+            return {**row, "match_tier": "alias"}
     hits = _candidates(name, table)
     if not hits:
         return None
@@ -329,7 +347,14 @@ def near_misses(name: str, limit: int = 10) -> dict:
                           "this club is covered is UNKNOWN — not 'absent'")}
     q = _tokens(name)
     out = []
-    for club, row in table.items():
+    for row in table.values():
+        # the table is keyed by the provider's STABLE ID ('G8PFBMll'),
+        # not the club name. The first version tokenized the KEY, so
+        # every query returned zero candidates and absence claims made
+        # with this probe were unfounded — including "all 79 unmapped
+        # friendlies clubs are genuinely absent" (2026-07-31), which must
+        # be re-measured.
+        club = (row or {}).get("club") or ""
         t = _tokens(club)
         if not t or not (q & t):
             continue

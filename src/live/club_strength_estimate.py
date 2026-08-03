@@ -162,7 +162,7 @@ def _side_from(source: str, name: str, day: str,
             "reason_words": REASON_WORDS[NAME_UNMAPPED]}
 
 
-def for_fixture(f: dict, day: str | None = None) -> dict:
+def for_fixture(f: dict, day: str | None = None, sources: tuple | None = None) -> dict:
     """The strength read for one friendly fixture, or named refusals.
 
     Never returns a bare blank, never a zero, and never a default 50% —
@@ -227,9 +227,20 @@ def for_fixture(f: dict, day: str | None = None) -> dict:
     # ClubElo alone rates 63 pairs here against worldclubratings' 37; but
     # worldclubratings reaches Qatar, Japan, Brazil and Mexico that ClubElo
     # cannot. Dropping either loses fixtures outright.
+    # SOURCE SCOPE, decided by the caller from what it knows about the
+    # competition. ClubElo rates EUROPEAN club football only, so for a
+    # competition whose entrants are known non-European (Leagues Cup: MLS
+    # v Liga MX) consulting it cannot help and can actively harm — on
+    # 2026-08-03 its single-token rows Inter (ITA) and Atletico (ESP)
+    # absorbed "Inter Miami" and "Atletico San Luis", and pair-level
+    # selection let those false matches SHADOW a correct worldclubratings
+    # pair. Restricting the source list is the structural fix; the
+    # tightened matcher below it is the defence for mixed populations
+    # (friendlies), where no competition-level scope exists.
+    allowed = sources or (SRC_CLUBELO, SRC_WCR)
     attempts = []
     h = a = None
-    for src in (SRC_CLUBELO, SRC_WCR):
+    for src in allowed:
         hh = _side_from(src, home_name, day, home_hint)
         if hh.get("reason") == "name_ambiguous":
             home_hint = _club_hint("home") or home_hint
