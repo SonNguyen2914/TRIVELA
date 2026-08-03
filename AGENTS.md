@@ -442,9 +442,9 @@ throwaway database — §9.
 Backend, from `~/dev/TRIVELA/backend`:
 
 ```bash
-.venv/bin/python -m pytest tests/ -q          # expect ~721 passed, 7 skipped
+.venv/bin/python -m pytest tests/ -q          # expect the count the suite PRINTS — never a number written here; stale twice
 PG_TEST_URL=postgresql+psycopg://<user>@localhost:5432/<throwaway> \
-  .venv/bin/python -m pytest tests/ -q        # expect ~728 passed
+  .venv/bin/python -m pytest tests/ -q        # expect the count the suite PRINTS — never a number written here; stale twice
 .venv/bin/python -m alembic -x "url=<throwaway>" upgrade head
 ```
 
@@ -457,7 +457,7 @@ Frontend, from `~/dev/TRIVELA/frontend`:
 ```bash
 npx tsc --noEmit
 npm run build
-npx playwright test        # expect ~12 passed, 1 skipped
+npx playwright test        # expect the count the suite PRINTS — never a number written here; stale twice
 ```
 
 The frontend figures still date from 2026-07-26 — they were not
