@@ -363,6 +363,81 @@ def clubelo_watch_job() -> None:
         print(f"[clubelo-watch] alert failed: {exc}")
 
 
+# --- approval disarm watch --------------------------------------------------
+# `approved_for_shadow` is the flag that actually gates shadow collection,
+# and it disarms on ANY container restart — not only on deploys. Measured
+# 2026-08-01/02: four disarms in one day, most with no deploy involved,
+# including one caught mid-check as it flipped true -> false in under two
+# minutes.
+#
+# Nothing warned. `/api/*/approval` stays green throughout because the
+# DECISION is immutable and persists; only the runtime flag resets. So the
+# endpoint an operator naturally checks is the one that cannot tell them.
+# A disarmed plane at kickoff collects nothing and looks exactly like a
+# quiet slate.
+_APPROVAL_STATE: dict[str, bool] = {}
+
+WATCHED_MODELS = ("mls-2026-v0", "epl-2026-v0", "liga-mx-2026-v0",
+                  "laliga-2026-v0")
+
+
+def approval_disarm_watch_job() -> None:
+    """Alert when a plane's runtime flag CHANGES, never on every run.
+
+    Reads ModelVersion.approved_for_shadow directly — the column the
+    collection gate reads — rather than any plane's summary, because the
+    summaries disagree in shape and one of them recomputed the value
+    independently and drifted (fixed in 047b5af).
+    """
+    try:
+        from src.live.db import get_session, plane_ready
+        from src.live.models import ModelVersion
+    except Exception as exc:
+        print(f"[approval-watch] import failed: {exc}")
+        return
+    try:
+        if not plane_ready():
+            print("[approval-watch] plane dormant, skipping")
+            return
+        s = get_session()
+        try:
+            rows = (s.query(ModelVersion)
+                    .filter(ModelVersion.name.in_(WATCHED_MODELS)).all())
+            now = {r.name: bool(r.approved_for_shadow) for r in rows}
+        finally:
+            s.close()
+    except Exception as exc:
+        print(f"[approval-watch] read failed: {exc}")
+        return
+
+    disarmed = []
+    for name, armed in sorted(now.items()):
+        was = _APPROVAL_STATE.get(name)
+        _APPROVAL_STATE[name] = armed
+        if was is None or was == armed:
+            continue
+        if not armed:
+            disarmed.append(name)
+        else:
+            print(f"[approval-watch] {name} REARMED")
+    if not disarmed:
+        print(f"[approval-watch] {sum(now.values())}/{len(now)} armed")
+        return
+    try:
+        from src import alerts
+        alerts.send_alert(
+            "these planes lost their runtime approval flag and are "
+            "collecting NOTHING until reactivated: " + ", ".join(disarmed)
+            + ". The approval DECISION still exists and /api/*/approval "
+              "still reads green — only the runtime flag reset, which any "
+              "container restart does. Reactivate before the next slate.",
+            title="shadow approval DISARMED", kind="action",
+            dispatch_class=OPERATIONAL)
+        print(f"[approval-watch] ALERTED: {disarmed}")
+    except Exception as exc:
+        print(f"[approval-watch] alert failed: {exc}")
+
+
 def mls_window_job() -> None:
     """Rolling fixture refresh: reschedules, status flips, final scores;
     then settle any paper fills whose fixtures just completed."""
@@ -814,6 +889,11 @@ def start_scheduler() -> BackgroundScheduler:
     # restores 420 refused sides.
     scheduler.add_job(clubelo_watch_job, "interval", minutes=60,
                       id="clubelo_watch", coalesce=True, max_instances=1)
+    # every 10 min: a disarm between two slate-day checks is exactly the
+    # gap that made this invisible, and the probe is one local query
+    scheduler.add_job(approval_disarm_watch_job, "interval", minutes=10,
+                      id="approval_disarm_watch", coalesce=True,
+                      max_instances=1)
     scheduler.add_job(mls_markets_job, "interval", minutes=10,
                       id="mls_markets", coalesce=True, max_instances=1)
     scheduler.add_job(mls_runs_job, "interval", minutes=15,
