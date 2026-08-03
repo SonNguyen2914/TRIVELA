@@ -49,6 +49,13 @@ def test_the_journal_token_reaches_only_journal_routes():
     scoped = _routes_using("_journal_ok")
     assert scoped, "no route accepts the scoped token"
     for r in scoped:
+        # `http` is _public_guard: app.middleware("http") parses as the
+        # route string. It NAMES _journal_ok legitimately — it lets an
+        # allowlisted journal write through to the route, which still
+        # authorizes for itself. The allowlist test in
+        # test_public_guard_journal.py pins that it opens nothing else.
+        if r == "http":
+            continue
         assert "/journal" in r, f"{r} accepts the journal token but is not journal"
 
 
