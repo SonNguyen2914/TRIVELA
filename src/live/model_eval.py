@@ -1118,13 +1118,52 @@ def ensure_approval_decision(corpus_version: str | None = None,
                     existing.decision_document).get("engine_signature")
             except (ValueError, TypeError):
                 doc_engine = None
+            # REVISION-ONLY DRIFT is not an engine change. engine_signature
+            # hashes the git revision, so every deploy moves it — including
+            # a migration or a docs commit that cannot touch the model.
+            # Comparing hashes strictly therefore failed this match on any
+            # deploy and boot fell closed, disarming the plane: four times
+            # on 2026-08-02/03, once from a docs-only PR. The replay path
+            # already solved this (model_mls.engine_matches): rehash under
+            # the revision the record stored, and if THAT reproduces the
+            # stored hash then only the revision moved. A genuine source,
+            # constant or runtime change still fails both arms, so this
+            # narrows nothing — it distinguishes "the repo moved" from
+            # "the engine changed", which strict equality could not.
+            #
+            # A row with no recorded revision (written before the column
+            # existed) has no second arm and falls through, which is
+            # exactly the previous behaviour. Missing evidence stays
+            # missing evidence.
+            engine_ok = doc_engine == current_engine
+            if not engine_ok and existing.code_revision:
+                matcher = getattr(model_mod, "engine_matches", None)
+                if matcher is not None:
+                    ok, _drift = matcher(doc_engine, existing.code_revision)
+                    engine_ok = bool(ok)
             # A change in the corpus binding must also fall through. The
             # active decision recorded corpus_version=null; publishing a
             # corpus does not retroactively bind it, and silently
             # returning the unbound row would leave the binding
             # permanently unreachable without an operator force.
-            if (doc_engine == current_engine
+            if (engine_ok
                     and existing.corpus_version == corpus_version):
+                # heal a pre-migration row on the EXACT-match path only.
+                # An exact signature match means the running revision is
+                # the one that produced this row, so recording it is
+                # provenance we can prove rather than assume. On the
+                # second arm the revision is by definition already there.
+                if doc_engine == current_engine and not existing.code_revision:
+                    rev = model_mod.engine_signature().get("code_revision")
+                    if rev:
+                        _s = get_session()
+                        try:
+                            _row = _s.get(type(existing), existing.id)
+                            if _row is not None and not _row.code_revision:
+                                _row.code_revision = rev
+                                _s.commit()
+                        finally:
+                            _s.close()
                 return {"decision_id": existing.id, "approved": True,
                         "loaded": True,
                         "content_hash": existing.content_hash,
@@ -1205,6 +1244,10 @@ def ensure_approval_decision(corpus_version: str | None = None,
                 report_json=json.dumps(report)[:200_000],
                 decision_document=canonical,
                 approved_by="automated-eval", content_hash=chash,
+                # provenance for the revision-drift second arm above; not
+                # part of content_hash and not in decision_document
+                code_revision=(model_mod.engine_signature()
+                               .get("code_revision") or None),
                 created_at=datetime.now(timezone.utc))
             s.add(row)
             s.commit()
@@ -1217,6 +1260,17 @@ def ensure_approval_decision(corpus_version: str | None = None,
             if not existing.decision_document:
                 existing.decision_document = canonical
                 s.commit()
+            # same heal for the revision, and it is provably the RIGHT
+            # revision rather than merely the current one: dedup matched
+            # on content_hash, content_hash covers engine_signature, and
+            # the signature hashes code_revision — so a row with this
+            # hash could only have been produced under the revision
+            # running now. Fills a NULL, never overwrites a recorded one.
+            if not existing.code_revision:
+                rev = model_mod.engine_signature().get("code_revision")
+                if rev:
+                    existing.code_revision = rev
+                    s.commit()
             decision_id = existing.id
     finally:
         s.close()
