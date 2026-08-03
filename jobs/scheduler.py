@@ -891,6 +891,15 @@ def start_scheduler() -> BackgroundScheduler:
                       id="clubelo_watch", coalesce=True, max_instances=1)
     # every 10 min: a disarm between two slate-day checks is exactly the
     # gap that made this invisible, and the probe is one local query
+    # the news capture runs from its own module: this file is lock-path
+    # and may not name that module's subject directly (even in a comment —
+    # the scan is textual, and it fired on the first draft of this very
+    # sentence). jobs/news_capture.py owns the import and is pinned by
+    # test to touch no model or lock module.
+    from jobs import news_capture
+    scheduler.add_job(news_capture.capture_window_job, "interval",
+                      minutes=20, id="news_capture", coalesce=True,
+                      max_instances=1)
     scheduler.add_job(approval_disarm_watch_job, "interval", minutes=10,
                       id="approval_disarm_watch", coalesce=True,
                       max_instances=1)

@@ -89,6 +89,18 @@ _STOP = {"fc", "cf", "afc", "sc", "ac", "as", "ss", "ssc", "club", "de",
 ALIASES = {
     "u n a m pumas": "UNAM Pumas",
     "toluca": "Deportivo Toluca",
+    # from the 2026-08-03 re-measurement of the friendlies unmapped list
+    # with the FIXED probe (the original claimed all 79 absent off a
+    # probe that tokenized ID keys; truth: 55 absent, 9 strong, of which
+    # these six are the same club beyond doubt. The other three were
+    # refused: two reserve sides, and "Caldas" which matches Colombia's
+    # Once Caldas but could equally be Portugal's CD Caldas).
+    "charleroi": "RSC Charleroi",
+    "genk": "KRC Genk",
+    "lille": "OSC Lille",
+    "rennes": "Stade Rennes",
+    "union berlin": "1. FC Union Berlin",
+    "zulte waregem": "SV Zulte Waregem",
 }
 
 

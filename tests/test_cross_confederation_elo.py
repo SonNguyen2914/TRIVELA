@@ -36,6 +36,21 @@ WCR_TABLE = {
             "points": 1284.0},
     "id3": {"id": "id3", "club": "Inter Miami CF",
             "country": "United States", "points": 1500.0},
+    # the six alias targets from the 2026-08-03 re-measurement, verbatim
+    # provider strings — recorded here so the alias-target test stays
+    # hermetic while still checking against the provider's real spellings
+    "id4": {"id": "id4", "club": "RSC Charleroi", "country": "Belgium",
+            "points": 1300.0},
+    "id5": {"id": "id5", "club": "KRC Genk", "country": "Belgium",
+            "points": 1350.0},
+    "id6": {"id": "id6", "club": "OSC Lille", "country": "France",
+            "points": 1500.0},
+    "id7": {"id": "id7", "club": "Stade Rennes", "country": "France",
+            "points": 1450.0},
+    "id8": {"id": "id8", "club": "1. FC Union Berlin", "country": "Germany",
+            "points": 1400.0},
+    "id9": {"id": "id9", "club": "SV Zulte Waregem", "country": "Belgium",
+            "points": 1200.0},
 }
 
 
