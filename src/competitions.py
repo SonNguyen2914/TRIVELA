@@ -54,7 +54,7 @@ _INSTEAD = (
 
 class Viewer:
     def __init__(self, key, display, apif_league_id, kalshi_series,
-                 no_model, accent="#7dd3fc", note=None):
+                 no_model, accent="#7dd3fc", note=None, why=None):
         self.key = key
         self.display = display
         self.apif_league_id = apif_league_id
@@ -62,12 +62,19 @@ class Viewer:
         self.no_model = no_model
         self.accent = accent
         self.note = note
+        # a competition-specific reason. The shared BY_DESIGN text says
+        # "qualifying rounds give most entrants 2-4 matches" — TRUE for
+        # the UEFA cups, FALSE for Leagues Cup, where every club is
+        # well-rated by its own league's model and the refusal is about
+        # the UNITS, not the sample. One wrong sentence under a heading
+        # is worse than none.
+        self.why = why
 
     def model_block(self) -> dict:
         return {
             "state": self.no_model,
-            "why": (_BY_DESIGN_WHY if self.no_model == BY_DESIGN
-                    else _NOT_BUILT_WHY),
+            "why": self.why or (_BY_DESIGN_WHY if self.no_model == BY_DESIGN
+                                else _NOT_BUILT_WHY),
             "instead": _INSTEAD,
             "note": self.note,
         }
@@ -91,6 +98,28 @@ VIEWERS: dict[str, Viewer] = {
         NOT_BUILT, "#7dd3fc"),
     "usl": Viewer(
         "usl", "USL Championship", 255, "KXUSLGAME", NOT_BUILT, "#f472b6"),
+    # MLS clubs against Liga MX clubs. BOTH approved models cover these
+    # clubs — and neither may price a single one of these fixtures,
+    # because each model's ratings are relative to ITS OWN league's mean
+    # and the codebase refuses that arithmetic by construction
+    # (ScopedStrength raises CrossCompetitionArithmetic). That refusal is
+    # the honest position: no conversion between the two scales has been
+    # fitted or published, and picking one implicitly is exactly how a
+    # confident number about nothing gets made. The cross-league strength
+    # read exists for precisely this case. Ticker PROBED 2026-08-03: 31
+    # tradeable events on KXLEAGUESCUPGAME, a 12-series family.
+    "leagues-cup": Viewer(
+        "leagues-cup", "Leagues Cup", 772, "KXLEAGUESCUPGAME",
+        BY_DESIGN, "#facc15",
+        why=("every club here IS well-rated — by its own league's model, "
+             "relative to its own league's mean. Those two scales have no "
+             "fitted conversion, and this codebase refuses cross-league "
+             "arithmetic by construction rather than guessing one. A "
+             "number produced by mixing them would be confident about "
+             "nothing"),
+        note=("probed 2026-08-03: 31 tradeable KXLEAGUESCUPGAME events; "
+              "the MLS fit is scoped to competition_slug='mls-2026', so "
+              "these cross-league results cannot leak into its ratings")),
 }
 
 FRAMING = (
