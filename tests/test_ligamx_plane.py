@@ -69,6 +69,29 @@ def ligamx_session(tmp_path, monkeypatch):
     monkeypatch.setattr(live_db, "_Session", None)
 
 
+
+def _upcoming_cross_midnight() -> tuple["datetime", str]:
+    """A kickoff at 01:00Z that is still in the FUTURE, plus the Kalshi
+    date segment it must join to.
+
+    These tests used to hardcode 2026-08-01T01:00Z with a `26JUL31`
+    ticker. That is the cross-midnight case the ET-date join exists for —
+    01:00Z is the previous day in US-Eastern — but as an ABSOLUTE date it
+    rotted: discovery only maps upcoming fixtures, so once 1 Aug passed
+    the fixture became historical, discovery saw nothing, and three tests
+    failed on the calendar rather than on any code change.
+
+    Derived relative to now, so the property under test (a UTC kickoff
+    whose Eastern date is the day before) holds forever.
+    """
+    from datetime import datetime, timedelta, timezone
+    from zoneinfo import ZoneInfo
+    ko = (datetime.now(timezone.utc) + timedelta(days=3)).replace(
+        hour=1, minute=0, second=0, microsecond=0)
+    et_day = ko.astimezone(ZoneInfo("America/New_York"))
+    assert et_day.date() < ko.date(), "not the cross-midnight case"
+    return ko, et_day.strftime("%y%b%d").upper()
+
 class TestLigamxIdentity:
     def test_seed_is_idempotent_and_competition_keyed(self, ligamx_session):
         out1 = identity.seed_league_teams(
@@ -193,7 +216,7 @@ class TestLigamxDiscovery:
                                          competition_slug="liga-mx-2026")
         # ESPN kickoff 2026-08-01T01:00Z = Jul 31 US-Eastern (the real
         # cross-midnight case the ET-date join exists for)
-        ko = datetime(2026, 8, 1, 1, 0, tzinfo=UTC)
+        ko, seg = _upcoming_cross_midnight()
         fx = Fixture(competition_slug="liga-mx-2026",
                      espn_event_id="401877027",
                      home_team_id=pue.id, away_team_id=gdl.id,
@@ -202,7 +225,7 @@ class TestLigamxDiscovery:
         ligamx_session.add(fx)
         ligamx_session.commit()
 
-        et = "KXLIGAMXGAME-26JUL31PUECDG"
+        et = f"KXLIGAMXGAME-{seg}PUECDG"
         fake = _fake_kalshi_paged(
             {"KXLIGAMXGAME": [{"event_ticker": et,
                                "title": "Puebla vs Guadalajara"}]},
@@ -246,7 +269,7 @@ class TestLigamxDiscovery:
                                          competition_slug="liga-mx-2026")
         gdl = identity.resolve_espn_name("Guadalajara",
                                          competition_slug="liga-mx-2026")
-        ko = datetime(2026, 8, 1, 1, 0, tzinfo=UTC)
+        ko, seg = _upcoming_cross_midnight()
         fx = Fixture(competition_slug="liga-mx-2026",
                      espn_event_id="401877027",
                      home_team_id=pue.id, away_team_id=gdl.id,
@@ -254,9 +277,9 @@ class TestLigamxDiscovery:
                      status="pre")
         ligamx_session.add(fx)
         ligamx_session.commit()
-        game_et = "KXLIGAMXGAME-26JUL31PUECDG"
-        tot_et = "KXLIGAMXTOTAL-26JUL31PUECDG"
-        spr_et = "KXLIGAMXSPREAD-26JUL31PUECDG"
+        game_et = f"KXLIGAMXGAME-{seg}PUECDG"
+        tot_et = f"KXLIGAMXTOTAL-{seg}PUECDG"
+        spr_et = f"KXLIGAMXSPREAD-{seg}PUECDG"
         fake = _fake_kalshi_paged(
             {"KXLIGAMXGAME": [{"event_ticker": game_et,
                                "title": "Puebla vs Guadalajara"}],
@@ -295,14 +318,14 @@ class TestLigamxDiscovery:
                                          competition_slug="liga-mx-2026")
         gdl = identity.resolve_espn_name("Guadalajara",
                                          competition_slug="liga-mx-2026")
-        ko = datetime(2026, 8, 1, 1, 0, tzinfo=UTC)
+        ko, seg = _upcoming_cross_midnight()
         ligamx_session.add(Fixture(
             competition_slug="liga-mx-2026", espn_event_id="401877027",
             home_team_id=pue.id, away_team_id=gdl.id,
             current_kickoff_utc=ko, original_kickoff_utc=ko,
             status="pre"))
         ligamx_session.commit()
-        et = "KXLIGAMXGAME-26JUL31MAZPUE"
+        et = f"KXLIGAMXGAME-{seg}MAZPUE"
         fake = _fake_kalshi_paged(
             {"KXLIGAMXGAME": [{"event_ticker": et,
                                "title": "Mazatlan vs Puebla"}]},
@@ -698,3 +721,21 @@ class TestCompetitionIsolation:
                  model_mls.seed_for(fx, "t10"),
                  model_epl.seed_for(fx, "t10")}
         assert len(seeds) == 3            # three distinct seed domains
+
+
+def test_no_test_in_this_file_pins_an_absolute_kickoff():
+    """Time-rotted tests fail on the calendar, not on a code change.
+
+    Three tests here hardcoded 2026-08-01T01:00Z with a `26JUL31`
+    ticker. Discovery only maps UPCOMING fixtures, so the day after that
+    date they began failing on main with `newly_mapped == 0` — a red
+    suite that had nothing to do with any commit, and which masks the
+    next real failure.
+    """
+    import re
+    src = open(__file__, encoding="utf-8").read()
+    body = src[:src.index("def test_no_test_in_this_file_pins_an_absolute")]
+    hard = re.findall(r"datetime\(20\d\d,\s*\d+,\s*\d+", body)
+    assert not hard, (
+        f"absolute kickoff(s) {hard} — derive from now() instead, or this "
+        f"file goes red on a date rather than on a defect")
