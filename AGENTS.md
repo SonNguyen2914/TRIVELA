@@ -177,9 +177,23 @@ The rule is therefore about *which branch*, not about pushing at all:
 - **Pushing an implementation branch is expected.** Railway's deploy
   branch was confirmed dashboard-side on 2026-07-27: **source
   `SonNguyen2914/TRIVELA`, branch `main`, auto-deploy ON.** A feature
-  branch therefore triggers no backend deploy. This is dashboard state,
-  not repo state — there is no `railway.*` file to read, so re-confirm
-  if the service is ever reconfigured.
+  branch therefore triggers no backend deploy. The deploy BRANCH is
+  dashboard state, so re-confirm it if the service is ever
+  reconfigured.
+- **Part of the deploy config IS in the repo: `railway.json`.** An
+  earlier revision of this file said no `railway.*` file existed, which
+  sent an agent hunting dashboard-side on 2026-08-03 for settings that
+  were committed all along. It declares:
+
+  ```json
+  {"restartPolicyType": "ON_FAILURE",
+   "restartPolicyMaxRetries": 10, "numReplicas": 1}
+  ```
+
+  `numReplicas: 1` is load-bearing when diagnosing state that appears to
+  flap: a single instance rules out "two replicas disagree" before
+  anyone goes looking for one. Read the file first; check the dashboard
+  only for what the file does not set.
 - Vercel builds a *preview* for any frontend branch push: harmless, a
   preview URL, production domain untouched.
 
