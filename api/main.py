@@ -121,6 +121,20 @@ def _journal_ok(request) -> bool:
             and _secrets.compare_digest(token, config.JOURNAL_TOKEN))
 
 
+# The ONLY POST paths a JOURNAL_TOKEN may carry through the read-only
+# middleware. An explicit allowlist, not a prefix: this is the boundary
+# where "a new route quietly inherits write access" is the expensive
+# failure, so joining it must be a visible edit here, never an accident
+# of route naming.
+JOURNAL_WRITE_PATHS = frozenset({
+    "/api/admin/mls/journal/view",
+    "/api/admin/mls/journal/resolve",
+    "/api/admin/mls/journal/execution",
+    "/api/admin/mls/journal/settlement",
+    "/api/admin/mls/journal/reconcile",
+})
+
+
 @app.middleware("http")
 async def _public_guard(request, call_next):
     """Post-tournament lockdown (Jul 21 evaluation, P0):
@@ -142,7 +156,18 @@ async def _public_guard(request, call_next):
             and config.PUBLIC_READ_ONLY:
         # Auth is evaluated BEFORE the rate bucket so an unauthenticated
         # caller can never exhaust the limiter and lock the operator out.
-        if not _admin_ok(request):
+        #
+        # The journal exemption LETS THROUGH, it does not authorize: the
+        # route's own _journal_ok still runs and still decides. Two
+        # layers, both checking — the middleware never becomes the thing
+        # that grants. Found the expensive way (2026-08-03): #51 built
+        # the narrow key and this guard silently outranked it (_admin_ok
+        # only), so JOURNAL_TOKEN could never write anything — and the
+        # post-#51 "live verification" misread THIS 403 as the scoped
+        # gate firing.
+        journal_pass = (path in JOURNAL_WRITE_PATHS
+                        and _journal_ok(request))
+        if not journal_pass and not _admin_ok(request):
             return JSONResponse(
                 {"detail": "read-only mode: the tournament is over; "
                            "mutations require operator credentials"},
