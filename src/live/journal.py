@@ -317,13 +317,109 @@ def _validate_quote_identity(s, fixture_id: int, market_ticker: str,
     return None, mc.id
 
 
-def record_view(fixture_id: int, market_ticker: str, *,
+def _resolve_or_create_viewer_fixture(s, competition_slug: str,
+                                      provider_fixture_id: str, *,
+                                      kickoff_utc=None,
+                                      home_team: str | None = None,
+                                      away_team: str | None = None):
+    """A Fixture row for a VIEWER competition, addressed by provider id.
+
+    The journal could only ever record MLS, because a pick had to name a
+    `fixture.id` and only the MLS ingest creates those. Leagues Cup ran
+    live with no way to record anything (journal-P0-M). The viewer
+    surfaces address a match by `(competition, provider fixture id)`, so
+    that is what this accepts.
+
+    Get-or-CREATE, minimally: enough row to hang an immutable pick on and
+    nothing more. It does NOT pretend to be ingest — no model run, no
+    market chain, no approved MarketEvent — which is exactly why an entry
+    made this way can only ever be `stated_only` and is excluded from
+    every aggregate BY NAME. Creating the row asserts that a pick was
+    made about this match, never that the platform models it.
+
+    Returns (fixture, error_dict). Teams are stored as NAMED, via the
+    same unique `(competition_slug, canonical_name)` Team rows the rest
+    of the plane uses, so a viewer pick does not invent a second team
+    namespace.
+    """
+    from src.live.models import Competition, Team
+    slug = (competition_slug or "").strip()
+    pid = str(provider_fixture_id or "").strip()
+    if not slug or not pid:
+        return None, {"error": "competition_slug and provider_fixture_id "
+                               "are both required to address a viewer "
+                               "fixture"}
+    comp = s.get(Competition, slug)
+    if comp is None:
+        # season is NOT NULL and is not knowable from a fixture id, so it
+        # is derived from the slug's trailing year when present and left
+        # explicit rather than invented when it is not.
+        year = None
+        tail = slug.rsplit("-", 1)[-1]
+        if tail.isdigit() and len(tail) == 4:
+            year = int(tail)
+        if year is None:
+            return None, {"error": f"competition {slug!r} is not seeded and "
+                                   f"its season cannot be read from the "
+                                   f"slug — seed the competition first "
+                                   f"rather than guessing a season"}
+        comp = Competition(slug=slug, name=slug, season=year)
+        s.add(comp)
+        s.flush()
+
+    fx = (s.query(Fixture)
+          .filter_by(competition_slug=slug, provider_fixture_id=pid)
+          .first())
+    if fx is not None:
+        return fx, None
+
+    def _team(name):
+        if not name:
+            return None
+        row = (s.query(Team)
+               .filter_by(competition_slug=slug,
+                          canonical_name=name[:80]).first())
+        if row is None:
+            row = Team(competition_slug=slug, canonical_name=name[:80])
+            s.add(row)
+            s.flush()
+        return row.id
+
+    fx = Fixture(competition_slug=slug, provider_fixture_id=pid,
+                 status="pre", current_kickoff_utc=_aware_or_none(kickoff_utc),
+                 home_team_id=_team(home_team), away_team_id=_team(away_team))
+    s.add(fx)
+    s.flush()
+    return fx, None
+
+
+def _aware_or_none(v):
+    """A tz-aware datetime, or None. A naive kickoff would make the
+    after-kickoff `void` check compare across tz-awareness and raise."""
+    if v is None:
+        return None
+    if isinstance(v, str):
+        try:
+            v = datetime.fromisoformat(v.replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            return None
+    if getattr(v, "tzinfo", None) is None:
+        return v.replace(tzinfo=timezone.utc)
+    return v
+
+
+def record_view(fixture_id: int | None, market_ticker: str, *,
                 outcome_key: str | None = None,
                 stated_price=None, stated_size=None,
                 rationale: str | None = None,
                 market_quote_id: int | None = None,
                 market_contract_id: int | None = None,
-                corrects_bet_id: int | None = None) -> dict:
+                corrects_bet_id: int | None = None,
+                competition_slug: str | None = None,
+                provider_fixture_id: str | None = None,
+                kickoff_utc=None,
+                home_team: str | None = None,
+                away_team: str | None = None) -> dict:
     """Record a view at the moment it FORMS.
 
     Returns the stored row as a dict, including the price_basis actually
@@ -366,9 +462,21 @@ def record_view(fixture_id: int, market_ticker: str, *,
     status = "considered"
     s = get_session()
     try:
-        fx = s.get(Fixture, fixture_id)
-        if fx is None:
-            return {"error": "no such fixture"}
+        if fixture_id is not None:
+            # the MLS path, unchanged: an id addresses an ingested row
+            fx = s.get(Fixture, fixture_id)
+            if fx is None:
+                return {"error": "no such fixture"}
+        else:
+            # viewer competitions address a match by provider id
+            # (journal-P0-M); nothing here can reach the branch above
+            fx, err = _resolve_or_create_viewer_fixture(
+                s, competition_slug, provider_fixture_id,
+                kickoff_utc=kickoff_utc, home_team=home_team,
+                away_team=away_team)
+            if err:
+                return err
+            fixture_id = fx.id
         if corrects_bet_id is not None:
             prev = s.get(PersonalBet, corrects_bet_id)
             if prev is None:

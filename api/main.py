@@ -387,7 +387,11 @@ class JournalViewIn(BaseModel):
     # post status="taken" and skip the considered→resolve lifecycle
     # entirely. There is no spelling of a pre-resolved entry at any
     # layer now; a posted `status` is ignored, never honoured.
-    fixture_id: int
+    # EITHER an ingested fixture id (MLS), OR competition_slug +
+    # provider_fixture_id for a viewer competition (journal-P0-M). The
+    # journal could previously record MLS only, so Leagues Cup ran live
+    # with no way to record a pick at all.
+    fixture_id: int | None = None
     market_ticker: str
     outcome_key: str | None = None
     stated_price: str | None = None
@@ -395,6 +399,11 @@ class JournalViewIn(BaseModel):
     market_quote_id: int | None = None
     rationale: str | None = None
     corrects_bet_id: int | None = None
+    competition_slug: str | None = None
+    provider_fixture_id: str | None = None
+    kickoff_utc: datetime | None = None
+    home_team: str | None = None
+    away_team: str | None = None
 
 
 class JournalResolveIn(BaseModel):
@@ -592,7 +601,11 @@ def mls_journal_record_view(request: Request, body: JournalViewIn):
         outcome_key=body.outcome_key,
         stated_price=body.stated_price, stated_size=body.stated_size,
         market_quote_id=body.market_quote_id, rationale=body.rationale,
-        corrects_bet_id=body.corrects_bet_id))
+        corrects_bet_id=body.corrects_bet_id,
+        competition_slug=body.competition_slug,
+        provider_fixture_id=body.provider_fixture_id,
+        kickoff_utc=body.kickoff_utc, home_team=body.home_team,
+        away_team=body.away_team))
 
 
 @app.post("/api/admin/mls/journal/resolve")
