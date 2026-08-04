@@ -26,6 +26,13 @@ def _clear(tmp_path, monkeypatch):
     # outage path started finding a real table and three of them failed —
     # a test whose premise the environment falsified, not a code defect.
     monkeypatch.setattr(clubelo, "_DISK", str(tmp_path / "none.json"))
+    # wcr grew the same disk cache on 2026-08-04 and this fixture must
+    # isolate it the same day, or the outage tests find the real
+    # 2,413-club table — the identical breakage clubelo's cache caused
+    # here once already
+    monkeypatch.setattr(worldclubratings, "_DISK",
+                        str(tmp_path / "none-wcr.json"))
+    worldclubratings._stale.clear()
     clubelo._cache.clear()
     clubelo._stale.clear()
     worldclubratings._cache = None
