@@ -320,16 +320,62 @@ def fixtures(key: str, season: int | None = None, days: int | None = None,
             # attaches Real Sociedad's book to Real Madrid — the exact
             # mis-bridge this repo refuses in three other places. One
             # matched side is NOT evidence the event is this fixture.
-            titled = [(e, _fr._identity_tokens(e.get("title") or ""))
-                      for e in events]
+            # An event's latest market close_time bounds WHICH MEETING it
+            # prices: a book settles shortly after its match, so a close
+            # before kickoff (or far past it) is a different leg of the
+            # same pairing. Without this, every UCL return leg was priced
+            # off its FIRST leg's book — the TASK-8 leak class in a
+            # second code path (helper finding, #68 2026-08-04 16:09Z).
+            def _ev_close(e):
+                from datetime import datetime, timezone as _tzz
+                best = None
+                for m in (e.get("markets") or []):
+                    c = m.get("close_time")
+                    if not c:
+                        continue
+                    try:
+                        d = datetime.fromisoformat(
+                            str(c).replace("Z", "+00:00"))
+                    except ValueError:
+                        continue
+                    if d.tzinfo is None:
+                        d = d.replace(tzinfo=_tzz.utc)
+                    if best is None or d > best:
+                        best = d
+                return best
+
+            titled = [(e, _fr._identity_tokens(e.get("title") or ""),
+                       _ev_close(e)) for e in events]
+            from datetime import datetime as _dt, timedelta as _td, \
+                timezone as _tzu
+            provisional = []
             for r in rows:
                 hn = (r.get("home") or {}).get("name") or ""
                 an = (r.get("away") or {}).get("name") or ""
                 ht, at = _fr._identity_tokens(hn), _fr._identity_tokens(an)
                 if not ht or not at:
                     continue
-                hits = [e for e, toks in titled
-                        if (ht & toks) and (at & toks)]
+                named = [(e, close) for e, toks, close in titled
+                         if (ht & toks) and (at & toks)]
+                if not named:
+                    continue
+                try:
+                    ko = _dt.fromisoformat(
+                        str(r.get("kickoff_utc")).replace("Z", "+00:00"))
+                    if ko.tzinfo is None:
+                        ko = ko.replace(tzinfo=_tzu.utc)
+                except (ValueError, TypeError):
+                    ko = None
+                hits = []
+                for e, close in named:
+                    if ko is not None and close is not None:
+                        # the book must OUTLIVE the kickoff, and not by a
+                        # tie's width: a close before kickoff is the
+                        # PREVIOUS leg; one more than 5 days after is a
+                        # later meeting
+                        if close < ko or close - ko > _td(days=5):
+                            continue
+                    hits.append(e)
                 # ambiguity is a refusal, not a coin flip between books
                 if len(hits) != 1:
                     if len(hits) > 1:
@@ -337,10 +383,33 @@ def fixtures(key: str, season: int | None = None, days: int | None = None,
                             "available": False,
                             "market_unavailable_reason": (
                                 f"{len(hits)} Kalshi events match both clubs "
-                                f"by name; none is attached rather than one "
+                                f"by name inside the settlement window; "
+                                f"none is attached rather than one "
                                 f"guessed")}
+                    elif named:
+                        r["market_vs_read"] = {
+                            "available": False,
+                            "market_unavailable_reason": (
+                                "a Kalshi event matches both clubs but its "
+                                "book settles before this kickoff — the "
+                                "same pairing's OTHER leg; not attached")}
                     continue
-                ev = hits[0]
+                provisional.append((r, hits[0], hn, an))
+            # REVERSE UNIQUENESS: one event backs at most one row. Two
+            # claimants refuse BOTH — attaching the nearer would be a
+            # guess wearing a rule's clothes.
+            claims: dict[int, int] = {}
+            for r, ev, _hn, _an in provisional:
+                claims[id(ev)] = claims.get(id(ev), 0) + 1
+            for r, ev, hn, an in provisional:
+                if claims[id(ev)] > 1:
+                    r["market_vs_read"] = {
+                        "available": False,
+                        "market_unavailable_reason": (
+                            "one Kalshi event is the sole in-window match "
+                            "for more than one fixture; all are refused "
+                            "rather than one attached")}
+                    continue
                 r["market_vs_read"] = match_pick.compare(
                     r.get("strength"), ev, hn, an)
                 r["kalshi_event"] = ev.get("event_ticker")
@@ -459,14 +528,27 @@ def _meaning(row: dict, season_rows: list[dict], comp_key: str) -> dict:
     known_two_leg = (comp_key == "asean"
                      and rl in ("semi-finals", "final"))
     if "qualif" in rl or "leg" in rl or same_round_reverse or known_two_leg:
-        # two-legged tie: find the FINISHED reverse fixture this season
+        # two-legged tie. WHICH leg is decided by KICKOFF ORDER against
+        # the reversed fixture, never by whether it has finished — before
+        # the first leg kicked off, every leg of every UCL tie read
+        # "leg 1, the return leg decides it", including the deciders
+        # (helper finding, #68 2026-08-04). The aggregate still requires
+        # a FINISHED first leg; the leg number does not.
         rev = next((f for f in season_rows
-                    if f.get("status") in FINISHED - {"CANC", "PST", "ABD"}
+                    if f is not row
                     and (f.get("home") or {}).get("apif_team_id") == aid
-                    and (f.get("away") or {}).get("apif_team_id") == hid
-                    and (f.get("goals") or {}).get("home") is not None),
+                    and (f.get("away") or {}).get("apif_team_id") == hid),
                    None)
-        if rev:
+        rev_done = (rev is not None
+                    and rev.get("status") in FINISHED - {"CANC", "PST",
+                                                         "ABD"}
+                    and (rev.get("goals") or {}).get("home") is not None)
+        rev_ko = (rev.get("kickoff_utc") or "") if rev else ""
+        row_ko = row.get("kickoff_utc") or ""
+        # kickoff order decides; when a feed omits kickoffs, a finished
+        # reverse fixture is necessarily the earlier one
+        rev_first = (rev_ko < row_ko) if (rev_ko and row_ko) else rev_done
+        if rev_first and rev_done:
             g = rev["goals"]
             # aggregate from THIS fixture's home side's view
             out["tie"] = {
@@ -481,6 +563,10 @@ def _meaning(row: dict, season_rows: list[dict], comp_key: str) -> dict:
                              "are level")
                           + " on aggregate"),
             }
+        elif rev_first:
+            out["tie"] = {"leg": 2,
+                          "means": "second leg of a two-legged tie — the "
+                                   "first leg has not settled yet"}
         else:
             out["tie"] = {"leg": 1,
                           "means": "first leg of a two-legged tie — the "

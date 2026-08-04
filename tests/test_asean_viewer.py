@@ -191,6 +191,99 @@ class TestAseanGroupStakes:
         assert m["tie"]["leg"] == 1
 
 
+# --- the market bridge: window + reverse uniqueness ------------------------
+
+class TestMarketBridgeLegs:
+    """Helper finding #68 2026-08-04 16:09Z: every UCL return leg was
+    priced off its FIRST leg's book, because the bridge had no kickoff
+    window and no reverse uniqueness — the TASK-8 leak class in a second
+    code path. The event's own close_time bounds which meeting it
+    prices: a book cannot settle before its match kicks off."""
+
+    @staticmethod
+    def _iso(days: float) -> str:
+        from datetime import datetime, timedelta, timezone
+        return (datetime.now(timezone.utc)
+                + timedelta(days=days)).isoformat()
+
+    def _rows(self):
+        return [
+            {"fixture_id": 1, "kickoff_utc": self._iso(1), "status": "NS",
+             "home": {"name": "Mjallby", "apif_team_id": 1},
+             "away": {"name": "Slovan Bratislava", "apif_team_id": 2},
+             "goals": {"home": None, "away": None}},
+            {"fixture_id": 2, "kickoff_utc": self._iso(8), "status": "NS",
+             "home": {"name": "Slovan Bratislava", "apif_team_id": 2},
+             "away": {"name": "Mjallby", "apif_team_id": 1},
+             "goals": {"home": None, "away": None}},
+        ]
+
+    def _first_leg_event(self):
+        # closes two days after leg 1 — five days BEFORE leg 2
+        return {"event_ticker": "KXUCLGAME-26AUG04MJASLO",
+                "title": "Mjallby vs Slovan Bratislava",
+                "markets": [
+                    {"status": "active", "yes_ask": "0.45",
+                     "close_time": self._iso(3)}]}
+
+    def _wire(self, monkeypatch, events):
+        monkeypatch.setattr(competitions, "_fixtures_raw",
+                            lambda lid, s: self._rows())
+        monkeypatch.setattr(competitions, "_cache", {})
+        monkeypatch.setattr(
+            competitions, "markets",
+            lambda k: {"status": "ok", "events": events})
+        monkeypatch.setattr(national_elo, "for_fixture",
+                            lambda f: {"available": False})
+
+    def test_a_first_leg_book_never_attaches_to_the_return_leg(
+            self, monkeypatch):
+        self._wire(monkeypatch, [self._first_leg_event()])
+        out = competitions.fixtures("asean", days=30)
+        first = next(r for r in out["fixtures"] if r["fixture_id"] == 1)
+        ret = next(r for r in out["fixtures"] if r["fixture_id"] == 2)
+        assert first.get("kalshi_event") == "KXUCLGAME-26AUG04MJASLO"
+        assert ret.get("kalshi_event") is None
+        why = (ret.get("market_vs_read") or {}).get(
+            "market_unavailable_reason", "")
+        assert "settles before this kickoff" in why
+
+    def test_one_event_claimed_by_two_rows_refuses_both(self, monkeypatch):
+        # same kickoff on both rows: the window cannot separate them, so
+        # reverse uniqueness must refuse both
+        rows = self._rows()
+        rows[1]["kickoff_utc"] = rows[0]["kickoff_utc"]
+        monkeypatch.setattr(competitions, "_fixtures_raw",
+                            lambda lid, s: rows)
+        monkeypatch.setattr(competitions, "_cache", {})
+        monkeypatch.setattr(
+            competitions, "markets",
+            lambda k: {"status": "ok",
+                       "events": [self._first_leg_event()]})
+        monkeypatch.setattr(national_elo, "for_fixture",
+                            lambda f: {"available": False})
+        out = competitions.fixtures("asean", days=30)
+        for r in out["fixtures"]:
+            assert r.get("kalshi_event") is None
+            assert "refused" in (r.get("market_vs_read") or {}).get(
+                "market_unavailable_reason", "")
+
+
+class TestLegNumberByOrder:
+    def test_an_unplayed_tie_still_knows_which_leg_is_which(self):
+        first = _fx("Semi-finals", 1, 2)
+        first["kickoff_utc"] = "2026-08-11T13:00:00+00:00"
+        ret = _fx("Semi-finals", 2, 1)
+        ret["kickoff_utc"] = "2026-08-15T13:00:00+00:00"
+        rows = [first, ret]
+        m1 = competitions._meaning(first, rows, "asean")
+        m2 = competitions._meaning(ret, rows, "asean")
+        assert m1["tie"]["leg"] == 1
+        assert m2["tie"]["leg"] == 2
+        assert "not settled" in m2["tie"]["means"]
+        assert "aggregate_before" not in m2["tie"]
+
+
 # --- transient failures are never cached ----------------------------------
 
 class TestFailureNeverCached:
