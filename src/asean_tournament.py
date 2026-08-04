@@ -271,6 +271,13 @@ def build(rows: list[dict]) -> dict:
     champ: dict[int, int] = {}
     fin: dict[int, int] = {}
     semi: dict[int, int] = {}
+    # per-SLOT occupancy — who lands A1/A2/B1/B2, and who wins each semi.
+    # _sim_once returns the semifinalist list in fixed slot order and the
+    # finalist list as [SF1 winner, SF2 winner]; both orders are pinned by
+    # its construction (qualified[0] is groups[0]'s top two).
+    slots: dict[str, dict[int, int]] = {k: {} for k in
+                                        ("A1", "A2", "B1", "B2")}
+    sfw: list[dict[int, int]] = [{}, {}]
     proxy_n = 0
     for _ in range(N_SIMS):
         c, fs, ss, proxy = _sim_once(rng, base, remaining, groups, elo)
@@ -279,6 +286,10 @@ def build(rows: list[dict]) -> dict:
             fin[t] = fin.get(t, 0) + 1
         for t in ss:
             semi[t] = semi.get(t, 0) + 1
+        for slot, t in zip(("A1", "A2", "B1", "B2"), ss):
+            slots[slot][t] = slots[slot].get(t, 0) + 1
+        for i, t in enumerate(fs):
+            sfw[i][t] = sfw[i].get(t, 0) + 1
         proxy_n += proxy
     out["n_sims"] = N_SIMS
     out["sim_seed"] = SIM_SEED
@@ -295,5 +306,100 @@ def build(rows: list[dict]) -> dict:
     out["champion"] = None          # crowned only by the real final
     out["champion_forecast_leader"] = {"team": lead["team"],
                                        "p": lead["p_champion"]}
+
+    def dist(counter: dict[int, int], top: int = 3) -> list[dict]:
+        return [{"team": names[t], "p": round(n / N_SIMS, 4)}
+                for t, n in sorted(counter.items(),
+                                   key=lambda kv: -kv[1])[:top]]
+
+    if ko:
+        out["bracket"] = _real_bracket(ko, names, elo)
+    else:
+        out["bracket"] = {
+            "projected": True,
+            "basis": ("slots filled by simulating the remaining group "
+                      "matches from current standings — the pairings are "
+                      "NOT drawn until the groups finish, and the real "
+                      "knockout fixtures replace these the moment the "
+                      "provider publishes them"),
+            "semifinals": [
+                {"name": "SF1",
+                 "home_slot": {"label": "Group A winner",
+                               "dist": dist(slots["A1"])},
+                 "away_slot": {"label": "Group B runner-up",
+                               "dist": dist(slots["B2"])},
+                 "winner_dist": dist(sfw[0])},
+                {"name": "SF2",
+                 "home_slot": {"label": "Group B winner",
+                               "dist": dist(slots["B1"])},
+                 "away_slot": {"label": "Group A runner-up",
+                               "dist": dist(slots["A2"])},
+                 "winner_dist": dist(sfw[1])},
+            ],
+            "final": {
+                "home_slot": {"label": "SF1 winner", "dist": dist(sfw[0])},
+                "away_slot": {"label": "SF2 winner", "dist": dist(sfw[1])},
+            },
+        }
     out["available"] = True
     return out
+
+
+def _real_bracket(ko: list[dict], names: dict[int, str],
+                  elo: dict[int, int]) -> dict:
+    """The knockout picture from PUBLISHED fixtures — real pairings, real
+    kickoffs, legs and aggregates as they land. p_advance stays the Elo
+    expectation (the stated two-leg simplification); no winner is ever
+    derived from an aggregate here, because the away-goals and shootout
+    clauses live in regulations this module does not reproduce."""
+    from src.live.national_elo import expected_points_share as eps
+
+    def ties_for(rnd_word: str) -> list[dict]:
+        legs_by_pair: dict[frozenset, list[dict]] = {}
+        for f in ko:
+            if rnd_word not in (f.get("round") or "").lower():
+                continue
+            h = (f.get("home") or {}).get("apif_team_id")
+            a = (f.get("away") or {}).get("apif_team_id")
+            if h and a:
+                legs_by_pair.setdefault(frozenset((h, a)), []).append(f)
+        cards = []
+        for pair, legs in legs_by_pair.items():
+            legs.sort(key=lambda f: f.get("kickoff_utc") or "")
+            t1, t2 = sorted(pair, key=lambda t: names.get(t, ""))
+            agg = {t1: 0, t2: 0}
+            settled = 0
+            for f in legs:
+                g = f.get("goals") or {}
+                if f.get("status") in FINISHED and g.get("home") is not None:
+                    settled += 1
+                    hid = (f.get("home") or {}).get("apif_team_id")
+                    agg[hid] += g["home"]
+                    agg[t2 if hid == t1 else t1] += g["away"]
+            e = eps(elo[t1], elo[t2]) if t1 in elo and t2 in elo else None
+            cards.append({
+                "teams": [
+                    {"team": names[t1],
+                     "p_advance": round(e, 4) if e is not None else None},
+                    {"team": names[t2],
+                     "p_advance": round(1 - e, 4) if e is not None else None},
+                ],
+                "legs": [{"kickoff_utc": f.get("kickoff_utc"),
+                          "status": f.get("status"),
+                          "home": (f.get("home") or {}).get("name"),
+                          "away": (f.get("away") or {}).get("name"),
+                          "goals": f.get("goals")} for f in legs],
+                "aggregate": (f"{agg[t1]}-{agg[t2]}" if settled else None),
+                "legs_settled": settled,
+            })
+        cards.sort(key=lambda c: (c["legs"][0]["kickoff_utc"] or ""))
+        return cards
+
+    return {
+        "projected": False,
+        "basis": ("published knockout fixtures. p_advance is the Elo "
+                  "expectation under the stated two-leg simplification; "
+                  "no winner is derived from an aggregate here"),
+        "semifinals": ties_for("semi"),
+        "final_ties": ties_for("final"),
+    }

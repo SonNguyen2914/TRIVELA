@@ -131,6 +131,70 @@ class TestBuild:
         assert a["champion_forecast"] == b["champion_forecast"]
 
 
+class TestProjectedBracket:
+    @pytest.fixture(autouse=True)
+    def rated(self, monkeypatch):
+        monkeypatch.setattr(
+            national_elo, "lookup",
+            lambda name: {"rated": True, "rating": 1000 + int(name[1:]) * 50,
+                          "source": "eloratings_national"})
+
+    def test_slots_carry_distributions_from_the_right_group(self):
+        out = at.build(_two_group_rows())
+        b = out["bracket"]
+        assert b["projected"] is True
+        a1 = b["semifinals"][0]["home_slot"]
+        assert a1["label"] == "Group A winner"
+        # group A is {N1,N2,N3}; its winner slot may contain only those
+        assert {d["team"] for d in a1["dist"]} <= {"N1", "N2", "N3"}
+        assert sum(d["p"] for d in a1["dist"]) == pytest.approx(1.0,
+                                                               abs=1e-3)
+
+    def test_the_final_slots_are_the_semi_winner_distributions(self):
+        b = at.build(_two_group_rows())["bracket"]
+        assert b["final"]["home_slot"]["dist"] == \
+            b["semifinals"][0]["winner_dist"]
+
+    def test_the_basis_says_projected_not_drawn(self):
+        b = at.build(_two_group_rows())["bracket"]
+        assert "NOT drawn" in b["basis"]
+
+
+class TestRealBracket:
+    @pytest.fixture(autouse=True)
+    def rated(self, monkeypatch):
+        monkeypatch.setattr(
+            national_elo, "lookup",
+            lambda name: {"rated": True, "rating": 1000 + int(name[1:]) * 50,
+                          "source": "eloratings_national"})
+
+    def _with_semis(self):
+        rows = _two_group_rows(finish_all=True)
+        leg1 = _fx("Semi-finals", 3, 5, status="FT", gh=2, ga=1)
+        leg1["kickoff_utc"] = "2026-08-11T13:00:00+00:00"
+        leg2 = _fx("Semi-finals", 5, 3)
+        leg2["kickoff_utc"] = "2026-08-15T13:00:00+00:00"
+        return rows + [leg1, leg2]
+
+    def test_published_semis_replace_the_projection(self):
+        b = at.build(self._with_semis())["bracket"]
+        assert b["projected"] is False
+        tie = b["semifinals"][0]
+        assert {t["team"] for t in tie["teams"]} == {"N3", "N5"}
+
+    def test_aggregate_counts_only_finished_legs_and_names_no_winner(self):
+        b = at.build(self._with_semis())["bracket"]
+        tie = b["semifinals"][0]
+        assert tie["legs_settled"] == 1
+        assert tie["aggregate"] == "2-1"          # N3 first alphabetically
+        assert "winner" not in tie
+
+    def test_p_advance_is_a_partition(self):
+        tie = at.build(self._with_semis())["bracket"]["semifinals"][0]
+        ps = [t["p_advance"] for t in tie["teams"]]
+        assert sum(ps) == pytest.approx(1.0, abs=1e-3)
+
+
 class TestRefusals:
     def test_three_groups_refuse_by_name(self, monkeypatch):
         monkeypatch.setattr(
