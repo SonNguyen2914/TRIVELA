@@ -323,9 +323,12 @@ def _espn_states(on_date: str | None = None) -> list[dict]:
         return hit[1]
     out: list[dict] = []
     try:
+        # no custom User-Agent on any ESPN call here: their edge began
+        # 403ing unrecognized UA strings on 2026-08-04 (results: 0/12 on
+        # the archive plane for a boot); the library default passes
         r = requests.get(ESPN_URL, timeout=8,
                          params={"dates": on_date} if on_date else None,
-                         headers={"User-Agent": "wc26-suggester/0.3"})
+                         )
         r.raise_for_status()
         for ev in r.json().get("events", []):
             comp = (ev.get("competitions") or [{}])[0]
@@ -431,7 +434,7 @@ def _espn_event_id(home: str, away: str,
     else:
         try:
             r = requests.get(ESPN_URL, params={"dates": on_date}, timeout=8,
-                             headers={"User-Agent": "wc26-suggester/0.3"})
+                             )
             r.raise_for_status()
             events = r.json().get("events", [])
             _cache[key] = (time.time(), events)
@@ -461,7 +464,7 @@ def espn_lineups(home: str, away: str) -> dict:
             out["reason"] = "fixture not found on ESPN"
         else:
             r = requests.get(ESPN_SUMMARY, params={"event": ev}, timeout=8,
-                             headers={"User-Agent": "wc26-suggester/0.3"})
+                             )
             r.raise_for_status()
             sides: dict = {}
             for side in r.json().get("rosters", []):
@@ -534,7 +537,7 @@ def espn_match_stats(home: str, away: str) -> dict:
         ev = _espn_event_id(home, away)
         if ev:
             r = requests.get(ESPN_SUMMARY, params={"event": ev}, timeout=8,
-                             headers={"User-Agent": "wc26-suggester/0.3"})
+                             )
             r.raise_for_status()
             teams = (r.json().get("boxscore") or {}).get("teams") or []
             stats: dict[str, dict] = {}
@@ -574,7 +577,7 @@ def espn_commentary(home: str, away: str) -> list[dict]:
         ev = _espn_event_id(home, away)
         if ev:
             r = requests.get(ESPN_SUMMARY, params={"event": ev}, timeout=8,
-                             headers={"User-Agent": "wc26-suggester/0.3"})
+                             )
             r.raise_for_status()
             out = r.json().get("commentary") or []
     except Exception as exc:

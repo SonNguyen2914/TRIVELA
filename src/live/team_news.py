@@ -333,9 +333,11 @@ def _espn_summary(event_id: str, slug: str) -> Fetched:
     """A raw ESPN summary, wrapped in the same state vocabulary. `items`
     carries the one summary dict when the fetch succeeded."""
     try:
+        # no custom User-Agent: ESPN's edge began 403ing unrecognized UA
+        # strings on 2026-08-04 (took out the WC26 result restore for a
+        # boot); the library default passes
         r = requests.get(f"{ESPN_SOCCER_BASE}/{slug}/summary",
-                         params={"event": event_id}, timeout=25,
-                         headers={"User-Agent": "trivela-team-news/1.0"})
+                         params={"event": event_id}, timeout=25)
     except requests.RequestException as exc:
         return Fetched("unavailable", note=f"transport: {str(exc)[:240]}")
     if r.status_code // 100 != 2:
