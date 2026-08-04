@@ -452,16 +452,41 @@ class SessionOpenIn(BaseModel):
 
 
 def _journal_write(result):
-    """Journal mutation responses, with a payload CONFLICT surfaced as
-    HTTP 409 (journal-P0-I).
+    """Journal mutation responses, with REFUSALS carried by the status
+    code and not only the body (journal-P0-I, journal-P0-L).
 
-    A conflicting retry must not read as success at any layer. The
-    handler already refuses to write; returning it inside a 200 body
-    would leave a client that checks only the status code believing its
-    corrected economics had been accepted."""
+    A refusal must not read as success at any layer. The handler already
+    declines to write; returning that inside a 200 leaves a client which
+    checks only the status believing it succeeded. Demonstrated in
+    production 2026-08-04: `resolve` to an invalid status answered
+    `200 {"error": "resolve to taken or passed"}` — nothing was written
+    and nothing said so above the body.
+
+    CLASSIFIED STRUCTURALLY, NOT BY WORDING. There are 55 distinct error
+    strings in `src/live/journal.py`; a mapping keyed on their prose is a
+    mapping an unlucky rewording defeats, which is the failure the alert
+    gate exists to avoid one layer down. So the rule reads only fields:
+
+        conflict present        -> 409  (unchanged)
+        error == "dormant"      -> 503  the plane is down; not the
+                                        caller's fault and retryable
+        any other error         -> 400  the caller must change something
+
+    A finer taxonomy — 404 for "no such entry", 409 for an immutable
+    resolution — would need an explicit `error_kind` at each of those 55
+    return sites. That is a larger change and it alters response BODIES,
+    which existing callers parse. Bodies are deliberately untouched here:
+    every error string a client reads today it still reads, byte for
+    byte. Only the envelope gains the truth.
+    """
     from fastapi.responses import JSONResponse
-    if isinstance(result, dict) and result.get("conflict"):
+    if not isinstance(result, dict):
+        return result
+    if result.get("conflict"):
         return JSONResponse(status_code=409, content=result)
+    if result.get("error"):
+        code = 503 if result["error"] == "dormant" else 400
+        return JSONResponse(status_code=code, content=result)
     return result
 
 
@@ -562,12 +587,12 @@ def mls_journal_record_view(request: Request, body: JournalViewIn):
     if not _journal_ok(request):
         raise HTTPException(403, "operator credentials required")
     from src.live import journal
-    return journal.record_view(
+    return _journal_write(journal.record_view(
         body.fixture_id, body.market_ticker,
         outcome_key=body.outcome_key,
         stated_price=body.stated_price, stated_size=body.stated_size,
         market_quote_id=body.market_quote_id, rationale=body.rationale,
-        corrects_bet_id=body.corrects_bet_id)
+        corrects_bet_id=body.corrects_bet_id))
 
 
 @app.post("/api/admin/mls/journal/resolve")
@@ -578,7 +603,7 @@ def mls_journal_resolve(request: Request, body: JournalResolveIn):
     if not _journal_ok(request):
         raise HTTPException(403, "operator credentials required")
     from src.live import journal
-    return journal.resolve_view(body.bet_id, body.status)
+    return _journal_write(journal.resolve_view(body.bet_id, body.status))
 
 
 @app.post("/api/admin/mls/journal/execution")
