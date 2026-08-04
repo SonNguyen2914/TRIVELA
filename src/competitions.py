@@ -251,6 +251,11 @@ def fixtures(key: str, season: int | None = None, days: int | None = None,
             rows.append(row)
         from datetime import datetime, timedelta, timezone as _tz
         soon = (datetime.now(_tz.utc) + timedelta(hours=48)).isoformat()
+        # weather reaches further than news: captures firm up near
+        # kickoff, but a forecast is exactly the thing an operator wants
+        # while eyeing a price days ahead, and the provider's hourly
+        # horizon (16d) comfortably covers a week
+        soon_weather = (datetime.now(_tz.utc) + timedelta(days=7)).isoformat()
         now_s = datetime.now(_tz.utc).isoformat()
         for r in rows:
             # captured absences, for near fixtures only — a read, never a
@@ -261,6 +266,13 @@ def fixtures(key: str, season: int | None = None, days: int | None = None,
                     n = team_news.fixture_news(str(r.get("fixture_id")))
                     if n:
                         r["news"] = n
+                except Exception:
+                    pass
+            if now_s <= (r.get("kickoff_utc") or "") <= soon_weather:
+                try:
+                    from src.live import match_weather
+                    r["weather"] = match_weather.for_fixture(
+                        r.get("venue_city"), r.get("kickoff_utc"))
                 except Exception:
                     pass
             try:
