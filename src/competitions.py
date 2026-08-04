@@ -54,7 +54,8 @@ _INSTEAD = (
 
 class Viewer:
     def __init__(self, key, display, apif_league_id, kalshi_series,
-                 no_model, accent="#7dd3fc", note=None, why=None):
+                 no_model, accent="#7dd3fc", note=None, why=None,
+                 strength_kind="club", season_default=None):
         self.key = key
         self.display = display
         self.apif_league_id = apif_league_id
@@ -62,6 +63,18 @@ class Viewer:
         self.no_model = no_model
         self.accent = accent
         self.note = note
+        # "club" reads ClubElo/worldclubratings; "national" reads
+        # eloratings.net. A national team run through a CLUB provider can
+        # only ever produce a false match, so the kind is pinned on the
+        # competition, never inferred from a name.
+        self.strength_kind = strength_kind
+        # the season label the FIXTURE PROVIDER uses for the current
+        # edition, when it differs from the calendar year. API-Football
+        # files the Aug-2026 ASEAN Championship under season 2025 (probed
+        # 2026-08-04: season 2025 = 22 fixtures, season 2026 = 0), so a
+        # caller defaulting to the calendar year would see an empty
+        # tournament that is actually mid-group-stage.
+        self.season_default = season_default
         # a competition-specific reason. The shared BY_DESIGN text says
         # "qualifying rounds give most entrants 2-4 matches" — TRUE for
         # the UEFA cups, FALSE for Leagues Cup, where every club is
@@ -125,6 +138,25 @@ VIEWERS: dict[str, Viewer] = {
         note=("probed 2026-08-03: 31 tradeable KXLEAGUESCUPGAME events; "
               "the MLS fit is scoped to competition_slug='mls-2026', so "
               "these cross-league results cannot leak into its ratings")),
+    # NATIONAL teams, the first non-club competition on this surface.
+    # Every model and both club ratings providers rate CLUBS, so the
+    # strength read here is World Football Elo (eloratings.net), which
+    # rates national teams and only national teams — strength_kind pins
+    # that structurally. Ticker PROBED 2026-08-04: KXASEANGAME, an
+    # 18-event board inside a 5-series family (GAME/BTTS/ADVANCE/SPREAD/
+    # TOTAL). Season pinned 2025 — see season_default on the class.
+    "asean": Viewer(
+        "asean", "ASEAN Championship", 24, "KXASEANGAME",
+        BY_DESIGN, "#fbbf24",
+        why=("a national-team cup. Every fitted model in this codebase "
+             "rates clubs within one league's population; no national-"
+             "team model exists here and none is claimed. The strength "
+             "read is eloratings.net's published national Elo — an "
+             "external rating, not a model of ours"),
+        note=("probed 2026-08-04: 18 listed KXASEANGAME events; all "
+              "eleven ASEAN federations carry a current eloratings.net "
+              "rating, Thailand 1395 down to Brunei 572"),
+        strength_kind="national", season_default=2025),
 }
 
 # ClubElo is European club football only. For these competitions every
@@ -185,25 +217,33 @@ def _fixtures_raw(league_id: int, season: int) -> list[dict]:
             if p is not None]
 
 
-def fixtures(key: str, season: int = 2026, days: int | None = None,
+def fixtures(key: str, season: int | None = None, days: int | None = None,
              include_finished: bool = False) -> dict | None:
     v = VIEWERS.get(key)
     if v is None:
         return None
+    # None -> the provider's label for the current edition when the
+    # registry pins one, else the calendar-year convention.
+    season = season or v.season_default or 2026
 
     def _run():
         rows = []
         for f in _fixtures_raw(v.apif_league_id, season):
             row = dict(f)
             try:
-                from src.live import club_strength_estimate as cse
                 from src.friendlies_apif import _slim_strength
-                # apply_calibration=False: the shrink is a FRIENDLIES
-                # measurement and these are competitive fixtures — the
-                # helper's Aug-4 briefing caught the leak (slope 0.185)
-                row["strength"] = _slim_strength(
-                    cse.for_fixture(f, sources=v.strength_sources,
-                                    apply_calibration=False))
+                if v.strength_kind == "national":
+                    from src.live import national_elo
+                    row["strength"] = _slim_strength(
+                        national_elo.for_fixture(f))
+                else:
+                    from src.live import club_strength_estimate as cse
+                    # apply_calibration=False: the shrink is a FRIENDLIES
+                    # measurement and these are competitive fixtures — the
+                    # helper's Aug-4 briefing caught the leak (slope 0.185)
+                    row["strength"] = _slim_strength(
+                        cse.for_fixture(f, sources=v.strength_sources,
+                                        apply_calibration=False))
             except Exception as exc:
                 row["strength"] = {"available": False,
                                    "reason": "estimate_unavailable",
@@ -371,7 +411,21 @@ def _meaning(row: dict, season_rows: list[dict], comp_key: str) -> dict:
     hid = (row.get("home") or {}).get("apif_team_id")
     aid = (row.get("away") or {}).get("apif_team_id")
 
-    if "qualif" in rnd.lower() or "leg" in rnd.lower():
+    # A two-legged tie announces itself two ways. UEFA rounds carry the
+    # word ("Semi-finals 1st Leg"); the ASEAN Championship's do NOT —
+    # its semis and final are two-legged under the bare round names
+    # "Semi-finals" and "Final" (probed on the 2024 edition: 4 and 2
+    # fixtures). The tie's SIGNATURE still shows in the fixture list:
+    # the same pairing reversed within the SAME round. Group-like rounds
+    # are excluded because a round-robin's reverse meetings are separate
+    # matches, not legs of one tie.
+    rl = rnd.lower()
+    same_round_reverse = ("group" not in rl and any(
+        f is not row and (f.get("round") or "") == rnd
+        and (f.get("home") or {}).get("apif_team_id") == aid
+        and (f.get("away") or {}).get("apif_team_id") == hid
+        for f in season_rows))
+    if "qualif" in rl or "leg" in rl or same_round_reverse:
         # two-legged tie: find the FINISHED reverse fixture this season
         rev = next((f for f in season_rows
                     if f.get("status") in FINISHED - {"CANC", "PST", "ABD"}
@@ -433,6 +487,43 @@ def _meaning(row: dict, season_rows: list[dict], comp_key: str) -> dict:
                        "bonus point, which the scoreline alone cannot "
                        "attribute — so a drawn record shows a points RANGE "
                        "rather than an invented rank"),
+            "home": record(hid), "away": record(aid),
+        }
+        return out
+
+    if comp_key == "asean":
+        # standard scoring — 3 for a win, 1 for a draw, no shootout —
+        # so unlike Leagues Cup the record is a POINT COUNT, not a range
+        def record(tid):
+            w = l = d = 0
+            for f in season_rows:
+                if f.get("status") not in ("FT", "AET", "PEN"):
+                    continue
+                frl = (f.get("round") or "").lower()
+                # "Qualification Round Group Stage - 1" contains "group"
+                # but is the pre-tournament qualifier, not the group
+                if "group" not in frl or "qualif" in frl:
+                    continue
+                g = f.get("goals") or {}
+                if g.get("home") is None:
+                    continue
+                fh = (f.get("home") or {}).get("apif_team_id")
+                fa = (f.get("away") or {}).get("apif_team_id")
+                if tid not in (fh, fa):
+                    continue
+                mine = g["home"] if tid == fh else g["away"]
+                theirs = g["away"] if tid == fh else g["home"]
+                if mine > theirs: w += 1
+                elif mine < theirs: l += 1
+                else: d += 1
+            return {"played": w + d + l, "w": w, "d": d, "l": l,
+                    "points": 3 * w + d}
+        out["stakes"] = {
+            "format": ("group stage: two groups, single round-robin; the "
+                       "top two per group advance to two-legged "
+                       "semi-finals, then a two-legged final. A draw is "
+                       "one point — no shootout bonus in this "
+                       "competition"),
             "home": record(hid), "away": record(aid),
         }
         return out

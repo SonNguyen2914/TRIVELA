@@ -818,9 +818,13 @@ def comp_list():
 
 
 @app.get("/api/comp/{key}/fixtures")
-def comp_fixtures(key: str, season: int = Query(2026, ge=2020, le=2030),
+def comp_fixtures(key: str,
+                  season: int | None = Query(None, ge=2020, le=2030),
                   days: int | None = Query(None, ge=1, le=60),
                   include_finished: bool = Query(False)):
+    # season None -> the registry resolves it: the provider's label for
+    # the current edition when pinned (ASEAN's Aug-2026 tournament files
+    # under 2025), else 2026. An explicit season still wins.
     """Upcoming fixtures with the strength read. Finished and past matches
     are hidden by default — a fixture list that opens on yesterday's
     results is not a fixture list."""

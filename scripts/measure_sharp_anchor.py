@@ -108,6 +108,11 @@ SPORT_MATCHERS: dict[str, tuple[frozenset[str], frozenset[str]]] = {
     "argentina": (frozenset({"argentina", "primera"}),
                   frozenset({"nacional", "women"})),
     "usl": (frozenset({"usl"}), frozenset({"one", "two", "women", "league"})),
+    # national teams. Not listed by the provider as of 2026-08-04, so this
+    # resolves to a NAMED absence — recorded on every measurement rather
+    # than silently missing, and it starts working the day they list it.
+    "asean": (frozenset({"asean"}),
+              frozenset({"club", "u19", "u23", "women"})),
 }
 
 
@@ -321,14 +326,19 @@ def pick_anchor(bookmakers: list[dict], home: str, away: str) -> dict | None:
 
 # --- our side --------------------------------------------------------------
 
-def our_slate(comp: str, api_base: str | None, season: int) -> dict:
+def our_slate(comp: str, api_base: str | None, season: int | None) -> dict:
     """The viewer surface for one competition, from the deployed route or
     in process. Both return the SAME object — the route is a thin wrapper
-    over `competitions.fixtures` — so nothing downstream branches on it."""
+    over `competitions.fixtures` — so nothing downstream branches on it.
+
+    season None defers to the registry, which knows each competition's
+    current-edition label (ASEAN's Aug-2026 tournament files under 2025;
+    forcing 2026 across the board would read that board as empty)."""
     if api_base:
         try:
             r = requests.get(f"{api_base.rstrip('/')}/api/comp/{comp}/fixtures",
-                             params={"season": season}, timeout=60)
+                             params=({"season": season} if season else {}),
+                             timeout=60)
             r.raise_for_status()
             return r.json() or {}
         except (requests.RequestException, ValueError) as exc:
@@ -498,7 +508,10 @@ def main() -> int:
         description="Compare our Kalshi legs against a sharp external book.")
     ap.add_argument("--regions", default="us,uk,eu",
                     help="provider regions; each one multiplies quota cost")
-    ap.add_argument("--season", type=int, default=2026)
+    ap.add_argument("--season", type=int, default=None,
+                    help="force one season label for every competition; "
+                         "default lets the registry resolve each "
+                         "competition's current edition")
     ap.add_argument("--competitions", default=None,
                     help="comma-separated subset; default is every "
                          "competition we carry a Kalshi series for")
