@@ -115,11 +115,75 @@ def test_the_comp_sweep_joins_the_window(monkeypatch):
     from datetime import datetime, timedelta, timezone
     seen = []
     now = datetime.now(timezone.utc)
-    comp = [{"fixture_id": 9001,
+    # book-gated since 2026-08-04: a comp fixture is watched because a
+    # Kalshi book exists for it, at ANY distance — tiered by proximity.
+    # 9002 sits 30h out in the 6h tier, first sweep, so it IS due.
+    comp = [{"fixture_id": 9001, "kalshi_event": "KX-A",
              "kickoff_utc": (now + timedelta(hours=1)).isoformat()},
-            {"fixture_id": 9002,          # outside the window: skipped
+            {"fixture_id": 9002, "kalshi_event": "KX-B",
              "kickoff_utc": (now + timedelta(hours=30)).isoformat()}]
     _wire(monkeypatch, [], lambda ref, **k: seen.append(ref) or {"stored": 1},
           comp_rows=comp)
     news_capture.capture_window_job()
-    assert seen == ["9001"], seen
+    assert seen == ["9001", "9002"], seen
+
+
+class TestBookKeyedWatching:
+    """A booked match is watched from listing, tiered by proximity."""
+
+    @pytest.fixture(autouse=True)
+    def _reset(self):
+        news_capture._LAST_SWEPT.clear()
+        news_capture._ALERTED.clear()
+        yield
+        news_capture._LAST_SWEPT.clear()
+        news_capture._ALERTED.clear()
+
+    def test_tiers(self):
+        assert news_capture._tier_seconds(48) == 6 * 3600
+        assert news_capture._tier_seconds(10) == 2 * 3600
+        assert news_capture._tier_seconds(1) == 0.0
+
+    def test_due_respects_the_tier_gap(self):
+        assert news_capture._due("x", 48, 1000.0) is True     # first
+        assert news_capture._due("x", 48, 1000.0 + 3600) is False
+        assert news_capture._due("x", 48, 1000.0 + 7 * 3600) is True
+
+    def test_an_unbooked_far_fixture_is_never_swept(self, monkeypatch):
+        from datetime import datetime, timedelta, timezone
+        seen = []
+        now = datetime.now(timezone.utc)
+        comp = [{"fixture_id": 9100, "kalshi_event": None,
+                 "kickoff_utc": (now + timedelta(hours=50)).isoformat()},
+                {"fixture_id": 9101, "kalshi_event": "KX-1",
+                 "kickoff_utc": (now + timedelta(hours=50)).isoformat()}]
+        _wire(monkeypatch, [],
+              lambda ref, **k: seen.append(ref) or {"stored": 0},
+              comp_rows=comp)
+        news_capture.capture_window_job()
+        assert seen == ["9101"], "book presence must gate the far watch"
+
+    def test_a_new_absence_on_a_booked_match_alerts_once(self, monkeypatch):
+        from datetime import datetime, timezone
+
+        class _Row:
+            subject_ref = "9101"; player_key = "p1"
+            player_name = "A. Player"; provider_type = "Missing Fixture"
+            provider_reason = "Knee Injury"
+
+        from src.live import db
+        class _Q:
+            def filter(self, *a): return self
+            def all(self): return [_Row()]
+        class _S:
+            def query(self, *a): return _Q()
+            def close(self): pass
+        monkeypatch.setattr(db, "get_session", lambda: _S())
+        sent = []
+        from src import alerts
+        monkeypatch.setattr(alerts, "send_alert",
+                            lambda msg, **k: sent.append(msg))
+        news_capture._alert_new_absences({"9101"})
+        news_capture._alert_new_absences({"9101"})   # same row: silent
+        assert len(sent) == 1
+        assert "A. Player" in sent[0] and "Knee Injury" in sent[0]

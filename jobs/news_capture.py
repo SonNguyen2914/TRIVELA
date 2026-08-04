@@ -23,6 +23,31 @@ from __future__ import annotations
 
 TEAM_NEWS_WINDOW_HOURS = 3.0
 
+# BOOK-KEYED WATCHING. A match with a live Kalshi book is watched from
+# the moment the book lists — days out — because news moves the price
+# whenever it lands, not only near kickoff. But information density and
+# provider budget both scale with proximity, so the cadence tiers:
+#   > 24h to kickoff : swept every 6h
+#   3h - 24h         : swept every 2h
+#   < 3h             : every run (20 min), the original window
+_LAST_SWEPT: dict[str, float] = {}
+_ALERTED: set[tuple] = set()
+
+
+def _tier_seconds(hours_to_ko: float) -> float:
+    if hours_to_ko > 24: return 6 * 3600
+    if hours_to_ko > 3: return 2 * 3600
+    return 0.0
+
+
+def _due(ref: str, hours_to_ko: float, now_mono: float) -> bool:
+    gap = _tier_seconds(hours_to_ko)
+    last = _LAST_SWEPT.get(ref)
+    if last is not None and now_mono - last < gap:
+        return False
+    _LAST_SWEPT[ref] = now_mono
+    return True
+
 
 def capture_window_job() -> None:
     """Capture absences for fixtures kicking off soon.
@@ -61,21 +86,29 @@ def capture_window_job() -> None:
     except Exception as exc:
         print(f"[news-capture] fixture read failed: {exc}")
         return
-    # viewer competitions too: their fixtures live outside the plane's
-    # Fixture table but carry the same provider ids the injuries endpoint
-    # keys on. Same window, same budget discipline.
+    # BOOKED fixtures are watched from listing, tiered by proximity —
+    # a Kalshi book means money is moving on this match, so news for it
+    # matters whenever it lands, not only inside the kickoff window.
+    import time as _time
+    booked: set[str] = set()
     try:
         from src import competitions
-        from datetime import datetime as _dt, timezone as _utz
+        from datetime import datetime as _dt
+        mono = _time.monotonic()
         for key in competitions.VIEWERS:
-            d = competitions.fixtures(key, days=1) or {}
+            d = competitions.fixtures(key, days=8) or {}
             for r in d.get("fixtures") or []:
                 fid = r.get("fixture_id")
                 ko = r.get("kickoff_utc") or ""
-                if fid and ko:
-                    kod = _dt.fromisoformat(ko)
-                    if now <= kod <= cut:
-                        refs.append((str(fid), None))
+                if not (fid and ko and r.get("kalshi_event")):
+                    continue
+                kod = _dt.fromisoformat(ko)
+                if kod < now:
+                    continue
+                hrs = (kod - now).total_seconds() / 3600
+                if _due(str(fid), hrs, mono):
+                    refs.append((str(fid), None))
+                    booked.add(str(fid))
     except Exception as exc:
         print(f"[news-capture] comp sweep failed: {exc}")
 
@@ -101,3 +134,50 @@ def capture_window_job() -> None:
             print(f"[news-capture] {ref}: {type(exc).__name__}: {str(exc)[:90]}")
     print(f"[news-capture] window {TEAM_NEWS_WINDOW_HOURS}h: "
           f"{len(refs)} fixtures, {ok} captured, {failed} failed")
+    _alert_new_absences(booked)
+
+
+def _alert_new_absences(booked: set[str]) -> None:
+    """The intern yelling: a NEW absence on a match with a live book.
+
+    Alerted once per (fixture, player), never re-alerted — repetition
+    trains deafness. Reads first_seen_at, so an absence merely re-seen
+    on a later sweep stays silent.
+    """
+    if not booked:
+        return
+    from datetime import datetime, timedelta, timezone
+    try:
+        from src.live.db import get_session
+        from src.live.models import TeamAbsence
+        cut = datetime.now(timezone.utc) - timedelta(minutes=30)
+        s = get_session()
+        try:
+            rows = (s.query(TeamAbsence)
+                    .filter(TeamAbsence.subject_ref.in_(booked),
+                            TeamAbsence.first_seen_at >= cut).all())
+            fresh = [(r.subject_ref, r.player_key, r.player_name,
+                      r.provider_type, r.provider_reason) for r in rows]
+        finally:
+            s.close()
+    except Exception as exc:
+        print(f"[news-capture] absence read failed: {exc}")
+        return
+    new = [f for f in fresh if (f[0], f[1]) not in _ALERTED]
+    _ALERTED.update((f[0], f[1]) for f in new)
+    if not new:
+        return
+    try:
+        from src import alerts
+        from src.alerts import OPERATIONAL
+        lines = [f"- {n or k}: {t or '?'} ({r or 'no reason given'}) "
+                 f"[fixture {ref}]" for ref, k, n, t, r in new[:12]]
+        alerts.send_alert(
+            "NEW absence(s) on booked matches - the market reprices on "
+            "these. Type and reason are the provider own words, stored "
+            "verbatim, not our claim:\n" + "\n".join(lines),
+            title="team news / booked match", kind="action",
+            dispatch_class=OPERATIONAL)
+        print(f"[news-capture] alerted {len(new)} new absence(s)")
+    except Exception as exc:
+        print(f"[news-capture] alert failed: {exc}")
