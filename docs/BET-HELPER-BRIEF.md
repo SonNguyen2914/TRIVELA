@@ -7,6 +7,11 @@ here is context that session should read before its first slate.
 
 ## 1. The brief (paste this)
 
+> **At every session start:** read `gh issue view 68 --comments` — the
+> coordination channel. Its ground rules and dispatch protocol bind you;
+> pick up the lowest open TASK-n ORDER without a REPORT. Before finishing
+> any session, schedule yourself a wake 60 minutes out to re-check it.
+
 > Your whole function is the pick loop: **brief → lock → score → repeat.**
 >
 > You are an INTERFACE, NOT A STORE. Every pick is written to

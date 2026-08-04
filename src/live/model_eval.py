@@ -1365,3 +1365,63 @@ def current_approval_decision(spec: LadderSpec | None = None) -> dict:
         }
     finally:
         s.close()
+
+
+def boot_shadow_flag(model_mod, model_name: str) -> bool:
+    """What approved_for_shadow should be at BOOT for a replay plane.
+
+    The V9.5 H6 rule said boot force-darks these planes, and while the
+    strict-equality engine check existed that was the only safe answer:
+    every deploy moved the git revision, the hash never matched, and an
+    armed flag at boot could not be distinguished from a stale one. #59
+    changed that for the runtime path; this extends the SAME two-arm rule
+    to boot, because at the operator's release cadence the force-dark
+    was costing a manual rearm per deploy per plane — ~40 decision rows
+    of pure churn in four days, and a plane silently dark whenever a
+    restart landed between rearms.
+
+    The rule, unchanged from #59: the latest approved shadow decision's
+    stored engine hash must reproduce either under the CURRENT revision
+    (nothing moved) or under the revision THE DECISION RECORDED (only
+    the repo moved). A genuine source, constant or runtime change fails
+    both arms and the plane stays dark. No decision, no document, no
+    stored revision, or ANY error — dark. Fail-closed is preserved; what
+    changes is only that "the repo moved" no longer counts as evidence
+    the engine did.
+
+    Generic on purpose: rehashes via model_mod.engine_signature(
+    code_revision=...), which every plane ships, rather than
+    engine_matches, which liga mx does not.
+    """
+    import json as _json
+    try:
+        from src.live.db import get_session
+        from src.live.models import ModelApprovalDecision
+        s = get_session()
+        try:
+            row = (s.query(ModelApprovalDecision)
+                   .filter_by(model_version_name=model_name,
+                              approved=True, approved_mode="shadow")
+                   .order_by(ModelApprovalDecision.id.desc())
+                   .first())
+            if row is None or not row.decision_document:
+                return False
+            doc = _json.loads(row.decision_document)
+            stored = doc.get("engine_signature")
+            rev = row.code_revision
+        finally:
+            s.close()
+        if not stored:
+            return False
+        current = model_mod.engine_signature()["signature_hash"]
+        if stored == current:
+            return True
+        if rev:
+            again = model_mod.engine_signature(
+                code_revision=rev)["signature_hash"]
+            return again == stored
+        return False
+    except Exception as exc:
+        print(f"[boot-flag] {model_name}: fail closed "
+              f"({type(exc).__name__}: {str(exc)[:90]})")
+        return False
