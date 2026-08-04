@@ -223,3 +223,13 @@ the cheap probe and the default `us,uk,eu` is the real one. If a
 competition resolves to `sport_key_ambiguous` or `sport_not_listed`,
 that is recorded and skipped — pin a mapping you have verified with
 `--sport-map`, never a guess.
+
+**Read `unmatched` before reading the ranking.** Our fixture list carries
+whole seasons and the anchor lists about a week, so most rows legitimately
+have no counterpart. The 2026-08-04 run bridged 49 Argentine rows out of
+33 anchor events — arithmetically impossible, and it put two false
+attaches at the top of the divergence ranking. Since then a bridge needs
+all three of: both clubs matching on tokens, kickoffs within
+`KICKOFF_WINDOW_HOURS` (36) of each other, and no other fixture claiming
+the same anchor event. `bridged` counts on each competition should now
+never exceed `anchor_events` — if one does, that is a bug, not a slate.

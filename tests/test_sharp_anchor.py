@@ -208,18 +208,23 @@ class TestAnchorSelection:
 
 # --- bridging --------------------------------------------------------------
 
-def _row(home, away, hp=0.50, tp=0.25, ap=0.25):
+KICK = "2026-08-04T23:45:00+00:00"        # ours carries an offset
+START = "2026-08-04T23:45:00Z"            # the provider's carries Z
+
+
+def _row(home, away, hp=0.50, tp=0.25, ap=0.25, kickoff=KICK):
     return {"home": {"name": home}, "away": {"name": away},
-            "kickoff_utc": "2026-08-04T23:45:00+00:00",
+            "kickoff_utc": kickoff,
             "kalshi_event": "KXLEAGUESCUPGAME-26AUG04CLBATL",
             "market_vs_read": {"market_vig": 0.01, "market_three_way": {
                 "home": {"p": hp}, "tie": {"p": tp}, "away": {"p": ap}}}}
 
 
-def _event(home, away, books=None):
+def _event(home, away, books=None, commence=START):
     if books is None:                     # [] means "listed, nothing priced"
         books = [_book("pinnacle", 2.0, 4.0, 4.0, home=home, away=away)]
-    return {"home_team": home, "away_team": away, "bookmakers": books}
+    return {"home_team": home, "away_team": away, "bookmakers": books,
+            "commence_time": commence}
 
 
 class TestBridging:
@@ -246,6 +251,164 @@ class TestBridging:
         pairs, un = sa.bridge([_row("Columbus Crew", "Atlas")],
                               [_event("Atlas", "Columbus Crew")])
         assert len(pairs) == 1 and un == []
+
+
+class TestTheTwoLeaksTheFirstLiveRunFound:
+    """Reconstructed from research_archive/sharp_anchor_2026-08-04.json,
+    which bridged 49 Argentine rows out of 33 anchor events. Each of
+    these fixtures BRIDGED under the original rule — that is the point of
+    reproducing them rather than describing them."""
+
+    # --- leak 1: a city token shared by two different clubs ------------
+    #
+    # In the archive these two of our rows carry byte-identical anchor
+    # legs (0.2582 divergence each), because 'cordoba' matched both.
+    COLLIDING = [_row("Union Santa Fe", "Instituto Cordoba",
+                      kickoff="2026-09-06T20:00:00+00:00"),
+                 _row("Union Santa Fe", "Central Cordoba de Santiago",
+                      kickoff="2026-08-11T22:00:00+00:00")]
+
+    def test_the_token_rule_alone_still_matches_both_rows(self):
+        """The guard being tested is NOT the token rule — this asserts the
+        leak is still present in it, so the fix below is doing the work."""
+        ev = _event("Union Santa Fe", "Central Cordoba de Santiago",
+                    commence="2026-08-11T22:00:00Z")
+        toks = sa._club_toks
+        for row in self.COLLIDING:
+            ht = toks((row["home"] or {})["name"])
+            at = toks((row["away"] or {})["name"])
+            eh, ea = toks(ev["home_team"]), toks(ev["away_team"])
+            assert (ht & eh) and (at & ea), "the name rule still collides"
+
+    def test_the_wrong_club_is_refused_by_the_window(self):
+        """Instituto Cordoba's meeting is in September; the anchor lists
+        August's. Same tokens, different match."""
+        ev = _event("Union Santa Fe", "Central Cordoba de Santiago",
+                    commence="2026-08-11T22:00:00Z")
+        pairs, un = sa.bridge([self.COLLIDING[0]], [ev])
+        assert pairs == []
+        assert "different meeting" in un[0]["reason"]
+        assert "36h" in un[0]["reason"]
+
+    def test_a_collision_inside_the_window_refuses_BOTH_rows(self):
+        """The window cannot catch a collision between clubs playing the
+        same night. Reverse uniqueness is what closes it, and it must
+        refuse both rather than keep the first."""
+        near = [_row("Union Santa Fe", "Instituto Cordoba",
+                     kickoff="2026-08-11T20:00:00+00:00"),
+                _row("Union Santa Fe", "Central Cordoba de Santiago",
+                     kickoff="2026-08-11T22:00:00+00:00")]
+        ev = _event("Union Santa Fe", "Central Cordoba de Santiago",
+                    commence="2026-08-11T22:00:00Z")
+        pairs, un = sa.bridge(near, [ev])
+        assert pairs == [], "neither may be attached"
+        assert len(un) == 2
+        for u in un:
+            assert "sole in-window match for 2 of our fixtures" in u["reason"]
+            assert "all are refused rather than one attached" in u["reason"]
+            assert "Union Santa Fe" in u["anchor_event"]
+
+    # --- leak 2: the same pairing, a different round -------------------
+
+    def test_the_reverse_fixture_no_longer_attaches_to_this_weeks_book(self):
+        """A round-robin league plays every pairing twice. Our list
+        carries the season; the anchor carries this week."""
+        october = _row("Boca Juniors", "Velez Sarsfield",
+                       kickoff="2026-10-28T22:00:00+00:00")
+        ev = _event("Velez Sarsfield", "Boca Juniors",
+                    commence="2026-08-08T22:00:00Z")
+        pairs, un = sa.bridge([october], [ev])
+        assert pairs == []
+        assert "same pairing, a different meeting" in un[0]["reason"]
+        assert un[0]["kickoff_utc"] == "2026-10-28T22:00:00+00:00"
+
+    def test_the_right_round_still_bridges(self):
+        """Green half: the fix must not simply refuse everything."""
+        august = _row("Boca Juniors", "Velez Sarsfield",
+                      kickoff="2026-08-08T22:00:00+00:00")
+        ev = _event("Velez Sarsfield", "Boca Juniors",
+                    commence="2026-08-08T22:00:00Z")
+        pairs, un = sa.bridge([august], [ev])
+        assert len(pairs) == 1 and un == []
+
+    def test_both_meetings_listed_attach_to_their_own_round(self):
+        """The real end state: two rounds, two events, each row on its
+        own book — no refusal at all."""
+        rows = [_row("Boca Juniors", "Velez Sarsfield",
+                     kickoff="2026-08-08T22:00:00+00:00"),
+                _row("Velez Sarsfield", "Boca Juniors",
+                     kickoff="2026-10-28T22:00:00+00:00")]
+        events = [_event("Velez Sarsfield", "Boca Juniors",
+                         commence="2026-08-08T22:00:00Z"),
+                  _event("Boca Juniors", "Velez Sarsfield",
+                         commence="2026-10-28T22:00:00Z")]
+        pairs, un = sa.bridge(rows, events)
+        assert un == []
+        assert len(pairs) == 2
+        assert {p[1]["commence_time"] for p in pairs} == {
+            "2026-08-08T22:00:00Z", "2026-10-28T22:00:00Z"}
+
+
+class TestTheWindowItself:
+    def test_a_reschedule_inside_the_window_still_bridges(self):
+        """A Saturday-night match moved to Sunday afternoon is the same
+        match. Refusing it would cost coverage silently."""
+        pairs, un = sa.bridge(
+            [_row("Columbus Crew", "Atlas",
+                  kickoff="2026-08-04T23:45:00+00:00")],
+            [_event("Columbus Crew", "Atlas",
+                    commence="2026-08-06T00:00:00Z")])       # +24.25h
+        assert len(pairs) == 1 and un == []
+
+    def test_just_outside_the_window_is_refused(self):
+        pairs, un = sa.bridge(
+            [_row("Columbus Crew", "Atlas",
+                  kickoff="2026-08-04T23:45:00+00:00")],
+            [_event("Columbus Crew", "Atlas",
+                    commence="2026-08-06T12:00:00Z")])       # +36.25h
+        assert pairs == []
+        assert "different meeting" in un[0]["reason"]
+
+    def test_the_window_is_symmetric(self):
+        """An anchor event BEFORE our kickoff is the same distance away."""
+        pairs, un = sa.bridge(
+            [_row("Columbus Crew", "Atlas",
+                  kickoff="2026-08-06T12:00:00+00:00")],
+            [_event("Columbus Crew", "Atlas",
+                    commence="2026-08-04T23:45:00Z")])
+        assert pairs == []
+        assert "different meeting" in un[0]["reason"]
+
+    def test_a_row_with_no_kickoff_is_refused_and_named(self):
+        pairs, un = sa.bridge([_row("Columbus Crew", "Atlas", kickoff=None)],
+                              [_event("Columbus Crew", "Atlas")])
+        assert pairs == []
+        assert "no readable kickoff" in un[0]["reason"]
+
+    def test_an_unparseable_kickoff_is_refused_not_crashed(self):
+        pairs, un = sa.bridge([_row("Columbus Crew", "Atlas", kickoff="soon")],
+                              [_event("Columbus Crew", "Atlas")])
+        assert pairs == [] and "no readable kickoff" in un[0]["reason"]
+
+    def test_an_event_with_no_commence_time_is_refused_and_counted(self):
+        ev = _event("Columbus Crew", "Atlas")
+        ev.pop("commence_time")
+        pairs, un = sa.bridge([_row("Columbus Crew", "Atlas")], [ev])
+        assert pairs == []
+        assert "1 carried no commence_time" in un[0]["reason"]
+
+    def test_a_naive_provider_timestamp_is_read_as_utc(self):
+        """Not a hypothetical: a provider dropping the Z would otherwise
+        turn every fixture into an unmatched row overnight."""
+        pairs, un = sa.bridge(
+            [_row("Columbus Crew", "Atlas")],
+            [_event("Columbus Crew", "Atlas",
+                    commence="2026-08-04T23:45:00")])
+        assert len(pairs) == 1 and un == []
+
+    def test_the_window_is_a_named_constant_the_archive_can_carry(self):
+        assert sa.KICKOFF_WINDOW_HOURS == 36
+        assert sa.KICKOFF_WINDOW_SECONDS == 36 * 3600
 
 
 class TestOrientation:
