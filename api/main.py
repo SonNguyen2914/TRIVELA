@@ -835,6 +835,32 @@ def comp_fixtures(key: str,
     return out
 
 
+@app.get("/api/comp/{key}/tournament")
+def comp_tournament(key: str):
+    """Groups, bracket and an external-rating champion FORECAST — served
+    only for competitions with a tournament surface built. 404 for the
+    rest is honest: no simulation exists, so no numbers may."""
+    if key != "asean":
+        raise HTTPException(404, "no tournament surface for this "
+                                 "competition")
+    from src import competitions
+    from src import asean_tournament
+
+    def _run():
+        v = competitions.VIEWERS[key]
+        rows = competitions._fixtures_raw(v.apif_league_id,
+                                          v.season_default or 2026)
+        if not rows:
+            return {"available": False,
+                    "reason": ("the fixture read returned nothing — "
+                               "provider failure or empty season, NOT an "
+                               "empty tournament")}
+        return asean_tournament.build(rows)
+
+    return competitions._cached(f"comp:{key}:tournament",
+                                competitions.CACHE_TTL, _run) or {}
+
+
 @app.get("/api/comp/{key}/markets")
 def comp_markets(key: str):
     """Kalshi books. Every series ticker was PROBED, not guessed from the

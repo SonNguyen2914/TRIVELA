@@ -1,0 +1,68 @@
+{
+  "measured_at": "2026-08-04",
+  "what": "ASEAN Championship (API-Football league 24) draw rates, editions 2016-2024",
+  "method": "finished fixtures only (FT/AET/PEN); group = round contains 'group' and not 'qualif'; knockout share is the 90-minute scoreline draw share in two-legged rounds",
+  "per_edition": {
+    "2016": {
+      "group": [
+        2,
+        12
+      ],
+      "ko": [
+        1,
+        12
+      ]
+    },
+    "2018": {
+      "group": [
+        3,
+        20
+      ],
+      "ko": [
+        3,
+        8
+      ]
+    },
+    "2020": {
+      "group": [
+        1,
+        20
+      ],
+      "ko": [
+        3,
+        6
+      ]
+    },
+    "2022": {
+      "group": [
+        3,
+        20
+      ],
+      "ko": [
+        2,
+        8
+      ]
+    },
+    "2024": {
+      "group": [
+        6,
+        20
+      ],
+      "ko": [
+        1,
+        8
+      ]
+    }
+  },
+  "group_draw_rate": {
+    "draws": 15,
+    "matches": 92,
+    "rate": 0.163
+  },
+  "ko_90min_draw_share": {
+    "draws": 10,
+    "matches": 42,
+    "rate": 0.2381
+  },
+  "use": "anchors the tournament simulation's draw probability at even ratings; see src/asean_tournament.py"
+}
