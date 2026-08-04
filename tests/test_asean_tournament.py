@@ -194,6 +194,23 @@ class TestRealBracket:
         ps = [t["p_advance"] for t in tie["teams"]]
         assert sum(ps) == pytest.approx(1.0, abs=1e-3)
 
+    def test_semi_legs_never_double_as_final_legs(self):
+        # "final" is a substring of "Semi-finals" — a plain contains-match
+        # renders every semi twice, once as itself and once as the final
+        b = at.build(self._with_semis())["bracket"]
+        assert len(b["semifinals"]) == 1
+        assert b["final_ties"] == []
+
+    def test_a_real_final_still_matches(self):
+        rows = self._with_semis()
+        f1 = _fx("Final", 3, 6, status="FT", gh=1, ga=0)
+        f1["kickoff_utc"] = "2026-08-22T13:00:00+00:00"
+        rows.append(f1)
+        b = at.build(rows)["bracket"]
+        assert len(b["final_ties"]) == 1
+        assert {t["team"] for t in b["final_ties"][0]["teams"]} == \
+            {"N3", "N6"}
+
 
 class TestRefusals:
     def test_three_groups_refuse_by_name(self, monkeypatch):

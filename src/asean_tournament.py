@@ -354,10 +354,14 @@ def _real_bracket(ko: list[dict], names: dict[int, str],
     clauses live in regulations this module does not reproduce."""
     from src.live.national_elo import expected_points_share as eps
 
-    def ties_for(rnd_word: str) -> list[dict]:
+    def ties_for(rnd_word: str, forbid: str | None = None) -> list[dict]:
         legs_by_pair: dict[frozenset, list[dict]] = {}
         for f in ko:
-            if rnd_word not in (f.get("round") or "").lower():
+            rl = (f.get("round") or "").lower()
+            # substring matching needs the forbid guard: "final" is a
+            # substring of "semi-finals", so without it every semi leg
+            # would double as a final leg
+            if rnd_word not in rl or (forbid and forbid in rl):
                 continue
             h = (f.get("home") or {}).get("apif_team_id")
             a = (f.get("away") or {}).get("apif_team_id")
@@ -401,5 +405,5 @@ def _real_bracket(ko: list[dict], names: dict[int, str],
                   "expectation under the stated two-leg simplification; "
                   "no winner is derived from an aggregate here"),
         "semifinals": ties_for("semi"),
-        "final_ties": ties_for("final"),
+        "final_ties": ties_for("final", forbid="semi"),
     }

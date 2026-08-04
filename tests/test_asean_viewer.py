@@ -171,6 +171,25 @@ class TestAseanGroupStakes:
         m = competitions._meaning(a, [a, b], "asean")
         assert m["tie"]["leg"] == 1
 
+    def test_a_lone_published_semi_leg_is_a_tie_not_a_group_record(self):
+        # the provider publishes leg 1 before leg 2 exists; in that gap
+        # the reversed-fixture signature cannot fire, and the fixture was
+        # falling through to GROUP stakes — wrong competition phase, wrong
+        # scoring. ASEAN's semis are two-legged BY FORMAT.
+        a = _fx("Semi-finals", 1, 2)
+        m = competitions._meaning(a, [a], "asean")
+        assert m["tie"]["leg"] == 1
+        assert "stakes" not in m
+
+    def test_a_knockout_fixture_never_wears_a_group_record(self):
+        rows = [
+            _fx("Group Stage - 1", 1, 2, status="FT", gh=2, ga=0),
+            _fx("Final", 1, 3),
+        ]
+        m = competitions._meaning(rows[1], rows, "asean")
+        assert "stakes" not in m
+        assert m["tie"]["leg"] == 1
+
 
 # --- the Elo source -------------------------------------------------------
 

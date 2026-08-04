@@ -437,7 +437,13 @@ def _meaning(row: dict, season_rows: list[dict], comp_key: str) -> dict:
         and (f.get("home") or {}).get("apif_team_id") == aid
         and (f.get("away") or {}).get("apif_team_id") == hid
         for f in season_rows))
-    if "qualif" in rl or "leg" in rl or same_round_reverse:
+    # ASEAN's semis and final are two-legged BY FORMAT. The signature
+    # check above needs both legs in the feed — but the provider often
+    # publishes leg 1 before leg 2 exists, and in that gap the fixture
+    # would fall through to group stakes, which is wrong twice over.
+    known_two_leg = (comp_key == "asean"
+                     and rl in ("semi-finals", "final"))
+    if "qualif" in rl or "leg" in rl or same_round_reverse or known_two_leg:
         # two-legged tie: find the FINISHED reverse fixture this season
         rev = next((f for f in season_rows
                     if f.get("status") in FINISHED - {"CANC", "PST", "ABD"}
@@ -503,7 +509,9 @@ def _meaning(row: dict, season_rows: list[dict], comp_key: str) -> dict:
         }
         return out
 
-    if comp_key == "asean":
+    if comp_key == "asean" and "group" in rl and "qualif" not in rl:
+        # group rounds only — a knockout fixture reaching here would
+        # otherwise wear a group record it is not playing under.
         # standard scoring — 3 for a win, 1 for a draw, no shootout —
         # so unlike Leagues Cup the record is a POINT COUNT, not a range
         def record(tid):
