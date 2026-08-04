@@ -183,3 +183,43 @@ implying an id exists.
 (`api/main.py`): a holder cannot arm a model plane. **Never put
 `ADMIN_TOKEN` in a pick-loop session** — it activates approvals. An unset
 `JOURNAL_TOKEN` grants nothing and never falls back.
+
+---
+
+## 8. The sharp anchor — run it yourself
+
+Every disagreement this platform publishes is measured against ONE
+market. `scripts/measure_sharp_anchor.py` puts a second, independently
+priced book beside it, so "Kalshi is soft here" and "we are wrong here"
+stop being the same observation. It compares two PRICES; neither has
+been scored against outcomes, so nothing it prints is an edge.
+
+**The key is yours to create** — free tier, the-odds-api.com. Store it
+so the script can find it without it ever reaching a chat log or a diff:
+
+```bash
+printf '%s' 'YOUR_KEY' > ~/.odds_api_key && chmod 600 ~/.odds_api_key
+```
+
+A group- or world-readable file is refused rather than read. `600` is
+checked, not assumed.
+
+```bash
+# what your key can actually see, and how each competition resolves.
+# Free — the sports list costs no odds quota.
+.venv/bin/python scripts/measure_sharp_anchor.py --list-sports
+
+# one slate, archived with the date it was measured
+.venv/bin/python scripts/measure_sharp_anchor.py \
+    --out research_archive/sharp_anchor_$(date -u +%F).json
+```
+
+Without a key it exits `2` with a named refusal and produces no
+document. That is the whole point: a measurement script that emits a
+plausible archive with nothing behind it is worse than one that stops.
+
+Each region requested multiplies the quota cost, so `--regions us` is
+the cheap probe and the default `us,uk,eu` is the real one. If a
+competition resolves to `sport_key_ambiguous` or `sport_not_listed`,
+that is recorded and skipped — pin a mapping you have verified with
+`--sport-map`, never a guess.
