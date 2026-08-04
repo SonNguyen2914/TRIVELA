@@ -1,0 +1,4076 @@
+{
+  "measured_at": "2026-08-04",
+  "measured_at_utc": "2026-08-04T12:03:43.878691+00:00",
+  "what_this_is": "one slate of our Kalshi legs beside the sharpest listed bookmaker's, both devigged proportionally",
+  "what_this_is_NOT": "an edge, a recommendation, or evidence that either book is right. Neither side has been scored against outcomes here",
+  "ask_asymmetry": "our legs come from yes_ask, the anchor's from the bookmaker's offer. A small positive tilt on our side is expected and uncorrected, because no correction has been measured",
+  "devig_method": "proportional on BOTH sides \u2014 a difference in method would be indistinguishable from a difference in price",
+  "anchor_provider": "the-odds-api.com v4",
+  "anchor_selection": {
+    "preference": [
+      "pinnacle",
+      "betfair_ex_eu",
+      "betfair_ex_uk",
+      "betfair"
+    ],
+    "fallback": "lowest measured overround",
+    "status": "the preference list is a PRIOR about which books run thin and take size. It has not been scored here; every row records which rule fired"
+  },
+  "bridge_rule": {
+    "clubs": "both sides must match on identity tokens, uniquely",
+    "kickoff_window_hours": 36,
+    "reverse_uniqueness": "one anchor event backs at most one of our rows; two claimants refuse both",
+    "why": "the 2026-08-04 run bridged 49 Argentine rows out of 33 anchor events. A shared city token attached two different clubs, and a seasons-long fixture list attached October's reverse fixture to this week's book. Both are recorded in that archive, which stands as measured"
+  },
+  "regions": "us,uk,eu",
+  "key_source": ".odds_api_key",
+  "key_problems": [],
+  "quota": {
+    "remaining": "476",
+    "used": "24"
+  },
+  "our_side": "in-process src.competitions",
+  "competitions": {
+    "mls": {
+      "sport_key": "soccer_usa_mls",
+      "provider_title": "MLS",
+      "resolved_by": "token match on the provider's own sports list, unique",
+      "our_fixtures": 0,
+      "anchor_events": 31,
+      "bridged": 0
+    },
+    "leagues-cup": {
+      "sport_key": "soccer_concacaf_leagues_cup",
+      "provider_title": "Leagues Cup",
+      "resolved_by": "token match on the provider's own sports list, unique",
+      "our_fixtures": 54,
+      "anchor_events": 18,
+      "bridged": 18
+    },
+    "ucl": {
+      "absent": "sport_not_listed",
+      "means": "the provider lists no active soccer sport matching this competition \u2014 NOT 'no odds exist'; it is outside what this key can see"
+    },
+    "uel": {
+      "absent": "sport_not_listed",
+      "means": "the provider lists no active soccer sport matching this competition \u2014 NOT 'no odds exist'; it is outside what this key can see"
+    },
+    "ecl": {
+      "absent": "sport_not_listed",
+      "means": "the provider lists no active soccer sport matching this competition \u2014 NOT 'no odds exist'; it is outside what this key can see"
+    },
+    "brasileirao": {
+      "sport_key": "soccer_brazil_campeonato",
+      "provider_title": "Brazil S\u00e9rie A",
+      "resolved_by": "token match on the provider's own sports list, unique",
+      "our_fixtures": 170,
+      "anchor_events": 20,
+      "bridged": 14
+    },
+    "argentina": {
+      "sport_key": "soccer_argentina_primera_division",
+      "provider_title": "Primera Divisi\u00f3n - Argentina",
+      "resolved_by": "token match on the provider's own sports list, unique",
+      "our_fixtures": 198,
+      "anchor_events": 33,
+      "bridged": 32
+    },
+    "usl": {
+      "absent": "sport_not_listed",
+      "means": "the provider lists no active soccer sport matching this competition \u2014 NOT 'no odds exist'; it is outside what this key can see"
+    },
+    "asean": {
+      "absent": "sport_not_listed",
+      "means": "the provider lists no active soccer sport matching this competition \u2014 NOT 'no odds exist'; it is outside what this key can see"
+    }
+  },
+  "summary": {
+    "n_compared": 44,
+    "floor": 10,
+    "what_a_divergence_is": "a disagreement between two BOOKS. Neither has been scored against outcomes here, so this ranks nothing and recommends nothing",
+    "mean_abs_divergence": 0.0306,
+    "median_abs_divergence": 0.0122,
+    "mean_signed_home_leg": -0.0055,
+    "ci95_signed_home_leg": [
+      -0.0231,
+      0.0117
+    ],
+    "significant": false,
+    "significance_caveat": "a significant POSITIVE mean on the Kalshi side is the expected consequence of pricing our legs off yes_ask, not a finding about either book. See the ask asymmetry in this script's docstring",
+    "by_competition": {
+      "argentina": 0.065,
+      "brasileirao": 0.0247,
+      "leagues-cup": 0.0122
+    }
+  },
+  "ranked_by_max_abs_divergence": [
+    {
+      "competition": "argentina",
+      "kickoff_utc": "2026-08-11T00:15:00+00:00",
+      "home": "Union Santa Fe",
+      "away": "Central Cordoba de Santiago",
+      "kalshi_event": "KXARGPREMDIVGAME-26AUG09UNICC",
+      "anchor_book": "betsson",
+      "anchor_rule": "lowest_overround",
+      "anchor_books_priced": 8,
+      "anchor_overround": 0.042,
+      "kalshi_vig": 1.38,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.3361,
+        "tie": 0.3319,
+        "away": 0.3319
+      },
+      "anchor": {
+        "away": 0.1215,
+        "home": 0.6191,
+        "tie": 0.2594
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.283,
+        "tie": 0.0725,
+        "away": 0.2104
+      },
+      "max_abs_divergence": 0.283,
+      "l1_divergence": 0.5659
+    },
+    {
+      "competition": "argentina",
+      "kickoff_utc": "2026-08-08T22:15:00+00:00",
+      "home": "Boca Juniors",
+      "away": "Velez Sarsfield",
+      "kalshi_event": "KXARGPREMDIVGAME-26AUG09BOCVEL",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 22,
+      "anchor_overround": 1.4231,
+      "kalshi_vig": 0.11,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.4685,
+        "tie": 0.3063,
+        "away": 0.2252
+      },
+      "anchor": {
+        "home": 0.2428,
+        "away": 0.3786,
+        "tie": 0.3786
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.2257,
+        "tie": -0.0723,
+        "away": -0.1534
+      },
+      "max_abs_divergence": 0.2257,
+      "l1_divergence": 0.4514
+    },
+    {
+      "competition": "brasileirao",
+      "kickoff_utc": "2026-08-17T23:00:00+00:00",
+      "home": "Internacional",
+      "away": "Remo",
+      "kalshi_event": "KXBRASILEIROGAME-26AUG17INTCR",
+      "anchor_book": "onexbet",
+      "anchor_rule": "lowest_overround",
+      "anchor_books_priced": 17,
+      "anchor_overround": 0.0439,
+      "kalshi_vig": 0.46,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.4452,
+        "tie": 0.2055,
+        "away": 0.3493
+      },
+      "anchor": {
+        "home": 0.5914,
+        "away": 0.1649,
+        "tie": 0.2438
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.1462,
+        "tie": -0.0383,
+        "away": 0.1844
+      },
+      "max_abs_divergence": 0.1844,
+      "l1_divergence": 0.3689
+    },
+    {
+      "competition": "argentina",
+      "kickoff_utc": "2026-08-08T20:00:00+00:00",
+      "home": "Tigre",
+      "away": "River Plate",
+      "kalshi_event": "KXARGPREMDIVGAME-26AUG09TIGRIV",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 25,
+      "anchor_overround": 1.685,
+      "kalshi_vig": 0.15,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.287,
+        "tie": 0.313,
+        "away": 0.4
+      },
+      "anchor": {
+        "home": 0.3156,
+        "away": 0.3156,
+        "tie": 0.3688
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0286,
+        "tie": -0.0558,
+        "away": 0.0844
+      },
+      "max_abs_divergence": 0.0844,
+      "l1_divergence": 0.1688
+    },
+    {
+      "competition": "argentina",
+      "kickoff_utc": "2026-08-10T22:00:00+00:00",
+      "home": "Banfield",
+      "away": "Belgrano Cordoba",
+      "kalshi_event": "KXARGPREMDIVGAME-26AUG11BANCAB",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 15,
+      "anchor_overround": 1.6708,
+      "kalshi_vig": 0.21,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.2893,
+        "tie": 0.3306,
+        "away": 0.3802
+      },
+      "anchor": {
+        "home": 0.3146,
+        "away": 0.3146,
+        "tie": 0.3707
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0253,
+        "tie": -0.0401,
+        "away": 0.0656
+      },
+      "max_abs_divergence": 0.0656,
+      "l1_divergence": 0.131
+    },
+    {
+      "competition": "argentina",
+      "kickoff_utc": "2026-08-08T17:45:00+00:00",
+      "home": "Atletico Tucuman",
+      "away": "Sarmiento Junin",
+      "kalshi_event": "KXARGPREMDIVGAME-26AUG08TUCCAS",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 23,
+      "anchor_overround": 1.7292,
+      "kalshi_vig": 1.42,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.3347,
+        "tie": 0.3306,
+        "away": 0.3347
+      },
+      "anchor": {
+        "home": 0.3186,
+        "away": 0.3186,
+        "tie": 0.3628
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0161,
+        "tie": -0.0322,
+        "away": 0.0161
+      },
+      "max_abs_divergence": 0.0322,
+      "l1_divergence": 0.0644
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-06T00:30:00+00:00",
+      "home": "FC Dallas",
+      "away": "Club Queretaro",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG05DALQUE",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 22,
+      "anchor_overround": 0.0262,
+      "kalshi_vig": 0.02,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.5098,
+        "tie": 0.2451,
+        "away": 0.2451
+      },
+      "anchor": {
+        "home": 0.5414,
+        "away": 0.2266,
+        "tie": 0.232
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0316,
+        "tie": 0.0131,
+        "away": 0.0185
+      },
+      "max_abs_divergence": 0.0316,
+      "l1_divergence": 0.0632
+    },
+    {
+      "competition": "brasileirao",
+      "kickoff_utc": "2026-08-16T00:00:00+00:00",
+      "home": "Sao Paulo",
+      "away": "Coritiba",
+      "kalshi_event": "KXBRASILEIROGAME-26AUG15SPACFC",
+      "anchor_book": "onexbet",
+      "anchor_rule": "lowest_overround",
+      "anchor_books_priced": 17,
+      "anchor_overround": 0.0411,
+      "kalshi_vig": 0.16,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.5345,
+        "tie": 0.2759,
+        "away": 0.1897
+      },
+      "anchor": {
+        "away": 0.1746,
+        "home": 0.565,
+        "tie": 0.2603
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0305,
+        "tie": 0.0156,
+        "away": 0.0151
+      },
+      "max_abs_divergence": 0.0305,
+      "l1_divergence": 0.0612
+    },
+    {
+      "competition": "argentina",
+      "kickoff_utc": "2026-08-09T20:45:00+00:00",
+      "home": "Defensa Y Justicia",
+      "away": "Newells Old Boys",
+      "kalshi_event": "KXARGPREMDIVGAME-26AUG09DYJNOB",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 20,
+      "anchor_overround": 1.9132,
+      "kalshi_vig": 0.12,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.3571,
+        "tie": 0.3214,
+        "away": 0.3214
+      },
+      "anchor": {
+        "home": 0.3301,
+        "away": 0.3301,
+        "tie": 0.3399
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.027,
+        "tie": -0.0185,
+        "away": -0.0087
+      },
+      "max_abs_divergence": 0.027,
+      "l1_divergence": 0.0542
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-06T02:30:00+00:00",
+      "home": "Los Angeles FC",
+      "away": "Guadalajara Chivas",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG05LAFCCDG",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 22,
+      "anchor_overround": 0.011,
+      "kalshi_vig": 0.03,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.4078,
+        "tie": 0.2524,
+        "away": 0.3398
+      },
+      "anchor": {
+        "away": 0.3319,
+        "home": 0.3894,
+        "tie": 0.2786
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0184,
+        "tie": -0.0262,
+        "away": 0.0079
+      },
+      "max_abs_divergence": 0.0262,
+      "l1_divergence": 0.0525
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-05T00:00:00+00:00",
+      "home": "Charlotte",
+      "away": "U.N.A.M. - Pumas",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG04CLTPUM",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 24,
+      "anchor_overround": 0.0099,
+      "kalshi_vig": 0.02,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.3922,
+        "tie": 0.2549,
+        "away": 0.3529
+      },
+      "anchor": {
+        "home": 0.416,
+        "away": 0.3301,
+        "tie": 0.2539
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0238,
+        "tie": 0.001,
+        "away": 0.0228
+      },
+      "max_abs_divergence": 0.0238,
+      "l1_divergence": 0.0476
+    },
+    {
+      "competition": "brasileirao",
+      "kickoff_utc": "2026-08-16T21:30:00+00:00",
+      "home": "Mirassol",
+      "away": "Flamengo",
+      "kalshi_event": "KXBRASILEIROGAME-26AUG16MIRFLA",
+      "anchor_book": "onexbet",
+      "anchor_rule": "lowest_overround",
+      "anchor_books_priced": 16,
+      "anchor_overround": 0.0407,
+      "kalshi_vig": 0.2,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.2417,
+        "tie": 0.2917,
+        "away": 0.4667
+      },
+      "anchor": {
+        "away": 0.4878,
+        "home": 0.2361,
+        "tie": 0.2761
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0056,
+        "tie": 0.0156,
+        "away": -0.0211
+      },
+      "max_abs_divergence": 0.0211,
+      "l1_divergence": 0.0423
+    },
+    {
+      "competition": "brasileirao",
+      "kickoff_utc": "2026-08-09T19:00:00+00:00",
+      "home": "Bahia",
+      "away": "Vasco DA Gama",
+      "kalshi_event": "KXBRASILEIROGAME-26AUG09BAHVDG",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 44,
+      "anchor_overround": 0.0371,
+      "kalshi_vig": 0.01,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.505,
+        "tie": 0.2475,
+        "away": 0.2475
+      },
+      "anchor": {
+        "home": 0.497,
+        "away": 0.2352,
+        "tie": 0.2678
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.008,
+        "tie": -0.0203,
+        "away": 0.0123
+      },
+      "max_abs_divergence": 0.0203,
+      "l1_divergence": 0.0406
+    },
+    {
+      "competition": "brasileirao",
+      "kickoff_utc": "2026-08-16T19:00:00+00:00",
+      "home": "Vasco DA Gama",
+      "away": "Santos",
+      "kalshi_event": "KXBRASILEIROGAME-26AUG16VDGSAN",
+      "anchor_book": "onexbet",
+      "anchor_rule": "lowest_overround",
+      "anchor_books_priced": 18,
+      "anchor_overround": 0.0406,
+      "kalshi_vig": 0.13,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.4602,
+        "tie": 0.2832,
+        "away": 0.2566
+      },
+      "anchor": {
+        "away": 0.2458,
+        "home": 0.4781,
+        "tie": 0.2761
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0179,
+        "tie": 0.0071,
+        "away": 0.0108
+      },
+      "max_abs_divergence": 0.0179,
+      "l1_divergence": 0.0358
+    },
+    {
+      "competition": "brasileirao",
+      "kickoff_utc": "2026-08-09T00:00:00+00:00",
+      "home": "Botafogo",
+      "away": "Fluminense",
+      "kalshi_event": "KXBRASILEIROGAME-26AUG08BOTFLU",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 46,
+      "anchor_overround": 0.0555,
+      "kalshi_vig": 0.01,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.3663,
+        "tie": 0.3069,
+        "away": 0.3267
+      },
+      "anchor": {
+        "home": 0.3701,
+        "away": 0.3384,
+        "tie": 0.2915
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0038,
+        "tie": 0.0154,
+        "away": -0.0117
+      },
+      "max_abs_divergence": 0.0154,
+      "l1_divergence": 0.0309
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-06T23:30:00+00:00",
+      "home": "New York City FC",
+      "away": "Santos Laguna",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG06NYCSLA",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 21,
+      "anchor_overround": 0.0623,
+      "kalshi_vig": 0.03,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.6117,
+        "tie": 0.2039,
+        "away": 0.1845
+      },
+      "anchor": {
+        "home": 0.6035,
+        "away": 0.1776,
+        "tie": 0.2189
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0082,
+        "tie": -0.015,
+        "away": 0.0069
+      },
+      "max_abs_divergence": 0.015,
+      "l1_divergence": 0.0301
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-07T01:00:00+00:00",
+      "home": "Austin",
+      "away": "Club Tijuana",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG06ATXTIJ",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 21,
+      "anchor_overround": 0.0581,
+      "kalshi_vig": 0.02,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.402,
+        "tie": 0.2647,
+        "away": 0.3333
+      },
+      "anchor": {
+        "home": 0.4145,
+        "away": 0.3193,
+        "tie": 0.2662
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0125,
+        "tie": -0.0015,
+        "away": 0.014
+      },
+      "max_abs_divergence": 0.014,
+      "l1_divergence": 0.028
+    },
+    {
+      "competition": "argentina",
+      "kickoff_utc": "2026-08-08T17:45:00+00:00",
+      "home": "Deportivo Riestra",
+      "away": "Estudiantes L.P.",
+      "kalshi_event": "KXARGPREMDIVGAME-26AUG08RIEELP",
+      "anchor_book": "onexbet",
+      "anchor_rule": "lowest_overround",
+      "anchor_books_priced": 24,
+      "anchor_overround": 0.0522,
+      "kalshi_vig": 0.03,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.2913,
+        "tie": 0.3398,
+        "away": 0.3689
+      },
+      "anchor": {
+        "home": 0.2812,
+        "away": 0.3655,
+        "tie": 0.3533
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0101,
+        "tie": -0.0135,
+        "away": 0.0034
+      },
+      "max_abs_divergence": 0.0135,
+      "l1_divergence": 0.027
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-05T02:30:00+00:00",
+      "home": "Vancouver Whitecaps",
+      "away": "Atlante FC",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG04VANALA",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 24,
+      "anchor_overround": 0.0234,
+      "kalshi_vig": 0.02,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.7451,
+        "tie": 0.1569,
+        "away": 0.098
+      },
+      "anchor": {
+        "away": 0.085,
+        "home": 0.7574,
+        "tie": 0.1576
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0123,
+        "tie": -0.0007,
+        "away": 0.013
+      },
+      "max_abs_divergence": 0.013,
+      "l1_divergence": 0.026
+    },
+    {
+      "competition": "argentina",
+      "kickoff_utc": "2026-08-08T00:45:00+00:00",
+      "home": "Independ. Rivadavia",
+      "away": "Estudiantes de Rio Cuarto",
+      "kalshi_event": "KXARGPREMDIVGAME-26AUG09IRMRCU",
+      "anchor_book": "lowvig",
+      "anchor_rule": "lowest_overround",
+      "anchor_books_priced": 15,
+      "anchor_overround": 0.0489,
+      "kalshi_vig": 0.01,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.6436,
+        "tie": 0.2376,
+        "away": 0.1188
+      },
+      "anchor": {
+        "away": 0.1315,
+        "home": 0.6314,
+        "tie": 0.2372
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0122,
+        "tie": 0.0004,
+        "away": -0.0127
+      },
+      "max_abs_divergence": 0.0127,
+      "l1_divergence": 0.0253
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-05T00:30:00+00:00",
+      "home": "Minnesota United FC",
+      "away": "FC Juarez",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG04MINJUA",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 24,
+      "anchor_overround": 0.0208,
+      "kalshi_vig": 0.01,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.5446,
+        "tie": 0.2376,
+        "away": 0.2178
+      },
+      "anchor": {
+        "away": 0.2227,
+        "home": 0.5324,
+        "tie": 0.2449
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0122,
+        "tie": -0.0073,
+        "away": -0.0049
+      },
+      "max_abs_divergence": 0.0122,
+      "l1_divergence": 0.0244
+    },
+    {
+      "competition": "argentina",
+      "kickoff_utc": "2026-08-06T22:00:00+00:00",
+      "home": "Union Santa Fe",
+      "away": "Lanus",
+      "kalshi_event": "KXARGPREMDIVGAME-26AUG06UNILAN",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 31,
+      "anchor_overround": 0.0352,
+      "kalshi_vig": 0.02,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.402,
+        "tie": 0.3137,
+        "away": 0.2843
+      },
+      "anchor": {
+        "away": 0.2721,
+        "home": 0.4059,
+        "tie": 0.322
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0039,
+        "tie": -0.0083,
+        "away": 0.0122
+      },
+      "max_abs_divergence": 0.0122,
+      "l1_divergence": 0.0244
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-04T23:45:00+00:00",
+      "home": "FC Cincinnati",
+      "away": "CF Pachuca",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG04CINPAC",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 24,
+      "anchor_overround": 0.0142,
+      "kalshi_vig": 0.03,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.4563,
+        "tie": 0.233,
+        "away": 0.3107
+      },
+      "anchor": {
+        "home": 0.4607,
+        "away": 0.2988,
+        "tie": 0.2405
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0044,
+        "tie": -0.0075,
+        "away": 0.0119
+      },
+      "max_abs_divergence": 0.0119,
+      "l1_divergence": 0.0238
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-05T02:00:00+00:00",
+      "home": "Tigres UANL",
+      "away": "Real Salt Lake",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG04TIGRSL",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 24,
+      "anchor_overround": 0.0177,
+      "kalshi_vig": 0.02,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.3431,
+        "tie": 0.2549,
+        "away": 0.402
+      },
+      "anchor": {
+        "away": 0.4094,
+        "home": 0.332,
+        "tie": 0.2586
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0111,
+        "tie": -0.0037,
+        "away": -0.0074
+      },
+      "max_abs_divergence": 0.0111,
+      "l1_divergence": 0.0222
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-06T02:00:00+00:00",
+      "home": "Toluca",
+      "away": "Seattle Sounders",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG05TOLSEA",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 22,
+      "anchor_overround": 0.0059,
+      "kalshi_vig": 0.03,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.7087,
+        "tie": 0.1748,
+        "away": 0.1165
+      },
+      "anchor": {
+        "away": 0.1058,
+        "home": 0.7101,
+        "tie": 0.1841
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0014,
+        "tie": -0.0093,
+        "away": 0.0107
+      },
+      "max_abs_divergence": 0.0107,
+      "l1_divergence": 0.0214
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-07T00:30:00+00:00",
+      "home": "Chicago Fire",
+      "away": "Necaxa",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG06CHINCX",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 21,
+      "anchor_overround": 0.0519,
+      "kalshi_vig": 0.04,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.5673,
+        "tie": 0.2212,
+        "away": 0.2115
+      },
+      "anchor": {
+        "home": 0.5659,
+        "away": 0.2023,
+        "tie": 0.2319
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0014,
+        "tie": -0.0107,
+        "away": 0.0092
+      },
+      "max_abs_divergence": 0.0107,
+      "l1_divergence": 0.0213
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-05T23:30:00+00:00",
+      "home": "Monterrey",
+      "away": "Orlando City SC",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG05MONORL",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 13,
+      "anchor_overround": 0.0451,
+      "kalshi_vig": 0.01,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.4158,
+        "tie": 0.2376,
+        "away": 0.3465
+      },
+      "anchor": {
+        "home": 0.4054,
+        "away": 0.3492,
+        "tie": 0.2453
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0104,
+        "tie": -0.0077,
+        "away": -0.0027
+      },
+      "max_abs_divergence": 0.0104,
+      "l1_divergence": 0.0208
+    },
+    {
+      "competition": "argentina",
+      "kickoff_utc": "2026-08-07T22:30:00+00:00",
+      "home": "Rosario Central",
+      "away": "Aldosivi",
+      "kalshi_event": "KXARGPREMDIVGAME-26AUG07CARCCAA",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 28,
+      "anchor_overround": 0.0725,
+      "kalshi_vig": 0.02,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.6275,
+        "tie": 0.2451,
+        "away": 0.1275
+      },
+      "anchor": {
+        "away": 0.1371,
+        "home": 0.6175,
+        "tie": 0.2454
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.01,
+        "tie": -0.0003,
+        "away": -0.0096
+      },
+      "max_abs_divergence": 0.01,
+      "l1_divergence": 0.0199
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-04T23:45:00+00:00",
+      "home": "Columbus Crew",
+      "away": "Atlas",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG04CLBATL",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 24,
+      "anchor_overround": 0.023,
+      "kalshi_vig": 0.02,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.5196,
+        "tie": 0.2353,
+        "away": 0.2451
+      },
+      "anchor": {
+        "away": 0.2384,
+        "home": 0.5172,
+        "tie": 0.2444
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0024,
+        "tie": -0.0091,
+        "away": 0.0067
+      },
+      "max_abs_divergence": 0.0091,
+      "l1_divergence": 0.0182
+    },
+    {
+      "competition": "brasileirao",
+      "kickoff_utc": "2026-08-09T14:00:00+00:00",
+      "home": "Cruzeiro",
+      "away": "Mirassol",
+      "kalshi_event": "KXBRASILEIROGAME-26AUG09CRUMIR",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 45,
+      "anchor_overround": 0.0579,
+      "kalshi_vig": 0.0,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.58,
+        "tie": 0.24,
+        "away": 0.18
+      },
+      "anchor": {
+        "home": 0.5729,
+        "away": 0.1784,
+        "tie": 0.2488
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0071,
+        "tie": -0.0088,
+        "away": 0.0016
+      },
+      "max_abs_divergence": 0.0088,
+      "l1_divergence": 0.0175
+    },
+    {
+      "competition": "brasileirao",
+      "kickoff_utc": "2026-08-15T19:30:00+00:00",
+      "home": "Fluminense",
+      "away": "Palmeiras",
+      "kalshi_event": "KXBRASILEIROGAME-26AUG15FLUPAL",
+      "anchor_book": "onexbet",
+      "anchor_rule": "lowest_overround",
+      "anchor_books_priced": 18,
+      "anchor_overround": 0.0411,
+      "kalshi_vig": 0.14,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.3333,
+        "tie": 0.307,
+        "away": 0.3596
+      },
+      "anchor": {
+        "home": 0.3245,
+        "away": 0.3666,
+        "tie": 0.3089
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0088,
+        "tie": -0.0019,
+        "away": -0.007
+      },
+      "max_abs_divergence": 0.0088,
+      "l1_divergence": 0.0177
+    },
+    {
+      "competition": "argentina",
+      "kickoff_utc": "2026-08-06T00:15:00+00:00",
+      "home": "Tigre",
+      "away": "Belgrano Cordoba",
+      "kalshi_event": "KXARGPREMDIVGAME-26AUG05TIGCAB",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 31,
+      "anchor_overround": 0.0107,
+      "kalshi_vig": 0.01,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.3663,
+        "tie": 0.3366,
+        "away": 0.297
+      },
+      "anchor": {
+        "away": 0.291,
+        "home": 0.3748,
+        "tie": 0.3342
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0085,
+        "tie": 0.0024,
+        "away": 0.006
+      },
+      "max_abs_divergence": 0.0085,
+      "l1_divergence": 0.0169
+    },
+    {
+      "competition": "brasileirao",
+      "kickoff_utc": "2026-08-16T21:30:00+00:00",
+      "home": "Vitoria",
+      "away": "Botafogo",
+      "kalshi_event": "KXBRASILEIROGAME-26AUG16VITBOT",
+      "anchor_book": "onexbet",
+      "anchor_rule": "lowest_overround",
+      "anchor_books_priced": 17,
+      "anchor_overround": 0.042,
+      "kalshi_vig": 0.18,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.3898,
+        "tie": 0.2966,
+        "away": 0.3136
+      },
+      "anchor": {
+        "away": 0.3136,
+        "home": 0.3982,
+        "tie": 0.2882
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0084,
+        "tie": 0.0084,
+        "away": 0.0
+      },
+      "max_abs_divergence": 0.0084,
+      "l1_divergence": 0.0168
+    },
+    {
+      "competition": "brasileirao",
+      "kickoff_utc": "2026-08-16T22:30:00+00:00",
+      "home": "Corinthians",
+      "away": "Cruzeiro",
+      "kalshi_event": "KXBRASILEIROGAME-26AUG16CORCRU",
+      "anchor_book": "onexbet",
+      "anchor_rule": "lowest_overround",
+      "anchor_books_priced": 16,
+      "anchor_overround": 0.0421,
+      "kalshi_vig": 0.18,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.4068,
+        "tie": 0.2881,
+        "away": 0.3051
+      },
+      "anchor": {
+        "home": 0.4049,
+        "away": 0.2989,
+        "tie": 0.2962
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0019,
+        "tie": -0.0081,
+        "away": 0.0062
+      },
+      "max_abs_divergence": 0.0081,
+      "l1_divergence": 0.0162
+    },
+    {
+      "competition": "brasileirao",
+      "kickoff_utc": "2026-08-09T21:30:00+00:00",
+      "home": "Santos",
+      "away": "Atletico Paranaense",
+      "kalshi_event": "KXBRASILEIROGAME-26AUG09SANCAP",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 40,
+      "anchor_overround": 0.0278,
+      "kalshi_vig": 0.01,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.4455,
+        "tie": 0.2871,
+        "away": 0.2673
+      },
+      "anchor": {
+        "away": 0.2629,
+        "home": 0.4422,
+        "tie": 0.2948
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0033,
+        "tie": -0.0077,
+        "away": 0.0044
+      },
+      "max_abs_divergence": 0.0077,
+      "l1_divergence": 0.0154
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-07T02:00:00+00:00",
+      "home": "Club America",
+      "away": "San Diego",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG06AMESD",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 21,
+      "anchor_overround": 0.0334,
+      "kalshi_vig": 0.01,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.6238,
+        "tie": 0.2079,
+        "away": 0.1683
+      },
+      "anchor": {
+        "home": 0.6284,
+        "away": 0.1613,
+        "tie": 0.2104
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0046,
+        "tie": -0.0025,
+        "away": 0.007
+      },
+      "max_abs_divergence": 0.007,
+      "l1_divergence": 0.0141
+    },
+    {
+      "competition": "brasileirao",
+      "kickoff_utc": "2026-08-08T19:00:00+00:00",
+      "home": "Gremio",
+      "away": "Sao Paulo",
+      "kalshi_event": "KXBRASILEIROGAME-26AUG08GPASPA",
+      "anchor_book": "onexbet",
+      "anchor_rule": "lowest_overround",
+      "anchor_books_priced": 41,
+      "anchor_overround": 0.0424,
+      "kalshi_vig": 0.01,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.396,
+        "tie": 0.297,
+        "away": 0.3069
+      },
+      "anchor": {
+        "home": 0.3931,
+        "away": 0.3135,
+        "tie": 0.2934
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0029,
+        "tie": 0.0036,
+        "away": -0.0066
+      },
+      "max_abs_divergence": 0.0066,
+      "l1_divergence": 0.0131
+    },
+    {
+      "competition": "argentina",
+      "kickoff_utc": "2026-08-05T22:00:00+00:00",
+      "home": "Boca Juniors",
+      "away": "Estudiantes L.P.",
+      "kalshi_event": "KXARGPREMDIVGAME-26AUG05BOCELP",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 31,
+      "anchor_overround": 0.0191,
+      "kalshi_vig": 0.01,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.4554,
+        "tie": 0.3168,
+        "away": 0.2277
+      },
+      "anchor": {
+        "home": 0.4501,
+        "away": 0.2282,
+        "tie": 0.3217
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0053,
+        "tie": -0.0049,
+        "away": -0.0005
+      },
+      "max_abs_divergence": 0.0053,
+      "l1_divergence": 0.0107
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-07T00:00:00+00:00",
+      "home": "Cruz Azul",
+      "away": "Philadelphia Union",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG06CRAPHI",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 21,
+      "anchor_overround": 0.0354,
+      "kalshi_vig": 0.03,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.3883,
+        "tie": 0.2718,
+        "away": 0.3398
+      },
+      "anchor": {
+        "home": 0.3926,
+        "away": 0.3353,
+        "tie": 0.2721
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0043,
+        "tie": -0.0003,
+        "away": 0.0045
+      },
+      "max_abs_divergence": 0.0045,
+      "l1_divergence": 0.0091
+    },
+    {
+      "competition": "brasileirao",
+      "kickoff_utc": "2026-08-09T19:00:00+00:00",
+      "home": "Palmeiras",
+      "away": "Internacional",
+      "kalshi_event": "KXBRASILEIROGAME-26AUG09PALINT",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 45,
+      "anchor_overround": 0.0506,
+      "kalshi_vig": 0.02,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.598,
+        "tie": 0.2451,
+        "away": 0.1569
+      },
+      "anchor": {
+        "away": 0.1535,
+        "home": 0.6024,
+        "tie": 0.2441
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0044,
+        "tie": 0.001,
+        "away": 0.0034
+      },
+      "max_abs_divergence": 0.0044,
+      "l1_divergence": 0.0088
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-05T23:30:00+00:00",
+      "home": "Inter Miami",
+      "away": "Atletico San Luis",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG05MIAASL",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 22,
+      "anchor_overround": 0.0389,
+      "kalshi_vig": 0.02,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.6961,
+        "tie": 0.1667,
+        "away": 0.1373
+      },
+      "anchor": {
+        "away": 0.1416,
+        "home": 0.6925,
+        "tie": 0.166
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0036,
+        "tie": 0.0007,
+        "away": -0.0043
+      },
+      "max_abs_divergence": 0.0043,
+      "l1_divergence": 0.0086
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-07T02:30:00+00:00",
+      "home": "Portland Timbers",
+      "away": "Puebla",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG06PORPUE",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 21,
+      "anchor_overround": 0.06,
+      "kalshi_vig": 0.04,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.5481,
+        "tie": 0.2308,
+        "away": 0.2212
+      },
+      "anchor": {
+        "home": 0.5453,
+        "away": 0.2246,
+        "tie": 0.2301
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0028,
+        "tie": 0.0007,
+        "away": -0.0034
+      },
+      "max_abs_divergence": 0.0034,
+      "l1_divergence": 0.0069
+    },
+    {
+      "competition": "brasileirao",
+      "kickoff_utc": "2026-08-09T22:30:00+00:00",
+      "home": "Flamengo",
+      "away": "Vitoria",
+      "kalshi_event": "KXBRASILEIROGAME-26AUG09FLAVIT",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 43,
+      "anchor_overround": 0.0382,
+      "kalshi_vig": 0.02,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.7843,
+        "tie": 0.1471,
+        "away": 0.0686
+      },
+      "anchor": {
+        "home": 0.7831,
+        "away": 0.0664,
+        "tie": 0.1505
+      },
+      "delta_ours_minus_anchor": {
+        "home": 0.0012,
+        "tie": -0.0034,
+        "away": 0.0022
+      },
+      "max_abs_divergence": 0.0034,
+      "l1_divergence": 0.0068
+    },
+    {
+      "competition": "leagues-cup",
+      "kickoff_utc": "2026-08-06T00:30:00+00:00",
+      "home": "Nashville SC",
+      "away": "Leon",
+      "kalshi_event": "KXLEAGUESCUPGAME-26AUG05NSHLEO",
+      "anchor_book": "betfair_ex_eu",
+      "anchor_rule": "named_sharp:betfair_ex_eu",
+      "anchor_books_priced": 21,
+      "anchor_overround": 0.0667,
+      "kalshi_vig": 0.01,
+      "orientation_flipped": false,
+      "ours": {
+        "home": 0.5743,
+        "tie": 0.2376,
+        "away": 0.1881
+      },
+      "anchor": {
+        "away": 0.1875,
+        "home": 0.5752,
+        "tie": 0.2373
+      },
+      "delta_ours_minus_anchor": {
+        "home": -0.0009,
+        "tie": 0.0003,
+        "away": 0.0006
+      },
+      "max_abs_divergence": 0.0009,
+      "l1_divergence": 0.0018
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Independiente",
+      "away": "Platense",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "San Lorenzo",
+      "away": "Huracan",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Gimnasia L.P.",
+      "away": "Barracas Central",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Argentinos JRS",
+      "away": "Racing Club",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Instituto Cordoba",
+      "away": "Gimnasia M.",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Talleres Cordoba",
+      "away": "Lanus",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Racing Club",
+      "away": "Banfield",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "San Lorenzo",
+      "away": "Union Santa Fe",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Aldosivi",
+      "away": "Tigre",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Estudiantes L.P.",
+      "away": "Gimnasia L.P.",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Belgrano Cordoba",
+      "away": "Independ. Rivadavia",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Newells Old Boys",
+      "away": "Deportivo Riestra",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Platense",
+      "away": "Boca Juniors",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Sarmiento Junin",
+      "away": "Huracan",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Central Cordoba de Santiago",
+      "away": "Instituto Cordoba",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "River Plate",
+      "away": "Argentinos JRS",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Barracas Central",
+      "away": "Rosario Central",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Lanus",
+      "away": "Independiente",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Velez Sarsfield",
+      "away": "Defensa Y Justicia",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    },
+    {
+      "competition": "argentina",
+      "skipped": "no_kalshi_three_way",
+      "home": "Gimnasia M.",
+      "away": "Talleres Cordoba",
+      "means": "our own surface could not form a three-leg partition for this fixture, so there is nothing to compare \u2014 not 'the books agree'"
+    }
+  ],
+  "unmatched": [
+    {
+      "competition": "leagues-cup",
+      "home": "Columbus Crew",
+      "away": "CF Pachuca",
+      "kickoff_utc": "2026-08-07T23:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Charlotte",
+      "away": "Atlas",
+      "kickoff_utc": "2026-08-07T23:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "FC Cincinnati",
+      "away": "U.N.A.M. - Pumas",
+      "kickoff_utc": "2026-08-08T00:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Tigres UANL",
+      "away": "Minnesota United FC",
+      "kickoff_utc": "2026-08-08T01:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Vancouver Whitecaps",
+      "away": "FC Juarez",
+      "kickoff_utc": "2026-08-08T02:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Orlando City SC",
+      "away": "Leon",
+      "kickoff_utc": "2026-08-08T22:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Inter Miami",
+      "away": "Monterrey",
+      "kickoff_utc": "2026-08-09T00:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Guadalajara Chivas",
+      "away": "FC Dallas",
+      "kickoff_utc": "2026-08-09T01:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Real Salt Lake",
+      "away": "Atlante FC",
+      "kickoff_utc": "2026-08-09T02:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Toluca",
+      "away": "Los Angeles FC",
+      "kickoff_utc": "2026-08-09T03:10:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Seattle Sounders",
+      "away": "Club Queretaro",
+      "kickoff_utc": "2026-08-09T19:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Philadelphia Union",
+      "away": "Necaxa",
+      "kickoff_utc": "2026-08-09T23:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Cruz Azul",
+      "away": "New York City FC",
+      "kickoff_utc": "2026-08-09T23:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Chicago Fire",
+      "away": "Santos Laguna",
+      "kickoff_utc": "2026-08-10T00:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Nashville SC",
+      "away": "Atletico San Luis",
+      "kickoff_utc": "2026-08-10T00:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Austin",
+      "away": "Puebla",
+      "kickoff_utc": "2026-08-10T01:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "San Diego",
+      "away": "Club Tijuana",
+      "kickoff_utc": "2026-08-10T02:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Club America",
+      "away": "Portland Timbers",
+      "kickoff_utc": "2026-08-10T02:15:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Columbus Crew",
+      "away": "U.N.A.M. - Pumas",
+      "kickoff_utc": "2026-08-11T23:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Charlotte",
+      "away": "CF Pachuca",
+      "kickoff_utc": "2026-08-11T23:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "FC Cincinnati",
+      "away": "Atlas",
+      "kickoff_utc": "2026-08-12T00:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Minnesota United FC",
+      "away": "Atlante FC",
+      "kickoff_utc": "2026-08-12T00:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Real Salt Lake",
+      "away": "FC Juarez",
+      "kickoff_utc": "2026-08-12T01:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Tigres UANL",
+      "away": "Vancouver Whitecaps",
+      "kickoff_utc": "2026-08-12T02:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Orlando City SC",
+      "away": "Atletico San Luis",
+      "kickoff_utc": "2026-08-12T23:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Inter Miami",
+      "away": "Leon",
+      "kickoff_utc": "2026-08-12T23:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Monterrey",
+      "away": "Nashville SC",
+      "kickoff_utc": "2026-08-13T00:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Toluca",
+      "away": "FC Dallas",
+      "kickoff_utc": "2026-08-13T02:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "San Diego",
+      "away": "Puebla",
+      "kickoff_utc": "2026-08-13T02:15:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Seattle Sounders",
+      "away": "Guadalajara Chivas",
+      "kickoff_utc": "2026-08-13T02:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Los Angeles FC",
+      "away": "Club Queretaro",
+      "kickoff_utc": "2026-08-13T02:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Philadelphia Union",
+      "away": "Santos Laguna",
+      "kickoff_utc": "2026-08-13T23:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "New York City FC",
+      "away": "Necaxa",
+      "kickoff_utc": "2026-08-13T23:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Club America",
+      "away": "Austin",
+      "kickoff_utc": "2026-08-14T00:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Cruz Azul",
+      "away": "Chicago Fire",
+      "kickoff_utc": "2026-08-14T01:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "leagues-cup",
+      "home": "Portland Timbers",
+      "away": "Club Tijuana",
+      "kickoff_utc": "2026-08-14T02:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Remo",
+      "away": "Atletico-MG",
+      "kickoff_utc": "2026-08-08T21:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Coritiba",
+      "away": "Chapecoense-sc",
+      "kickoff_utc": "2026-08-08T23:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "RB Bragantino",
+      "away": "Corinthians",
+      "kickoff_utc": "2026-08-09T21:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico-MG",
+      "away": "Gremio",
+      "kickoff_utc": "2026-08-15T19:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico Paranaense",
+      "away": "RB Bragantino",
+      "kickoff_utc": "2026-08-15T21:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Chapecoense-sc",
+      "away": "Bahia",
+      "kickoff_utc": "2026-08-16T14:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Fluminense",
+      "away": "Remo",
+      "kickoff_utc": "2026-08-22T19:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Internacional",
+      "away": "Atletico-MG",
+      "kickoff_utc": "2026-08-22T21:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Cruzeiro",
+      "away": "Flamengo",
+      "kickoff_utc": "2026-08-22T23:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Palmeiras",
+      "away": "Vasco DA Gama",
+      "kickoff_utc": "2026-08-23T19:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Vitoria",
+      "away": "Bahia",
+      "kickoff_utc": "2026-08-23T19:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "RB Bragantino",
+      "away": "Gremio",
+      "kickoff_utc": "2026-08-23T19:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Santos",
+      "away": "Mirassol",
+      "kickoff_utc": "2026-08-23T21:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Chapecoense-sc",
+      "away": "Sao Paulo",
+      "kickoff_utc": "2026-08-23T21:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Coritiba",
+      "away": "Corinthians",
+      "kickoff_utc": "2026-08-23T22:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Botafogo",
+      "away": "Atletico Paranaense",
+      "kickoff_utc": "2026-08-24T23:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Bahia",
+      "away": "Internacional",
+      "kickoff_utc": "2026-08-30T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Sao Paulo",
+      "away": "RB Bragantino",
+      "kickoff_utc": "2026-08-30T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Flamengo",
+      "away": "Botafogo",
+      "kickoff_utc": "2026-08-30T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Gremio",
+      "away": "Chapecoense-sc",
+      "kickoff_utc": "2026-08-30T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Corinthians",
+      "away": "Santos",
+      "kickoff_utc": "2026-08-30T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Vasco DA Gama",
+      "away": "Cruzeiro",
+      "kickoff_utc": "2026-08-30T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico Paranaense",
+      "away": "Fluminense",
+      "kickoff_utc": "2026-08-30T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico-MG",
+      "away": "Vitoria",
+      "kickoff_utc": "2026-08-30T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Remo",
+      "away": "Coritiba",
+      "kickoff_utc": "2026-08-30T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Mirassol",
+      "away": "Palmeiras",
+      "kickoff_utc": "2026-08-30T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Internacional",
+      "away": "Santos",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Botafogo",
+      "away": "Palmeiras",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Fluminense",
+      "away": "Vasco DA Gama",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Sao Paulo",
+      "away": "Atletico-MG",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Corinthians",
+      "away": "Chapecoense-sc",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Cruzeiro",
+      "away": "Atletico Paranaense",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Vitoria",
+      "away": "Gremio",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Coritiba",
+      "away": "Mirassol",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "RB Bragantino",
+      "away": "Bahia",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Remo",
+      "away": "Flamengo",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Bahia",
+      "away": "Remo",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Botafogo",
+      "away": "RB Bragantino",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Palmeiras",
+      "away": "Sao Paulo",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Flamengo",
+      "away": "Corinthians",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Santos",
+      "away": "Cruzeiro",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Gremio",
+      "away": "Vasco DA Gama",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Chapecoense-sc",
+      "away": "Internacional",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Coritiba",
+      "away": "Atletico Paranaense",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico-MG",
+      "away": "Fluminense",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Mirassol",
+      "away": "Vitoria",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Sao Paulo",
+      "away": "Internacional",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Flamengo",
+      "away": "RB Bragantino",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Gremio",
+      "away": "Palmeiras",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Corinthians",
+      "away": "Fluminense",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Vasco DA Gama",
+      "away": "Coritiba",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico Paranaense",
+      "away": "Bahia",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Vitoria",
+      "away": "Cruzeiro",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico-MG",
+      "away": "Chapecoense-sc",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Remo",
+      "away": "Santos",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Mirassol",
+      "away": "Botafogo",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Internacional",
+      "away": "Corinthians",
+      "kickoff_utc": "2026-10-07T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Botafogo",
+      "away": "Vasco DA Gama",
+      "kickoff_utc": "2026-10-07T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Palmeiras",
+      "away": "Bahia",
+      "kickoff_utc": "2026-10-07T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Fluminense",
+      "away": "Coritiba",
+      "kickoff_utc": "2026-10-07T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Santos",
+      "away": "Flamengo",
+      "kickoff_utc": "2026-10-07T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico Paranaense",
+      "away": "Atletico-MG",
+      "kickoff_utc": "2026-10-07T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Cruzeiro",
+      "away": "Sao Paulo",
+      "kickoff_utc": "2026-10-07T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Vitoria",
+      "away": "Chapecoense-sc",
+      "kickoff_utc": "2026-10-07T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "RB Bragantino",
+      "away": "Mirassol",
+      "kickoff_utc": "2026-10-07T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Remo",
+      "away": "Gremio",
+      "kickoff_utc": "2026-10-07T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Bahia",
+      "away": "Mirassol",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Palmeiras",
+      "away": "Corinthians",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Sao Paulo",
+      "away": "Vitoria",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Flamengo",
+      "away": "Fluminense",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Gremio",
+      "away": "Internacional",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Chapecoense-sc",
+      "away": "Atletico Paranaense",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Vasco DA Gama",
+      "away": "Remo",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Coritiba",
+      "away": "Botafogo",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "RB Bragantino",
+      "away": "Cruzeiro",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico-MG",
+      "away": "Santos",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Bahia",
+      "away": "Flamengo",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Botafogo",
+      "away": "Chapecoense-sc",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Fluminense",
+      "away": "Santos",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Sao Paulo",
+      "away": "Vasco DA Gama",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Gremio",
+      "away": "Cruzeiro",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Corinthians",
+      "away": "Vitoria",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico Paranaense",
+      "away": "Palmeiras",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico-MG",
+      "away": "Coritiba",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Remo",
+      "away": "RB Bragantino",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Mirassol",
+      "away": "Internacional",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Internacional",
+      "away": "Botafogo",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Palmeiras",
+      "away": "RB Bragantino",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Flamengo",
+      "away": "Atletico-MG",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Santos",
+      "away": "Bahia",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Chapecoense-sc",
+      "away": "Fluminense",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Vasco DA Gama",
+      "away": "Corinthians",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Cruzeiro",
+      "away": "Remo",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Vitoria",
+      "away": "Atletico Paranaense",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Coritiba",
+      "away": "Gremio",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Mirassol",
+      "away": "Sao Paulo",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Bahia",
+      "away": "Sao Paulo",
+      "kickoff_utc": "2026-10-28T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Fluminense",
+      "away": "Internacional",
+      "kickoff_utc": "2026-10-28T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Santos",
+      "away": "Palmeiras",
+      "kickoff_utc": "2026-10-28T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Gremio",
+      "away": "Atletico Paranaense",
+      "kickoff_utc": "2026-10-28T21:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Corinthians",
+      "away": "Mirassol",
+      "kickoff_utc": "2026-10-28T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Vasco DA Gama",
+      "away": "Flamengo",
+      "kickoff_utc": "2026-10-28T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Coritiba",
+      "away": "Vitoria",
+      "kickoff_utc": "2026-10-28T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "RB Bragantino",
+      "away": "Chapecoense-sc",
+      "kickoff_utc": "2026-10-28T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico-MG",
+      "away": "Cruzeiro",
+      "kickoff_utc": "2026-10-28T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Remo",
+      "away": "Botafogo",
+      "kickoff_utc": "2026-10-28T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Internacional",
+      "away": "Coritiba",
+      "kickoff_utc": "2026-11-04T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Botafogo",
+      "away": "Atletico-MG",
+      "kickoff_utc": "2026-11-04T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Palmeiras",
+      "away": "Remo",
+      "kickoff_utc": "2026-11-04T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Sao Paulo",
+      "away": "Corinthians",
+      "kickoff_utc": "2026-11-04T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Flamengo",
+      "away": "Gremio",
+      "kickoff_utc": "2026-11-04T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Chapecoense-sc",
+      "away": "Mirassol",
+      "kickoff_utc": "2026-11-04T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico Paranaense",
+      "away": "Vasco DA Gama",
+      "kickoff_utc": "2026-11-04T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Cruzeiro",
+      "away": "Bahia",
+      "kickoff_utc": "2026-11-04T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Vitoria",
+      "away": "Fluminense",
+      "kickoff_utc": "2026-11-04T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "RB Bragantino",
+      "away": "Santos",
+      "kickoff_utc": "2026-11-04T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Sao Paulo",
+      "away": "Fluminense",
+      "kickoff_utc": "2026-11-18T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Flamengo",
+      "away": "Atletico Paranaense",
+      "kickoff_utc": "2026-11-18T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Gremio",
+      "away": "Bahia",
+      "kickoff_utc": "2026-11-18T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Corinthians",
+      "away": "Botafogo",
+      "kickoff_utc": "2026-11-18T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Vasco DA Gama",
+      "away": "Internacional",
+      "kickoff_utc": "2026-11-18T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Cruzeiro",
+      "away": "Palmeiras",
+      "kickoff_utc": "2026-11-18T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Vitoria",
+      "away": "RB Bragantino",
+      "kickoff_utc": "2026-11-18T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Coritiba",
+      "away": "Santos",
+      "kickoff_utc": "2026-11-18T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Remo",
+      "away": "Chapecoense-sc",
+      "kickoff_utc": "2026-11-18T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Mirassol",
+      "away": "Atletico-MG",
+      "kickoff_utc": "2026-11-18T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Bahia",
+      "away": "Coritiba",
+      "kickoff_utc": "2026-11-22T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Internacional",
+      "away": "Vitoria",
+      "kickoff_utc": "2026-11-22T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Botafogo",
+      "away": "Sao Paulo",
+      "kickoff_utc": "2026-11-22T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Palmeiras",
+      "away": "Flamengo",
+      "kickoff_utc": "2026-11-22T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Fluminense",
+      "away": "Mirassol",
+      "kickoff_utc": "2026-11-22T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Santos",
+      "away": "Gremio",
+      "kickoff_utc": "2026-11-22T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Chapecoense-sc",
+      "away": "Cruzeiro",
+      "kickoff_utc": "2026-11-22T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico Paranaense",
+      "away": "Remo",
+      "kickoff_utc": "2026-11-22T21:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "RB Bragantino",
+      "away": "Vasco DA Gama",
+      "kickoff_utc": "2026-11-22T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico-MG",
+      "away": "Corinthians",
+      "kickoff_utc": "2026-11-22T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Internacional",
+      "away": "RB Bragantino",
+      "kickoff_utc": "2026-11-29T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Botafogo",
+      "away": "Bahia",
+      "kickoff_utc": "2026-11-29T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Fluminense",
+      "away": "Cruzeiro",
+      "kickoff_utc": "2026-11-29T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Sao Paulo",
+      "away": "Remo",
+      "kickoff_utc": "2026-11-29T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Corinthians",
+      "away": "Gremio",
+      "kickoff_utc": "2026-11-29T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Chapecoense-sc",
+      "away": "Palmeiras",
+      "kickoff_utc": "2026-11-29T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Vitoria",
+      "away": "Santos",
+      "kickoff_utc": "2026-11-29T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Coritiba",
+      "away": "Flamengo",
+      "kickoff_utc": "2026-11-29T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico-MG",
+      "away": "Vasco DA Gama",
+      "kickoff_utc": "2026-11-29T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Mirassol",
+      "away": "Atletico Paranaense",
+      "kickoff_utc": "2026-11-29T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Bahia",
+      "away": "Atletico-MG",
+      "kickoff_utc": "2026-12-02T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Palmeiras",
+      "away": "Coritiba",
+      "kickoff_utc": "2026-12-02T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Flamengo",
+      "away": "Chapecoense-sc",
+      "kickoff_utc": "2026-12-02T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Santos",
+      "away": "Botafogo",
+      "kickoff_utc": "2026-12-02T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Gremio",
+      "away": "Mirassol",
+      "kickoff_utc": "2026-12-02T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Vasco DA Gama",
+      "away": "Vitoria",
+      "kickoff_utc": "2026-12-02T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Atletico Paranaense",
+      "away": "Sao Paulo",
+      "kickoff_utc": "2026-12-02T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Cruzeiro",
+      "away": "Internacional",
+      "kickoff_utc": "2026-12-02T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "RB Bragantino",
+      "away": "Fluminense",
+      "kickoff_utc": "2026-12-02T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "brasileirao",
+      "home": "Remo",
+      "away": "Corinthians",
+      "kickoff_utc": "2026-12-02T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Estudiantes de Rio Cuarto",
+      "away": "Atletico Tucuman",
+      "kickoff_utc": "2026-08-17T17:45:00+00:00",
+      "reason": "2 anchor events match both clubs inside the window; none is attached rather than one guessed"
+    },
+    {
+      "competition": "argentina",
+      "home": "Aldosivi",
+      "away": "Union Santa Fe",
+      "kickoff_utc": "2026-08-21T17:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Estudiantes de Rio Cuarto",
+      "away": "San Lorenzo",
+      "kickoff_utc": "2026-08-21T23:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Gimnasia L.P.",
+      "away": "Gimnasia M.",
+      "kickoff_utc": "2026-08-22T19:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Atletico Tucuman",
+      "away": "Instituto Cordoba",
+      "kickoff_utc": "2026-08-22T19:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Independiente",
+      "away": "Independ. Rivadavia",
+      "kickoff_utc": "2026-08-22T21:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Huracan",
+      "away": "Deportivo Riestra",
+      "kickoff_utc": "2026-08-23T00:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Newells Old Boys",
+      "away": "Banfield",
+      "kickoff_utc": "2026-08-23T00:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Sarmiento Junin",
+      "away": "Estudiantes L.P.",
+      "kickoff_utc": "2026-08-23T17:45:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Barracas Central",
+      "away": "Platense",
+      "kickoff_utc": "2026-08-23T17:45:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Belgrano Cordoba",
+      "away": "Defensa Y Justicia",
+      "kickoff_utc": "2026-08-23T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "River Plate",
+      "away": "Velez Sarsfield",
+      "kickoff_utc": "2026-08-23T22:15:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Racing Club",
+      "away": "Boca Juniors",
+      "kickoff_utc": "2026-08-24T00:30:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Tigre",
+      "away": "Central Cordoba de Santiago",
+      "kickoff_utc": "2026-08-24T22:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Lanus",
+      "away": "Argentinos JRS",
+      "kickoff_utc": "2026-08-25T00:15:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Talleres Cordoba",
+      "away": "Rosario Central",
+      "kickoff_utc": "2026-08-25T00:15:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Huracan",
+      "away": "Estudiantes de Rio Cuarto",
+      "kickoff_utc": "2026-08-28T22:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Union Santa Fe",
+      "away": "Sarmiento Junin",
+      "kickoff_utc": "2026-08-29T00:15:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Deportivo Riestra",
+      "away": "Velez Sarsfield",
+      "kickoff_utc": "2026-08-29T17:45:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Rosario Central",
+      "away": "Gimnasia L.P.",
+      "kickoff_utc": "2026-08-29T20:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Boca Juniors",
+      "away": "Lanus",
+      "kickoff_utc": "2026-08-29T22:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Atletico Tucuman",
+      "away": "Belgrano Cordoba",
+      "kickoff_utc": "2026-08-30T00:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Talleres Cordoba",
+      "away": "Central Cordoba de Santiago",
+      "kickoff_utc": "2026-08-30T00:30:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Banfield",
+      "away": "River Plate",
+      "kickoff_utc": "2026-08-30T18:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Argentinos JRS",
+      "away": "Aldosivi",
+      "kickoff_utc": "2026-08-30T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Independiente",
+      "away": "Gimnasia M.",
+      "kickoff_utc": "2026-08-30T22:15:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Independ. Rivadavia",
+      "away": "Racing Club",
+      "kickoff_utc": "2026-08-31T00:30:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Defensa Y Justicia",
+      "away": "Platense",
+      "kickoff_utc": "2026-08-31T22:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Estudiantes L.P.",
+      "away": "Newells Old Boys",
+      "kickoff_utc": "2026-08-31T22:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Tigre",
+      "away": "Barracas Central",
+      "kickoff_utc": "2026-09-01T00:15:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Instituto Cordoba",
+      "away": "San Lorenzo",
+      "kickoff_utc": "2026-09-01T00:15:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Gimnasia L.P.",
+      "away": "Tigre",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "River Plate",
+      "away": "Independ. Rivadavia",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Racing Club",
+      "away": "Atletico Tucuman",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Rosario Central",
+      "away": "Newells Old Boys",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Velez Sarsfield",
+      "away": "Estudiantes L.P.",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Belgrano Cordoba",
+      "away": "Huracan",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Union Santa Fe",
+      "away": "Instituto Cordoba",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Lanus",
+      "away": "Defensa Y Justicia",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "San Lorenzo",
+      "away": "Talleres Cordoba",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Aldosivi",
+      "away": "Banfield",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Platense",
+      "away": "Deportivo Riestra",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Central Cordoba de Santiago",
+      "away": "Independiente",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "2 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Gimnasia M.",
+      "away": "Boca Juniors",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Estudiantes de Rio Cuarto",
+      "away": "Sarmiento Junin",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Barracas Central",
+      "away": "Argentinos JRS",
+      "kickoff_utc": "2026-09-06T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Defensa Y Justicia",
+      "away": "Gimnasia M.",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Huracan",
+      "away": "Racing Club",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Banfield",
+      "away": "Barracas Central",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Estudiantes L.P.",
+      "away": "Platense",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Boca Juniors",
+      "away": "Central Cordoba de Santiago",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Tigre",
+      "away": "Rosario Central",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Independiente",
+      "away": "San Lorenzo",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Atletico Tucuman",
+      "away": "River Plate",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Talleres Cordoba",
+      "away": "Union Santa Fe",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Newells Old Boys",
+      "away": "Velez Sarsfield",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Argentinos JRS",
+      "away": "Gimnasia L.P.",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Independ. Rivadavia",
+      "away": "Aldosivi",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Sarmiento Junin",
+      "away": "Belgrano Cordoba",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Deportivo Riestra",
+      "away": "Lanus",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Instituto Cordoba",
+      "away": "Estudiantes de Rio Cuarto",
+      "kickoff_utc": "2026-09-13T20:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Gimnasia L.P.",
+      "away": "Banfield",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "River Plate",
+      "away": "Huracan",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Racing Club",
+      "away": "Sarmiento Junin",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Rosario Central",
+      "away": "Argentinos JRS",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Velez Sarsfield",
+      "away": "Tigre",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Belgrano Cordoba",
+      "away": "Estudiantes de Rio Cuarto",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Union Santa Fe",
+      "away": "Independiente",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Lanus",
+      "away": "Estudiantes L.P.",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "San Lorenzo",
+      "away": "Boca Juniors",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Aldosivi",
+      "away": "Atletico Tucuman",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Instituto Cordoba",
+      "away": "Talleres Cordoba",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Platense",
+      "away": "Newells Old Boys",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Central Cordoba de Santiago",
+      "away": "Defensa Y Justicia",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Gimnasia M.",
+      "away": "Deportivo Riestra",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Barracas Central",
+      "away": "Independ. Rivadavia",
+      "kickoff_utc": "2026-09-20T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Velez Sarsfield",
+      "away": "Platense",
+      "kickoff_utc": "2026-10-04T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Defensa Y Justicia",
+      "away": "San Lorenzo",
+      "kickoff_utc": "2026-10-04T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Huracan",
+      "away": "Aldosivi",
+      "kickoff_utc": "2026-10-04T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Banfield",
+      "away": "Rosario Central",
+      "kickoff_utc": "2026-10-04T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Estudiantes L.P.",
+      "away": "Gimnasia M.",
+      "kickoff_utc": "2026-10-04T20:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Boca Juniors",
+      "away": "Union Santa Fe",
+      "kickoff_utc": "2026-10-04T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Independiente",
+      "away": "Instituto Cordoba",
+      "kickoff_utc": "2026-10-04T20:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Atletico Tucuman",
+      "away": "Barracas Central",
+      "kickoff_utc": "2026-10-04T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Talleres Cordoba",
+      "away": "Belgrano Cordoba",
+      "kickoff_utc": "2026-10-04T20:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Newells Old Boys",
+      "away": "Lanus",
+      "kickoff_utc": "2026-10-04T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Argentinos JRS",
+      "away": "Tigre",
+      "kickoff_utc": "2026-10-04T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Independ. Rivadavia",
+      "away": "Gimnasia L.P.",
+      "kickoff_utc": "2026-10-04T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Sarmiento Junin",
+      "away": "River Plate",
+      "kickoff_utc": "2026-10-04T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Deportivo Riestra",
+      "away": "Central Cordoba de Santiago",
+      "kickoff_utc": "2026-10-04T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Estudiantes de Rio Cuarto",
+      "away": "Racing Club",
+      "kickoff_utc": "2026-10-04T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Gimnasia L.P.",
+      "away": "Atletico Tucuman",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "River Plate",
+      "away": "Estudiantes de Rio Cuarto",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Racing Club",
+      "away": "Belgrano Cordoba",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Rosario Central",
+      "away": "Independ. Rivadavia",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Union Santa Fe",
+      "away": "Defensa Y Justicia",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Lanus",
+      "away": "Velez Sarsfield",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Tigre",
+      "away": "Banfield",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Talleres Cordoba",
+      "away": "Independiente",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "San Lorenzo",
+      "away": "Deportivo Riestra",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Aldosivi",
+      "away": "Sarmiento Junin",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Instituto Cordoba",
+      "away": "Boca Juniors",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Platense",
+      "away": "Argentinos JRS",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Central Cordoba de Santiago",
+      "away": "Estudiantes L.P.",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Gimnasia M.",
+      "away": "Newells Old Boys",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Barracas Central",
+      "away": "Huracan",
+      "kickoff_utc": "2026-10-11T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Racing Club",
+      "away": "Independiente",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Velez Sarsfield",
+      "away": "Gimnasia M.",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Belgrano Cordoba",
+      "away": "River Plate",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Defensa Y Justicia",
+      "away": "Instituto Cordoba",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Huracan",
+      "away": "Gimnasia L.P.",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Banfield",
+      "away": "Argentinos JRS",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Estudiantes L.P.",
+      "away": "San Lorenzo",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Boca Juniors",
+      "away": "Talleres Cordoba",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Atletico Tucuman",
+      "away": "Rosario Central",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Newells Old Boys",
+      "away": "Central Cordoba de Santiago",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Independ. Rivadavia",
+      "away": "Tigre",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Sarmiento Junin",
+      "away": "Barracas Central",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Deportivo Riestra",
+      "away": "Union Santa Fe",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Platense",
+      "away": "Lanus",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Estudiantes de Rio Cuarto",
+      "away": "Aldosivi",
+      "kickoff_utc": "2026-10-18T20:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Gimnasia L.P.",
+      "away": "Sarmiento Junin",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "River Plate",
+      "away": "Racing Club",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Rosario Central",
+      "away": "Huracan",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Union Santa Fe",
+      "away": "Estudiantes L.P.",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Banfield",
+      "away": "Lanus",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Tigre",
+      "away": "Atletico Tucuman",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Independiente",
+      "away": "Boca Juniors",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Talleres Cordoba",
+      "away": "Defensa Y Justicia",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Argentinos JRS",
+      "away": "Independ. Rivadavia",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "San Lorenzo",
+      "away": "Newells Old Boys",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Aldosivi",
+      "away": "Belgrano Cordoba",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Instituto Cordoba",
+      "away": "Deportivo Riestra",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Central Cordoba de Santiago",
+      "away": "Velez Sarsfield",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Gimnasia M.",
+      "away": "Platense",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Barracas Central",
+      "away": "Estudiantes de Rio Cuarto",
+      "kickoff_utc": "2026-10-25T21:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Racing Club",
+      "away": "Aldosivi",
+      "kickoff_utc": "2026-11-01T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Velez Sarsfield",
+      "away": "San Lorenzo",
+      "kickoff_utc": "2026-11-01T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Belgrano Cordoba",
+      "away": "Barracas Central",
+      "kickoff_utc": "2026-11-01T21:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Defensa Y Justicia",
+      "away": "Independiente",
+      "kickoff_utc": "2026-11-01T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Huracan",
+      "away": "Tigre",
+      "kickoff_utc": "2026-11-01T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Lanus",
+      "away": "Gimnasia M.",
+      "kickoff_utc": "2026-11-01T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Estudiantes L.P.",
+      "away": "Instituto Cordoba",
+      "kickoff_utc": "2026-11-01T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Boca Juniors",
+      "away": "River Plate",
+      "kickoff_utc": "2026-11-01T21:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Atletico Tucuman",
+      "away": "Argentinos JRS",
+      "kickoff_utc": "2026-11-01T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Newells Old Boys",
+      "away": "Union Santa Fe",
+      "kickoff_utc": "2026-11-01T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Independ. Rivadavia",
+      "away": "Banfield",
+      "kickoff_utc": "2026-11-01T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Sarmiento Junin",
+      "away": "Rosario Central",
+      "kickoff_utc": "2026-11-01T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Deportivo Riestra",
+      "away": "Talleres Cordoba",
+      "kickoff_utc": "2026-11-01T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Platense",
+      "away": "Central Cordoba de Santiago",
+      "kickoff_utc": "2026-11-01T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Estudiantes de Rio Cuarto",
+      "away": "Gimnasia L.P.",
+      "kickoff_utc": "2026-11-01T21:00:00+00:00",
+      "reason": "2 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Gimnasia L.P.",
+      "away": "Belgrano Cordoba",
+      "kickoff_utc": "2026-11-08T21:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Rosario Central",
+      "away": "Estudiantes de Rio Cuarto",
+      "kickoff_utc": "2026-11-08T21:00:00+00:00",
+      "reason": "1 anchor event(s) match both clubs but none within 36h of our kickoff \u2014 same pairing, a different meeting"
+    },
+    {
+      "competition": "argentina",
+      "home": "Union Santa Fe",
+      "away": "Velez Sarsfield",
+      "kickoff_utc": "2026-11-08T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Banfield",
+      "away": "Atletico Tucuman",
+      "kickoff_utc": "2026-11-08T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Boca Juniors",
+      "away": "Defensa Y Justicia",
+      "kickoff_utc": "2026-11-08T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Tigre",
+      "away": "Sarmiento Junin",
+      "kickoff_utc": "2026-11-08T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Independiente",
+      "away": "Deportivo Riestra",
+      "kickoff_utc": "2026-11-08T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Talleres Cordoba",
+      "away": "Estudiantes L.P.",
+      "kickoff_utc": "2026-11-08T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Argentinos JRS",
+      "away": "Huracan",
+      "kickoff_utc": "2026-11-08T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "San Lorenzo",
+      "away": "Platense",
+      "kickoff_utc": "2026-11-08T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Aldosivi",
+      "away": "River Plate",
+      "kickoff_utc": "2026-11-08T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Instituto Cordoba",
+      "away": "Newells Old Boys",
+      "kickoff_utc": "2026-11-08T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Central Cordoba de Santiago",
+      "away": "Lanus",
+      "kickoff_utc": "2026-11-08T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Gimnasia M.",
+      "away": "Independ. Rivadavia",
+      "kickoff_utc": "2026-11-08T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    },
+    {
+      "competition": "argentina",
+      "home": "Barracas Central",
+      "away": "Racing Club",
+      "kickoff_utc": "2026-11-08T21:00:00+00:00",
+      "reason": "no anchor event matches both clubs"
+    }
+  ]
+}
