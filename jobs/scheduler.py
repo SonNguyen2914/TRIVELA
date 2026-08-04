@@ -900,6 +900,12 @@ def start_scheduler() -> BackgroundScheduler:
     scheduler.add_job(news_capture.capture_window_job, "interval",
                       minutes=20, id="news_capture", coalesce=True,
                       max_instances=1)
+    from jobs import preflight
+    scheduler.add_job(preflight.preflight_job, "interval", hours=6,
+                      id="coverage_preflight", coalesce=True,
+                      max_instances=1)
+    scheduler.add_job(preflight.ops_digest_job, "interval", hours=24,
+                      id="ops_digest", coalesce=True, max_instances=1)
     scheduler.add_job(approval_disarm_watch_job, "interval", minutes=10,
                       id="approval_disarm_watch", coalesce=True,
                       max_instances=1)

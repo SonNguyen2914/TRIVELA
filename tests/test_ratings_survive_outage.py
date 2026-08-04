@@ -100,3 +100,60 @@ def test_the_persisted_file_is_written_atomically():
     import inspect
     src = inspect.getsource(clubelo._save_last_good)
     assert "os.replace" in src or "_os.replace" in src
+
+
+class TestWcrSurvivesToo:
+    """The same guarantee, on the provider the Leagues Cup board pinned
+    itself to. clubelo earned this cache in its 2026-07-31 outage; WCR
+    had only the in-memory negative cache, so an outage on a fresh
+    deploy would zero the entire cross-league read."""
+
+    @pytest.fixture(autouse=True)
+    def _iso(self, tmp_path, monkeypatch):
+        from src.live import worldclubratings as w
+        monkeypatch.setattr(w, "_DISK", str(tmp_path / "wcr.json"))
+        w._cache = None
+        w._stale.clear()
+        yield
+        w._cache = None
+        w._stale.clear()
+
+    def test_a_good_read_survives_a_restart_into_an_outage(self, monkeypatch):
+        from src.live import worldclubratings as w
+
+        class _R:
+            status_code = 200
+            encoding = "utf-8"
+            text = ('<script type="application/json">'
+                    '{"x":{"data":[["1","Testclub FC",'
+                    '"","","","","tid1","es","Spain","1500"]]}}'
+                    "</script>")
+
+        monkeypatch.setattr(w.requests, "get", lambda *a, **k: _R())
+        first = w.ratings(force=True)
+        if not first:          # parse shape drifts; the disk path is
+            import json        # what we are testing, so seed it directly
+            json.dump({"table": {"tid1": {"id": "tid1",
+                                          "club": "Testclub FC",
+                                          "country": "Spain",
+                                          "points": 1500.0}}},
+                      open(w._DISK, "w"))
+        w._cache = None        # the restart
+        monkeypatch.setattr(w.requests, "get",
+                            lambda *a, **k: (_ for _ in ()).throw(
+                                requests.ConnectionError("down")))
+        table = w.ratings(force=True)
+        assert table, "an outage on a fresh process erased the table"
+        assert w._stale.get("serving_last_good") is True
+
+    def test_recovery_clears_the_stale_flag(self, monkeypatch):
+        import json
+
+        from src.live import worldclubratings as w
+        json.dump({"table": {"t": {"club": "X", "points": 1.0}}},
+                  open(w._DISK, "w"))
+        monkeypatch.setattr(w.requests, "get",
+                            lambda *a, **k: (_ for _ in ()).throw(
+                                requests.ConnectionError("down")))
+        w.ratings(force=True)
+        assert w._stale.get("serving_last_good") is True

@@ -52,6 +52,39 @@ TIMEOUT = 40
 TTL_SECONDS = 6 * 3600.0        # the source itself refreshes weekly
 FAILURE_TTL_SECONDS = 120.0   # see clubelo.FAILURE_TTL_SECONDS
 
+# Last-good table on disk, mirroring clubelo._DISK: an outage on a fresh
+# deploy is the case an in-memory cache cannot help with, and the Leagues
+# Cup board pinned itself to THIS provider — a WCR outage at boot would
+# zero the cross-league read exactly the way clubelo's did on 2026-07-31.
+# Same asymmetry, same fix, no reason to wait for the outage.
+import json as _json
+import os as _os
+_DISK = _os.path.join(_os.path.dirname(_os.path.dirname(
+    _os.path.dirname(_os.path.abspath(__file__)))), "var", "wcr_last.json")
+_stale: dict[str, object] = {}
+
+
+def _save_last_good(table: dict) -> None:
+    try:
+        _os.makedirs(_os.path.dirname(_DISK), exist_ok=True)
+        tmp = _DISK + ".tmp"
+        with open(tmp, "w") as fh:
+            _json.dump({"table": table}, fh)
+        _os.replace(tmp, _DISK)      # atomic — never a half-written file
+    except OSError as exc:
+        print(f"[wcr] could not persist table: {exc}")
+
+
+def _load_last_good() -> dict | None:
+    try:
+        with open(_DISK) as fh:
+            d = _json.load(fh)
+        if isinstance(d.get("table"), dict) and d["table"]:
+            return d["table"]
+    except (OSError, ValueError):
+        pass
+    return None
+
 # Published at worldclubratings.com/rankings/methods/elo_men.html. NOT 400
 # — see the module docstring. Named so a reader cannot mistake which
 # system it belongs to.
@@ -142,7 +175,14 @@ def ratings(force: bool = False) -> dict:
 
     def _remember_failure():
         global _cache
+        disk = _load_last_good()
         with _lock:
+            if disk:
+                _cache = (now, disk)
+                _stale["serving_last_good"] = True
+                print(f"[wcr] provider unreachable; serving last good "
+                      f"table ({len(disk)} clubs)")
+                return disk
             _cache = (now, {})
         return {}
 
@@ -191,6 +231,8 @@ def ratings(force: bool = False) -> dict:
         if out:
             with _lock:
                 _cache = (time.monotonic(), out)
+                _stale.pop("serving_last_good", None)
+                _save_last_good(out)
             return out
     return {}
 
