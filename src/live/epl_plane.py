@@ -313,10 +313,16 @@ def boot() -> dict:
         # the previous season, or every club is unrated on matchday one
         ("history_ingest", ingest_history),
         ("market_map", discover_and_map),
-        # DARK registration: the row exists so the F3 gate has something
-        # to refuse against; approved_for_shadow stays False.
-        ("model_version_dark",
-         lambda: model_epl.ensure_model_version(approved_for_shadow=False)),
+        # Registration with the TWO-ARM boot flag (#59 extended): the
+        # flag survives a revision-only deploy, and everything else —
+        # genuine engine change, missing decision, any error — stays
+        # dark. The old unconditional force-dark cost one manual rearm
+        # per deploy per plane at the operator's release cadence.
+        ("model_version_flag",
+         lambda: model_epl.ensure_model_version(
+             approved_for_shadow=__import__(
+                 "src.live.model_eval", fromlist=["x"]).boot_shadow_flag(
+                 model_epl, model_epl.MODEL_NAME))),
     ):
         try:
             results[name] = step()
