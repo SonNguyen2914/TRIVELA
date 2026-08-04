@@ -162,7 +162,8 @@ def _side_from(source: str, name: str, day: str,
             "reason_words": REASON_WORDS[NAME_UNMAPPED]}
 
 
-def for_fixture(f: dict, day: str | None = None, sources: tuple | None = None) -> dict:
+def for_fixture(f: dict, day: str | None = None, sources: tuple | None = None,
+                apply_calibration: bool = True) -> dict:
     """The strength read for one friendly fixture, or named refusals.
 
     Never returns a bare blank, never a zero, and never a default 50% —
@@ -315,31 +316,47 @@ def for_fixture(f: dict, day: str | None = None, sources: tuple | None = None) -
         # The calibrated one below is OURS — a locally fitted shrink, which
         # makes it a different kind of claim, so it is labelled and shown
         # beside the original rather than quietly standing in for it.
+        # SCOPE: the shrink was measured on 626 settled FRIENDLIES,
+        # where rotation and dead stakes compress results toward the
+        # middle — its own provenance says so. Competitive competitions
+        # must NOT inherit it: on 2026-08-04 the Leagues Cup board ran
+        # every comparison through this friendlies constant, and the
+        # bet-helper's briefing caught the symptom before anyone here
+        # did — read sd .049 vs market sd .090, slope 0.185, fourteen
+        # negative gaps that were one finding. Callers on competitive
+        # surfaces pass apply_calibration=False and get the provider's
+        # published expectation, labeled raw.
         import config as _cfg
-        k = _cfg.FRIENDLY_CALIBRATION_SHRINK
-        ce = 0.5 + k * (e - 0.5)
-        out["calibrated"] = {
-            "expected_points_share": {"home": round(ce, 4),
-                                      "away": round(1.0 - ce, 4)},
-            "shrink_k": k,
-            "source": "measured on this platform, not published by the provider",
-            "measured_at": _cfg.FRIENDLY_CALIBRATION_MEASURED_AT,
-            "archive": _cfg.FRIENDLY_CALIBRATION_ARCHIVE,
-            "basis": (
-                "the raw read is overconfident on friendlies: measured over "
-                "626 completed matches it is slightly WORSE than a coin flip "
-                "(Brier 0.2027 vs 0.1973). Shrinking toward 0.5 by k gives "
-                "0.1892 out of sample, +0.0134 with a bootstrap 95% CI of "
-                "[+0.0040, +0.0233]."),
-            "corrects": (
-                "CONFIDENCE, not skill — direction accuracy is ~59-61% "
-                "before and after. This stops the read overclaiming; it does "
-                "not make friendlies predictable."),
-            "scope": (
-                "fitted on PRE-SEASON friendlies only; a different "
-                "population needs a re-measure "
-                "(scripts/measure_friendly_calibration.py)"),
-        }
+        k = _cfg.FRIENDLY_CALIBRATION_SHRINK if apply_calibration else None
+        if k is None:
+            out["calibration_scope"] = (
+                "not applied: the shrink was measured on friendlies and "
+                "this is a competitive fixture — the raw provider "
+                "expectation is the honest number here")
+        else:
+            ce = 0.5 + k * (e - 0.5)
+            out["calibrated"] = {
+                "expected_points_share": {"home": round(ce, 4),
+                                          "away": round(1.0 - ce, 4)},
+                "shrink_k": k,
+                "source": "measured on this platform, not published by the provider",
+                "measured_at": _cfg.FRIENDLY_CALIBRATION_MEASURED_AT,
+                "archive": _cfg.FRIENDLY_CALIBRATION_ARCHIVE,
+                "basis": (
+                    "the raw read is overconfident on friendlies: measured over "
+                    "626 completed matches it is slightly WORSE than a coin flip "
+                    "(Brier 0.2027 vs 0.1973). Shrinking toward 0.5 by k gives "
+                    "0.1892 out of sample, +0.0134 with a bootstrap 95% CI of "
+                    "[+0.0040, +0.0233]."),
+                "corrects": (
+                    "CONFIDENCE, not skill — direction accuracy is ~59-61% "
+                    "before and after. This stops the read overclaiming; it does "
+                    "not make friendlies predictable."),
+                "scope": (
+                    "fitted on PRE-SEASON friendlies only; a different "
+                    "population needs a re-measure "
+                    "(scripts/measure_friendly_calibration.py)"),
+            }
         out["rating_difference"] = round(h["rating"] - a["rating"], 1)
         # kept under the old name too: the frontend shipped against it
         out["elo_difference"] = out["rating_difference"]

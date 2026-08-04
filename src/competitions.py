@@ -198,8 +198,12 @@ def fixtures(key: str, season: int = 2026, days: int | None = None,
             try:
                 from src.live import club_strength_estimate as cse
                 from src.friendlies_apif import _slim_strength
+                # apply_calibration=False: the shrink is a FRIENDLIES
+                # measurement and these are competitive fixtures — the
+                # helper's Aug-4 briefing caught the leak (slope 0.185)
                 row["strength"] = _slim_strength(
-                    cse.for_fixture(f, sources=v.strength_sources))
+                    cse.for_fixture(f, sources=v.strength_sources,
+                                    apply_calibration=False))
             except Exception as exc:
                 row["strength"] = {"available": False,
                                    "reason": "estimate_unavailable",

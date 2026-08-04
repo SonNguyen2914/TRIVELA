@@ -122,3 +122,22 @@ def test_european_competitions_still_reach_clubelo():
     from src import competitions
     for key in ("ecl", "uel", "ucl"):
         assert competitions.VIEWERS[key].strength_sources is None, key
+
+
+def test_the_friendlies_shrink_stays_out_of_competitive_fixtures():
+    """k=0.56 was measured on 626 settled FRIENDLIES — its own scope
+    field says so — yet every viewer-competition comparison ran through
+    it until the bet-helper's 2026-08-04 briefing caught the symptom:
+    read sd .049 against market sd .090, slope 0.185, fourteen negative
+    gaps that were one finding. A constant may not migrate populations."""
+    f = {"league_country": "World",
+         "home": {"name": "Inter Miami"},
+         "away": {"name": "UNAM Pumas"},
+         "kickoff_utc": "2026-08-05T23:30:00+00:00"}
+    comp = cse.for_fixture(f, sources=("worldclubratings",),
+                           apply_calibration=False)
+    assert comp.get("available")
+    assert "calibrated" not in comp, "the friendlies shrink leaked back"
+    assert "friendlies" in comp["calibration_scope"]
+    friendly = cse.for_fixture(f, sources=("worldclubratings",))
+    assert "calibrated" in friendly, "friendlies must KEEP the shrink"
