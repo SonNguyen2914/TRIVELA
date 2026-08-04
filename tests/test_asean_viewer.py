@@ -191,6 +191,51 @@ class TestAseanGroupStakes:
         assert m["tie"]["leg"] == 1
 
 
+# --- transient failures are never cached ----------------------------------
+
+class TestFailureNeverCached:
+    """One transient provider error was served for the full 300s TTL —
+    on the Leagues Cup board that meant five bookless minutes on
+    matchday 1. A failure must be retried on the NEXT request."""
+
+    def test_a_failed_fixture_read_does_not_poison_the_cache(
+            self, monkeypatch):
+        calls = {"n": 0}
+
+        def flaky(lid, season):
+            calls["n"] += 1
+            return None if calls["n"] == 1 else [
+                {"home": {"name": "A", "apif_team_id": 1},
+                 "away": {"name": "B", "apif_team_id": 2},
+                 "fixture_id": 1,
+                 "kickoff_utc": "2099-01-01T00:00:00+00:00"}]
+        monkeypatch.setattr(competitions, "_fixtures_raw", flaky)
+        monkeypatch.setattr(competitions, "_cache", {})
+        monkeypatch.setattr(competitions, "markets", lambda k: {})
+        monkeypatch.setattr(national_elo, "for_fixture",
+                            lambda f: {"available": False})
+        first = competitions.fixtures("asean")
+        assert first["count"] == 0
+        second = competitions.fixtures("asean")
+        assert second["count"] == 1          # retried, not served stale
+
+    def test_a_failed_kalshi_read_does_not_poison_the_cache(
+            self, monkeypatch):
+        from src import friendlies
+        calls = {"n": 0}
+
+        def flaky(url, params):
+            calls["n"] += 1
+            return None if calls["n"] == 1 else {"events": []}
+        monkeypatch.setattr(friendlies, "_get_json", flaky)
+        monkeypatch.setattr(competitions, "_cache", {})
+        first = competitions.markets("asean")
+        assert first["status"] == "unavailable"
+        assert "never cached" in first["means"]
+        second = competitions.markets("asean")
+        assert second["status"] == "ok"      # retried, not served stale
+
+
 # --- the Elo source -------------------------------------------------------
 
 TEAMS_TSV = ("VN\tVietnam\n"

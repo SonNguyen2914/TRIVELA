@@ -850,15 +850,20 @@ def comp_tournament(key: str):
         v = competitions.VIEWERS[key]
         rows = competitions._fixtures_raw(v.apif_league_id,
                                           v.season_default or 2026)
-        if not rows:
-            return {"available": False,
-                    "reason": ("the fixture read returned nothing — "
-                               "provider failure or empty season, NOT an "
-                               "empty tournament")}
+        # None = provider FAILURE: return None so nothing is cached and
+        # the next request retries (the failure-cached-for-TTL class,
+        # found on the Leagues Cup board 2026-08-04). [] = a genuinely
+        # empty season, which build() refuses with its own reason.
+        if rows is None:
+            return None
         return asean_tournament.build(rows)
 
-    return competitions._cached(f"comp:{key}:tournament",
-                                competitions.CACHE_TTL, _run) or {}
+    out = competitions._cached(f"comp:{key}:tournament",
+                               competitions.CACHE_TTL, _run)
+    return out or {"available": False,
+                   "reason": ("the fixture read FAILED — provider "
+                              "failure, not an empty tournament; "
+                              "retried on every request, never cached")}
 
 
 @app.get("/api/comp/{key}/markets")

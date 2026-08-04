@@ -189,18 +189,20 @@ def _cached(key: str, ttl: float, fetch):
     return data
 
 
-def _fixtures_raw(league_id: int, season: int) -> list[dict]:
-    """League-scoped fixture read; [] on failure, which callers must not
-    read as "no fixtures". League scoping is correct here — unlike
-    friendlies, where branded pre-season tournaments each get their own
-    league id and only a date sweep sees them."""
+def _fixtures_raw(league_id: int, season: int) -> list[dict] | None:
+    """League-scoped fixture read. None on FAILURE (no key, transport,
+    non-200) — which callers must never cache or read as "no fixtures" —
+    and [] only when the provider genuinely answered with an empty
+    season. League scoping is correct here — unlike friendlies, where
+    branded pre-season tournaments each get their own league id and only
+    a date sweep sees them."""
     import requests
 
     from src.friendlies_apif import (APIF_BASE, APIF_TIMEOUT, load_key,
                                      parse_fixture, redact, response_items)
     key, _s, _p = load_key()
     if not key:
-        return []
+        return None
     try:
         r = requests.get(f"{APIF_BASE}/fixtures",
                          params={"league": str(league_id),
@@ -208,11 +210,11 @@ def _fixtures_raw(league_id: int, season: int) -> list[dict]:
                          headers={"x-apisports-key": key},
                          timeout=APIF_TIMEOUT)
         if r.status_code != 200:
-            return []
+            return None
         body = r.json()
     except (requests.RequestException, ValueError) as exc:
         print(f"[comp {league_id}] fixtures: {redact(str(exc), key)[:140]}")
-        return []
+        return None
     return [p for p in (parse_fixture(x) for x in response_items(body))
             if p is not None]
 
@@ -227,8 +229,15 @@ def fixtures(key: str, season: int | None = None, days: int | None = None,
     season = season or v.season_default or 2026
 
     def _run():
+        raw = _fixtures_raw(v.apif_league_id, season)
+        if raw is None:
+            # provider FAILURE — return None so _cached stores nothing;
+            # caching an empty board for the TTL turned one transient
+            # hiccup into five minutes of "no fixtures" (found on the
+            # Leagues Cup board, matchday 1, 2026-08-04)
+            return None
         rows = []
-        for f in _fixtures_raw(v.apif_league_id, season):
+        for f in raw:
             row = dict(f)
             try:
                 from src.friendlies_apif import _slim_strength
@@ -359,21 +368,21 @@ def markets(key: str) -> dict | None:
         return None
 
     def _run():
+        # a FAILURE returns None so _cached stores nothing — one
+        # transient Kalshi error was being served as "unavailable" for
+        # the full TTL, which stripped every book off the Leagues Cup
+        # board for five minutes on matchday 1 (2026-08-04). The honest
+        # unavailable body is built below, OUTSIDE the cache.
         from src import friendlies
         try:
             d = friendlies._get_json(
                 f"{friendlies.KALSHI_BASE}/events",
                 {"series_ticker": v.kalshi_series, "limit": 200,
                  "with_nested_markets": "true"})
-        except Exception as exc:
-            return {"status": "unavailable", "detail": str(exc)[:140],
-                    "series": v.kalshi_series,
-                    "means": ("the registry read FAILED — this is not 'no "
-                              "book exists'")}
+        except Exception:
+            return None
         if d is None:
-            return {"status": "unavailable", "series": v.kalshi_series,
-                    "means": ("the registry read FAILED, so whether books "
-                              "are listed is UNKNOWN, not 'none open'")}
+            return None
         events = d.get("events") or []
         # listed vs tradeable stay APART: an EPL probe once returned ten
         # status=open events that were all settled prior-season fixtures.
@@ -386,7 +395,13 @@ def markets(key: str) -> dict | None:
                 "events": open_events,
                 "truncated": bool(d.get("cursor"))}
 
-    return _cached(f"comp:{key}:markets", CACHE_TTL, _run) or {}
+    out = _cached(f"comp:{key}:markets", CACHE_TTL, _run)
+    if out:
+        return out
+    return {"status": "unavailable", "series": v.kalshi_series,
+            "means": ("the registry read FAILED, so whether books are "
+                      "listed is UNKNOWN, not 'none open' — retried on "
+                      "every request, never cached")}
 
 
 def status(key: str) -> dict | None:
