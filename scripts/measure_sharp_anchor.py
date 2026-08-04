@@ -46,9 +46,16 @@ recorded as a NAMED ABSENCE and that competition is skipped. Use
 `--list-sports` (free, no quota) to see what a key can actually reach,
 and `--sport-map FILE` to pin a mapping the operator has verified.
 
-FIXTURES ARE BRIDGED ON BOTH CLUBS. One shared token attaches Real
-Sociedad's book to Real Madrid. Both sides must match and the match must
-be unique; anything else lands in `unmatched` with a reason.
+FIXTURES ARE BRIDGED ON BOTH CLUBS, IN ONE WINDOW, ONE ROW EACH. One
+shared token attaches Real Sociedad's book to Real Madrid, so both sides
+must match and the match must be unique. That alone was not enough: the
+first live run bridged 49 Argentine rows out of 33 anchor events. Two
+more guards close what it let through — kickoffs must agree within
+`KICKOFF_WINDOW_HOURS` (our list carries whole seasons, the anchor about
+a week, and in a round-robin league the reverse fixture is the same
+pairing), and one anchor event may back at most ONE of our rows (a city
+token shared by two different clubs beat the name rule). Anything else
+lands in `unmatched` with a reason.
 
 NO KEY, NO RESULT. Without a credential this exits 2 with a named
 refusal. It never falls back to a cached slate, a partial run or an
@@ -87,6 +94,31 @@ SHARP_PREFERENCE = ("pinnacle", "betfair_ex_eu", "betfair_ex_uk", "betfair")
 
 # Below this, a mean divergence is scatter with a story attached.
 MIN_FIXTURES_FOR_SUMMARY = 10
+
+# How far apart two kickoffs may be and still be the SAME meeting.
+#
+# The number is bounded from both sides, and the gap between the bounds
+# is wide, which is why a round figure inside it is defensible rather
+# than tuned:
+#
+#   FROM BELOW — the two providers schedule independently. API-Football's
+#   kickoff and a bookmaker's commence_time drift on TV reschedules, and
+#   one updates before the other. A match moved from Saturday night to
+#   Sunday afternoon is the same match; a window under ~24h would refuse
+#   it and quietly cost coverage, which is the same dishonesty as a false
+#   attach wearing the opposite face.
+#
+#   FROM ABOVE — two meetings of the same clubs WITHIN ONE COMPETITION
+#   are never close together. A round-robin reverse fixture is a
+#   half-season away; the tightest real case is a two-legged tie, and
+#   those are a week apart. This script bridges inside a single sport
+#   key, so the league-plus-cup-in-one-week case cannot arise here.
+#
+# 36h clears the reschedule case and sits at a fifth of the tightest
+# collision case. Nothing about the result is sensitive to the exact
+# figure anywhere between roughly 24h and 4 days.
+KICKOFF_WINDOW_HOURS = 36
+KICKOFF_WINDOW_SECONDS = KICKOFF_WINDOW_HOURS * 3600
 
 # competition key -> (required tokens, forbidden tokens). Matched against
 # the provider's own key + title + description, never against our display
@@ -362,34 +394,121 @@ def our_legs(fixture: dict) -> dict | None:
 
 # --- bridge and compare ----------------------------------------------------
 
+def _when(s: str | None) -> datetime | None:
+    """An aware UTC datetime, or None. Our side carries an offset
+    ('...+00:00'), the provider's carries 'Z'; a naive value is read as
+    UTC rather than crashing, because a fixture list is not the place to
+    discover a provider changed its format."""
+    if not s:
+        return None
+    try:
+        d = datetime.fromisoformat(str(s).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return d if d.tzinfo else d.replace(tzinfo=UTC)
+
+
 def bridge(rows: list[dict], events: list[dict]) -> tuple[list, list]:
-    """(pairs, unmatched). BOTH clubs must match, and uniquely."""
-    tagged = [(e, _club_toks(e.get("home_team") or ""),
-               _club_toks(e.get("away_team") or "")) for e in events]
-    pairs, unmatched = [], []
+    """(pairs, unmatched). Both clubs, the same MEETING, and one row each.
+
+    The first live run (research_archive/sharp_anchor_2026-08-04.json)
+    bridged 49 Argentine rows out of 33 anchor events, which is
+    arithmetically impossible without multi-attach. Two leaks produced
+    it, both visible in that document and both closed here:
+
+      TOKEN COLLISION ACROSS DIFFERENT CLUBS. 'Union Santa Fe v Instituto
+      Cordoba' (Sep 6) and 'Union Santa Fe v Central Cordoba de Santiago'
+      (Aug 11) carry byte-identical anchor legs in the archive, because
+      both opponents share the city token 'cordoba'. Both-clubs-must-match
+      passed on a shared CITY. Token rules cannot see that, so the two
+      guards below catch it instead — the collision always attaches two of
+      our rows to one event, and it almost always crosses rounds.
+
+      NO KICKOFF WINDOW. Our fixture list carries whole seasons; the
+      anchor lists about a week. Rows with kickoffs out to Oct 28 attached
+      to this week's meeting of the same clubs — the same pairing, a
+      different match. In a round-robin league that is systematic, not
+      unlucky, and it produced the top 'divergences' in the ranking.
+    """
+    tagged = [(i, e, _club_toks(e.get("home_team") or ""),
+               _club_toks(e.get("away_team") or ""),
+               _when(e.get("commence_time"))) for i, e in enumerate(events)]
+    provisional: list[tuple[dict, dict, int]] = []
+    unmatched: list[dict] = []
+
     for r in rows:
         hn = (r.get("home") or {}).get("name") or ""
         an = (r.get("away") or {}).get("name") or ""
         ht, at = _club_toks(hn), _club_toks(an)
+        who = {"home": hn, "away": an, "kickoff_utc": r.get("kickoff_utc")}
         if not ht or not at:
-            unmatched.append({"home": hn, "away": an,
+            unmatched.append({**who,
                               "reason": "no identity tokens on a side"})
+            continue
+        ours = _when(r.get("kickoff_utc"))
+        if ours is None:
+            # A fixture with no kickoff cannot be placed in a round, so
+            # it cannot be told apart from the reverse fixture. Refuse.
+            unmatched.append({**who, "reason": (
+                "our row has no readable kickoff, so it cannot be "
+                "distinguished from another meeting of the same clubs")})
             continue
         # orientation-agnostic: the two providers disagree about which
         # club is "home" often enough (neutral venues, tour matches) that
         # requiring the same orientation would drop real matches. The
         # SIDES are still resolved by name, never by position.
-        hits = [e for e, eh, ea in tagged
-                if ((ht & eh) and (at & ea)) or ((ht & ea) and (at & eh))]
-        if len(hits) != 1:
-            unmatched.append({
-                "home": hn, "away": an,
-                "reason": ("no anchor event matches both clubs"
-                           if not hits else
-                           f"{len(hits)} anchor events match both clubs; "
-                           f"none is attached rather than one guessed")})
+        named = [(i, e, w) for i, e, eh, ea, w in tagged
+                 if ((ht & eh) and (at & ea)) or ((ht & ea) and (at & eh))]
+        if not named:
+            unmatched.append({**who,
+                              "reason": "no anchor event matches both clubs"})
             continue
-        pairs.append((r, hits[0]))
+        hits = [(i, e) for i, e, w in named
+                if w is not None
+                and abs((w - ours).total_seconds()) <= KICKOFF_WINDOW_SECONDS]
+        if not hits:
+            undated = sum(1 for _i, _e, w in named if w is None)
+            unmatched.append({**who, "reason": (
+                f"{len(named)} anchor event(s) match both clubs but none "
+                f"within {KICKOFF_WINDOW_HOURS}h of our kickoff"
+                + (f" ({undated} carried no commence_time)" if undated
+                   else "") + " — same pairing, a different meeting")})
+            continue
+        if len(hits) > 1:
+            unmatched.append({**who, "reason": (
+                f"{len(hits)} anchor events match both clubs inside the "
+                f"window; none is attached rather than one guessed")})
+            continue
+        idx, ev = hits[0]
+        provisional.append((r, ev, idx))
+
+    # REVERSE UNIQUENESS. Everything above asks "which event is this row?"
+    # and never "did I already use that event?" — so a collision that
+    # survives both guards still lands twice. One anchor event may back at
+    # most ONE of our rows; two claimants refuse BOTH, because picking the
+    # nearer or the first is exactly the guess this script exists to
+    # avoid, and the wrong one would rank as a large divergence.
+    claims: dict[int, list[int]] = {}
+    for n, (_r, _e, idx) in enumerate(provisional):
+        claims.setdefault(idx, []).append(n)
+    pairs = []
+    for n, (r, ev, idx) in enumerate(provisional):
+        rivals = claims[idx]
+        if len(rivals) == 1:
+            pairs.append((r, ev))
+            continue
+        others = [f"{(provisional[m][0].get('home') or {}).get('name')} v "
+                  f"{(provisional[m][0].get('away') or {}).get('name')}"
+                  for m in rivals if m != n]
+        unmatched.append({
+            "home": (r.get("home") or {}).get("name"),
+            "away": (r.get("away") or {}).get("name"),
+            "kickoff_utc": r.get("kickoff_utc"),
+            "reason": (f"one anchor event is the sole in-window match for "
+                       f"{len(rivals)} of our fixtures ({', '.join(others)}) "
+                       f"— all are refused rather than one attached"),
+            "anchor_event": (f"{ev.get('home_team')} v {ev.get('away_team')} "
+                             f"@ {ev.get('commence_time')}")})
     return pairs, unmatched
 
 
@@ -626,6 +745,17 @@ def main() -> int:
             "status": ("the preference list is a PRIOR about which books "
                        "run thin and take size. It has not been scored "
                        "here; every row records which rule fired")},
+        "bridge_rule": {
+            "clubs": "both sides must match on identity tokens, uniquely",
+            "kickoff_window_hours": KICKOFF_WINDOW_HOURS,
+            "reverse_uniqueness": ("one anchor event backs at most one of "
+                                   "our rows; two claimants refuse both"),
+            "why": ("the 2026-08-04 run bridged 49 Argentine rows out of "
+                    "33 anchor events. A shared city token attached two "
+                    "different clubs, and a seasons-long fixture list "
+                    "attached October's reverse fixture to this week's "
+                    "book. Both are recorded in that archive, which "
+                    "stands as measured")},
         "regions": a.regions,
         "key_source": source,
         "key_problems": problems,
