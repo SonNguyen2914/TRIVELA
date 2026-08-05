@@ -262,6 +262,116 @@ def cmd_resolve(args) -> int:
     return 0
 
 
+def cmd_record_viewer(args) -> int:
+    """The viewer-competition write (#72): a fixture addressed by
+    (competition_slug, provider_fixture_id) instead of an MLS espn id.
+
+    No briefing exists for these competitions, so the operator supplies
+    what the briefing would have: the kickoff and both club names. Two
+    consequences the MLS path softens are structural here and the
+    command says them up front rather than warning after:
+
+      - every row is `stated_only`. There is no model and no approved
+        market chain to grant `observed_quote` against, so there is no
+        --allow-stated-only gate: choosing this subcommand IS the
+        choice, and the row counts nowhere by construction.
+      - the kickoff guard runs on the kickoff YOU state. Misstate it
+        and the server still stamps `void` off its own copy on a
+        repeat fixture — but a first write creates the fixture from
+        your value, so the clock is only as honest as the input.
+    """
+    try:
+        ko = datetime.fromisoformat(
+            args.kickoff_utc.replace("Z", "+00:00"))
+    except ValueError:
+        sys.exit(f"--kickoff-utc {args.kickoff_utc!r} is not an ISO "
+                 f"timestamp (e.g. 2026-08-05T23:30:00+00:00)")
+    if ko.tzinfo is None:
+        sys.exit("--kickoff-utc must carry a timezone offset — a naive "
+                 "kickoff silently shifts the void rule")
+    if _now() >= ko and not args.allow_void:
+        sys.exit(f"kickoff was {(_now()-ko).total_seconds()/60:.0f} min "
+                 f"ago. The server would record this as `void` — kept, "
+                 f"counted nowhere. Pass --allow-void to record it "
+                 f"anyway as documentation.")
+    body = {"market_ticker": args.market_ticker,
+            "outcome_key": args.outcome_key,
+            "competition_slug": args.competition_slug,
+            "provider_fixture_id": args.provider_fixture_id,
+            "kickoff_utc": args.kickoff_utc,
+            "home_team": args.home_team, "away_team": args.away_team}
+    for k, v in (("stated_price", args.stated_price),
+                 ("stated_size", args.stated_size),
+                 ("rationale", args.rationale),
+                 ("corrects_bet_id", args.corrects_bet_id)):
+        if v is not None:
+            body[k] = v
+    if args.dry_run:
+        print("DRY RUN — would POST /api/admin/mls/journal/view")
+        print(json.dumps(body, indent=2))
+        return 0
+    out = _post("/api/admin/mls/journal/view", body)
+    if out.get("error"):
+        sys.exit(f"refused: {out['error']}")
+    print(json.dumps(out, indent=2))
+    print("\nNOTE: price_basis=stated_only by construction on a viewer "
+          "competition — recorded honestly, counted NOWHERE.",
+          file=sys.stderr)
+    return 0
+
+
+def cmd_execution(args) -> int:
+    """Attach a REAL fill (or a real failure to fill) to a taken view.
+
+    Every fill fact is operator-supplied; the server refuses invented
+    ones, refuses fills that antedate the taken moment, and this
+    command adds nothing to soften either refusal — the matchday-1
+    slate's fills were correctly refused for exactly that chronology,
+    and the fix is process (say taken before betting), not tooling.
+    """
+    body = {"bet_id": args.bet_id, "account_label": args.account_label,
+            "consent_recorded_at": args.consent_recorded_at,
+            "status": args.status}
+    for k, v in (("fill_price", args.fill_price),
+                 ("filled_contracts", args.filled_contracts),
+                 ("fee_paid", args.fee_paid),
+                 ("filled_at", args.filled_at),
+                 ("market_quote_id_at_fill", args.market_quote_id_at_fill),
+                 ("not_filled_reason", args.not_filled_reason),
+                 ("best_available_price", args.best_available_price),
+                 ("exchange_order_id", args.exchange_order_id)):
+        if v is not None:
+            body[k] = v
+    if args.dry_run:
+        print("DRY RUN — would POST /api/admin/mls/journal/execution")
+        print(json.dumps(body, indent=2))
+        return 0
+    out = _post("/api/admin/mls/journal/execution", body)
+    if out.get("error"):
+        sys.exit(f"refused: {out['error']}")
+    print(json.dumps(out, indent=2))
+    return 0
+
+
+def cmd_settlement(args) -> int:
+    """The exchange's own settlement numbers — operator-supplied,
+    never derived from a scoreboard."""
+    body = {"execution_id": args.execution_id,
+            "settlement_credit": args.settlement_credit,
+            "settled_at": args.settled_at}
+    if args.settled_outcome is not None:
+        body["settled_outcome"] = args.settled_outcome
+    if args.dry_run:
+        print("DRY RUN — would POST /api/admin/mls/journal/settlement")
+        print(json.dumps(body, indent=2))
+        return 0
+    out = _post("/api/admin/mls/journal/settlement", body)
+    if out.get("error"):
+        sys.exit(f"refused: {out['error']}")
+    print(json.dumps(out, indent=2))
+    return 0
+
+
 def main() -> int:
     p = argparse.ArgumentParser(
         description="Record a personal view against an MLS fixture.")
@@ -292,6 +402,61 @@ def main() -> int:
     v.add_argument("bet_id", type=int)
     v.add_argument("status", choices=("taken", "passed", "void"))
     v.set_defaults(fn=cmd_resolve)
+
+    rv = sub.add_parser(
+        "record-viewer",
+        help="record a view on a viewer competition (leagues-cup etc.) "
+             "— stated_only by construction, counts nowhere")
+    rv.add_argument("outcome_key", choices=THREE_WAY)
+    rv.add_argument("--competition-slug", required=True,
+                    help="e.g. leagues-cup-2026 (season readable from "
+                         "the slug)")
+    rv.add_argument("--provider-fixture-id", required=True)
+    rv.add_argument("--kickoff-utc", required=True,
+                    help="ISO with offset, e.g. 2026-08-05T23:30:00+00:00")
+    rv.add_argument("--home-team", required=True)
+    rv.add_argument("--away-team", required=True)
+    rv.add_argument("--market-ticker", required=True)
+    rv.add_argument("--stated-price")
+    rv.add_argument("--stated-size")
+    rv.add_argument("--rationale")
+    rv.add_argument("--corrects-bet-id", type=int)
+    rv.add_argument("--allow-void", action="store_true",
+                    help="record after kickoff as documentation")
+    rv.add_argument("--dry-run", action="store_true")
+    rv.set_defaults(fn=cmd_record_viewer)
+
+    e = sub.add_parser("execution",
+                       help="attach a real fill (or non-fill) to a "
+                            "taken view — all facts operator-supplied")
+    e.add_argument("bet_id", type=int)
+    e.add_argument("account_label")
+    e.add_argument("--consent-recorded-at", required=True,
+                   help="when the operator's consent was recorded (ISO)")
+    e.add_argument("--status", default="filled",
+                   choices=("filled", "partial", "not_filled"))
+    e.add_argument("--fill-price")
+    e.add_argument("--filled-contracts")
+    e.add_argument("--fee-paid")
+    e.add_argument("--filled-at",
+                   help="the ACTUAL fill moment (ISO) — required for "
+                        "filled/partial; never approximated")
+    e.add_argument("--market-quote-id-at-fill", type=int)
+    e.add_argument("--not-filled-reason")
+    e.add_argument("--best-available-price")
+    e.add_argument("--exchange-order-id")
+    e.add_argument("--dry-run", action="store_true")
+    e.set_defaults(fn=cmd_execution)
+
+    st = sub.add_parser("settlement",
+                        help="the exchange's settlement numbers for an "
+                             "execution")
+    st.add_argument("execution_id", type=int)
+    st.add_argument("settlement_credit")
+    st.add_argument("--settled-at", required=True)
+    st.add_argument("--settled-outcome")
+    st.add_argument("--dry-run", action="store_true")
+    st.set_defaults(fn=cmd_settlement)
 
     args = p.parse_args()
     return args.fn(args)
