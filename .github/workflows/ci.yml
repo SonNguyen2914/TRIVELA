@@ -63,3 +63,28 @@ jobs:
         env:
           PG_TEST_URL: ${{ env.PG_BASE }}/postgres
         run: python -m pytest tests/test_postgres_integration.py -v
+
+      # TASK-11: the live-plane fixture suites again, on the real server.
+      # tests/_livedb.py switches the eight session fixtures to a
+      # throwaway PG schema per test when PG_TEST_URL is set; the
+      # terminal summary prints the per-engine leg counts, so a silent
+      # fallback to SQLite would read `postgresql=0` here instead of
+      # reading like success. The file list is the eight fixture-defining
+      # suites plus every file that imports one of those fixtures.
+      - name: Live-plane suites on real PostgreSQL (fixture parameterization)
+        env:
+          PG_TEST_URL: ${{ env.PG_BASE }}/postgres
+        run: |
+          python -m pytest -q \
+            tests/test_mls_shadow.py tests/test_epl_plane.py \
+            tests/test_ligamx_plane.py tests/test_laliga.py \
+            tests/test_hunter.py tests/test_hunter_live_stats.py \
+            tests/test_mls_xg_guard.py tests/test_mls_analyser.py \
+            tests/test_livedb_engine_leg.py tests/test_alert_gate.py \
+            tests/test_approval_revision_drift.py \
+            tests/test_fixture_unique_index.py \
+            tests/test_journal_error_status.py \
+            tests/test_journal_viewer_competitions.py \
+            tests/test_personal_journal.py tests/test_readiness_watch.py \
+            tests/test_scorer.py tests/test_scorer_populated.py \
+            tests/test_team_news.py tests/test_team_news_isolation.py

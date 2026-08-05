@@ -30,17 +30,15 @@ from tests.test_mls_shadow import CANNED_ESPN
 
 @pytest.fixture
 def live_session(tmp_path, monkeypatch):
-    url = f"sqlite:///{tmp_path}/live.db"
-    monkeypatch.setattr(config, "LIVE_DATABASE_URL", url)
-    monkeypatch.setattr(live_db, "_engine", None)
-    monkeypatch.setattr(live_db, "_Session", None)
-    monkeypatch.setattr(live_db, "LIVE_BOOT_ERROR", None)
+    from tests import _livedb
+    url, _livedb_done = _livedb.provision(tmp_path, monkeypatch)
     LiveBase.metadata.create_all(live_db.get_engine())
     s = live_db.get_session()
     s.add(Competition(slug="mls-2026", name="MLS", season=2026))
     s.commit()
     yield s
     s.close()
+    _livedb_done()
     monkeypatch.setattr(live_db, "_engine", None)
     monkeypatch.setattr(live_db, "_Session", None)
 

@@ -253,22 +253,22 @@ def dual_session(tmp_path, monkeypatch):
     """Throwaway live DB seeded with BOTH competitions, so cross-league
     scoping is testable. Same VARCHAR enforcement as the MLS suite."""
     from tests.test_mls_shadow import _enforce_varchar_lengths
-    url = f"sqlite:///{tmp_path}/live.db"
-    monkeypatch.setattr(config, "LIVE_DATABASE_URL", url)
-    monkeypatch.setattr(live_db, "_engine", None)
-    monkeypatch.setattr(live_db, "_Session", None)
-    monkeypatch.setattr(live_db, "LIVE_BOOT_ERROR", None)
+    from tests import _livedb
+    url, _livedb_done = _livedb.provision(tmp_path, monkeypatch)
     LiveBase.metadata.create_all(live_db.get_engine())
     from sqlalchemy import event
     from sqlalchemy.orm import Session as _Session
-    event.listen(_Session, "before_flush", _enforce_varchar_lengths)
+    if _livedb.SIMULATE_VARCHAR:
+        event.listen(_Session, "before_flush", _enforce_varchar_lengths)
     s = live_db.get_session()
     s.add(Competition(slug="mls-2026", name="MLS", season=2026))
     s.add(Competition(slug="la-liga-2026", name="La Liga", season=2026))
     s.commit()
     yield s
-    event.remove(_Session, "before_flush", _enforce_varchar_lengths)
+    if _livedb.SIMULATE_VARCHAR:
+        event.remove(_Session, "before_flush", _enforce_varchar_lengths)
     s.close()
+    _livedb_done()
     monkeypatch.setattr(live_db, "_engine", None)
     monkeypatch.setattr(live_db, "_Session", None)
 
