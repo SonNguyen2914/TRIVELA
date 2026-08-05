@@ -330,9 +330,16 @@ class TestIngestAndConsumption:
         """Rows written before the guard existed read NULL. They are not
         passes, and the report must not present them as such."""
         fx, _ = self._ingest_broken(live_session, monkeypatch)
-        # a row from before the guard: verdict NULL
+        # a row from before the guard: verdict NULL. It needs a REAL
+        # fixture — the first version hung it on fx.id + 1, which SQLite
+        # accepted (FKs off) and the PostgreSQL leg refused.
+        from src.live.models import Fixture
+        fx2 = Fixture(competition_slug="mls-2026", espn_event_id="pre-guard",
+                      status="post")
+        live_session.add(fx2)
+        live_session.flush()
         live_session.add(MlsTeamMatchStat(
-            fixture_id=fx.id + 1, team_id=1, side="home", xg=1.1,
+            fixture_id=fx2.id, team_id=1, side="home", xg=1.1,
             xg_against=0.9, goals=1, goals_conceded=0, shots_on_target=5))
         live_session.commit()
 
