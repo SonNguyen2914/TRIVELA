@@ -1,0 +1,65 @@
+{
+  "measured_at": "2026-08-05",
+  "measured_at_utc": "2026-08-05T22:53:03.155851+00:00",
+  "question": "does the cross-league strength read already encode hosting league, or does it under-rate MLS hosts as matchday 1 suggested?",
+  "what_this_is_NOT": "a correction, a constant, or evidence of an edge. It is the read's own signed error, split by who hosted",
+  "prior_from_outcomes": {
+    "source": "research_archive/leagues_cup_history_2026-08-05.json",
+    "mls_hosted_points_share": 0.6159,
+    "mls_hosted_ci95": [
+      0.5145,
+      0.7101
+    ],
+    "ligamx_hosted_points_share": 0.5286,
+    "ligamx_hosted_ci95": [
+      0.4357,
+      0.6286
+    ],
+    "note": "outcome-only and clean, but it says how the MATCHES went, not what the READ said. This document supplies the second half"
+  },
+  "leakage_policy": {
+    "2023_2024": "REFUSED. Today's ratings contain those outcomes; a retrospective error there is contaminated beyond use (AGENTS.md 13)",
+    "2025": "reported, labeled contaminated_retrospective",
+    "2026": "the clean arm \u2014 reads observed before kickoff, so the number existed before the outcome"
+  },
+  "retrospective_2025": {
+    "arm": "retrospective_2025",
+    "unresolved": 3,
+    "unresolved_names": [
+      "Los Angeles FC v Mazatl\u00e1n",
+      "Houston Dynamo v Mazatl\u00e1n",
+      "Mazatl\u00e1n v San Diego"
+    ],
+    "same_league_excluded": 4,
+    "fixtures_without_a_read": 3,
+    "by_host": {
+      "mls_hosted": {
+        "n": 33,
+        "mean_signed_error": -0.0966,
+        "ci95": [
+          -0.2215,
+          0.0369
+        ],
+        "below_floor": false
+      },
+      "ligamx_hosted": {
+        "n": 19,
+        "mean_signed_error": 0.1351,
+        "ci95": null,
+        "below_floor": true
+      }
+    },
+    "host_asymmetry": {
+      "refused": "each bucket needs 20+ scorable fixtures; have 33 MLS-hosted and 19 Liga MX-hosted",
+      "why_a_floor": "a mean signed error over a handful of fixtures is a slate's mood, and this number's only purpose is to justify or refuse a constant"
+    },
+    "evidence_class": "contaminated_retrospective",
+    "contamination": "the read is CURRENT ratings scored against 2025 results those ratings already absorbed \u2014 it flatters the read by an unknown amount and cannot justify a constant on its own"
+  },
+  "prospective_2026": {
+    "refused": "no pre-kickoff read corpus supplied. The clean arm needs reads OBSERVED BEFORE KICKOFF; re-reading a fixture after the fact returns today's rating and silently becomes the contaminated arm wearing a clean label",
+    "what_would_be_needed": "a JSON list of settled fixtures each carrying the read as it stood pre-kickoff (`_read`), plus home/away names and goals. The T-60 briefings on issue #68 freeze exactly these numbers per slate; ~2 slates exist so far against a 20-per-bucket floor",
+    "evidence_class": "not_yet_collectable"
+  },
+  "conclusion": "A hosting-league correction is JUSTIFIED only by the prospective arm clearing its floor with a CI excluding zero. Until then the read is left alone: matchday 1's four MLS hosts are an observation, not a coefficient"
+}
