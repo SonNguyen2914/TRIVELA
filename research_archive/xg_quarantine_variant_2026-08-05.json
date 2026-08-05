@@ -1,0 +1,56 @@
+{
+  "eval_version": "model-eval-v1",
+  "task": "xg-quarantine-variant (TASK-12)",
+  "generated_at": "2026-08-05T22:34:44.778134+00:00",
+  "method": "score_rows twice on identical rolling origins \u2014 the deployed xG map vs the quarantine-filtered map \u2014 paired by fixture key, match-cluster bootstrap on the paired log-loss delta",
+  "n_paired": 192,
+  "n_bootstrap": 2000,
+  "xg_map_fixtures": 268,
+  "xg_map_fixtures_after_exclusion": 261,
+  "quarantined_fixture_ids": [
+    1,
+    35,
+    158,
+    236,
+    371,
+    428,
+    437
+  ],
+  "m3_vs_m3q": {
+    "delta_log_loss": -0.0,
+    "ci95": [
+      -0.0011,
+      0.0011
+    ],
+    "significant": false,
+    "means": "positive = EXCLUDING quarantined xG scores better out of sample. Not significant = the quarantine decision is not evidence-forced either way"
+  },
+  "frozen_market": {
+    "n_with_frozen_market": 30,
+    "devig": "proportional on frozen yes_ask \u2014 an assumption about how the vig is distributed, not a measurement",
+    "log_loss": {
+      "market": 0.977,
+      "m3_included": 1.0022,
+      "m3_excluded": 1.003
+    },
+    "m3_included_vs_market": {
+      "delta_log_loss": -0.0252,
+      "ci95": [
+        -0.0714,
+        0.0234
+      ],
+      "means": "positive = the model beats the frozen market on these fixtures; NOT an edge claim \u2014 n is small and the market baseline is one book"
+    },
+    "m3_excluded_vs_market": {
+      "delta_log_loss": -0.0261,
+      "ci95": [
+        -0.0743,
+        0.0251
+      ]
+    }
+  },
+  "flag_state": {
+    "MLS_XG_QUARANTINE_EXCLUDE": false,
+    "decision": "the operator's, with this number in front of them \u2014 nothing here changes the flag"
+  }
+}
