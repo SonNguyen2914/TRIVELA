@@ -1,0 +1,2210 @@
+{
+  "measured_at_utc": "2026-08-05T10:41:32.989522+00:00",
+  "what_this_is": "the devig tilt from pricing legs off yes_ask instead of the bid/ask mid, per tradeable three-way book",
+  "what_this_is_not": "a correction \u2014 nothing anywhere applies this number; it is the measurement the sharp anchor's caveat has been waiting on",
+  "n_books": 182,
+  "n_excluded_one_sided": 0,
+  "abs_leg_tilt": {
+    "mean": 0.00765,
+    "median": 0.00385,
+    "p90": 0.01823,
+    "max": 0.08365
+  },
+  "by_competition_mean_max_abs": {
+    "mls": 0.00731,
+    "leagues-cup": 0.01494,
+    "asean": 0.00747,
+    "ucl": 0.02705,
+    "uel": 0.01166,
+    "ecl": 0.00882,
+    "brasileirao": 0.01048,
+    "argentina": 0.00798,
+    "usl": 0.00804
+  },
+  "books": [
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG19TORCLT",
+      "per_leg_tilt": [
+        -0.0011,
+        -0.00098,
+        0.00208
+      ],
+      "max_abs_leg_tilt": 0.00208,
+      "ask_overround": -0.9883,
+      "mid_overround": -0.9895
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG19PHIMIA",
+      "per_leg_tilt": [
+        0.00696,
+        -0.00324,
+        -0.00371
+      ],
+      "max_abs_leg_tilt": 0.00696,
+      "ask_overround": -0.9881,
+      "mid_overround": -0.9892
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG19ORLCHI",
+      "per_leg_tilt": [
+        0.00486,
+        -0.0018,
+        -0.00306
+      ],
+      "max_abs_leg_tilt": 0.00486,
+      "ask_overround": -0.9879,
+      "mid_overround": -0.9892
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG19NYRBNSH",
+      "per_leg_tilt": [
+        0.00239,
+        0.00309,
+        -0.00548
+      ],
+      "max_abs_leg_tilt": 0.00548,
+      "ask_overround": -0.9879,
+      "mid_overround": -0.9893
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG19DCUNE",
+      "per_leg_tilt": [
+        -0.00892,
+        0.00565,
+        0.00327
+      ],
+      "max_abs_leg_tilt": 0.00892,
+      "ask_overround": -0.9877,
+      "mid_overround": -0.9892
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG19CLBMTL",
+      "per_leg_tilt": [
+        -0.01675,
+        -0.00082,
+        0.01757
+      ],
+      "max_abs_leg_tilt": 0.01757,
+      "ask_overround": -0.9884,
+      "mid_overround": -0.9895
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG19CINNYC",
+      "per_leg_tilt": [
+        0.00343,
+        -8e-05,
+        -0.00335
+      ],
+      "max_abs_leg_tilt": 0.00343,
+      "ask_overround": -0.988,
+      "mid_overround": -0.9893
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG16SEAVAN",
+      "per_leg_tilt": [
+        0.00841,
+        -0.00121,
+        -0.00719
+      ],
+      "max_abs_leg_tilt": 0.00841,
+      "ask_overround": -0.9894,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG16ATXDAL",
+      "per_leg_tilt": [
+        0.0066,
+        -0.00348,
+        -0.00312
+      ],
+      "max_abs_leg_tilt": 0.0066,
+      "ask_overround": -0.9892,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG16NYCPHI",
+      "per_leg_tilt": [
+        -0.00094,
+        0.0058,
+        -0.00486
+      ],
+      "max_abs_leg_tilt": 0.0058,
+      "ask_overround": -0.9895,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG16CHIPOR",
+      "per_leg_tilt": [
+        -0.01032,
+        -0.00019,
+        0.0105
+      ],
+      "max_abs_leg_tilt": 0.0105,
+      "ask_overround": -0.9894,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG15SJSTL",
+      "per_leg_tilt": [
+        -0.00296,
+        0.00657,
+        -0.00361
+      ],
+      "max_abs_leg_tilt": 0.00657,
+      "ask_overround": -0.9895,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG15LAFCSD",
+      "per_leg_tilt": [
+        -0.01245,
+        0.00925,
+        0.00319
+      ],
+      "max_abs_leg_tilt": 0.01245,
+      "ask_overround": -0.9893,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG15RSLMIN",
+      "per_leg_tilt": [
+        -0.00132,
+        0.0016,
+        -0.00028
+      ],
+      "max_abs_leg_tilt": 0.0016,
+      "ask_overround": -0.9895,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG15COLSKC",
+      "per_leg_tilt": [
+        -0.01575,
+        0.0116,
+        0.00414
+      ],
+      "max_abs_leg_tilt": 0.01575,
+      "ask_overround": -0.9893,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG15NSHMIA",
+      "per_leg_tilt": [
+        0.00321,
+        -0.00321,
+        0.0
+      ],
+      "max_abs_leg_tilt": 0.00321,
+      "ask_overround": -0.9892,
+      "mid_overround": -0.9896
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG15HOULAG",
+      "per_leg_tilt": [
+        -0.00981,
+        0.01186,
+        -0.00206
+      ],
+      "max_abs_leg_tilt": 0.01186,
+      "ask_overround": -0.9896,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG15TORNE",
+      "per_leg_tilt": [
+        -0.00673,
+        0.00063,
+        0.0061
+      ],
+      "max_abs_leg_tilt": 0.00673,
+      "ask_overround": -0.9892,
+      "mid_overround": -0.9898
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG15ORLCIN",
+      "per_leg_tilt": [
+        0.00605,
+        -0.00266,
+        -0.00339
+      ],
+      "max_abs_leg_tilt": 0.00605,
+      "ask_overround": -0.9893,
+      "mid_overround": -0.9897
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG15MTLDCU",
+      "per_leg_tilt": [
+        -0.00518,
+        0.00148,
+        0.0037
+      ],
+      "max_abs_leg_tilt": 0.00518,
+      "ask_overround": -0.9893,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG15CLTCLB",
+      "per_leg_tilt": [
+        -0.00426,
+        0.00128,
+        0.00299
+      ],
+      "max_abs_leg_tilt": 0.00426,
+      "ask_overround": -0.9895,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "mls",
+      "event": "KXMLSGAME-26AUG15ATLNYRB",
+      "per_leg_tilt": [
+        -0.00656,
+        0.00305,
+        0.00351
+      ],
+      "max_abs_leg_tilt": 0.00656,
+      "ask_overround": -0.9894,
+      "mid_overround": -0.9897
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG13PORTIJ",
+      "per_leg_tilt": [
+        -0.00178,
+        -0.00178,
+        0.00356
+      ],
+      "max_abs_leg_tilt": 0.00356,
+      "ask_overround": -0.977,
+      "mid_overround": -0.9878
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG13CRACHI",
+      "per_leg_tilt": [
+        0.0015,
+        -0.01252,
+        0.01101
+      ],
+      "max_abs_leg_tilt": 0.01252,
+      "ask_overround": -0.9765,
+      "mid_overround": -0.9872
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG13AMEATX",
+      "per_leg_tilt": [
+        -0.00204,
+        -2e-05,
+        0.00206
+      ],
+      "max_abs_leg_tilt": 0.00206,
+      "ask_overround": -0.9769,
+      "mid_overround": -0.9878
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG13NYCNCX",
+      "per_leg_tilt": [
+        0.00132,
+        -0.00264,
+        0.00132
+      ],
+      "max_abs_leg_tilt": 0.00264,
+      "ask_overround": -0.976,
+      "mid_overround": -0.9873
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG13PHISLA",
+      "per_leg_tilt": [
+        -0.00204,
+        -2e-05,
+        0.00206
+      ],
+      "max_abs_leg_tilt": 0.00206,
+      "ask_overround": -0.9769,
+      "mid_overround": -0.9878
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG12SEACDG",
+      "per_leg_tilt": [
+        0.00132,
+        -0.00264,
+        0.00132
+      ],
+      "max_abs_leg_tilt": 0.00264,
+      "ask_overround": -0.976,
+      "mid_overround": -0.9873
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG12LAFCQUE",
+      "per_leg_tilt": [
+        -0.02582,
+        0.00891,
+        0.01691
+      ],
+      "max_abs_leg_tilt": 0.02582,
+      "ask_overround": -0.9769,
+      "mid_overround": -0.9872
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG12SDPUE",
+      "per_leg_tilt": [
+        -0.00116,
+        -0.00138,
+        0.00254
+      ],
+      "max_abs_leg_tilt": 0.00254,
+      "ask_overround": -0.9759,
+      "mid_overround": -0.9872
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG12TOLDAL",
+      "per_leg_tilt": [
+        0.00132,
+        -0.00264,
+        0.00132
+      ],
+      "max_abs_leg_tilt": 0.00264,
+      "ask_overround": -0.976,
+      "mid_overround": -0.9873
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG12MONNSH",
+      "per_leg_tilt": [
+        -0.00264,
+        0.00132,
+        0.00132
+      ],
+      "max_abs_leg_tilt": 0.00264,
+      "ask_overround": -0.976,
+      "mid_overround": -0.9873
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG12ORLASL",
+      "per_leg_tilt": [
+        0.00132,
+        -0.00264,
+        0.00132
+      ],
+      "max_abs_leg_tilt": 0.00264,
+      "ask_overround": -0.976,
+      "mid_overround": -0.9873
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG12MIALEO",
+      "per_leg_tilt": [
+        0.00249,
+        0.00249,
+        -0.00499
+      ],
+      "max_abs_leg_tilt": 0.00499,
+      "ask_overround": -0.9759,
+      "mid_overround": -0.9871
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG11TIGVAN",
+      "per_leg_tilt": [
+        -0.00267,
+        0.00133,
+        0.00133
+      ],
+      "max_abs_leg_tilt": 0.00267,
+      "ask_overround": -0.9766,
+      "mid_overround": -0.9875
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG11RSLJUA",
+      "per_leg_tilt": [
+        0.00133,
+        -0.00267,
+        0.00133
+      ],
+      "max_abs_leg_tilt": 0.00267,
+      "ask_overround": -0.9766,
+      "mid_overround": -0.9875
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG11MINALA",
+      "per_leg_tilt": [
+        0.00163,
+        -0.00326,
+        0.00163
+      ],
+      "max_abs_leg_tilt": 0.00326,
+      "ask_overround": -0.9769,
+      "mid_overround": -0.9877
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG11CINATL",
+      "per_leg_tilt": [
+        0.00163,
+        -0.00326,
+        0.00163
+      ],
+      "max_abs_leg_tilt": 0.00326,
+      "ask_overround": -0.9769,
+      "mid_overround": -0.9877
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG11CLTPAC",
+      "per_leg_tilt": [
+        -0.00267,
+        0.00133,
+        0.00133
+      ],
+      "max_abs_leg_tilt": 0.00267,
+      "ask_overround": -0.9766,
+      "mid_overround": -0.9875
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG11CLBPUM",
+      "per_leg_tilt": [
+        -0.01823,
+        0.00911,
+        0.00911
+      ],
+      "max_abs_leg_tilt": 0.01823,
+      "ask_overround": -0.9766,
+      "mid_overround": -0.9872
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG09AMEPOR",
+      "per_leg_tilt": [
+        -0.03929,
+        0.02615,
+        0.01314
+      ],
+      "max_abs_leg_tilt": 0.03929,
+      "ask_overround": -0.9764,
+      "mid_overround": -0.9867
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG09SDTIJ",
+      "per_leg_tilt": [
+        -0.01297,
+        0.00259,
+        0.01038
+      ],
+      "max_abs_leg_tilt": 0.01297,
+      "ask_overround": -0.976,
+      "mid_overround": -0.9871
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG09ATXPUE",
+      "per_leg_tilt": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "max_abs_leg_tilt": 0.0,
+      "ask_overround": -0.976,
+      "mid_overround": -0.9876
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG09NSHASL",
+      "per_leg_tilt": [
+        -0.05059,
+        0.02506,
+        0.02552
+      ],
+      "max_abs_leg_tilt": 0.05059,
+      "ask_overround": -0.9763,
+      "mid_overround": -0.9867
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG09CHISLA",
+      "per_leg_tilt": [
+        0.00934,
+        -0.04471,
+        0.03537
+      ],
+      "max_abs_leg_tilt": 0.04471,
+      "ask_overround": -0.9778,
+      "mid_overround": -0.9866
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG09PHINCX",
+      "per_leg_tilt": [
+        -0.02787,
+        0.01311,
+        0.01476
+      ],
+      "max_abs_leg_tilt": 0.02787,
+      "ask_overround": -0.9764,
+      "mid_overround": -0.9872
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG09CRANYC",
+      "per_leg_tilt": [
+        -0.02324,
+        0.01162,
+        0.01162
+      ],
+      "max_abs_leg_tilt": 0.02324,
+      "ask_overround": -0.9762,
+      "mid_overround": -0.9872
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG09SEAQUE",
+      "per_leg_tilt": [
+        -0.03313,
+        0.01544,
+        0.01768
+      ],
+      "max_abs_leg_tilt": 0.03313,
+      "ask_overround": -0.9768,
+      "mid_overround": -0.9873
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG08TOLLAFC",
+      "per_leg_tilt": [
+        -0.01541,
+        -0.0044,
+        0.01981
+      ],
+      "max_abs_leg_tilt": 0.01981,
+      "ask_overround": -0.9765,
+      "mid_overround": -0.9869
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG08RSLALA",
+      "per_leg_tilt": [
+        -0.00541,
+        -0.01175,
+        0.01715
+      ],
+      "max_abs_leg_tilt": 0.01715,
+      "ask_overround": -0.9773,
+      "mid_overround": -0.9872
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG08CDGDAL",
+      "per_leg_tilt": [
+        -0.02263,
+        0.01348,
+        0.00915
+      ],
+      "max_abs_leg_tilt": 0.02263,
+      "ask_overround": -0.9769,
+      "mid_overround": -0.9864
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG08MIAMON",
+      "per_leg_tilt": [
+        -0.02936,
+        0.00749,
+        0.02188
+      ],
+      "max_abs_leg_tilt": 0.02936,
+      "ask_overround": -0.9765,
+      "mid_overround": -0.9869
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG08ORLLEO",
+      "per_leg_tilt": [
+        0.01796,
+        -0.01654,
+        -0.00142
+      ],
+      "max_abs_leg_tilt": 0.01796,
+      "ask_overround": -0.9765,
+      "mid_overround": -0.9871
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG07VANJUA",
+      "per_leg_tilt": [
+        0.03319,
+        -0.02007,
+        -0.01311
+      ],
+      "max_abs_leg_tilt": 0.03319,
+      "ask_overround": -0.9805,
+      "mid_overround": -0.9878
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG07TIGMIN",
+      "per_leg_tilt": [
+        0.01058,
+        -0.05916,
+        0.04858
+      ],
+      "max_abs_leg_tilt": 0.05916,
+      "ask_overround": -0.9811,
+      "mid_overround": -0.9885
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG07CINPUM",
+      "per_leg_tilt": [
+        -0.00741,
+        -0.02962,
+        0.03703
+      ],
+      "max_abs_leg_tilt": 0.03703,
+      "ask_overround": -0.9764,
+      "mid_overround": -0.9845
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG07CLTATL",
+      "per_leg_tilt": [
+        0.00726,
+        -0.04203,
+        0.03477
+      ],
+      "max_abs_leg_tilt": 0.04203,
+      "ask_overround": -0.9761,
+      "mid_overround": -0.9858
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG07CLBPAC",
+      "per_leg_tilt": [
+        -0.02863,
+        -0.00549,
+        0.03412
+      ],
+      "max_abs_leg_tilt": 0.03412,
+      "ask_overround": -0.977,
+      "mid_overround": -0.9863
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG06PORPUE",
+      "per_leg_tilt": [
+        -0.02313,
+        0.01461,
+        0.00852
+      ],
+      "max_abs_leg_tilt": 0.02313,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.9902
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG06AMESD",
+      "per_leg_tilt": [
+        -0.00794,
+        0.00667,
+        0.00127
+      ],
+      "max_abs_leg_tilt": 0.00794,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG06ATXTIJ",
+      "per_leg_tilt": [
+        -0.00102,
+        -0.0001,
+        0.00112
+      ],
+      "max_abs_leg_tilt": 0.00112,
+      "ask_overround": -0.99,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG06CHINCX",
+      "per_leg_tilt": [
+        -0.01142,
+        0.0134,
+        -0.00198
+      ],
+      "max_abs_leg_tilt": 0.0134,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.9902
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG06CRAPHI",
+      "per_leg_tilt": [
+        -0.00549,
+        0.0018,
+        0.00369
+      ],
+      "max_abs_leg_tilt": 0.00549,
+      "ask_overround": -0.9896,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG06NYCSLA",
+      "per_leg_tilt": [
+        -0.00235,
+        0.00127,
+        0.00108
+      ],
+      "max_abs_leg_tilt": 0.00235,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG05LAFCCDG",
+      "per_leg_tilt": [
+        -0.00075,
+        -0.00047,
+        0.00122
+      ],
+      "max_abs_leg_tilt": 0.00122,
+      "ask_overround": -0.9896,
+      "mid_overround": -0.9898
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG05TOLSEA",
+      "per_leg_tilt": [
+        -0.00557,
+        0.00308,
+        0.00249
+      ],
+      "max_abs_leg_tilt": 0.00557,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG05NSHLEO",
+      "per_leg_tilt": [
+        -0.00144,
+        0.00111,
+        0.00034
+      ],
+      "max_abs_leg_tilt": 0.00144,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG05DALQUE",
+      "per_leg_tilt": [
+        -0.00278,
+        0.00117,
+        0.00161
+      ],
+      "max_abs_leg_tilt": 0.00278,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG05MONORL",
+      "per_leg_tilt": [
+        -0.00351,
+        0.00317,
+        0.00034
+      ],
+      "max_abs_leg_tilt": 0.00351,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "leagues-cup",
+      "event": "KXLEAGUESCUPGAME-26AUG05MIAASL",
+      "per_leg_tilt": [
+        -0.00541,
+        0.00293,
+        0.00249
+      ],
+      "max_abs_leg_tilt": 0.00541,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "asean",
+      "event": "KXASEANGAME-26AUG08THAMYA",
+      "per_leg_tilt": [
+        -0.00937,
+        0.00802,
+        0.00135
+      ],
+      "max_abs_leg_tilt": 0.00937,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "asean",
+      "event": "KXASEANGAME-26AUG08MASPHI",
+      "per_leg_tilt": [
+        -0.00859,
+        0.00266,
+        0.00594
+      ],
+      "max_abs_leg_tilt": 0.00859,
+      "ask_overround": -0.9901,
+      "mid_overround": -0.9903
+    },
+    {
+      "competition": "asean",
+      "event": "KXASEANGAME-26AUG07VIECAM",
+      "per_leg_tilt": [
+        -0.00827,
+        0.00407,
+        0.00421
+      ],
+      "max_abs_leg_tilt": 0.00827,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "asean",
+      "event": "KXASEANGAME-26AUG07SININA",
+      "per_leg_tilt": [
+        0.00219,
+        -0.00366,
+        0.00146
+      ],
+      "max_abs_leg_tilt": 0.00366,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "ucl",
+      "event": "KXUCLGAME-26AUG11OLSPA",
+      "per_leg_tilt": [
+        -0.00732,
+        -0.00171,
+        0.00903
+      ],
+      "max_abs_leg_tilt": 0.00903,
+      "ask_overround": -0.9879,
+      "mid_overround": -0.9908
+    },
+    {
+      "competition": "ucl",
+      "event": "KXUCLGAME-26AUG11SLOMJA",
+      "per_leg_tilt": [
+        -0.08365,
+        0.03181,
+        0.05184
+      ],
+      "max_abs_leg_tilt": 0.08365,
+      "ask_overround": -0.9858,
+      "mid_overround": -0.9898
+    },
+    {
+      "competition": "ucl",
+      "event": "KXUCLGAME-26AUG11CELARA",
+      "per_leg_tilt": [
+        -0.02737,
+        0.01979,
+        0.00758
+      ],
+      "max_abs_leg_tilt": 0.02737,
+      "ask_overround": -0.989,
+      "mid_overround": -0.9904
+    },
+    {
+      "competition": "ucl",
+      "event": "KXUCLGAME-26AUG11CZVHBS",
+      "per_leg_tilt": [
+        -0.01786,
+        0.0102,
+        0.00765
+      ],
+      "max_abs_leg_tilt": 0.01786,
+      "ask_overround": -0.9888,
+      "mid_overround": -0.9902
+    },
+    {
+      "competition": "ucl",
+      "event": "KXUCLGAME-26AUG11NIJOLY",
+      "per_leg_tilt": [
+        -0.00187,
+        0.02455,
+        -0.02267
+      ],
+      "max_abs_leg_tilt": 0.02455,
+      "ask_overround": -0.9866,
+      "mid_overround": -0.9895
+    },
+    {
+      "competition": "ucl",
+      "event": "KXUCLGAME-26AUG11KAZDIN",
+      "per_leg_tilt": [
+        0.00093,
+        -0.0142,
+        0.01327
+      ],
+      "max_abs_leg_tilt": 0.0142,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "ucl",
+      "event": "KXUCLGAME-26AUG11BOGUSG",
+      "per_leg_tilt": [
+        -0.02078,
+        0.01557,
+        0.00522
+      ],
+      "max_abs_leg_tilt": 0.02078,
+      "ask_overround": -0.9875,
+      "mid_overround": -0.9898
+    },
+    {
+      "competition": "ucl",
+      "event": "KXUCLGAME-26AUG11ALMLEV",
+      "per_leg_tilt": [
+        -0.06373,
+        0.0122,
+        0.05153
+      ],
+      "max_abs_leg_tilt": 0.06373,
+      "ask_overround": -0.9871,
+      "mid_overround": -0.9898
+    },
+    {
+      "competition": "ucl",
+      "event": "KXUCLGAME-26AUG05FENSTU",
+      "per_leg_tilt": [
+        -0.00572,
+        0.00323,
+        0.00249
+      ],
+      "max_abs_leg_tilt": 0.00572,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "ucl",
+      "event": "KXUCLGAME-26AUG05AGFSBH",
+      "per_leg_tilt": [
+        -0.00363,
+        0.00204,
+        0.00159
+      ],
+      "max_abs_leg_tilt": 0.00363,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "uel",
+      "event": "KXUELGAME-26AUG13EGRSHA",
+      "per_leg_tilt": [
+        -0.00264,
+        -0.00264,
+        0.00527
+      ],
+      "max_abs_leg_tilt": 0.00527,
+      "ask_overround": -0.9766,
+      "mid_overround": -0.9873
+    },
+    {
+      "competition": "uel",
+      "event": "KXUELGAME-26AUG11IBELAR",
+      "per_leg_tilt": [
+        -0.02836,
+        0.02206,
+        0.0063
+      ],
+      "max_abs_leg_tilt": 0.02836,
+      "ask_overround": -0.9792,
+      "mid_overround": -0.9881
+    },
+    {
+      "competition": "uel",
+      "event": "KXUELGAME-26AUG06THUREY",
+      "per_leg_tilt": [
+        -0.00835,
+        0.00205,
+        0.0063
+      ],
+      "max_abs_leg_tilt": 0.00835,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "uel",
+      "event": "KXUELGAME-26AUG06PAOKRSC",
+      "per_leg_tilt": [
+        -0.00902,
+        0.00537,
+        0.00365
+      ],
+      "max_abs_leg_tilt": 0.00902,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "uel",
+      "event": "KXUELGAME-26AUG06PAFRBS",
+      "per_leg_tilt": [
+        0.03517,
+        -0.03844,
+        0.00327
+      ],
+      "max_abs_leg_tilt": 0.03844,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.9906
+    },
+    {
+      "competition": "uel",
+      "event": "KXUELGAME-26AUG06MTACSK",
+      "per_leg_tilt": [
+        -0.00441,
+        0.0001,
+        0.00431
+      ],
+      "max_abs_leg_tilt": 0.00441,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "uel",
+      "event": "KXUELGAME-26AUG06LPOKI",
+      "per_leg_tilt": [
+        -0.01409,
+        0.0079,
+        0.00619
+      ],
+      "max_abs_leg_tilt": 0.01409,
+      "ask_overround": -0.9896,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "uel",
+      "event": "KXUELGAME-26AUG06LINOMO",
+      "per_leg_tilt": [
+        0.00689,
+        -0.02051,
+        0.01362
+      ],
+      "max_abs_leg_tilt": 0.02051,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.9902
+    },
+    {
+      "competition": "uel",
+      "event": "KXUELGAME-26AUG06KUPSCSU",
+      "per_leg_tilt": [
+        0.0053,
+        -0.00495,
+        -0.00035
+      ],
+      "max_abs_leg_tilt": 0.0053,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "uel",
+      "event": "KXUELGAME-26AUG06JAGRFC",
+      "per_leg_tilt": [
+        0.00036,
+        -0.00102,
+        0.00066
+      ],
+      "max_abs_leg_tilt": 0.00102,
+      "ask_overround": -0.99,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "uel",
+      "event": "KXUELGAME-26AUG06HRKBES",
+      "per_leg_tilt": [
+        0.00025,
+        -0.00495,
+        0.0047
+      ],
+      "max_abs_leg_tilt": 0.00495,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "uel",
+      "event": "KXUELGAME-26AUG06FTCGOR",
+      "per_leg_tilt": [
+        -0.00351,
+        0.00219,
+        0.00132
+      ],
+      "max_abs_leg_tilt": 0.00351,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "uel",
+      "event": "KXUELGAME-26AUG06BENHOM",
+      "per_leg_tilt": [
+        -0.01245,
+        0.00422,
+        0.00824
+      ],
+      "max_abs_leg_tilt": 0.01245,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "uel",
+      "event": "KXUELGAME-26AUG06RBSPAF",
+      "per_leg_tilt": [
+        -0.00755,
+        0.00694,
+        0.00061
+      ],
+      "max_abs_leg_tilt": 0.00755,
+      "ask_overround": -0.99,
+      "mid_overround": -0.9902
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG13DICAUD",
+      "per_leg_tilt": [
+        -0.00298,
+        0.00149,
+        0.00149
+      ],
+      "max_abs_leg_tilt": 0.00298,
+      "ask_overround": -0.9762,
+      "mid_overround": -0.9873
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06TRFDRI",
+      "per_leg_tilt": [
+        0.00152,
+        -0.01427,
+        0.01275
+      ],
+      "max_abs_leg_tilt": 0.01427,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06PARTOB",
+      "per_leg_tilt": [
+        -0.01563,
+        0.00667,
+        0.00896
+      ],
+      "max_abs_leg_tilt": 0.01563,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06HIBSHK",
+      "per_leg_tilt": [
+        -0.01451,
+        0.00121,
+        0.0133
+      ],
+      "max_abs_leg_tilt": 0.01451,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06RIJILV",
+      "per_leg_tilt": [
+        -0.00796,
+        0.00443,
+        0.00353
+      ],
+      "max_abs_leg_tilt": 0.00796,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06BOHFCM",
+      "per_leg_tilt": [
+        0.00284,
+        -0.00931,
+        0.00647
+      ],
+      "max_abs_leg_tilt": 0.00931,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06VALNJA",
+      "per_leg_tilt": [
+        0.00383,
+        -0.00662,
+        0.00279
+      ],
+      "max_abs_leg_tilt": 0.00662,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06LUGNSI",
+      "per_leg_tilt": [
+        -0.01634,
+        0.00386,
+        0.01248
+      ],
+      "max_abs_leg_tilt": 0.01634,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06BRADMI",
+      "per_leg_tilt": [
+        -0.01704,
+        0.00915,
+        0.00789
+      ],
+      "max_abs_leg_tilt": 0.01704,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06BBLMAX",
+      "per_leg_tilt": [
+        -0.01256,
+        0.00805,
+        0.00451
+      ],
+      "max_abs_leg_tilt": 0.01256,
+      "ask_overround": -0.9896,
+      "mid_overround": -0.9902
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06TWEDDS",
+      "per_leg_tilt": [
+        -0.00767,
+        0.00439,
+        0.00328
+      ],
+      "max_abs_leg_tilt": 0.00767,
+      "ask_overround": -0.9902,
+      "mid_overround": -0.9903
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06HTAKAT",
+      "per_leg_tilt": [
+        -0.00128,
+        -0.00187,
+        0.00315
+      ],
+      "max_abs_leg_tilt": 0.00315,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06AJASHE",
+      "per_leg_tilt": [
+        -0.00863,
+        0.00454,
+        0.0041
+      ],
+      "max_abs_leg_tilt": 0.00863,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06BEIFAK",
+      "per_leg_tilt": [
+        -0.00065,
+        -0.00221,
+        0.00286
+      ],
+      "max_abs_leg_tilt": 0.00286,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06ZALHAJ",
+      "per_leg_tilt": [
+        0.0047,
+        -0.00435,
+        -0.00035
+      ],
+      "max_abs_leg_tilt": 0.0047,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06SHFSTG",
+      "per_leg_tilt": [
+        -0.00113,
+        -0.00227,
+        0.0034
+      ],
+      "max_abs_leg_tilt": 0.0034,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06RFCGYO",
+      "per_leg_tilt": [
+        -0.01308,
+        -0.00317,
+        0.01625
+      ],
+      "max_abs_leg_tilt": 0.01625,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.9902
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06IFKKAA",
+      "per_leg_tilt": [
+        0.00291,
+        -0.00606,
+        0.00315
+      ],
+      "max_abs_leg_tilt": 0.00606,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06ESCTAF",
+      "per_leg_tilt": [
+        -0.02015,
+        -0.00324,
+        0.02339
+      ],
+      "max_abs_leg_tilt": 0.02339,
+      "ask_overround": -0.9893,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06DYKQAR",
+      "per_leg_tilt": [
+        -0.00176,
+        0.00073,
+        0.00102
+      ],
+      "max_abs_leg_tilt": 0.00176,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06DEBFCC",
+      "per_leg_tilt": [
+        0.00488,
+        -0.009,
+        0.00412
+      ],
+      "max_abs_leg_tilt": 0.009,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06CZEHIF",
+      "per_leg_tilt": [
+        -0.01885,
+        0.0097,
+        0.00914
+      ],
+      "max_abs_leg_tilt": 0.01885,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.9903
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06CFRTIL",
+      "per_leg_tilt": [
+        0.00118,
+        0.00094,
+        -0.00212
+      ],
+      "max_abs_leg_tilt": 0.00212,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06PAISCR",
+      "per_leg_tilt": [
+        0.0033,
+        -0.00488,
+        0.00158
+      ],
+      "max_abs_leg_tilt": 0.00488,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06HJKMOT",
+      "per_leg_tilt": [
+        -0.00284,
+        -0.00167,
+        0.00451
+      ],
+      "max_abs_leg_tilt": 0.00451,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06FKJRFS",
+      "per_leg_tilt": [
+        -0.00783,
+        0.0003,
+        0.00753
+      ],
+      "max_abs_leg_tilt": 0.00783,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.9902
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06FCNSIO",
+      "per_leg_tilt": [
+        0.00126,
+        -0.00469,
+        0.00343
+      ],
+      "max_abs_leg_tilt": 0.00469,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG06INTVAD",
+      "per_leg_tilt": [
+        -0.0068,
+        0.00315,
+        0.00365
+      ],
+      "max_abs_leg_tilt": 0.0068,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG05PANCSK",
+      "per_leg_tilt": [
+        -0.00707,
+        0.00413,
+        0.00294
+      ],
+      "max_abs_leg_tilt": 0.00707,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "ecl",
+      "event": "KXUECLGAME-26AUG05SKBAPO",
+      "per_leg_tilt": [
+        -0.0038,
+        0.00219,
+        0.00161
+      ],
+      "max_abs_leg_tilt": 0.0038,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG17INTCR",
+      "per_leg_tilt": [
+        -0.04826,
+        0.04593,
+        0.00234
+      ],
+      "max_abs_leg_tilt": 0.04826,
+      "ask_overround": -0.9872,
+      "mid_overround": -0.9893
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG16CORCRU",
+      "per_leg_tilt": [
+        -0.00896,
+        0.00394,
+        0.00502
+      ],
+      "max_abs_leg_tilt": 0.00896,
+      "ask_overround": -0.9881,
+      "mid_overround": -0.9895
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG16VITBOT",
+      "per_leg_tilt": [
+        -0.00928,
+        0.00535,
+        0.00393
+      ],
+      "max_abs_leg_tilt": 0.00928,
+      "ask_overround": -0.988,
+      "mid_overround": -0.9894
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG16MIRFLA",
+      "per_leg_tilt": [
+        0.01171,
+        -0.01869,
+        0.00697
+      ],
+      "max_abs_leg_tilt": 0.01869,
+      "ask_overround": -0.9884,
+      "mid_overround": -0.9896
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG16VDGSAN",
+      "per_leg_tilt": [
+        -0.0139,
+        0.00693,
+        0.00697
+      ],
+      "max_abs_leg_tilt": 0.0139,
+      "ask_overround": -0.9884,
+      "mid_overround": -0.9896
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG16CHABAH",
+      "per_leg_tilt": [
+        0.00829,
+        -0.01273,
+        0.00443
+      ],
+      "max_abs_leg_tilt": 0.01273,
+      "ask_overround": -0.9884,
+      "mid_overround": -0.9895
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG15SPACFC",
+      "per_leg_tilt": [
+        -0.02337,
+        0.01342,
+        0.00995
+      ],
+      "max_abs_leg_tilt": 0.02337,
+      "ask_overround": -0.9885,
+      "mid_overround": -0.9896
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG15CAPRBB",
+      "per_leg_tilt": [
+        -0.01107,
+        0.0025,
+        0.00857
+      ],
+      "max_abs_leg_tilt": 0.01107,
+      "ask_overround": -0.9885,
+      "mid_overround": -0.9896
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG15FLUPAL",
+      "per_leg_tilt": [
+        0.0074,
+        -0.00886,
+        0.00146
+      ],
+      "max_abs_leg_tilt": 0.00886,
+      "ask_overround": -0.9885,
+      "mid_overround": -0.9896
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG15ATLGPA",
+      "per_leg_tilt": [
+        -0.02061,
+        0.01158,
+        0.00903
+      ],
+      "max_abs_leg_tilt": 0.02061,
+      "ask_overround": -0.9885,
+      "mid_overround": -0.9896
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG09FLAVIT",
+      "per_leg_tilt": [
+        -0.00588,
+        0.00363,
+        0.00225
+      ],
+      "max_abs_leg_tilt": 0.00588,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG09SANCAP",
+      "per_leg_tilt": [
+        -0.00169,
+        0.001,
+        0.0007
+      ],
+      "max_abs_leg_tilt": 0.00169,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG09RBBCOR",
+      "per_leg_tilt": [
+        -0.00128,
+        -0.00138,
+        0.00266
+      ],
+      "max_abs_leg_tilt": 0.00266,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG09PALINT",
+      "per_leg_tilt": [
+        -0.00196,
+        0.00186,
+        0.0001
+      ],
+      "max_abs_leg_tilt": 0.00196,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG09BAHVDG",
+      "per_leg_tilt": [
+        -0.00754,
+        0.00389,
+        0.00365
+      ],
+      "max_abs_leg_tilt": 0.00754,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG09CRUMIR",
+      "per_leg_tilt": [
+        -0.0043,
+        0.00536,
+        -0.00106
+      ],
+      "max_abs_leg_tilt": 0.00536,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG08BOTFLU",
+      "per_leg_tilt": [
+        0.00094,
+        -0.0031,
+        0.00217
+      ],
+      "max_abs_leg_tilt": 0.0031,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG08CFCCHA",
+      "per_leg_tilt": [
+        -0.00378,
+        0.00234,
+        0.00144
+      ],
+      "max_abs_leg_tilt": 0.00378,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG08CRATL",
+      "per_leg_tilt": [
+        0.00029,
+        -0.00088,
+        0.00059
+      ],
+      "max_abs_leg_tilt": 0.00088,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "brasileirao",
+      "event": "KXBRASILEIROGAME-26AUG08GPASPA",
+      "per_leg_tilt": [
+        -0.00095,
+        0.0004,
+        0.00055
+      ],
+      "max_abs_leg_tilt": 0.00095,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG11CATLAN",
+      "per_leg_tilt": [
+        -0.00441,
+        0.00313,
+        0.00128
+      ],
+      "max_abs_leg_tilt": 0.00441,
+      "ask_overround": -0.9884,
+      "mid_overround": -0.9896
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG11BANCAB",
+      "per_leg_tilt": [
+        0.00367,
+        0.00251,
+        -0.00618
+      ],
+      "max_abs_leg_tilt": 0.00618,
+      "ask_overround": -0.989,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG09UNICC",
+      "per_leg_tilt": [
+        -0.04183,
+        0.04316,
+        -0.00133
+      ],
+      "max_abs_leg_tilt": 0.04316,
+      "ask_overround": -0.9877,
+      "mid_overround": -0.9893
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG09TIGRIV",
+      "per_leg_tilt": [
+        0.00057,
+        -0.00411,
+        0.00354
+      ],
+      "max_abs_leg_tilt": 0.00411,
+      "ask_overround": -0.9896,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG09SLAHUR",
+      "per_leg_tilt": [
+        0.00221,
+        -0.00324,
+        0.00103
+      ],
+      "max_abs_leg_tilt": 0.00324,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG09IRMRCU",
+      "per_leg_tilt": [
+        -0.00453,
+        0.00308,
+        0.00144
+      ],
+      "max_abs_leg_tilt": 0.00453,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG09IACCGEM",
+      "per_leg_tilt": [
+        -0.00724,
+        0.00562,
+        0.00162
+      ],
+      "max_abs_leg_tilt": 0.00724,
+      "ask_overround": -0.9896,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG09GLPBAR",
+      "per_leg_tilt": [
+        -0.01759,
+        0.01977,
+        -0.00218
+      ],
+      "max_abs_leg_tilt": 0.01977,
+      "ask_overround": -0.9894,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG09DYJNOB",
+      "per_leg_tilt": [
+        0.00141,
+        -0.0002,
+        -0.00122
+      ],
+      "max_abs_leg_tilt": 0.00141,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG09CAIPLA",
+      "per_leg_tilt": [
+        -0.0099,
+        0.01259,
+        -0.0027
+      ],
+      "max_abs_leg_tilt": 0.01259,
+      "ask_overround": -0.9894,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG09BOCVEL",
+      "per_leg_tilt": [
+        -0.00603,
+        0.00731,
+        -0.00127
+      ],
+      "max_abs_leg_tilt": 0.00731,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG09ARGRAC",
+      "per_leg_tilt": [
+        -0.00378,
+        0.00521,
+        -0.00144
+      ],
+      "max_abs_leg_tilt": 0.00521,
+      "ask_overround": -0.9896,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG08TUCCAS",
+      "per_leg_tilt": [
+        -0.00831,
+        0.00423,
+        0.00408
+      ],
+      "max_abs_leg_tilt": 0.00831,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG08RIEELP",
+      "per_leg_tilt": [
+        0.00378,
+        -0.00481,
+        0.00103
+      ],
+      "max_abs_leg_tilt": 0.00481,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG07CARCCAA",
+      "per_leg_tilt": [
+        -0.00775,
+        0.00265,
+        0.0051
+      ],
+      "max_abs_leg_tilt": 0.00775,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG06UNILAN",
+      "per_leg_tilt": [
+        -0.00102,
+        0.00073,
+        0.00029
+      ],
+      "max_abs_leg_tilt": 0.00102,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG05TIGCAB",
+      "per_leg_tilt": [
+        -0.0005,
+        0.0007,
+        -0.0002
+      ],
+      "max_abs_leg_tilt": 0.0007,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "argentina",
+      "event": "KXARGPREMDIVGAME-26AUG05BOCELP",
+      "per_leg_tilt": [
+        -0.00184,
+        0.00159,
+        0.00025
+      ],
+      "max_abs_leg_tilt": 0.00184,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "usl",
+      "event": "KXUSLGAME-26AUG09IELHAR",
+      "per_leg_tilt": [
+        -0.00777,
+        0.00166,
+        0.00611
+      ],
+      "max_abs_leg_tilt": 0.00777,
+      "ask_overround": -0.99,
+      "mid_overround": -0.9903
+    },
+    {
+      "competition": "usl",
+      "event": "KXUSLGAME-26AUG08OCTAM",
+      "per_leg_tilt": [
+        0.00461,
+        -0.0079,
+        0.0033
+      ],
+      "max_abs_leg_tilt": 0.0079,
+      "ask_overround": -0.9901,
+      "mid_overround": -0.9903
+    },
+    {
+      "competition": "usl",
+      "event": "KXUSLGAME-26AUG08MONNEW",
+      "per_leg_tilt": [
+        0.00337,
+        0.00098,
+        -0.00434
+      ],
+      "max_abs_leg_tilt": 0.00434,
+      "ask_overround": -0.9896,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "usl",
+      "event": "KXUSLGAME-26AUG08PASOAK",
+      "per_leg_tilt": [
+        -0.00734,
+        -0.00026,
+        0.0076
+      ],
+      "max_abs_leg_tilt": 0.0076,
+      "ask_overround": -0.9889,
+      "mid_overround": -0.9898
+    },
+    {
+      "competition": "usl",
+      "event": "KXUSLGAME-26AUG08TULDET",
+      "per_leg_tilt": [
+        0.00208,
+        -0.00302,
+        0.00094
+      ],
+      "max_abs_leg_tilt": 0.00302,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.9902
+    },
+    {
+      "competition": "usl",
+      "event": "KXUSLGAME-26AUG08LFCSAN",
+      "per_leg_tilt": [
+        -0.01179,
+        0.00692,
+        0.00487
+      ],
+      "max_abs_leg_tilt": 0.01179,
+      "ask_overround": -0.99,
+      "mid_overround": -0.9902
+    },
+    {
+      "competition": "usl",
+      "event": "KXUSLGAME-26AUG08RHOCSS",
+      "per_leg_tilt": [
+        -0.00041,
+        -0.00016,
+        0.00057
+      ],
+      "max_abs_leg_tilt": 0.00057,
+      "ask_overround": -0.99,
+      "mid_overround": -0.9903
+    },
+    {
+      "competition": "usl",
+      "event": "KXUSLGAME-26AUG08PITSRP",
+      "per_leg_tilt": [
+        0.00196,
+        0.00039,
+        -0.00235
+      ],
+      "max_abs_leg_tilt": 0.00235,
+      "ask_overround": -0.9896,
+      "mid_overround": -0.9902
+    },
+    {
+      "competition": "usl",
+      "event": "KXUSLGAME-26AUG08MIALAS",
+      "per_leg_tilt": [
+        0.00154,
+        0.00244,
+        -0.00398
+      ],
+      "max_abs_leg_tilt": 0.00398,
+      "ask_overround": -0.9897,
+      "mid_overround": -0.9902
+    },
+    {
+      "competition": "usl",
+      "event": "KXUSLGAME-26AUG08LOUCHA",
+      "per_leg_tilt": [
+        0.00385,
+        -0.00769,
+        0.00385
+      ],
+      "max_abs_leg_tilt": 0.00769,
+      "ask_overround": -0.99,
+      "mid_overround": -0.9902
+    },
+    {
+      "competition": "usl",
+      "event": "KXUSLGAME-26AUG08LEXPHO",
+      "per_leg_tilt": [
+        -0.00975,
+        0.00232,
+        0.00743
+      ],
+      "max_abs_leg_tilt": 0.00975,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.9902
+    },
+    {
+      "competition": "usl",
+      "event": "KXUSLGAME-26AUG08BROBIR",
+      "per_leg_tilt": [
+        0.00122,
+        -0.00249,
+        0.00127
+      ],
+      "max_abs_leg_tilt": 0.00249,
+      "ask_overround": -0.9896,
+      "mid_overround": -0.9901
+    },
+    {
+      "competition": "usl",
+      "event": "KXUSLGAME-26AUG05LASOAK",
+      "per_leg_tilt": [
+        -0.00647,
+        -0.00476,
+        0.01123
+      ],
+      "max_abs_leg_tilt": 0.01123,
+      "ask_overround": -0.9896,
+      "mid_overround": -0.9899
+    },
+    {
+      "competition": "usl",
+      "event": "KXUSLGAME-26AUG05PASMON",
+      "per_leg_tilt": [
+        -0.00348,
+        0.00189,
+        0.00159
+      ],
+      "max_abs_leg_tilt": 0.00348,
+      "ask_overround": -0.9899,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "usl",
+      "event": "KXUSLGAME-26AUG05TULSRP",
+      "per_leg_tilt": [
+        0.00333,
+        -0.00206,
+        -0.00127
+      ],
+      "max_abs_leg_tilt": 0.00333,
+      "ask_overround": -0.9898,
+      "mid_overround": -0.99
+    },
+    {
+      "competition": "usl",
+      "event": "KXUSLGAME-26JUL24BIRNEW",
+      "per_leg_tilt": [
+        -0.04136,
+        0.02418,
+        0.01717
+      ],
+      "max_abs_leg_tilt": 0.04136,
+      "ask_overround": -0.9877,
+      "mid_overround": -0.9902
+    }
+  ]
+}

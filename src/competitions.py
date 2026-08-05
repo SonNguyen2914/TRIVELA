@@ -280,8 +280,24 @@ def fixtures(key: str, season: int | None = None, days: int | None = None,
             if now_s <= (r.get("kickoff_utc") or "") <= soon_weather:
                 try:
                     from src.live import match_weather
-                    r["weather"] = match_weather.for_fixture(
-                        r.get("venue_city"), r.get("kickoff_utc"))
+                    from src.live import venue_city as _vc
+                    hid = (r.get("home") or {}).get("apif_team_id")
+                    city = r.get("venue_city")
+                    basis = "city from the fixture feed"
+                    if not city:
+                        # feed carries no city for most club fixtures —
+                        # fall back to the home team's registered ground,
+                        # with the basis carried on the payload
+                        city, basis = _vc.city_for(hid, r.get("venue"))
+                    # the home team's country disambiguates the geocode
+                    # either way — a bare 'Mansfield' is England's
+                    w = match_weather.for_fixture(
+                        city, r.get("kickoff_utc"),
+                        country_hint=_vc.country_for(hid),
+                        venue_name=r.get("venue"))
+                    if isinstance(w, dict):
+                        w["city_basis"] = basis
+                    r["weather"] = w
                 except Exception:
                     pass
             try:

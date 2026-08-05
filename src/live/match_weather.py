@@ -53,24 +53,67 @@ def _get_json(url: str, params: dict) -> dict | None:
         return None
 
 
-def _geocode(city: str) -> dict | None:
+# API-Football spells countries its own way; open-meteo answers with
+# names and ISO codes. Only the mismatches need entries.
+_COUNTRY_ALIASES = {"usa": "us", "england": "gb", "south korea": "kr"}
+
+
+def _fold_c(s: str) -> str:
+    return " ".join((s or "").lower().split())
+
+
+def _country_matches(hint: str, cand: dict) -> bool:
+    h = _fold_c(hint)
+    return h in (_fold_c(cand.get("country")),
+                 _fold_c(cand.get("country_code"))) \
+        or _COUNTRY_ALIASES.get(h) == _fold_c(cand.get("country_code"))
+
+
+def _geocode(city: str, country_hint: str | None = None,
+             evidence: str | None = None) -> dict | None:
+    """Resolve a city with two disambiguators, both from GIVEN data:
+
+    COUNTRY comes from the home team's federation record — 'Mansfield'
+    alone geocodes to Mansfield, England, which put FC Dallas at 13°C
+    in a Texas August (caught live 2026-08-05 precisely because the
+    place is printed beside the number).
+
+    ADMIN1 (state) is matched against tokens of the venue name when the
+    country still leaves several candidates: 'Texas Health Mansfield
+    Stadium' names its own state. Otherwise the provider's population
+    ranking decides — right for major-league metros, and the resolved
+    admin1 stays in the place string so a wrong pick is visible.
+    """
+    key = (city, country_hint or "", evidence or "")
     with _lock:
-        if city in _geo:
-            return _geo[city]
-    body = _get_json(GEO_BASE, {"name": city, "count": 1})
-    hit = ((body or {}).get("results") or [None])[0]
+        if key in _geo:
+            return _geo[key]
+    body = _get_json(GEO_BASE, {"name": city, "count": 10})
+    cands = (body or {}).get("results") or []
+    if country_hint:
+        filtered = [c for c in cands if _country_matches(country_hint, c)]
+        if filtered:
+            cands = filtered
+    if evidence and len(cands) > 1:
+        ev = _fold_c(evidence)
+        by_state = [c for c in cands
+                    if c.get("admin1") and _fold_c(c["admin1"]) in ev]
+        if by_state:
+            cands = by_state
+    hit = cands[0] if cands else None
     out = None
     if hit and hit.get("latitude") is not None:
         out = {"lat": round(float(hit["latitude"]), 3),
                "lon": round(float(hit["longitude"]), 3),
                "place": ", ".join(p for p in (hit.get("name"),
+                                              hit.get("admin1"),
                                               hit.get("country")) if p)}
     with _lock:
         # a geocode MISS is cached too — the city string will not start
         # resolving mid-process, and re-asking per render is waste. A
         # provider FAILURE (body None) is not cached, so it retries.
         if body is not None:
-            _geo[city] = out
+            _geo[key] = out
     return out
 
 
@@ -92,7 +135,9 @@ def _forecast(lat: float, lon: float) -> dict | None:
     return None
 
 
-def for_fixture(venue_city: str | None, kickoff_utc: str | None) -> dict:
+def for_fixture(venue_city: str | None, kickoff_utc: str | None,
+                country_hint: str | None = None,
+                venue_name: str | None = None) -> dict:
     base = {"available": False, "source": ATTRIBUTION}
     if not venue_city:
         return {**base, "reason": "no_venue_city",
@@ -111,7 +156,7 @@ def for_fixture(venue_city: str | None, kickoff_utc: str | None) -> dict:
         return {**base, "reason": "beyond_forecast_horizon",
                 "means": f"kickoff is {days_out:.0f} days out; the "
                          f"provider's hourly horizon is {HORIZON_DAYS} days"}
-    geo = _geocode(venue_city)
+    geo = _geocode(venue_city, country_hint, venue_name)
     if geo is None:
         return {**base, "reason": "geocode_miss", "city": venue_city,
                 "means": "the venue city did not resolve to coordinates; "

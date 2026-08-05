@@ -38,7 +38,13 @@ UTC = timezone.utc
 
 # the commit the refactor started from — the ladder as MLS's live approval
 # knows it. Read from git, never from the working tree.
-BASE_REF = "origin/feat-liga-mx"
+#
+# Pinned to the COMMIT that was feat-liga-mx's tip (recovered via the
+# merge commit 38d2136^2), not the branch name: the branch was pruned in
+# the 2026-08-03 sweep and this test SILENTLY SKIPPED for two days — a
+# guard that dies when housekeeping runs was mis-pinned. A commit in
+# main's history is immutable; a branch name is not.
+BASE_REF = "0118344d7ebe14a1db754bd3f07c00be4f7cc9bc"
 BASE_PATH = "src/live/model_eval.py"
 
 

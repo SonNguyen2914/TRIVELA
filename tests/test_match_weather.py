@@ -76,6 +76,51 @@ class TestRefusals:
         assert out["reason"] == "kickoff_hour_not_in_forecast"
 
 
+class TestGeocodeDisambiguation:
+    MANSFIELDS = {"results": [
+        {"name": "Mansfield", "admin1": "England",
+         "country": "United Kingdom", "country_code": "GB",
+         "latitude": 53.14, "longitude": -1.20},
+        {"name": "Mansfield", "admin1": "Ohio",
+         "country": "United States", "country_code": "US",
+         "latitude": 40.75, "longitude": -82.51},
+        {"name": "Mansfield", "admin1": "Texas",
+         "country": "United States", "country_code": "US",
+         "latitude": 32.56, "longitude": -97.14},
+    ]}
+
+    def _wire(self, monkeypatch):
+        def fake(url, params):
+            if url == mw.GEO_BASE:
+                return self.MANSFIELDS
+            return FC
+        monkeypatch.setattr(mw, "_get_json", fake)
+
+    def test_no_hint_takes_the_top_ranked_hit(self, monkeypatch):
+        self._wire(monkeypatch)
+        g = mw._geocode("Mansfield")
+        assert g["place"] == "Mansfield, England, United Kingdom"
+
+    def test_the_country_hint_excludes_the_wrong_country(self, monkeypatch):
+        # 'USA' is API-Football's spelling; open-meteo says US
+        self._wire(monkeypatch)
+        g = mw._geocode("Mansfield", country_hint="USA")
+        assert "United States" in g["place"]
+
+    def test_the_venue_name_names_its_own_state(self, monkeypatch):
+        # the FC Dallas case, caught live 2026-08-05: 13C in a Texas
+        # August because 'Mansfield' resolved to England
+        self._wire(monkeypatch)
+        g = mw._geocode("Mansfield", country_hint="USA",
+                        evidence="Texas Health Mansfield Stadium")
+        assert g["place"] == "Mansfield, Texas, United States"
+
+    def test_the_resolved_state_is_visible_in_the_place(self, monkeypatch):
+        self._wire(monkeypatch)
+        g = mw._geocode("Mansfield", country_hint="USA")
+        assert g["place"].count(",") == 2    # city, admin1, country
+
+
 class TestCaching:
     def test_a_geocode_miss_is_cached_a_failure_is_not(self, monkeypatch):
         calls = {"n": 0}
