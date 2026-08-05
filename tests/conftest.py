@@ -27,3 +27,21 @@ config.DATABASE_URL = os.environ["DATABASE_URL"]   # belt and braces
 @pytest.fixture(autouse=True)
 def _dev_mode_defaults(monkeypatch):
     monkeypatch.setattr(config, "PUBLIC_READ_ONLY", False)
+
+
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    """TASK-11: which engine the live-plane fixtures actually ran on.
+
+    Purely additive — no fixture or collection semantics change. The
+    line exists so a PG-titled CI leg that silently fell back to SQLite
+    reads `postgresql=0` instead of reading like success.
+    """
+    try:
+        from tests import _livedb
+    except ImportError:
+        return
+    if any(_livedb.LEGS.values()):
+        terminalreporter.write_line(
+            "live-plane DB legs: "
+            + ", ".join(f"{k}={v}" for k, v in _livedb.LEGS.items())
+            + ("" if _livedb.PG_URL is None else "   (PG_TEST_URL set)"))

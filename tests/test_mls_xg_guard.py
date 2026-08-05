@@ -30,17 +30,15 @@ from tests.test_mls_shadow import CANNED_ESPN
 
 @pytest.fixture
 def live_session(tmp_path, monkeypatch):
-    url = f"sqlite:///{tmp_path}/live.db"
-    monkeypatch.setattr(config, "LIVE_DATABASE_URL", url)
-    monkeypatch.setattr(live_db, "_engine", None)
-    monkeypatch.setattr(live_db, "_Session", None)
-    monkeypatch.setattr(live_db, "LIVE_BOOT_ERROR", None)
+    from tests import _livedb
+    url, _livedb_done = _livedb.provision(tmp_path, monkeypatch)
     LiveBase.metadata.create_all(live_db.get_engine())
     s = live_db.get_session()
     s.add(Competition(slug="mls-2026", name="MLS", season=2026))
     s.commit()
     yield s
     s.close()
+    _livedb_done()
     monkeypatch.setattr(live_db, "_engine", None)
     monkeypatch.setattr(live_db, "_Session", None)
 
@@ -332,9 +330,16 @@ class TestIngestAndConsumption:
         """Rows written before the guard existed read NULL. They are not
         passes, and the report must not present them as such."""
         fx, _ = self._ingest_broken(live_session, monkeypatch)
-        # a row from before the guard: verdict NULL
+        # a row from before the guard: verdict NULL. It needs a REAL
+        # fixture — the first version hung it on fx.id + 1, which SQLite
+        # accepted (FKs off) and the PostgreSQL leg refused.
+        from src.live.models import Fixture
+        fx2 = Fixture(competition_slug="mls-2026", espn_event_id="pre-guard",
+                      status="post")
+        live_session.add(fx2)
+        live_session.flush()
         live_session.add(MlsTeamMatchStat(
-            fixture_id=fx.id + 1, team_id=1, side="home", xg=1.1,
+            fixture_id=fx2.id, team_id=1, side="home", xg=1.1,
             xg_against=0.9, goals=1, goals_conceded=0, shots_on_target=5))
         live_session.commit()
 

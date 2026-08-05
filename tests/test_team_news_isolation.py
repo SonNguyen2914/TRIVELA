@@ -342,12 +342,8 @@ class TestAbsencesCannotReachTheModelInput:
         monkeypatch.setattr(alerts, "send_alert", lambda msg, **kw: None)
         monkeypatch.setattr(
             lineups_mod, "capture_lineup",
-            lambda fixture_id, **kw: {
-                "snapshot_id": 77, "status": "pending",
-                "quality": {"LINEUP_CONFIRMED": False,
-                            "GOALKEEPER_CONFIRMED": False,
-                            "AVAILABILITY_COMPLETE": False,
-                            "PLAYER_DATA_FRESH": False}})
+            __import__("tests.test_mls_shadow",
+                       fromlist=["x"])._persisting_fake_lineup())
         assert runs.t10_locks()["locked"] == 1
 
         run = (live_session.query(PredictionRun)

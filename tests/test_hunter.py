@@ -50,21 +50,21 @@ def _enforce_varchar_lengths(session, flush_context, instances):
 
 @pytest.fixture()
 def live_session(tmp_path, monkeypatch):
-    url = f"sqlite:///{tmp_path}/live.db"
-    monkeypatch.setattr(config, "LIVE_DATABASE_URL", url)
-    monkeypatch.setattr(live_db, "_engine", None)
-    monkeypatch.setattr(live_db, "_Session", None)
-    monkeypatch.setattr(live_db, "LIVE_BOOT_ERROR", None)
+    from tests import _livedb
+    url, _livedb_done = _livedb.provision(tmp_path, monkeypatch)
     LiveBase.metadata.create_all(live_db.get_engine())
     from sqlalchemy import event
     from sqlalchemy.orm import Session as _Session
-    event.listen(_Session, "before_flush", _enforce_varchar_lengths)
+    if _livedb.SIMULATE_VARCHAR:
+        event.listen(_Session, "before_flush", _enforce_varchar_lengths)
     s = live_db.get_session()
     s.add(Competition(slug="mls-2026", name="MLS", season=2026))
     s.commit()
     yield s
-    event.remove(_Session, "before_flush", _enforce_varchar_lengths)
+    if _livedb.SIMULATE_VARCHAR:
+        event.remove(_Session, "before_flush", _enforce_varchar_lengths)
     s.close()
+    _livedb_done()
     monkeypatch.setattr(live_db, "_engine", None)
     monkeypatch.setattr(live_db, "_Session", None)
 
@@ -920,8 +920,15 @@ class TestSchemaParityGuard:
         live_session.add(HunterFinding(
             series="X" * 65, finding_type="SUM_BELOW_ONE",
             finding_key="k1", legs_json="{}", first_captured_at=NOW))
-        with pytest.raises(ValueError, match="value too long"):
-            live_session.commit()
+        from tests import _livedb
+        if _livedb.SIMULATE_VARCHAR:
+            with pytest.raises(ValueError, match="value too long"):
+                live_session.commit()
+        else:
+            # the PG leg: the REAL engine enforces what the guard imitates
+            from sqlalchemy.exc import DataError
+            with pytest.raises(DataError):
+                live_session.commit()
         live_session.rollback()
 
     def test_generous_ticker_widths_accept_real_tickers(self, live_session):

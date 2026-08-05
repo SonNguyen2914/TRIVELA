@@ -45,8 +45,8 @@ def _seed(s, kickoff_in_hours=3.0):
                     market_snapshot_id=1)
     run = PredictionRun(id="run1", fixture_id=1, run_type="scheduled",
                         status="complete", captured_at=datetime.now(UTC))
-    s.add_all([fx, snap, ev, mc, q, run])
-    s.flush()
+    from tests import _livedb
+    _livedb.add_ordered(s, fx, snap, ev, mc, q, run)
     s.add(PredictionContract(prediction_run_id="run1",
                              market_contract_id=1, market_quote_id=1,
                              outcome_key="home_win", raw_probability=0.52))
@@ -250,7 +250,8 @@ def _seed_other_fixture(s):
                      captured_at=datetime.now(UTC)
                      - timedelta(minutes=1),
                      yes_ask_c=60, yes_bid_c=58)
-    s.add_all([fx2, ev2, mc2, q2])
+    from tests import _livedb
+    _livedb.add_ordered(s, fx2, ev2, mc2, q2)
     s.commit()
 
 
@@ -1736,7 +1737,8 @@ class TestCorpusScoping:
                          captured_at=datetime.now(UTC)
                          - timedelta(minutes=1),
                          yes_ask_c=50, yes_bid_c=48)
-        s.add_all([fx2, ev2, mc2, q2])
+        from tests import _livedb
+        _livedb.add_ordered(s, fx2, ev2, mc2, q2)
         s.commit()
         mls_bet = journal.record_view(1, "KXMLSGAME-x-H",
                                       outcome_key="home_win",

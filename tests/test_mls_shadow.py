@@ -54,23 +54,53 @@ def _enforce_varchar_lengths(session, flush_context, instances):
 def live_session(tmp_path, monkeypatch):
     """Point the whole live plane at a throwaway sqlite file so module
     code paths (identity/ingest/runs) run exactly as in production."""
-    url = f"sqlite:///{tmp_path}/live.db"
-    monkeypatch.setattr(config, "LIVE_DATABASE_URL", url)
-    monkeypatch.setattr(live_db, "_engine", None)
-    monkeypatch.setattr(live_db, "_Session", None)
-    monkeypatch.setattr(live_db, "LIVE_BOOT_ERROR", None)
+    from tests import _livedb
+    url, _livedb_done = _livedb.provision(tmp_path, monkeypatch)
     LiveBase.metadata.create_all(live_db.get_engine())
     from sqlalchemy import event
     from sqlalchemy.orm import Session as _Session
-    event.listen(_Session, "before_flush", _enforce_varchar_lengths)
+    if _livedb.SIMULATE_VARCHAR:
+        event.listen(_Session, "before_flush", _enforce_varchar_lengths)
     s = live_db.get_session()
     s.add(Competition(slug="mls-2026", name="MLS", season=2026))
     s.commit()
     yield s
-    event.remove(_Session, "before_flush", _enforce_varchar_lengths)
+    if _livedb.SIMULATE_VARCHAR:
+        event.remove(_Session, "before_flush", _enforce_varchar_lengths)
     s.close()
+    _livedb_done()
     monkeypatch.setattr(live_db, "_engine", None)
     monkeypatch.setattr(live_db, "_Session", None)
+
+
+def _persisting_fake_lineup(quality=None):
+    """A capture_lineup double that keeps the double's CONTRACT: it
+    persists a real LineupSnapshot and returns that row's id. The first
+    version returned a phantom snapshot_id=77 with no row behind it —
+    invisible on SQLite (FK enforcement off), a ForeignKeyViolation
+    inside the lock writer on the real-PostgreSQL leg. A test double
+    that lies about referential integrity tests nothing about it."""
+    from src.live import db as _db
+    from src.live.models import LineupSnapshot
+
+    def _capture(fixture_id, **kw):
+        s = _db.get_session()
+        try:
+            snap = LineupSnapshot(fixture_id=fixture_id,
+                                  captured_at=datetime.now(UTC),
+                                  status="pending")
+            s.add(snap)
+            s.commit()
+            sid = snap.id
+        finally:
+            s.close()
+        return {"snapshot_id": sid, "status": "pending",
+                "quality": quality if quality is not None else {
+                    "LINEUP_CONFIRMED": False,
+                    "GOALKEEPER_CONFIRMED": False,
+                    "AVAILABILITY_COMPLETE": False,
+                    "PLAYER_DATA_FRESH": False}}
+    return _capture
 
 
 def _valid_approval(mv_id, created_at, decision_id=None):
@@ -588,8 +618,8 @@ class TestPaperTrading:
         run = PredictionRun(id="lock", fixture_id=1, run_type="t10",
                             status="complete", canonical=True,
                             market_snapshot_id=1)
-        s.add_all([fx, snap, ev, mc, q, run])
-        s.flush()
+        from tests import _livedb
+        _livedb.add_ordered(s, fx, snap, ev, mc, q, run)
         # depth: NO bids -> a buyable YES ladder
         s.add_all([MarketDepthLevel(market_quote_id=1, side="no",
                                     price_c=100 - ask, size=30),
@@ -1284,11 +1314,18 @@ class TestVersionStringsFitTheirColumns:
         """The suite's PostgreSQL-parity guard must actually fire —
         otherwise it is decoration, and the next 26-char constant ships."""
         from src.live.models import MarketSnapshot
+        from tests import _livedb
         live_session.add(MarketSnapshot(
             id=999, fixture_id=1, captured_at=datetime.now(UTC),
             status="complete", policy_version="x" * 500))
-        with pytest.raises(ValueError, match="value too long"):
-            live_session.flush()
+        if _livedb.SIMULATE_VARCHAR:
+            with pytest.raises(ValueError, match="value too long"):
+                live_session.flush()
+        else:
+            # the PG leg: the REAL engine enforces what the guard imitates
+            from sqlalchemy.exc import DataError
+            with pytest.raises(DataError):
+                live_session.flush()
         live_session.rollback()
 
 
@@ -1321,12 +1358,17 @@ class TestRiskEngine:
                                      PredictionRun)
         pol = risk.RISK_POLICY
         # an existing open home position near the correlated cap
+        from src.live.models import Team
+        from tests import _livedb
         fx = Fixture(id=5, competition_slug="mls-2026", espn_event_id="r5",
                      home_team_id=1, away_team_id=2)
         run = PredictionRun(id="rr5", fixture_id=5, run_type="t10",
                             status="complete")
-        live_session.add_all([fx, run])
-        live_session.flush()
+        _livedb.add_ordered(
+            live_session,
+            Team(id=1, competition_slug="mls-2026", canonical_name="Home R5"),
+            Team(id=2, competition_slug="mls-2026", canonical_name="Away R5"),
+            fx, run)
         sig = PaperSignal(fixture_id=5, outcome_key="home_win",
                           decision="fill", prediction_run_id="rr5")
         live_session.add(sig); live_session.flush()
@@ -1380,6 +1422,7 @@ class TestSlateReport:
         et = past.astimezone(ZoneInfo("America/New_York")).strftime("%Y%m%d")
         live_session.add(ModelVersion(id=1, name=model_mls.MODEL_NAME,
                                       approved_for_shadow=True))
+        live_session.flush()          # the decision's FK needs the row
         live_session.add(_valid_approval(1, past - timedelta(days=1),
                                          decision_id=1))
 
@@ -1398,7 +1441,8 @@ class TestSlateReport:
         # PASS: audit-clean canonical lock, execution-ready snapshot
         fx(3, "pass", past)
         cap = past - timedelta(minutes=8)
-        live_session.add_all([
+        from tests import _livedb
+        _livedb.add_ordered(live_session, *[
             ModelInputArtifact(
                 id=1, schema_version="model-input-v5", content_hash="h",
                 document_json=_json.dumps(
@@ -1481,7 +1525,8 @@ class TestSlateReport:
                                      PredictionRun)
         import json as _json
         base = datetime(2026, 8, 16, 23, 30, tzinfo=UTC)
-        live_session.add_all([
+        from tests import _livedb
+        _livedb.add_ordered(live_session, *[
             ModelVersion(id=1, name=model_mls.MODEL_NAME,
                          approved_for_shadow=True),
             _valid_approval(1, base - timedelta(days=1), decision_id=1),
@@ -2107,14 +2152,8 @@ class TestPredictionRuns:
         monkeypatch.setattr(alerts, "send_alert",
                             lambda msg, **kw: sent.append(msg))
         import src.live.lineups as lineups_mod
-        monkeypatch.setattr(
-            lineups_mod, "capture_lineup",
-            lambda fixture_id, **kw: {
-                "snapshot_id": 77, "status": "pending",
-                "quality": {"LINEUP_CONFIRMED": False,
-                            "GOALKEEPER_CONFIRMED": False,
-                            "AVAILABILITY_COMPLETE": False,
-                            "PLAYER_DATA_FRESH": False}})
+        monkeypatch.setattr(lineups_mod, "capture_lineup",
+                            _persisting_fake_lineup())
         assert runs.t10_locks()["locked"] == 1
         assert runs.t10_locks()["locked"] == 0        # already locked
         # The T-10 dispatch is an OPERATIONAL lock record carrying the
@@ -2136,7 +2175,12 @@ class TestPredictionRuns:
         assert lock.market_snapshot_id == snap["snapshot_id"]
         assert lock.model_version_id is not None
         assert lock.input_snapshot_hash is not None
-        assert lock.lineup_snapshot_id == 77
+        # the double persists a REAL row now; assert the reference is
+        # live rather than pinning the phantom id the old fake invented
+        from src.live.models import LineupSnapshot
+        assert lock.lineup_snapshot_id is not None
+        assert live_session.get(LineupSnapshot,
+                                lock.lineup_snapshot_id) is not None
         # a PENDING lineup is recorded honestly, never absorbed as truth
         import json as _json
         iq = _json.loads(lock.input_quality_json)
@@ -2210,14 +2254,8 @@ class TestPredictionRuns:
         # hermetic: never touch live ESPN (the real capture_lineup makes a
         # network call; DNS-less CI otherwise produced a lineup-less lock)
         import src.live.lineups as lineups_mod
-        monkeypatch.setattr(
-            lineups_mod, "capture_lineup",
-            lambda fixture_id, **kw: {
-                "snapshot_id": 77, "status": "pending",
-                "quality": {"LINEUP_CONFIRMED": False,
-                            "GOALKEEPER_CONFIRMED": False,
-                            "AVAILABILITY_COMPLETE": False,
-                            "PLAYER_DATA_FRESH": False}})
+        monkeypatch.setattr(lineups_mod, "capture_lineup",
+                            _persisting_fake_lineup())
         import src.alerts as alerts
         monkeypatch.setattr(alerts, "send_alert", lambda *a, **kw: None)
         assert runs.t10_locks()["locked"] == 1
@@ -2273,9 +2311,7 @@ class TestPredictionRuns:
                             lambda fixture_id, **kw: snap)
         import src.live.lineups as lineups_mod
         monkeypatch.setattr(lineups_mod, "capture_lineup",
-                            lambda fixture_id, **kw: {"snapshot_id": 77,
-                                                      "status": "pending",
-                                                      "quality": {}})
+                            _persisting_fake_lineup(quality={}))
         import src.alerts as alerts
         monkeypatch.setattr(alerts, "send_alert", lambda *a, **kw: None)
         assert runs.t10_locks()["locked"] == 1
@@ -2308,9 +2344,7 @@ class TestPredictionRuns:
                             lambda fixture_id, **kw: snap)
         import src.live.lineups as lineups_mod
         monkeypatch.setattr(lineups_mod, "capture_lineup",
-                            lambda fixture_id, **kw: {"snapshot_id": 77,
-                                                      "status": "pending",
-                                                      "quality": {}})
+                            _persisting_fake_lineup(quality={}))
         import src.alerts as alerts
         monkeypatch.setattr(alerts, "send_alert", lambda *a, **kw: None)
         assert runs.t10_locks()["locked"] == 1

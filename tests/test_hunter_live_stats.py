@@ -54,17 +54,15 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ==========================================================================
 @pytest.fixture()
 def live_session(tmp_path, monkeypatch):
-    url = f"sqlite:///{tmp_path}/live.db"
-    monkeypatch.setattr(config, "LIVE_DATABASE_URL", url)
-    monkeypatch.setattr(live_db, "_engine", None)
-    monkeypatch.setattr(live_db, "_Session", None)
-    monkeypatch.setattr(live_db, "LIVE_BOOT_ERROR", None)
+    from tests import _livedb
+    url, _livedb_done = _livedb.provision(tmp_path, monkeypatch)
     LiveBase.metadata.create_all(live_db.get_engine())
     s = live_db.get_session()
     s.add(Competition(slug="mls-2026", name="MLS", season=2026))
     s.commit()
     yield s
     s.close()
+    _livedb_done()
     monkeypatch.setattr(live_db, "_engine", None)
     monkeypatch.setattr(live_db, "_Session", None)
 
@@ -520,12 +518,8 @@ class TestLiveXgCannotReachALockedArtifact:
         import src.live.lineups as lineups_mod
         monkeypatch.setattr(
             lineups_mod, "capture_lineup",
-            lambda fixture_id, **kw: {
-                "snapshot_id": 77, "status": "pending",
-                "quality": {"LINEUP_CONFIRMED": False,
-                            "GOALKEEPER_CONFIRMED": False,
-                            "AVAILABILITY_COMPLETE": False,
-                            "PLAYER_DATA_FRESH": False}})
+            __import__("tests.test_mls_shadow",
+                       fromlist=["x"])._persisting_fake_lineup())
         from src.live import runs
         assert runs.t10_locks()["locked"] == 1
         lock = (live_session.query(PredictionRun)
