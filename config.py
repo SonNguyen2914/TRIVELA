@@ -871,3 +871,75 @@ FRIENDLY_CALIBRATION_ARCHIVE = (
 # not pass it.
 FRIENDLY_DRAW_RATE = 0.1899
 FRIENDLY_DRAW_ARCHIVE = "research_archive/friendly_draw_rate_2026-07-31.json"
+
+
+# Our own draw rate for the LEAGUES CUP, measured — the same gap the
+# friendlies constant above closes, on a different competition.
+#
+# Until now this surface published a two-way points share only, so on
+# the Tie leg of every book — a third of every three-way — we had NO
+# opinion at all. Silence there is not "draws are unlikely"; it is a
+# missing number, and the exchange prices that leg whether or not we do.
+#
+# MEASURED 2026-08-05 over THREE COMPLETE EDITIONS, 216 settled matches
+# (research_archive/leagues_cup_history_2026-08-05.json, produced by
+# scripts/measure_leagues_cup_history.py):
+#
+#   2023   23/77  0.2987      2024   24/77  0.3117
+#   2025   18/62  0.2903      pooled 65/216 0.3009  CI [0.2407, 0.3611]
+#
+# Three editions inside two points of each other, which is why one
+# constant is defensible where a single season's figure would not be.
+#
+# RESULTS-ONLY, so no leakage: this counts outcomes, and consults no
+# rating, no book and no model. In this cup a `PEN` status IS a
+# 90-minute draw (group and knockout draws both go to a shootout), and
+# 90 minutes is exactly what the Kalshi Tie leg settles on.
+#
+# ONE CONSTANT, NOT TWO. The phase split was measured and REJECTED as a
+# refinement: group 41/144 = 0.2847 vs knockout 24/72 = 0.3333, a
+# difference of +0.0486 with 95% CI [-0.0829, +0.1801] — nowhere near
+# clearing zero, and the per-edition knockout rates (0.406/0.281/0.250)
+# are a small sample bouncing around. Splitting on an unsupported
+# difference would buy precision the data does not have.
+#
+# The same forced split applies as for friendlies: P(home)=E-d/2,
+# P(away)=1-E-d/2, so match_pick.read_three_way clips d to
+# 2*min(E,1-E) per fixture and flags when the clip binds.
+#
+# WHAT THIS IS NOT: it does not make the read better at picking winners.
+# The two-way points share is untouched, so every disagreement number on
+# the surface is unchanged. It gives the read a voice on the leg where
+# it had none — nothing more.
+#
+# LEAGUES CUP ONLY. The other viewer competitions have no measured draw
+# rate and deliberately pass none, staying two-way (src/competitions.py).
+LEAGUES_CUP_DRAW_RATE = 0.3009
+LEAGUES_CUP_DRAW_ARCHIVE = "research_archive/leagues_cup_history_2026-08-05.json"
+
+# The provenance that TRAVELS WITH the number above, because a constant
+# rate is uniform across fixtures and real draw rates are not. The
+# market prices tonight's Tie legs from .14 (Miami, a heavy favourite)
+# to .25 (LAFC, near-even); a flat 0.3009 sits ABOVE all of them, and a
+# reader must not mistake that for a discovery about mispriced draws.
+# It is our constant not knowing how lopsided the fixture is.
+#
+# Whether a mismatch-dependent form d(E) beats the constant here is
+# UNMEASURED and, on historical data, unmeasurable without leakage —
+# refused by name in the archive above (no captured books for
+# 2023-2025, and today's ratings contain those outcomes). The clean
+# answer needs the 2026 prospective corpus, whose T-60 books are frozen
+# per slate before kickoff. Until then the constant ships with this
+# limitation stated rather than discovered later.
+LEAGUES_CUP_DRAW_BASIS = (
+    "our own draw rate for THIS competition, measured on 216 settled "
+    "matches across three complete editions (2023-2025, pooled 0.3009, "
+    "CI [0.2407, 0.3611]) — results only, no rating or book consulted. "
+    "CONSTANT across fixtures: real draw rates fall on lopsided "
+    "matches and this number does not know how lopsided a fixture is, "
+    "so it sits ABOVE the market's Tie leg on favourite-heavy games BY "
+    "CONSTRUCTION. That gap is our constant's ignorance, never evidence "
+    "the draw is underpriced. A mismatch-dependent form is untested "
+    "here and unmeasurable on historical data without leakage; the "
+    "prospective corpus is where it becomes answerable"
+)
