@@ -518,12 +518,8 @@ class TestLiveXgCannotReachALockedArtifact:
         import src.live.lineups as lineups_mod
         monkeypatch.setattr(
             lineups_mod, "capture_lineup",
-            lambda fixture_id, **kw: {
-                "snapshot_id": 77, "status": "pending",
-                "quality": {"LINEUP_CONFIRMED": False,
-                            "GOALKEEPER_CONFIRMED": False,
-                            "AVAILABILITY_COMPLETE": False,
-                            "PLAYER_DATA_FRESH": False}})
+            __import__("tests.test_mls_shadow",
+                       fromlist=["x"])._persisting_fake_lineup())
         from src.live import runs
         assert runs.t10_locks()["locked"] == 1
         lock = (live_session.query(PredictionRun)

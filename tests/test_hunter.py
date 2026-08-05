@@ -920,8 +920,15 @@ class TestSchemaParityGuard:
         live_session.add(HunterFinding(
             series="X" * 65, finding_type="SUM_BELOW_ONE",
             finding_key="k1", legs_json="{}", first_captured_at=NOW))
-        with pytest.raises(ValueError, match="value too long"):
-            live_session.commit()
+        from tests import _livedb
+        if _livedb.SIMULATE_VARCHAR:
+            with pytest.raises(ValueError, match="value too long"):
+                live_session.commit()
+        else:
+            # the PG leg: the REAL engine enforces what the guard imitates
+            from sqlalchemy.exc import DataError
+            with pytest.raises(DataError):
+                live_session.commit()
         live_session.rollback()
 
     def test_generous_ticker_widths_accept_real_tickers(self, live_session):

@@ -62,6 +62,52 @@ def _pg_scoped_url() -> tuple[str, str]:
     return scoped, schema
 
 
+def add_ordered(session, *objs):
+    """add() and flush() in foreign-key dependency order.
+
+    The live models declare ForeignKey columns but no relationship()s,
+    so the ORM's flush has NO dependency information and emits INSERTs
+    in an arbitrary per-table order. SQLite never noticed — it ships
+    with FK enforcement off — so seeds writing parent and child in one
+    flush passed for the suite's whole life and exploded the moment a
+    real PostgreSQL enforced the constraint (150 failures on the first
+    full leg). This helper flushes layer by layer along
+    metadata.sorted_tables, which IS FK-topological, so a seed can stay
+    a single readable call. Objects in the same layer keep their given
+    order (sorted() is stable).
+    """
+    from sqlalchemy import inspect
+    md = inspect(objs[0]).mapper.local_table.metadata
+    rank = {t: i for i, t in enumerate(md.sorted_tables)}
+    current = None
+    touched = set()
+    for obj in sorted(objs, key=lambda o: rank[inspect(o).mapper.local_table]):
+        t = inspect(obj).mapper.local_table
+        r = rank[t]
+        if current is not None and r != current:
+            session.flush()
+        session.add(obj)
+        touched.add(t)
+        current = r
+    session.flush()
+    # Second PG-only divergence: seeds INSERT with explicit ids, which
+    # SQLite treats as also advancing autoincrement and PostgreSQL does
+    # not — the sequence stays at 1 and the next id-less INSERT collides
+    # with the seed (fixture_pkey UniqueViolation on the first leg).
+    # Resync every touched serial to max(id) so both engines agree on
+    # "the next row gets a fresh id".
+    if session.bind.dialect.name == "postgresql":
+        from sqlalchemy import text
+        for t in touched:
+            pk = list(t.primary_key.columns)
+            if len(pk) == 1 and pk[0].name == "id" \
+                    and pk[0].type.python_type is int:
+                session.execute(text(
+                    f"SELECT setval(pg_get_serial_sequence("
+                    f"'{t.name}', 'id'), "
+                    f"COALESCE((SELECT MAX(id) FROM {t.name}), 1))"))
+
+
 def provision(tmp_path, monkeypatch):
     """Point the live plane at a throwaway database and return
     (url, teardown). The fixture calls teardown() AFTER closing its
