@@ -97,6 +97,16 @@ class Fixture(LiveBase):
     provider_updated_at = Column(DateTime(timezone=True))
     __table_args__ = (
         UniqueConstraint("competition_slug", "espn_event_id"),
+        # the viewer-competition write path (#72) get-or-creates fixtures
+        # by (slug, provider id) at APPLICATION level — racy by
+        # construction. This partial unique index is the database saying
+        # no. Partial because the MLS plane's own fixtures key on
+        # espn_event_id and may carry NULL provider ids forever.
+        Index("uq_fixture_slug_provider_fixture",
+              "competition_slug", "provider_fixture_id",
+              unique=True,
+              postgresql_where=text("provider_fixture_id IS NOT NULL"),
+              sqlite_where=text("provider_fixture_id IS NOT NULL")),
     )
 
 
