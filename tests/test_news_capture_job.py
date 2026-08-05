@@ -38,6 +38,10 @@ def _wire(monkeypatch, fixtures, capture, comp_rows=None):
     from src.live import db, team_news
     monkeypatch.setattr(team_news, "plane_ready", lambda: True)
     monkeypatch.setattr(team_news, "capture_absences", capture)
+    # default no-op so tests that do not care about the XI still pass;
+    # tests that DO care override it after calling _wire
+    monkeypatch.setattr(team_news, "capture_league_lineup",
+                        lambda ref, **k: {"state": "empty", "sides": {}})
 
     class _Q:
         def filter(self, *a): return self
@@ -187,3 +191,67 @@ class TestBookKeyedWatching:
         news_capture._alert_new_absences({"9101"})   # same row: silent
         assert len(sent) == 1
         assert "A. Player" in sent[0] and "Knee Injury" in sent[0]
+
+
+# --- the XI sweep -----------------------------------------------------------
+# `capture_league_lineup` was built, tested, and called by NOTHING for its
+# entire existence: two slates of briefings read `lineup.by_provider: {}`
+# as "not released yet" while the wire was dead. These pin that it is
+# actually invoked — the assertion the old suite never made.
+
+def _booked(fid, hours):
+    now = datetime.now(timezone.utc)
+    return {"fixture_id": fid,
+            "kickoff_utc": (now + timedelta(hours=hours)).isoformat(),
+            "kalshi_event": f"KX-{fid}"}
+
+
+def test_the_xi_is_actually_captured_for_a_near_booked_fixture(monkeypatch):
+    asked = []
+    _wire(monkeypatch, [], lambda ref, **k: {"stored": 1},
+          comp_rows=[_booked(900, 1.0)])
+    from src.live import team_news
+    monkeypatch.setattr(team_news, "capture_league_lineup",
+                        lambda ref, **k: asked.append(ref) or
+                        {"state": "ok",
+                         "sides": {"home": {"state": "released"}}})
+    news_capture.capture_window_job()
+    assert asked == ["900"]
+
+
+def test_a_far_fixture_is_not_asked_for_an_xi_that_cannot_exist(monkeypatch):
+    asked = []
+    _wire(monkeypatch, [], lambda ref, **k: {"stored": 1},
+          comp_rows=[_booked(901, 20.0)])
+    from src.live import team_news
+    monkeypatch.setattr(team_news, "capture_league_lineup",
+                        lambda ref, **k: asked.append(ref) or {"state": "ok"})
+    news_capture.capture_window_job()
+    assert asked == []
+
+
+def test_an_empty_absence_window_still_sweeps_the_xi(monkeypatch):
+    # the early return this file's job used to take on `not refs` is
+    # exactly how a second feed goes quietly uncaptured
+    asked = []
+    _wire(monkeypatch, [], lambda ref, **k: {"stored": 1},
+          comp_rows=[_booked(902, 0.5)])
+    from src.live import team_news
+    monkeypatch.setattr(team_news, "capture_league_lineup",
+                        lambda ref, **k: asked.append(ref) or {"state": "ok"})
+    news_capture.capture_window_job()
+    assert asked == ["902"]
+
+
+def test_a_released_xi_is_counted_and_reported(monkeypatch, capsys):
+    _wire(monkeypatch, [], lambda ref, **k: {"stored": 1},
+          comp_rows=[_booked(903, 1.0)])
+    from src.live import team_news
+    monkeypatch.setattr(
+        team_news, "capture_league_lineup",
+        lambda ref, **k: {"state": "ok",
+                          "sides": {"home": {"state": "released"},
+                                    "away": {"state": "released"}}})
+    news_capture.capture_window_job()
+    out = capsys.readouterr().out
+    assert "1 with a released XI" in out
