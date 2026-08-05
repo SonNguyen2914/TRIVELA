@@ -51,7 +51,8 @@ def _seed(s, kickoff_in_hours=3.0):
     """A real fixture with a real quote — the payload shapes the route
     actually sees, not a stub."""
     ko = datetime.now(UTC) + timedelta(hours=kickoff_in_hours)
-    s.add_all([
+    from tests import _livedb
+    _livedb.add_ordered(s, *[
         Fixture(id=1, competition_slug="mls-2026", espn_event_id="e1",
                 status="pre", current_kickoff_utc=ko),
         MarketSnapshot(id=1, fixture_id=1, captured_at=datetime.now(UTC),
@@ -68,7 +69,6 @@ def _seed(s, kickoff_in_hours=3.0):
         PredictionRun(id="run1", fixture_id=1, run_type="scheduled",
                       status="complete", captured_at=datetime.now(UTC)),
     ])
-    s.flush()
     s.add(PredictionContract(prediction_run_id="run1", market_contract_id=1,
                              market_quote_id=1, outcome_key="home_win",
                              raw_probability=0.52))
