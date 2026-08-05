@@ -214,7 +214,8 @@ def test_the_xi_is_actually_captured_for_a_near_booked_fixture(monkeypatch):
     monkeypatch.setattr(team_news, "capture_league_lineup",
                         lambda ref, **k: asked.append(ref) or
                         {"state": "ok",
-                         "sides": {"home": {"state": "released"}}})
+                         "sides": {"home": {"released": True,
+                                            "lineup_state": "released"}}})
     news_capture.capture_window_job()
     assert asked == ["900"]
 
@@ -250,8 +251,10 @@ def test_a_released_xi_is_counted_and_reported(monkeypatch, capsys):
     monkeypatch.setattr(
         team_news, "capture_league_lineup",
         lambda ref, **k: {"state": "ok",
-                          "sides": {"home": {"state": "released"},
-                                    "away": {"state": "released"}}})
+                          "sides": {"home": {"released": True,
+                                             "lineup_state": "released"},
+                                    "away": {"released": True,
+                                             "lineup_state": "released"}}})
     news_capture.capture_window_job()
     out = capsys.readouterr().out
     assert "1 with a released XI" in out
