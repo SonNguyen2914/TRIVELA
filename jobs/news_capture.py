@@ -175,7 +175,7 @@ def capture_window_job() -> None:
             if r.get("state") in ("ok", "empty"):
                 l_ok += 1
                 sides = r.get("sides") or {}
-                if any((v or {}).get("state") == "released"
+                if any((v or {}).get("released")
                        for v in sides.values()):
                     l_released += 1
             else:
@@ -206,7 +206,7 @@ def capture_window_job() -> None:
                         kickoff_utc=(row or {}).get("kickoff_utc")) or {}
                     if r.get("state") in ("ok", "empty"):
                         e_ok += 1
-                        if any((v or {}).get("state") == "released"
+                        if any((v or {}).get("released")
                                for v in (r.get("sides") or {}).values()):
                             e_released += 1
                     else:

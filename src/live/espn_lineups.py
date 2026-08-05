@@ -212,6 +212,10 @@ def capture(fixture_id: int, espn_event_id: str, comp_key: str,
     if not slug:
         return {"state": "unavailable", "feed": "lineup",
                 "note": f"no probed ESPN slug for {comp_key}"}
+    # _store_lineup_states feeds kickoff_utc to _utc(), which expects a
+    # DATETIME; a viewer row carries an ISO string, and passing it
+    # through raised on the first live fixture ('str' has no tzinfo).
+    ko = _when(kickoff_utc) if isinstance(kickoff_utc, str) else kickoff_utc
     f = (tn.Fetched("ok", [summary]) if summary is not None
          else tn._espn_summary(str(espn_event_id), slug))
     s = tn.get_session()
@@ -220,7 +224,7 @@ def capture(fixture_id: int, espn_event_id: str, comp_key: str,
         states = (tn.espn_lineup_states(body) if f.state == "ok" else {})
         sides = tn._store_lineup_states(s, tn.PROVIDER_ESPN,
                                         str(fixture_id), states,
-                                        None, comp_key, kickoff_utc)
+                                        None, comp_key, ko)
         tn._record_capture(s, tn.PROVIDER_ESPN, str(fixture_id), "lineup",
                            f, None, comp_key)
         s.commit()
