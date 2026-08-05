@@ -91,8 +91,28 @@ def provision(tmp_path, monkeypatch):
             from sqlalchemy import create_engine, text
             base = config._normalize_pg_url(PG_URL)
             e = create_engine(base, future=True)
-            with e.begin() as c:
-                c.execute(text(f'DROP SCHEMA "{schema}" CASCADE'))
+            # Restart-simulating tests build their OWN engines from the
+            # URL; disposing the plane's engine cannot reach those, and
+            # one idle-in-transaction connection blocks DROP SCHEMA
+            # forever (observed: a 15-minute hang on the first full
+            # leg). The database is a throwaway test server, so the
+            # honest fix is: bounded wait, then terminate the stragglers
+            # by name and retry once. lock_timeout makes the wait
+            # visible instead of eternal.
+            try:
+                with e.begin() as c:
+                    c.execute(text("SET lock_timeout = '3s'"))
+                    c.execute(text(f'DROP SCHEMA "{schema}" CASCADE'))
+            except Exception:
+                with e.begin() as c:
+                    c.execute(text(
+                        "SELECT pg_terminate_backend(pid) "
+                        "FROM pg_stat_activity "
+                        "WHERE datname = current_database() "
+                        "AND pid <> pg_backend_pid() "
+                        "AND state LIKE 'idle in transaction%'"))
+                with e.begin() as c:
+                    c.execute(text(f'DROP SCHEMA "{schema}" CASCADE'))
             e.dispose()
 
     return url, teardown
