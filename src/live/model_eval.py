@@ -1425,3 +1425,242 @@ def boot_shadow_flag(model_mod, model_name: str) -> bool:
         print(f"[boot-flag] {model_name}: fail closed "
               f"({type(exc).__name__}: {str(exc)[:90]})")
         return False
+
+
+# --- TASK-12: the M3 quarantine variant ------------------------------------
+
+def _mls_xg_map_quarantine_excluded() -> dict:
+    """The deployed xG map MINUS every fixture carrying a quarantined
+    row — the exact semantics `mls_stats.team_xg_map` applies when
+    MLS_XG_QUARANTINE_EXCLUDE is true ("a fixture with any quarantined
+    row is dropped ENTIRELY... the surviving row's xg_against IS the
+    other side's rejected number"). Reimplemented here from the same
+    table rather than flipping the config flag: the flag stays false
+    (TASK-12 hard limit), and this evaluation must not depend on
+    mutating deployed configuration to run."""
+    from src.live.models import MlsTeamMatchStat
+    base = _mls_xg_map()
+    if not base:
+        return {}
+    s = get_session()
+    try:
+        quarantined = {r.fixture_id for r in
+                       s.query(MlsTeamMatchStat)
+                       .filter(MlsTeamMatchStat.xg_quarantined.is_(True))}
+    finally:
+        s.close()
+    return {fid: sides for fid, sides in base.items()
+            if fid not in quarantined}
+
+
+def _devig_frozen_three_way(s, fixture_id: int) -> dict | None:
+    """The frozen T-10 market as a 3-way probability partition, or None.
+
+    The chain is the canonical one: the fixture's canonical complete t10
+    PredictionRun -> its three game-leg PredictionContracts -> the
+    FROZEN MarketQuote each cites. All three legs must be present and
+    priced, or the fixture contributes nothing — a 2-leg partition is
+    not a weaker market view, it is a different quantity.
+
+    Devig is proportional on yes_ask (the repo's IMPLIED_BASIS): the ask
+    carries the exchange's spread, and removing the vig proportionally
+    is an assumption about how it is distributed, not a measurement —
+    the payload states this beside the numbers.
+    """
+    from src.live.models import (MarketQuote, PredictionContract,
+                                 PredictionRun)
+    run = (s.query(PredictionRun)
+           .filter_by(fixture_id=fixture_id, run_type="t10",
+                      canonical=True, status="complete")
+           .one_or_none())
+    if run is None:
+        return None
+    legs = {}
+    for pc in s.query(PredictionContract).filter_by(
+            prediction_run_id=run.id):
+        if pc.outcome_key not in THREE or pc.market_quote_id is None:
+            continue
+        q = s.get(MarketQuote, pc.market_quote_id)
+        if q is None or q.yes_ask_c is None or not (0 < q.yes_ask_c < 100):
+            continue
+        legs[pc.outcome_key] = q.yes_ask_c / 100.0
+    if set(legs) != set(THREE):
+        return None
+    total = sum(legs.values())
+    if total <= 0:
+        return None
+    return {k: v / total for k, v in legs.items()}
+
+
+def evaluate_xg_quarantine_variant(n_boot: int = 2000,
+                                   seed: int = 12345) -> dict:
+    """TASK-12: does EXCLUDING quarantined xG improve the M3 rung?
+
+    The deliverable is a NUMBER with a bootstrap CI; the decision on
+    MLS_XG_QUARANTINE_EXCLUDE is the operator's, made with that number
+    in front of them. Nothing here flips the flag, and nothing here
+    touches model_mls or the frozen production ladder — the MLS ladder
+    and its edge pairs are pinned by tests/test_ladder_parity.py and the
+    live approval rests on them, so this runs as a SEPARATE paired
+    evaluation through the same machinery (`score_rows` twice, paired by
+    fixture key — the pairing pattern score_rows exists to serve).
+
+    Three sections:
+
+      m3_vs_m3q        the walk-forward edge, outcome-scored, paired on
+                       exactly the fixtures BOTH policies could predict.
+                       Positive delta_log_loss = excluding quarantined
+                       xG is BETTER.
+      frozen_market    on the paired fixtures that carry a canonical t10
+                       lock with all three game legs frozen: each
+                       policy's log loss beside the devigged frozen
+                       market's, same bootstrap. When no such fixture
+                       exists the section is a NAMED REFUSAL saying
+                       exactly what is missing — never a silent absence.
+      flag_state       what is deployed right now, echoed so the payload
+                       is self-describing.
+    """
+    if not plane_ready():
+        return {"error": "dormant"}
+    spec = MLS_LADDER_SPEC
+    s = get_session()
+    try:
+        rows = spec.completed(s)
+    finally:
+        s.close()
+    base_map = _mls_xg_map()
+    excl_map = _mls_xg_map_quarantine_excluded()
+    quarantined_fixtures = sorted(set(base_map) - set(excl_map))
+    if not rows:
+        return {"error": "no completed fixtures in the live plane"}
+    if not base_map:
+        return {"refused": "no xG map — the M3 rung cannot be fitted at "
+                           "all, with or without the quarantine filter"}
+
+    m3_only = LadderSpec(
+        slug=spec.slug, model_module=spec.model,
+        ladder={"M3": LADDER["M3"]}, edge_pairs=(),
+        future_rungs={}, calibration_alpha_fn=_mls_calibration_alpha,
+        xg_map_fn=spec.xg_map_fn, label="MLS-M3-variant")
+
+    keys_a, per_a = score_rows(rows, spec=m3_only, xg_by_fixture=base_map)
+    keys_b, per_b = score_rows(rows, spec=m3_only, xg_by_fixture=excl_map)
+    a_by = dict(zip(keys_a, per_a))
+    b_by = dict(zip(keys_b, per_b))
+    paired = [k for k in keys_a if k in b_by]
+    n = len(paired)
+    if n == 0:
+        return {"refused": "no fixture was scorable under both policies"}
+
+    ll_a = np.array([a_by[k]["M3"]["log_loss"] for k in paired])
+    ll_b = np.array([b_by[k]["M3"]["log_loss"] for k in paired])
+    rng = np.random.default_rng(seed)
+    deltas = []
+    for _ in range(n_boot):
+        idx = rng.integers(0, n, n)
+        # positive = EXCLUDING is better (lower log loss)
+        deltas.append(float(np.mean(ll_a[idx]) - np.mean(ll_b[idx])))
+    lo, hi = np.percentile(deltas, [2.5, 97.5])
+    point = float(np.mean(ll_a) - np.mean(ll_b))
+
+    # --- the frozen market beside both policies, where it exists -------
+    s = get_session()
+    try:
+        by_key = {(getattr(f, "espn_event_id", None) or f.id): f.id
+                  for f in rows}
+        market = {}
+        for k in paired:
+            fid = by_key.get(k)
+            if fid is None:
+                continue
+            p = _devig_frozen_three_way(s, fid)
+            if p is not None:
+                market[k] = p
+        results = {}
+        for f in rows:
+            k = getattr(f, "espn_event_id", None) or f.id
+            results[k] = ("home_win" if f.home_goals > f.away_goals else
+                          "away_win" if f.away_goals > f.home_goals
+                          else "draw")
+    finally:
+        s.close()
+
+    if market:
+        mk = sorted(market)
+        ll_m = np.array([_score_fixture(market[k], results[k])["log_loss"]
+                         for k in mk])
+        la = np.array([a_by[k]["M3"]["log_loss"] for k in mk])
+        lb = np.array([b_by[k]["M3"]["log_loss"] for k in mk])
+        nm = len(mk)
+        rng2 = np.random.default_rng(seed + 1)
+        d_am, d_bm = [], []
+        for _ in range(n_boot):
+            idx = rng2.integers(0, nm, nm)
+            d_am.append(float(np.mean(ll_m[idx]) - np.mean(la[idx])))
+            d_bm.append(float(np.mean(ll_m[idx]) - np.mean(lb[idx])))
+        frozen = {
+            "n_with_frozen_market": nm,
+            "devig": ("proportional on frozen yes_ask — an assumption "
+                      "about how the vig is distributed, not a "
+                      "measurement"),
+            "log_loss": {"market": round(float(np.mean(ll_m)), 4),
+                         "m3_included": round(float(np.mean(la)), 4),
+                         "m3_excluded": round(float(np.mean(lb)), 4)},
+            "m3_included_vs_market": {
+                "delta_log_loss": round(float(np.mean(ll_m) - np.mean(la)),
+                                        4),
+                "ci95": [round(float(np.percentile(d_am, 2.5)), 4),
+                         round(float(np.percentile(d_am, 97.5)), 4)],
+                "means": "positive = the model beats the frozen market "
+                         "on these fixtures; NOT an edge claim — n is "
+                         "small and the market baseline is one book"},
+            "m3_excluded_vs_market": {
+                "delta_log_loss": round(float(np.mean(ll_m) - np.mean(lb)),
+                                        4),
+                "ci95": [round(float(np.percentile(d_bm, 2.5)), 4),
+                         round(float(np.percentile(d_bm, 97.5)), 4)]},
+        }
+    else:
+        frozen = {
+            "refused": ("no paired fixture carries a canonical complete "
+                        "t10 PredictionRun whose three game-leg "
+                        "PredictionContracts all cite a frozen "
+                        "MarketQuote with a priced yes_ask. That chain "
+                        "is what 'frozen market data' means here; until "
+                        "locked fixtures complete and settle, the "
+                        "market comparison has nothing to score "
+                        "against"),
+            "what_would_be_needed": ("completed fixtures with canonical "
+                                     "t10 locks — the T-10 sweep creates "
+                                     "them ~10 minutes before kickoff on "
+                                     "mapped MLS fixtures"),
+        }
+
+    import config as _cfg
+    return {
+        "eval_version": EVAL_VERSION,
+        "task": "xg-quarantine-variant (TASK-12)",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "method": ("score_rows twice on identical rolling origins — the "
+                   "deployed xG map vs the quarantine-filtered map — "
+                   "paired by fixture key, match-cluster bootstrap on "
+                   "the paired log-loss delta"),
+        "n_paired": n, "n_bootstrap": n_boot,
+        "xg_map_fixtures": len(base_map),
+        "xg_map_fixtures_after_exclusion": len(excl_map),
+        "quarantined_fixture_ids": quarantined_fixtures,
+        "m3_vs_m3q": {
+            "delta_log_loss": round(point, 4),
+            "ci95": [round(float(lo), 4), round(float(hi), 4)],
+            "significant": bool(lo > 0 or hi < 0),
+            "means": ("positive = EXCLUDING quarantined xG scores better "
+                      "out of sample. Not significant = the quarantine "
+                      "decision is not evidence-forced either way"),
+        },
+        "frozen_market": frozen,
+        "flag_state": {
+            "MLS_XG_QUARANTINE_EXCLUDE": _cfg.MLS_XG_QUARANTINE_EXCLUDE,
+            "decision": ("the operator's, with this number in front of "
+                         "them — nothing here changes the flag"),
+        },
+    }
