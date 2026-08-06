@@ -2626,8 +2626,37 @@ def ready():
     top_ready = (archive_ok and live_ok
                  and (shadow_collection_ready if mode == "mls_shadow"
                       else True))
+    # WHICH REVISION IS ANSWERING (TASK-19). Every other field here says
+    # what state the process is in; none said which code produced it. So
+    # `model_approved_for_shadow: true` read a minute after a merge was
+    # indistinguishable between "the new revision re-armed" and "the old
+    # container is still serving" — and AGENTS.md §4 invites exactly that
+    # reading. The coordinator hit this three times in one day and worked
+    # around it each time by polling for a CONTENT change instead, which
+    # answers "has the behaviour I expect appeared" rather than "is my
+    # code live": a cached response, a partial rollout or an unrelated
+    # data change all break the substitution.
+    #
+    # Read from `src.live.revision`, NOT from model_mls — that module is
+    # inside the engine signature, so adding an accessor to it would move
+    # the hash, fail both arms of the boot approval check and take the
+    # plane dark. The two are pinned equal by test instead. Null — with a
+    # named reason — when the environment variable is absent, because a
+    # local process must never be able to look like a deployed one.
+    try:
+        from src.live.revision import running_code_revision
+        _rev = running_code_revision()
+    except Exception as exc:                     # never break readiness
+        _rev, _rev_note = None, f"unavailable: {type(exc).__name__}"
+    else:
+        _rev_note = None if _rev else (
+            "RAILWAY_GIT_COMMIT_SHA is unset, so this process cannot say "
+            "which revision it is running. Expected off-platform; on a "
+            "deploy it means the build did not inject it")
     return {"ready": bool(top_ready),
             "mode": mode,
+            "code_revision": _rev,
+            "code_revision_unknown_because": _rev_note,
             "readiness": readiness,
             "shadow_blockers": shadow.get("blockers", []),
             "results": results, "expected_results": expected_results,
