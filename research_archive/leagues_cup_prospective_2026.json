@@ -1,0 +1,371 @@
+{
+  "what_this_is": "pre-kickoff reads paired with settled 90-minute outcomes. The clean arm of scripts/measure_league_offset.py consumes this. Every row's read DEMONSTRABLY predates its kickoff: the snapshot said the fixture had not started AND the snapshot file was written before kickoff",
+  "what_this_is_NOT": "not an edge claim, not a calibration, not a correction, and not a performance record. It is paired inputs and outcomes; the measurement lives in the script that reads it",
+  "admissibility": {
+    "status_in_snapshot": [
+      "NS",
+      "TBD"
+    ],
+    "file_mtime_before_kickoff": true,
+    "why_both": "this feed reported NS six minutes past kickoff and PST for matches that then played, on 2026-08-05 — its status is a claim. The file's mtime does not depend on the feed",
+    "settled_statuses": [
+      "FT",
+      "PEN"
+    ],
+    "why_not_AET": "AET goals include extra time, so the 90-minute result the read and the market both answer is unrecoverable",
+    "duplicate_policy": "latest admissible read per fixture wins — the one closest to kickoff while still before it, which is the read the briefing published and the operator decided against"
+  },
+  "n_rows": 11,
+  "n_pre_kickoff_reads_collected": 51,
+  "pending_not_yet_settled": [
+    {
+      "fixture": "Austin v Club Tijuana",
+      "status": "NS"
+    },
+    {
+      "fixture": "Chicago Fire v Necaxa",
+      "status": "NS"
+    },
+    {
+      "fixture": "Cruz Azul v Philadelphia Union",
+      "status": "NS"
+    },
+    {
+      "fixture": "New York City FC v Santos Laguna",
+      "status": "NS"
+    },
+    {
+      "fixture": "Portland Timbers v Puebla",
+      "status": "NS"
+    },
+    {
+      "fixture": "Club America v San Diego",
+      "status": "NS"
+    }
+  ],
+  "in_snapshot_but_absent_from_results": [
+    "Charlotte v Atlas",
+    "Columbus Crew v CF Pachuca",
+    "FC Cincinnati v U.N.A.M. - Pumas",
+    "Tigres UANL v Minnesota United FC",
+    "Vancouver Whitecaps v FC Juarez",
+    "Guadalajara Chivas v FC Dallas",
+    "Inter Miami v Monterrey",
+    "Orlando City SC v Leon",
+    "Seattle Sounders v Club Queretaro",
+    "Toluca v Los Angeles FC",
+    "Austin v Puebla",
+    "Chicago Fire v Santos Laguna",
+    "Club America v Portland Timbers",
+    "Cruz Azul v New York City FC",
+    "Nashville SC v Atletico San Luis",
+    "Philadelphia Union v Necaxa",
+    "San Diego v Club Tijuana",
+    "Charlotte v CF Pachuca",
+    "Columbus Crew v U.N.A.M. - Pumas",
+    "FC Cincinnati v Atlas",
+    "Real Salt Lake v FC Juarez",
+    "Tigres UANL v Vancouver Whitecaps",
+    "Inter Miami v Leon",
+    "Los Angeles FC v Club Queretaro",
+    "Monterrey v Nashville SC",
+    "Orlando City SC v Atletico San Luis",
+    "San Diego v Puebla",
+    "Seattle Sounders v Guadalajara Chivas",
+    "Toluca v FC Dallas",
+    "Club America v Austin",
+    "Cruz Azul v Chicago Fire",
+    "New York City FC v Necaxa",
+    "Philadelphia Union v Santos Laguna",
+    "Portland Timbers v Club Tijuana"
+  ],
+  "rejected_from_snapshots": [
+    {
+      "file": "lc_before.json",
+      "fixture": "Vancouver Whitecaps v Atlante FC",
+      "why": "no strength read in this snapshot"
+    },
+    {
+      "file": "lc_pre.json",
+      "fixture": "Vancouver Whitecaps v Atlante FC",
+      "why": "no strength read in this snapshot"
+    },
+    {
+      "file": "lc_pre.json",
+      "fixture": "Real Salt Lake v Atlante FC",
+      "why": "no strength read in this snapshot"
+    },
+    {
+      "file": "lc_pre.json",
+      "fixture": "Minnesota United FC v Atlante FC",
+      "why": "no strength read in this snapshot"
+    },
+    {
+      "file": "lc_gate.json",
+      "fixture": "Vancouver Whitecaps v Atlante FC",
+      "why": "no strength read in this snapshot"
+    },
+    {
+      "file": "lc_gate.json",
+      "fixture": "Real Salt Lake v Atlante FC",
+      "why": "no strength read in this snapshot"
+    },
+    {
+      "file": "lc_gate.json",
+      "fixture": "Minnesota United FC v Atlante FC",
+      "why": "no strength read in this snapshot"
+    },
+    {
+      "file": "lc_win.json",
+      "fixture": "Columbus Crew v Atlas",
+      "why": "snapshot status 'FT' is not pre-kickoff"
+    },
+    {
+      "file": "lc_win.json",
+      "fixture": "FC Cincinnati v CF Pachuca",
+      "why": "snapshot status 'FT' is not pre-kickoff"
+    },
+    {
+      "file": "lc_win.json",
+      "fixture": "Charlotte v U.N.A.M. - Pumas",
+      "why": "snapshot status 'FT' is not pre-kickoff"
+    },
+    {
+      "file": "lc_win.json",
+      "fixture": "Minnesota United FC v FC Juarez",
+      "why": "snapshot status 'FT' is not pre-kickoff"
+    },
+    {
+      "file": "lc_win.json",
+      "fixture": "Tigres UANL v Real Salt Lake",
+      "why": "snapshot status 'PEN' is not pre-kickoff"
+    },
+    {
+      "file": "lc_win.json",
+      "fixture": "Vancouver Whitecaps v Atlante FC",
+      "why": "snapshot status 'FT' is not pre-kickoff"
+    },
+    {
+      "file": "lc_win.json",
+      "fixture": "Monterrey v Orlando City SC",
+      "why": "file written 2026-08-05T23:36:26.450326+00:00 at or after kickoff 2026-08-05T23:30:00+00:00"
+    },
+    {
+      "file": "lc_win.json",
+      "fixture": "Inter Miami v Atletico San Luis",
+      "why": "file written 2026-08-05T23:36:26.450326+00:00 at or after kickoff 2026-08-05T23:30:00+00:00"
+    }
+  ],
+  "rejected_count": 15,
+  "rows": [
+    {
+      "fixture_id": "1530107",
+      "home": {
+        "name": "Charlotte"
+      },
+      "away": {
+        "name": "U.N.A.M. - Pumas"
+      },
+      "_read": 0.4267,
+      "kickoff_utc": "2026-08-05T00:00:00+00:00",
+      "captured_at": "2026-08-04T19:23:53.462500+00:00",
+      "source_file": "lc_pre.json",
+      "lead_seconds": 16566,
+      "goals": {
+        "home": 3,
+        "away": 0
+      },
+      "final_status": "FT"
+    },
+    {
+      "fixture_id": "1530108",
+      "home": {
+        "name": "Columbus Crew"
+      },
+      "away": {
+        "name": "Atlas"
+      },
+      "_read": 0.6471,
+      "kickoff_utc": "2026-08-04T23:45:00+00:00",
+      "captured_at": "2026-08-04T19:23:53.462500+00:00",
+      "source_file": "lc_pre.json",
+      "lead_seconds": 15666,
+      "goals": {
+        "home": 3,
+        "away": 1
+      },
+      "final_status": "FT"
+    },
+    {
+      "fixture_id": "1530109",
+      "home": {
+        "name": "FC Cincinnati"
+      },
+      "away": {
+        "name": "CF Pachuca"
+      },
+      "_read": 0.4827,
+      "kickoff_utc": "2026-08-04T23:45:00+00:00",
+      "captured_at": "2026-08-04T19:23:53.462500+00:00",
+      "source_file": "lc_pre.json",
+      "lead_seconds": 15666,
+      "goals": {
+        "home": 3,
+        "away": 1
+      },
+      "final_status": "FT"
+    },
+    {
+      "fixture_id": "1530110",
+      "home": {
+        "name": "Minnesota United FC"
+      },
+      "away": {
+        "name": "FC Juarez"
+      },
+      "_read": 0.5364,
+      "kickoff_utc": "2026-08-05T00:30:00+00:00",
+      "captured_at": "2026-08-04T19:23:53.462500+00:00",
+      "source_file": "lc_pre.json",
+      "lead_seconds": 18366,
+      "goals": {
+        "home": 1,
+        "away": 2
+      },
+      "final_status": "FT"
+    },
+    {
+      "fixture_id": "1530111",
+      "home": {
+        "name": "Tigres UANL"
+      },
+      "away": {
+        "name": "Real Salt Lake"
+      },
+      "_read": 0.6427,
+      "kickoff_utc": "2026-08-05T02:00:00+00:00",
+      "captured_at": "2026-08-04T19:23:53.462500+00:00",
+      "source_file": "lc_pre.json",
+      "lead_seconds": 23766,
+      "goals": {
+        "home": 1,
+        "away": 1
+      },
+      "final_status": "PEN"
+    },
+    {
+      "fixture_id": "1530113",
+      "home": {
+        "name": "FC Dallas"
+      },
+      "away": {
+        "name": "Club Queretaro"
+      },
+      "_read": 0.5545,
+      "kickoff_utc": "2026-08-06T00:30:00+00:00",
+      "captured_at": "2026-08-05T23:36:26.450326+00:00",
+      "source_file": "lc_win.json",
+      "lead_seconds": 3213,
+      "goals": {
+        "home": 2,
+        "away": 0
+      },
+      "final_status": "FT"
+    },
+    {
+      "fixture_id": "1530114",
+      "home": {
+        "name": "Inter Miami"
+      },
+      "away": {
+        "name": "Atletico San Luis"
+      },
+      "_read": 0.7168,
+      "kickoff_utc": "2026-08-05T23:30:00+00:00",
+      "captured_at": "2026-08-05T22:50:35.698365+00:00",
+      "source_file": "lc_final.json",
+      "lead_seconds": 2364,
+      "goals": {
+        "home": 4,
+        "away": 2
+      },
+      "final_status": "FT"
+    },
+    {
+      "fixture_id": "1530115",
+      "home": {
+        "name": "Los Angeles FC"
+      },
+      "away": {
+        "name": "Guadalajara Chivas"
+      },
+      "_read": 0.5715,
+      "kickoff_utc": "2026-08-06T02:30:00+00:00",
+      "captured_at": "2026-08-05T23:36:26.450326+00:00",
+      "source_file": "lc_win.json",
+      "lead_seconds": 10413,
+      "goals": {
+        "home": 1,
+        "away": 1
+      },
+      "final_status": "PEN"
+    },
+    {
+      "fixture_id": "1530116",
+      "home": {
+        "name": "Monterrey"
+      },
+      "away": {
+        "name": "Orlando City SC"
+      },
+      "_read": 0.6086,
+      "kickoff_utc": "2026-08-05T23:30:00+00:00",
+      "captured_at": "2026-08-05T22:50:35.698365+00:00",
+      "source_file": "lc_final.json",
+      "lead_seconds": 2364,
+      "goals": {
+        "home": 1,
+        "away": 2
+      },
+      "final_status": "FT"
+    },
+    {
+      "fixture_id": "1530117",
+      "home": {
+        "name": "Nashville SC"
+      },
+      "away": {
+        "name": "Leon"
+      },
+      "_read": 0.5573,
+      "kickoff_utc": "2026-08-06T00:30:00+00:00",
+      "captured_at": "2026-08-05T23:36:26.450326+00:00",
+      "source_file": "lc_win.json",
+      "lead_seconds": 3213,
+      "goals": {
+        "home": 0,
+        "away": 1
+      },
+      "final_status": "FT"
+    },
+    {
+      "fixture_id": "1530118",
+      "home": {
+        "name": "Toluca"
+      },
+      "away": {
+        "name": "Seattle Sounders"
+      },
+      "_read": 0.5827,
+      "kickoff_utc": "2026-08-06T02:00:00+00:00",
+      "captured_at": "2026-08-05T23:36:26.450326+00:00",
+      "source_file": "lc_win.json",
+      "lead_seconds": 8613,
+      "goals": {
+        "home": 3,
+        "away": 0
+      },
+      "final_status": "FT"
+    }
+  ]
+}

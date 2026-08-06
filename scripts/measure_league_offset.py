@@ -287,9 +287,28 @@ def main() -> int:
 
     # --- clean arm: prospective, pre-kickoff snapshots ------------------
     if a.prospective_corpus and Path(a.prospective_corpus).exists():
-        snaps = json.loads(Path(a.prospective_corpus).read_text())
+        loaded = json.loads(Path(a.prospective_corpus).read_text())
+        # A bare list of rows, or the document scripts/
+        # build_prospective_corpus.py writes — which wraps the same rows
+        # in the provenance that makes them auditable (what was rejected,
+        # how far ahead of kickoff each read was captured, from which
+        # file). Accept both rather than forcing the builder to throw
+        # that away: iterating the document as if it were a list yields
+        # its KEYS, which fails loudly here but would be a silent
+        # miscount in any laxer reader.
+        snaps = loaded["rows"] if isinstance(loaded, dict) else loaded
+        if not isinstance(snaps, list):
+            print(json.dumps({"error": "bad_prospective_corpus",
+                              "means": "expected a list of rows, or an "
+                                       "object with a 'rows' list"}))
+            return 2
         doc["prospective_2026"] = _arm(snaps, rosters, "prospective_2026")
         doc["prospective_2026"]["evidence_class"] = "prospective_clean"
+        if isinstance(loaded, dict):
+            doc["prospective_2026"]["corpus_provenance"] = {
+                k: loaded.get(k) for k in
+                ("n_rows", "rejected_count", "admissibility",
+                 "pending_not_yet_settled")}
     else:
         doc["prospective_2026"] = {
             "refused": ("no pre-kickoff read corpus supplied. The clean "
