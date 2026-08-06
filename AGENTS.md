@@ -669,3 +669,13 @@ Cross-repo and binding, not merely a reviewer checklist:
 - **Stable identity.** Fixtures and teams get provider-stable IDs, never
   names or name+date. An ambiguous match fails explicitly.
 - **IANA time zones**, never fixed UTC offsets.
+- **The four engine-signature modules take modelling changes only.**
+  `src/live/model_mls.py`, `src/models/simulator.py`,
+  `src/models/xg_model.py`, `src/models/features.py` are hashed by their
+  RAW BYTES, so a helper, a docstring, a type hint or a bare comment
+  darkens the plane exactly as a changed simulator would (§4). Put it in
+  a sibling module and pin the two equal by test. The warning cannot be
+  written *into* those files — that would be the edit — so it lives in
+  `src/models/ENGINE-SIGNATURE.md` beside them, and in the assertion
+  message of `tests/test_team_style.py`, which is where someone who has
+  already made the edit will read it.
