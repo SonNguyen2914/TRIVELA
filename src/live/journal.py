@@ -1304,6 +1304,39 @@ def _bet_dict(row: PersonalBet, *, superseded: bool = False) -> dict:
     }
 
 
+_PRIVATE_BET_FIELDS = (
+    # private prose, never exports (see src/live/corpus.py)
+    "rationale",
+    # bet sizing is the operator's, and the corpus redacts it too — a
+    # public row that carried it would leak staking from a surface with
+    # no credential at all
+    "stated_size",
+)
+
+
+def _bet_dict_public(row: PersonalBet, *, superseded: bool = False) -> dict:
+    """A journal row minus the fields the corpus already refuses.
+
+    `aggregate_withheld.note` has always promised "rows are listed" and
+    for a long time none were, which meant nothing could compare the
+    journal against the operator's real account: a $35 position that
+    returned $70.35 sat outside the record entirely and a whole
+    matchday-1 position went unnoticed for two days.
+
+    Listing them fixes that WITHOUT widening what a credential-less
+    reader sees. `rationale` is private prose and `stated_size` is
+    staking; both are redacted here for the same reason the published
+    corpus redacts them. What remains — ticker, outcome, status,
+    correction chain — is exactly what an audit needs to answer "is
+    there a row for this position, and does it claim the operator
+    declined?", which is the pair of questions that went unasked.
+    """
+    out = _bet_dict(row, superseded=superseded)
+    for k in _PRIVATE_BET_FIELDS:
+        out.pop(k, None)
+    return out
+
+
 def _execution_dict(s, row: PersonalBetExecution) -> dict:
     bet = s.get(PersonalBet, row.personal_bet_id)
     return {
@@ -1395,6 +1428,30 @@ def journal_summary(fixture_id: int | None = None,
             "policy": JOURNAL_POLICY,
             "evidence_class": "personal_journal",
             "counts": counts,
+            # The rows themselves. `aggregate_withheld.note` has always
+            # said "rows are listed"; until 2026-08-06 it was the only
+            # part of this payload that was false, and the omission was
+            # not cosmetic — with no row listing, nothing could compare
+            # the journal against the operator's actual account, so a
+            # $35 position on FC Dallas that returned $70.35 sat outside
+            # the record entirely and a whole matchday-1 position went
+            # unnoticed for two days.
+            #
+            # Superseded rows are INCLUDED and flagged. A correction
+            # chain is audit evidence: dropping the corrected row would
+            # hide that a mistake was made, which is the opposite of
+            # what `corrects_bet_id` exists for. `counts_toward_
+            # aggregate` on each row is what a reader should filter on,
+            # never presence in this list.
+            "entries": [_bet_dict_public(b, superseded=b.id in superseded_ids)
+                        for b in sorted(bets, key=lambda r: r.id)],
+            "entries_redacted": sorted(_PRIVATE_BET_FIELDS),
+            "entries_redacted_why": (
+                "private prose and staking. This surface takes no "
+                "credential, so it carries what an audit needs — is "
+                "there a row for this position, and does it claim the "
+                "operator declined — and nothing more. The operator "
+                "routes carry the full row"),
             "total_recorded": len(bets),
             # journal-P1-F: the counting surfaces above are EFFECTIVE
             # (one observation per correction chain); the raw rows are
