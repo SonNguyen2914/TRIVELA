@@ -26,10 +26,31 @@ series. For a committed file the git commit time is an independent
 upper bound on the claim.
 
 WHAT IS STORED, and what deliberately is not. Only what a book-behaviour
-measurement needs: ticker, the three legs, ask/bid, open interest,
-volume, and the derived sum-of-asks. No account data, no journal rows,
-no operator information — this is public exchange state and nothing
-else, so it can live in the archive without a redaction question.
+measurement needs: ticker, the three legs, ask/bid, THE SIZE RESTING AT
+EACH, open interest, volume, and the derived sum-of-asks. No account
+data, no journal rows, no operator information — this is public exchange
+state and nothing else, so it can live in the archive without a
+redaction question.
+
+`ask_size` and `bid_size` were added after the archive was asked a
+question it could not answer. Four books had quoted a sum of asks BELOW
+$1.00, and the first thing anyone wants to know about a sub-$1 book is
+whether a ticket would actually fill at those prices. The stored fields
+were price and open interest — and OPEN INTEREST IS NOT DEPTH. It counts
+contracts already held, not contracts offered, so a one-lot ask sitting
+in front of a 15,000-contract position looks identical to a deep one.
+`yes_ask_size_fp` was in the provider payload the whole time and was
+being discarded. Live books carry asks of ONE contract on the Tie leg,
+so this is not a hypothetical distinction.
+
+THE SUM REFUSES ON A PARTIAL BOOK. `sum_of_asks` used to add up whatever
+asks happened to exist, so a three-leg event with one unquoted leg would
+report the sum of the other two — a book that looks two-thirds priced
+reads as a book that is thirty points cheap. No archived snapshot has
+ever hit it (326 three-way event-snapshots, zero missing and zero
+zero-valued asks, checked), which is exactly why it was worth closing
+before it happened: the number would have been wrong and nothing would
+have said so.
 
 A capture is IMMUTABLE: an existing path is never overwritten. Two
 captures a minute apart are two files, which is the point — the series
@@ -95,19 +116,30 @@ def condense(markets_doc: dict, fixtures_doc: dict | None, now: datetime):
                 "label": r.get("no_sub_title") or r.get("yes_sub_title"),
                 "yes_ask": _f(r.get("yes_ask_dollars")),
                 "yes_bid": _f(r.get("yes_bid_dollars")),
+                # depth, not position count — see the module note
+                "ask_size": _f(r.get("yes_ask_size_fp")),
+                "bid_size": _f(r.get("yes_bid_size_fp")),
                 "open_interest": _f(r.get("open_interest_fp")),
                 "volume": _f(r.get("volume")),
             })
         asks = [l["yes_ask"] for l in legs if l["yes_ask"] is not None]
+        # every leg or nothing: a sum over SOME legs is not a book price,
+        # and it is indistinguishable from a cheap book once written down
+        priced = bool(legs) and len(asks) == len(legs)
         meta = ko.get(e.get("event_ticker")) or {}
         k = _utc(meta.get("kickoff_utc"))
         rows.append({
             "event_ticker": e.get("event_ticker"),
             "legs": legs,
             "n_legs": len(legs),
+            "n_asks": len(asks),
             "three_way": len(legs) == 3,
-            "sum_of_asks": round(sum(asks), 4) if asks else None,
-            "vig": round(sum(asks) - 1, 4) if asks else None,
+            "all_legs_quoted": priced,
+            "sum_of_asks": round(sum(asks), 4) if priced else None,
+            "vig": round(sum(asks) - 1, 4) if priced else None,
+            "why_no_sum": (None if priced else
+                           "at least one leg had no ask; a partial sum "
+                           "would read as a cheap book"),
             **meta,
             "lead_seconds": (int((k - now).total_seconds())
                              if k else None),
@@ -194,6 +226,7 @@ def main() -> int:
         "competition": a.competition,
         "n_events": len(rows),
         "n_three_way": sum(1 for r in rows if r["three_way"]),
+        "n_unpriced": sum(1 for r in rows if not r["all_legs_quoted"]),
         "events": rows,
     }
     out.parent.mkdir(parents=True, exist_ok=True)
