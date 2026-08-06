@@ -216,7 +216,9 @@ class TestPairingWithOutcomes:
                         [_fx(1, "A", "B", status="FT", hg=2, ag=0)])
         assert "not an edge claim" in doc["what_this_is_NOT"]
         assert "not a calibration" in doc["what_this_is_NOT"]
-        assert doc["admissibility"]["file_mtime_before_kickoff"] is True
+        # renamed from file_mtime_before_kickoff: mtime is no longer the
+        # only witness, because git does not preserve it
+        assert doc["admissibility"]["capture_time_before_kickoff"] is True
 
     def test_no_results_source_refuses(self, tmp_path, monkeypatch, capsys):
         monkeypatch.delenv("TRIVELA_API_BASE", raising=False)
