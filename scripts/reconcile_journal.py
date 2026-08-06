@@ -169,15 +169,38 @@ def reconcile(entries: list, positions: list) -> dict:
         else:
             matched.append(rec)
 
-    rows_without_position = [
-        {"bet_id": e.get("id"), "market_ticker": e.get("market_ticker"),
-         "status": e.get("status"),
-         "why": ("recorded, but the account shows no position. Expected "
-                 "for a genuine pass or void; a problem for anything "
-                 "else")}
-        for e in entries
-        if (e.get("market_ticker") or "") not in seen_tickers
-        and not e.get("superseded")]
+    # An orphan's status decides whether it is a finding at all. A
+    # `passed`, `considered` or `void` row with no position is the
+    # expected shape — the operator declined, or the row is late
+    # documentation. A `taken` row with no position is the mirror image
+    # of the contradiction above: the journal claims money was placed
+    # and the account shows none. Lumping the two together let a first
+    # production run report `clean: true` while five `taken` matchday-1
+    # rows sat unmatched, which is the false-clean this tool exists to
+    # prevent.
+    rows_without_position, claimed_without_position = [], []
+    for e in entries:
+        if (e.get("market_ticker") or "") in seen_tickers \
+                or e.get("superseded"):
+            continue
+        rec = {"bet_id": e.get("id"),
+               "market_ticker": e.get("market_ticker"),
+               "status": e.get("status")}
+        if e.get("status") == "taken":
+            claimed_without_position.append({
+                **rec,
+                "why": ("row says `taken` — money WAS placed — but the "
+                        "supplied account shows no position on this "
+                        "market. Either the row is wrong, or the "
+                        "positions file is incomplete"),
+            })
+        else:
+            rows_without_position.append({
+                **rec,
+                "why": ("recorded, and the account shows no position. "
+                        "Expected for a genuine pass or for late "
+                        "documentation"),
+            })
 
     return {
         "what_this_is": (
@@ -193,9 +216,11 @@ def reconcile(entries: list, positions: list) -> dict:
         "agreed": matched,
         "positions_with_no_journal_row": unmatched_positions,
         "journal_rows_with_no_position": rows_without_position,
+        "taken_rows_with_no_position": claimed_without_position,
         "status_contradictions": contradictions,
         "value_mismatches": mismatches,
-        "clean": not (unmatched_positions or contradictions or mismatches),
+        "clean": not (unmatched_positions or contradictions or mismatches
+                      or claimed_without_position),
         "matching": {
             "key": "market_ticker",
             "why": ("provider-stable identity. Names and name+date are "

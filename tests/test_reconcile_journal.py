@@ -66,7 +66,10 @@ class TestThePositionWithNoRow:
         que = DAL.replace("-DAL", "-QUE")
         out = rj.reconcile([_row(1, que)], [_pos(DAL)])
         assert len(out["positions_with_no_journal_row"]) == 1
-        assert len(out["journal_rows_with_no_position"]) == 1
+        # the orphan is `taken`, so it lands in the stronger class:
+        # the journal claims money on a market the account is silent on
+        assert len(out["taken_rows_with_no_position"]) == 1
+        assert out["journal_rows_with_no_position"] == []
 
 
 class TestTheStatusContradiction:
@@ -303,3 +306,42 @@ class TestItRefusesRatherThanFabricate:
         assert rj.main() == 2
         assert not out.exists()
         assert json.loads(capsys.readouterr().out)["reconciled"] is False
+
+
+class TestATakenRowWithNoMoney:
+    """The mirror of the status contradiction, and a false-clean the
+    first production run actually produced: five matchday-1 rows saying
+    `taken` sat unmatched while the report said `clean: true`, because
+    every orphan was treated as an expected pass."""
+
+    def test_a_taken_orphan_is_its_own_class_and_dirties_the_run(self):
+        out = rj.reconcile([_row(16, MON, status="taken")], [])
+        assert out["clean"] is False
+        t = out["taken_rows_with_no_position"]
+        assert len(t) == 1 and t[0]["bet_id"] == 16
+        assert "money WAS placed" in t[0]["why"]
+        assert out["journal_rows_with_no_position"] == []
+
+    def test_a_passed_orphan_stays_expected_and_stays_clean(self):
+        out = rj.reconcile([_row(5, MON, status="passed")], [])
+        assert out["clean"] is True
+        assert out["taken_rows_with_no_position"] == []
+        assert "Expected for a genuine pass" in \
+            out["journal_rows_with_no_position"][0]["why"]
+
+    def test_a_void_orphan_stays_expected(self):
+        """Late documentation of a real position is exactly what the
+        repair path produces; flagging it would cry wolf."""
+        out = rj.reconcile([_row(30, MON, status="void")], [])
+        assert out["clean"] is True and out["taken_rows_with_no_position"] == []
+
+    def test_a_superseded_taken_row_is_not_flagged(self):
+        """A corrected row is audit, not a live claim."""
+        out = rj.reconcile([_row(24, MON, status="taken", superseded=True),
+                            _row(32, MON, status="void", corrects=24)], [])
+        assert out["taken_rows_with_no_position"] == []
+
+    def test_a_matched_taken_row_is_never_in_this_class(self):
+        out = rj.reconcile([_row(25, DAL, status="taken")], [_pos(DAL)])
+        assert out["taken_rows_with_no_position"] == []
+        assert out["agreed"][0]["bet_id"] == 25
