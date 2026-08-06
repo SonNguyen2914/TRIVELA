@@ -39,6 +39,26 @@ requires predicting nothing.
 That shape is DESCRIBED here from observed data, per fixture. It is not
 extrapolated to fixtures that have not been observed, and the script
 says which is which.
+
+A THIRD THING THE COST HALF SURFACED, and the reason `gross_negative`
+exists below. Seven event-snapshots quoted three asks summing to $0.99 —
+a NEGATIVE vig, which is the shape of a free lunch: buy all three legs
+of a mutually exclusive market for 99c and collect $1.00 whatever
+happens. It is not one, and the margin is not close:
+
+    Austin v Tijuana, asks .40/.33/.26
+      gross  +$0.0100 per contract set
+      fees   -$0.0457   (0.07*P*(1-P) per leg, src/execution.py)
+      net    -$0.0357
+
+The taker fee on three legs runs 4.0-4.6c, so a three-way book only pays
+a basket buyer once its asks sum BELOW about $0.955 — 4.5 points of
+negative vig, not one. Every observed instance is exactly -$0.01, the
+smallest step the exchange's cent grid allows, and the Austin book held
+it across four independent fetches spanning 4.4 hours. A stale quote
+does not survive four fetches; an untradeable one does. So the quote is
+REAL and the arbitrage is NOT, and this script now prints the second
+sentence beside the first every time it prints the first.
 """
 from __future__ import annotations
 
@@ -47,11 +67,19 @@ import glob
 import itertools
 import json
 import math
+import os
 import random
 import statistics as st
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# The ONE execution-economics module (V7 F5). Re-deriving 0.07*P*(1-P)
+# here is how "fee-aware" becomes true in one subsystem and false in
+# another, which is the finding that created that module.
+from src.execution import fee                                    # noqa: E402
 
 # A drift relationship is reported as a FINDING only when it clears
 # both. n and significance, because either alone is gameable: a huge
@@ -146,6 +174,13 @@ def cost_report(ser):
             "vig_first": first["vig"],
             "vig_last": last["vig"],
             "vig_cheapest": best["vig"],
+            # a negative vig in a column of positive ones reads as free
+            # money at a glance. It is not; see `gross_negative`
+            **({"vig_cheapest_is_negative": (
+                "GROSS only. Crossing all three legs costs the ask PLUS "
+                "the taker fee and is not profitable at this size of "
+                "negative — see the `gross_negative` section")}
+               if best["vig"] < 0 else {}),
             "cheapest_at_lead_minutes": best["lead_seconds"] // 60,
             "observed_window_minutes": [last["lead_seconds"] // 60,
                                         first["lead_seconds"] // 60],
@@ -165,6 +200,81 @@ def cost_report(ser):
         "fixtures": rows,
         "fixtures_with_one_observation": single,
     }
+
+
+def gross_negative_report(snaps):
+    """Books quoting a sum of asks below $1.00, priced honestly.
+
+    The number invites exactly one question — is this free money — so it
+    is never reported without its answer. A basket buyer pays the ask
+    PLUS the taker fee on every leg, and `src/execution.py` owns that
+    arithmetic.
+
+    What this deliberately does NOT do is call the quote an error. It is
+    a real quote: it persisted across independent fetches, and the three
+    legs arrive in one response so there is no multi-request skew to
+    blame. It is simply not crossable at a profit.
+    """
+    out = []
+    for at, doc in snaps:
+        for e in (doc.get("events") or []):
+            if not e.get("three_way"):
+                continue
+            asks = [l.get("yes_ask") for l in (e.get("legs") or [])]
+            if any(a is None for a in asks) or len(asks) != 3:
+                continue
+            gross = round(1.0 - sum(asks), 4)
+            if gross <= 0:
+                continue
+            fees = round(sum(fee(a) for a in asks), 4)
+            net = round(gross - fees, 4)
+            out.append({
+                "captured_at": at.isoformat(),
+                "event_ticker": e.get("event_ticker"),
+                "asks": asks,
+                "sum_of_asks": round(sum(asks), 4),
+                "gross_per_contract_set": gross,
+                "taker_fees_per_contract_set": fees,
+                "net_per_contract_set": net,
+                "tradeable": net > 0,
+                "sum_of_asks_needed_to_break_even": round(1.0 - fees, 4),
+                # depth is the OTHER thing that decides whether a quote
+                # is reachable, and older snapshots predate its capture
+                "ask_sizes": [l.get("ask_size")
+                              for l in (e.get("legs") or [])],
+            })
+    unreachable = [r for r in out if not r["tradeable"]]
+    doc = {
+        "means": ("books whose three asks summed below $1.00, with what "
+                  "buying all three would actually have cost"),
+        "why_it_is_reported_at_all": (
+            "a sub-$1 book on a mutually exclusive market looks like free "
+            "money. Reporting the gross number alone would be the most "
+            "misleading true statement this script could make"),
+        "fee_source": "src/execution.py — the one execution-economics module",
+        "n_gross_negative": len(out),
+        "n_tradeable_after_fees": len(out) - len(unreachable),
+        "observations": out,
+    }
+    if out and not unreachable:
+        doc["finding"] = (
+            "at least one book was crossable at a profit after fees. This "
+            "is NOT a recommendation and nothing here sizes it — it goes "
+            "to the operator to rule on")
+    elif out:
+        doc["finding"] = (
+            f"{len(unreachable)} of {len(out)} gross-negative books were "
+            f"unreachable after fees, and NONE were reachable. The taker "
+            f"fee on three legs is 4.0-4.6c against a gross of 1c, so the "
+            f"quote is real and the arbitrage is not")
+    if any(s is None for r in out for s in r["ask_sizes"]):
+        doc["depth_not_recorded"] = (
+            "some of these snapshots predate `ask_size` capture, so "
+            "whether a ticket would have FILLED at the quoted ask is not "
+            "answerable from them. Open interest was stored and is not "
+            "depth. Fixed forward in capture_market_book.py; the gap "
+            "cannot be closed backwards")
+    return doc
 
 
 def drift_report(ser):
@@ -263,6 +373,7 @@ def main() -> int:
         "span": [snaps[0][0].isoformat(), snaps[-1][0].isoformat()],
         "n_fixtures_observed": len(ser),
         "cost": cost_report(ser),
+        "gross_negative": gross_negative_report(snaps),
         "drift": drift_report(ser),
     }
     text = json.dumps(doc, indent=2, ensure_ascii=False) + "\n"
