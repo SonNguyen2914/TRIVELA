@@ -1456,6 +1456,34 @@ def journal_summary(fixture_id: int | None = None,
         s.close()
 
 
+def journal_scopes(prefix: str) -> list[str]:
+    """Competition slugs under `prefix` that the journal actually holds.
+
+    The viewer surfaces write rows with a caller-supplied slug
+    (`leagues-cup-2026`), and until now nothing could READ them: the one
+    public journal route is pinned to `mls-2026` by journal-P1 F9, so a
+    viewer row was writable and invisible. Discovering the slugs rather
+    than deriving them from a key plus a season keeps that fix from
+    inventing a denominator — `Viewer.season_default` is None for most
+    competitions and the provider's season label is not always the
+    calendar year, so a derived slug would silently report an empty
+    journal for rows that exist under a neighbouring one.
+
+    Returns what is there, sorted. Never pools: each slug is its own
+    denominator, which is the whole point of F9.
+    """
+    if not plane_ready():
+        return []
+    s = get_session()
+    try:
+        rows = (s.query(PersonalBet.competition_slug)
+                .filter(PersonalBet.competition_slug.like(f"{prefix}-%"))
+                .distinct().all())
+        return sorted(r[0] for r in rows if r[0])
+    finally:
+        s.close()
+
+
 # --- the broadcast boundary (journal-P0 F1) --------------------------------
 # The action channel relays prose to Son, whose consenting friend places
 # REAL bets on the same views. The real-money lock

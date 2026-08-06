@@ -891,6 +891,49 @@ def comp_status(key: str):
     return out
 
 
+@app.get("/api/comp/{key}/journal")
+def comp_journal(key: str):
+    """The personal journal for a VIEWER competition, with its
+    denominator — the read side of the write path `journal_pick.py
+    record-viewer` already had.
+
+    Entries recorded against a viewer competition were writable and
+    unreadable: the only public journal route is pinned to `mls-2026`
+    (journal-P1 F9), so `/api/mls/journal` reported `total_recorded: 15`
+    on a store whose live ids had passed 25. That is worse than no
+    surface, because the number it returns looks like an answer. Found
+    2026-08-05 while trying to confirm six real operator entries.
+
+    Scopes are NOT pooled. Each competition slug carries its own
+    denominator — the same reason F9 keeps a second league out of the
+    MLS one — and slugs are DISCOVERED rather than derived from the key
+    plus a season, so this cannot report an empty journal for rows
+    sitting under a season label it guessed wrong.
+
+    Public read-only, and reports no aggregate the underlying summary
+    would withhold.
+    """
+    from src import competitions
+    if key not in competitions.VIEWERS:
+        raise HTTPException(404, "unknown competition")
+    try:
+        from src.live import journal
+        slugs = journal.journal_scopes(key)
+        return {
+            "competition": key,
+            "scopes": {slug: journal.journal_summary(
+                competition_slug=slug) for slug in slugs},
+            "scopes_found": slugs,
+            "note": ("one denominator per competition slug, never pooled. "
+                     "An empty `scopes` means nothing has been recorded "
+                     "against this competition — NOT that the journal is "
+                     "unavailable"),
+        }
+    except Exception as exc:
+        print(f"[comp {key}] journal failed: {exc}")
+        raise HTTPException(503, "journal unavailable")
+
+
 @app.get("/api/ecl/fixtures")
 def ecl_fixtures(season: int = Query(2026, ge=2020, le=2030),
                  days: int | None = Query(None, ge=1, le=30)):
