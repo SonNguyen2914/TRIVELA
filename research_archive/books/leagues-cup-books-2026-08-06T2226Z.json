@@ -1,0 +1,1890 @@
+{
+  "what_this_is": "a frozen public market book. An INPUT to scripts/measure_book_timing.py, which predicts nothing until it has enough of these",
+  "what_this_is_NOT": "not an edge claim, not a recommendation, not a forecast of where the crowd goes",
+  "captured_at": "2026-08-06T22:26:32.125429+00:00",
+  "captured_by": "scripts/capture_market_book.py",
+  "scratch_backfill": false,
+  "captured_at_provenance": "first-hand: this script's clock at the moment it fetched",
+  "captured_at_is_the_witness": "analysis orders this series by THIS field, not file mtime: git does not preserve mtime, so a committed snapshot returns from a clone stamped with the checkout time and the whole series would silently mis-order. For a committed file the git commit time is the independent upper bound",
+  "contains_only_public_exchange_state": true,
+  "competition": "leagues-cup",
+  "n_events": 42,
+  "n_three_way": 42,
+  "n_unpriced": 0,
+  "events": [
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG13PORTIJ",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG13PORTIJ-POR",
+          "label": "Portland",
+          "yes_ask": 0.75,
+          "yes_bid": 0.06,
+          "ask_size": 5.0,
+          "bid_size": 0.24,
+          "open_interest": 0.24,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG13PORTIJ-TIJ",
+          "label": "Tijuana de Caliente",
+          "yes_ask": 0.75,
+          "yes_bid": 0.04,
+          "ask_size": 10.0,
+          "bid_size": 44444.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG13PORTIJ-TIE",
+          "label": "Tie",
+          "yes_ask": 0.49,
+          "yes_bid": 0.04,
+          "ask_size": 10.0,
+          "bid_size": 44444.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.99,
+      "vig": 0.99,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG13CRACHI",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG13CRACHI-CRA",
+          "label": "Cruz Azul",
+          "yes_ask": 0.77,
+          "yes_bid": 0.13,
+          "ask_size": 5.0,
+          "bid_size": 10.0,
+          "open_interest": 65.63,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG13CRACHI-CHI",
+          "label": "Chicago Fire",
+          "yes_ask": 0.77,
+          "yes_bid": 0.11,
+          "ask_size": 10.0,
+          "bid_size": 5.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG13CRACHI-TIE",
+          "label": "Tie",
+          "yes_ask": 0.77,
+          "yes_bid": 0.05,
+          "ask_size": 10.0,
+          "bid_size": 5.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.31,
+      "vig": 1.31,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG13AMEATX",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG13AMEATX-AME",
+          "label": "America",
+          "yes_ask": 0.8,
+          "yes_bid": 0.09,
+          "ask_size": 5.0,
+          "bid_size": 5.0,
+          "open_interest": 121.94,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG13AMEATX-ATX",
+          "label": "Austin",
+          "yes_ask": 0.69,
+          "yes_bid": 0.05,
+          "ask_size": 5.0,
+          "bid_size": 5.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG13AMEATX-TIE",
+          "label": "Tie",
+          "yes_ask": 0.78,
+          "yes_bid": 0.05,
+          "ask_size": 5.0,
+          "bid_size": 5.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.27,
+      "vig": 1.27,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG13NYCNCX",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG13NYCNCX-NYC",
+          "label": "New York City",
+          "yes_ask": 0.8,
+          "yes_bid": 0.04,
+          "ask_size": 10.0,
+          "bid_size": 44444.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG13NYCNCX-NCX",
+          "label": "Necaxa",
+          "yes_ask": 0.79,
+          "yes_bid": 0.05,
+          "ask_size": 10.0,
+          "bid_size": 10.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG13NYCNCX-TIE",
+          "label": "Tie",
+          "yes_ask": 0.8,
+          "yes_bid": 0.04,
+          "ask_size": 10.0,
+          "bid_size": 44444.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.39,
+      "vig": 1.39,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG13PHISLA",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG13PHISLA-PHI",
+          "label": "Philadelphia",
+          "yes_ask": 0.8,
+          "yes_bid": 0.05,
+          "ask_size": 10.0,
+          "bid_size": 10.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG13PHISLA-SLA",
+          "label": "Santos Laguna",
+          "yes_ask": 0.71,
+          "yes_bid": 0.04,
+          "ask_size": 10.0,
+          "bid_size": 44444.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG13PHISLA-TIE",
+          "label": "Tie",
+          "yes_ask": 0.8,
+          "yes_bid": 0.04,
+          "ask_size": 10.0,
+          "bid_size": 44444.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.31,
+      "vig": 1.31,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG12SEACDG",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12SEACDG-SEA",
+          "label": "Seattle",
+          "yes_ask": 0.76,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12SEACDG-CDG",
+          "label": "Guadalajara",
+          "yes_ask": 0.78,
+          "yes_bid": 0.08,
+          "ask_size": 4.0,
+          "bid_size": 12.0,
+          "open_interest": 12.29,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12SEACDG-TIE",
+          "label": "Tie",
+          "yes_ask": 0.76,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.3,
+      "vig": 1.3,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG12LAFCQUE",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12LAFCQUE-LAFC",
+          "label": "Los Angeles F",
+          "yes_ask": 0.78,
+          "yes_bid": 0.2,
+          "ask_size": 4.0,
+          "bid_size": 5.0,
+          "open_interest": 25.05,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12LAFCQUE-QUE",
+          "label": "Queretaro",
+          "yes_ask": 0.56,
+          "yes_bid": 0.07,
+          "ask_size": 2.0,
+          "bid_size": 14.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12LAFCQUE-TIE",
+          "label": "Tie",
+          "yes_ask": 0.72,
+          "yes_bid": 0.07,
+          "ask_size": 3.0,
+          "bid_size": 14.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.06,
+      "vig": 1.06,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG12SDPUE",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12SDPUE-SD",
+          "label": "San Diego FC",
+          "yes_ask": 0.8,
+          "yes_bid": 0.07,
+          "ask_size": 5.0,
+          "bid_size": 14.0,
+          "open_interest": 6.31,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12SDPUE-PUE",
+          "label": "Puebla",
+          "yes_ask": 0.74,
+          "yes_bid": 0.06,
+          "ask_size": 3.0,
+          "bid_size": 16.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12SDPUE-TIE",
+          "label": "Tie",
+          "yes_ask": 0.76,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.3,
+      "vig": 1.3,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG12TOLDAL",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12TOLDAL-TOL",
+          "label": "Toluca",
+          "yes_ask": 0.8,
+          "yes_bid": 0.7,
+          "ask_size": 5.0,
+          "bid_size": 100.0,
+          "open_interest": 1.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12TOLDAL-DAL",
+          "label": "Dallas",
+          "yes_ask": 0.44,
+          "yes_bid": 0.06,
+          "ask_size": 1.0,
+          "bid_size": 16.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12TOLDAL-TIE",
+          "label": "Tie",
+          "yes_ask": 0.43,
+          "yes_bid": 0.05,
+          "ask_size": 1.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.67,
+      "vig": 0.67,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG12MONNSH",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12MONNSH-MON",
+          "label": "Monterrey",
+          "yes_ask": 0.75,
+          "yes_bid": 0.06,
+          "ask_size": 3.0,
+          "bid_size": 16.0,
+          "open_interest": 0.69,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12MONNSH-NSH",
+          "label": "Nashville",
+          "yes_ask": 0.78,
+          "yes_bid": 0.07,
+          "ask_size": 4.0,
+          "bid_size": 14.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12MONNSH-TIE",
+          "label": "Tie",
+          "yes_ask": 0.78,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.31,
+      "vig": 1.31,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG12ORLASL",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12ORLASL-ORL",
+          "label": "Orlando",
+          "yes_ask": 0.78,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12ORLASL-ASL",
+          "label": "San Luis",
+          "yes_ask": 0.69,
+          "yes_bid": 0.06,
+          "ask_size": 3.0,
+          "bid_size": 16.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12ORLASL-TIE",
+          "label": "Tie",
+          "yes_ask": 0.78,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.25,
+      "vig": 1.25,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG12MIALEO",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12MIALEO-MIA",
+          "label": "Miami",
+          "yes_ask": 0.79,
+          "yes_bid": 0.51,
+          "ask_size": 8.0,
+          "bid_size": 2.0,
+          "open_interest": 151.14,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12MIALEO-LEO",
+          "label": "Leon",
+          "yes_ask": 0.3,
+          "yes_bid": 0.1,
+          "ask_size": 5.0,
+          "bid_size": 5.0,
+          "open_interest": 4.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG12MIALEO-TIE",
+          "label": "Tie",
+          "yes_ask": 0.57,
+          "yes_bid": 0.09,
+          "ask_size": 2.0,
+          "bid_size": 1.0,
+          "open_interest": 17.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.66,
+      "vig": 0.66,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG11TIGVAN",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11TIGVAN-TIG",
+          "label": "Tigres",
+          "yes_ask": 0.7,
+          "yes_bid": 0.06,
+          "ask_size": 3.0,
+          "bid_size": 16.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11TIGVAN-VAN",
+          "label": "Vancouver",
+          "yes_ask": 0.78,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11TIGVAN-TIE",
+          "label": "Tie",
+          "yes_ask": 0.78,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.26,
+      "vig": 1.26,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG11RSLJUA",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11RSLJUA-RSL",
+          "label": "Salt Lake",
+          "yes_ask": 0.77,
+          "yes_bid": 0.06,
+          "ask_size": 4.0,
+          "bid_size": 16.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11RSLJUA-JUA",
+          "label": "Juarez",
+          "yes_ask": 0.71,
+          "yes_bid": 0.06,
+          "ask_size": 3.0,
+          "bid_size": 16.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11RSLJUA-TIE",
+          "label": "Tie",
+          "yes_ask": 0.68,
+          "yes_bid": 0.05,
+          "ask_size": 3.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.16,
+      "vig": 1.16,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG11MINALA",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11MINALA-MIN",
+          "label": "Minnesota",
+          "yes_ask": 0.78,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11MINALA-ALA",
+          "label": "Atlante",
+          "yes_ask": 0.75,
+          "yes_bid": 0.06,
+          "ask_size": 4.0,
+          "bid_size": 16.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11MINALA-TIE",
+          "label": "Tie",
+          "yes_ask": 0.78,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.31,
+      "vig": 1.31,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG11CINATL",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11CINATL-CIN",
+          "label": "Cincinnati",
+          "yes_ask": 0.78,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11CINATL-ATL",
+          "label": "Atlas",
+          "yes_ask": 0.75,
+          "yes_bid": 0.06,
+          "ask_size": 4.0,
+          "bid_size": 16.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11CINATL-TIE",
+          "label": "Tie",
+          "yes_ask": 0.78,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.31,
+      "vig": 1.31,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG11CLTPAC",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11CLTPAC-CLT",
+          "label": "Charlotte",
+          "yes_ask": 0.78,
+          "yes_bid": 0.06,
+          "ask_size": 4.0,
+          "bid_size": 16.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11CLTPAC-PAC",
+          "label": "Pachuca",
+          "yes_ask": 0.78,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.85,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11CLTPAC-TIE",
+          "label": "Tie",
+          "yes_ask": 0.78,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.34,
+      "vig": 1.34,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG11CLBPUM",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11CLBPUM-CLB",
+          "label": "Columbus",
+          "yes_ask": 0.78,
+          "yes_bid": 0.12,
+          "ask_size": 4.0,
+          "bid_size": 8.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11CLBPUM-PUM",
+          "label": "Pumas UNAM",
+          "yes_ask": 0.78,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG11CLBPUM-TIE",
+          "label": "Tie",
+          "yes_ask": 0.78,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.34,
+      "vig": 1.34,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG09AMEPOR",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09AMEPOR-AME",
+          "label": "America",
+          "yes_ask": 0.8,
+          "yes_bid": 0.21,
+          "ask_size": 12.0,
+          "bid_size": 6.0,
+          "open_interest": 162.79,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09AMEPOR-POR",
+          "label": "Portland",
+          "yes_ask": 0.74,
+          "yes_bid": 0.07,
+          "ask_size": 3.0,
+          "bid_size": 14.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09AMEPOR-TIE",
+          "label": "Tie",
+          "yes_ask": 0.78,
+          "yes_bid": 0.09,
+          "ask_size": 4.0,
+          "bid_size": 1.0,
+          "open_interest": 12.29,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.32,
+      "vig": 1.32,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG09SDTIJ",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09SDTIJ-SD",
+          "label": "San Diego FC",
+          "yes_ask": 0.77,
+          "yes_bid": 0.07,
+          "ask_size": 4.0,
+          "bid_size": 14.0,
+          "open_interest": 12.29,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09SDTIJ-TIJ",
+          "label": "Tijuana de Caliente",
+          "yes_ask": 0.76,
+          "yes_bid": 0.1,
+          "ask_size": 1.0,
+          "bid_size": 10.0,
+          "open_interest": 21.41,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09SDTIJ-TIE",
+          "label": "Tie",
+          "yes_ask": 0.72,
+          "yes_bid": 0.05,
+          "ask_size": 3.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.25,
+      "vig": 1.25,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG09ATXPUE",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09ATXPUE-ATX",
+          "label": "Austin",
+          "yes_ask": 0.79,
+          "yes_bid": 0.03,
+          "ask_size": 10.0,
+          "bid_size": 44554.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09ATXPUE-PUE",
+          "label": "Puebla",
+          "yes_ask": 0.76,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09ATXPUE-TIE",
+          "label": "Tie",
+          "yes_ask": 0.78,
+          "yes_bid": 0.06,
+          "ask_size": 4.0,
+          "bid_size": 16.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.33,
+      "vig": 1.33,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG09NSHASL",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09NSHASL-NSH",
+          "label": "Nashville",
+          "yes_ask": 0.77,
+          "yes_bid": 0.26,
+          "ask_size": 4.0,
+          "bid_size": 3.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09NSHASL-ASL",
+          "label": "San Luis",
+          "yes_ask": 0.76,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09NSHASL-TIE",
+          "label": "Tie",
+          "yes_ask": 0.77,
+          "yes_bid": 0.07,
+          "ask_size": 4.0,
+          "bid_size": 14.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.3,
+      "vig": 1.3,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG09CHISLA",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09CHISLA-CHI",
+          "label": "Chicago Fire",
+          "yes_ask": 0.75,
+          "yes_bid": 0.2,
+          "ask_size": 594.0,
+          "bid_size": 7.0,
+          "open_interest": 11.38,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09CHISLA-SLA",
+          "label": "Santos Laguna",
+          "yes_ask": 0.49,
+          "yes_bid": 0.07,
+          "ask_size": 2.0,
+          "bid_size": 8.0,
+          "open_interest": 2.32,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09CHISLA-TIE",
+          "label": "Tie",
+          "yes_ask": 0.77,
+          "yes_bid": 0.03,
+          "ask_size": 10.0,
+          "bid_size": 44544.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.01,
+      "vig": 1.01,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG09PHINCX",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09PHINCX-PHI",
+          "label": "Philadelphia",
+          "yes_ask": 0.8,
+          "yes_bid": 0.16,
+          "ask_size": 10.0,
+          "bid_size": 16.0,
+          "open_interest": 26.02,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09PHINCX-NCX",
+          "label": "Necaxa",
+          "yes_ask": 0.74,
+          "yes_bid": 0.03,
+          "ask_size": 10.0,
+          "bid_size": 44554.0,
+          "open_interest": 121.83,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09PHINCX-TIE",
+          "label": "Tie",
+          "yes_ask": 0.79,
+          "yes_bid": 0.05,
+          "ask_size": 4.0,
+          "bid_size": 20.0,
+          "open_interest": 0.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.33,
+      "vig": 1.33,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG09CRANYC",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09CRANYC-CRA",
+          "label": "Cruz Azul",
+          "yes_ask": 0.77,
+          "yes_bid": 0.13,
+          "ask_size": 3.0,
+          "bid_size": 11.0,
+          "open_interest": 164.21,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09CRANYC-NYC",
+          "label": "New York City",
+          "yes_ask": 0.73,
+          "yes_bid": 0.03,
+          "ask_size": 10.0,
+          "bid_size": 44544.0,
+          "open_interest": 9.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09CRANYC-TIE",
+          "label": "Tie",
+          "yes_ask": 0.75,
+          "yes_bid": 0.07,
+          "ask_size": 4.0,
+          "bid_size": 4.0,
+          "open_interest": 9.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 2.25,
+      "vig": 1.25,
+      "why_no_sum": null,
+      "lead_seconds": null
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG09SEAQUE",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09SEAQUE-SEA",
+          "label": "Seattle",
+          "yes_ask": 0.76,
+          "yes_bid": 0.35,
+          "ask_size": 7.89,
+          "bid_size": 2.11,
+          "open_interest": 103.73,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09SEAQUE-QUE",
+          "label": "Queretaro",
+          "yes_ask": 0.6,
+          "yes_bid": 0.38,
+          "ask_size": 9.99,
+          "bid_size": 0.01,
+          "open_interest": 202.85,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG09SEAQUE-TIE",
+          "label": "Tie",
+          "yes_ask": 0.17,
+          "yes_bid": 0.09,
+          "ask_size": 1.0,
+          "bid_size": 4.0,
+          "open_interest": 9.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.53,
+      "vig": 0.53,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-09T19:30:00+00:00",
+      "home": "Seattle Sounders",
+      "away": "Club Queretaro",
+      "status": "NS",
+      "lead_seconds": 248607
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG08TOLLAFC",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG08TOLLAFC-TOL",
+          "label": "Toluca",
+          "yes_ask": 0.41,
+          "yes_bid": 0.39,
+          "ask_size": 11546.82,
+          "bid_size": 5252.09,
+          "open_interest": 963.05,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG08TOLLAFC-LAFC",
+          "label": "Los Angeles F",
+          "yes_ask": 0.35,
+          "yes_bid": 0.34,
+          "ask_size": 5665.36,
+          "bid_size": 5091.82,
+          "open_interest": 687.54,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG08TOLLAFC-TIE",
+          "label": "Tie",
+          "yes_ask": 0.26,
+          "yes_bid": 0.24,
+          "ask_size": 12362.82,
+          "bid_size": 4655.09,
+          "open_interest": 158.95,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.02,
+      "vig": 0.02,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-09T03:10:00+00:00",
+      "home": "Toluca",
+      "away": "Los Angeles FC",
+      "status": "NS",
+      "lead_seconds": 189807
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG08RSLALA",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG08RSLALA-RSL",
+          "label": "Salt Lake",
+          "yes_ask": 0.52,
+          "yes_bid": 0.51,
+          "ask_size": 1883.0,
+          "bid_size": 4988.37,
+          "open_interest": 169.47,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG08RSLALA-ALA",
+          "label": "Atlante",
+          "yes_ask": 0.24,
+          "yes_bid": 0.23,
+          "ask_size": 6979.61,
+          "bid_size": 166.39,
+          "open_interest": 550.77,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG08RSLALA-TIE",
+          "label": "Tie",
+          "yes_ask": 0.24,
+          "yes_bid": 0.23,
+          "ask_size": 13616.08,
+          "bid_size": 2288.46,
+          "open_interest": 11.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.0,
+      "vig": 0.0,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-09T02:00:00+00:00",
+      "home": "Real Salt Lake",
+      "away": "Atlante FC",
+      "status": "NS",
+      "lead_seconds": 185607
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG08CDGDAL",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG08CDGDAL-CDG",
+          "label": "Guadalajara",
+          "yes_ask": 0.44,
+          "yes_bid": 0.43,
+          "ask_size": 5263.88,
+          "bid_size": 644.0,
+          "open_interest": 27668.9,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG08CDGDAL-DAL",
+          "label": "Dallas",
+          "yes_ask": 0.33,
+          "yes_bid": 0.32,
+          "ask_size": 422.0,
+          "bid_size": 38.25,
+          "open_interest": 70.5,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG08CDGDAL-TIE",
+          "label": "Tie",
+          "yes_ask": 0.24,
+          "yes_bid": 0.23,
+          "ask_size": 772.0,
+          "bid_size": 252.25,
+          "open_interest": 18.0,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.01,
+      "vig": 0.01,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-09T01:00:00+00:00",
+      "home": "Guadalajara Chivas",
+      "away": "FC Dallas",
+      "status": "NS",
+      "lead_seconds": 182007
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG08MIAMON",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG08MIAMON-MIA",
+          "label": "Miami",
+          "yes_ask": 0.58,
+          "yes_bid": 0.57,
+          "ask_size": 14814.47,
+          "bid_size": 444.31,
+          "open_interest": 10778.62,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG08MIAMON-MON",
+          "label": "Monterrey",
+          "yes_ask": 0.24,
+          "yes_bid": 0.23,
+          "ask_size": 14048.88,
+          "bid_size": 37.0,
+          "open_interest": 1164.2,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG08MIAMON-TIE",
+          "label": "Tie",
+          "yes_ask": 0.22,
+          "yes_bid": 0.2,
+          "ask_size": 15184.39,
+          "bid_size": 800.0,
+          "open_interest": 228.98,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.04,
+      "vig": 0.04,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-09T00:00:00+00:00",
+      "home": "Inter Miami",
+      "away": "Monterrey",
+      "status": "NS",
+      "lead_seconds": 178407
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG08ORLLEO",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG08ORLLEO-ORL",
+          "label": "Orlando",
+          "yes_ask": 0.48,
+          "yes_bid": 0.47,
+          "ask_size": 7140.77,
+          "bid_size": 7507.4,
+          "open_interest": 10876.03,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG08ORLLEO-LEO",
+          "label": "Leon",
+          "yes_ask": 0.29,
+          "yes_bid": 0.28,
+          "ask_size": 10850.72,
+          "bid_size": 825.14,
+          "open_interest": 199.42,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG08ORLLEO-TIE",
+          "label": "Tie",
+          "yes_ask": 0.24,
+          "yes_bid": 0.23,
+          "ask_size": 1819.0,
+          "bid_size": 565.0,
+          "open_interest": 60.85,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.01,
+      "vig": 0.01,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-08T22:30:00+00:00",
+      "home": "Orlando City SC",
+      "away": "Leon",
+      "status": "NS",
+      "lead_seconds": 173007
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG07VANJUA",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG07VANJUA-VAN",
+          "label": "Vancouver",
+          "yes_ask": 0.66,
+          "yes_bid": 0.65,
+          "ask_size": 4528.81,
+          "bid_size": 1334.71,
+          "open_interest": 2343.5,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG07VANJUA-JUA",
+          "label": "Juarez",
+          "yes_ask": 0.18,
+          "yes_bid": 0.17,
+          "ask_size": 30425.16,
+          "bid_size": 6.0,
+          "open_interest": 546.81,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG07VANJUA-TIE",
+          "label": "Tie",
+          "yes_ask": 0.19,
+          "yes_bid": 0.18,
+          "ask_size": 13354.57,
+          "bid_size": 136.0,
+          "open_interest": 52.8,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.03,
+      "vig": 0.03,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-08T02:30:00+00:00",
+      "home": "Vancouver Whitecaps",
+      "away": "FC Juarez",
+      "status": "NS",
+      "lead_seconds": 101007
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG07TIGMIN",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG07TIGMIN-TIG",
+          "label": "Tigres",
+          "yes_ask": 0.44,
+          "yes_bid": 0.43,
+          "ask_size": 19052.6,
+          "bid_size": 445.1,
+          "open_interest": 1184.57,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG07TIGMIN-MIN",
+          "label": "Minnesota",
+          "yes_ask": 0.32,
+          "yes_bid": 0.31,
+          "ask_size": 15693.94,
+          "bid_size": 2749.63,
+          "open_interest": 103.0,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG07TIGMIN-TIE",
+          "label": "Tie",
+          "yes_ask": 0.25,
+          "yes_bid": 0.24,
+          "ask_size": 1698.0,
+          "bid_size": 5322.74,
+          "open_interest": 125.57,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.01,
+      "vig": 0.01,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-08T01:00:00+00:00",
+      "home": "Tigres UANL",
+      "away": "Minnesota United FC",
+      "status": "NS",
+      "lead_seconds": 95607
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG07CINPUM",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG07CINPUM-CIN",
+          "label": "Cincinnati",
+          "yes_ask": 0.46,
+          "yes_bid": 0.45,
+          "ask_size": 13124.23,
+          "bid_size": 412.0,
+          "open_interest": 9116.63,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG07CINPUM-PUM",
+          "label": "Pumas UNAM",
+          "yes_ask": 0.31,
+          "yes_bid": 0.3,
+          "ask_size": 12296.8,
+          "bid_size": 2137.1,
+          "open_interest": 1924.66,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG07CINPUM-TIE",
+          "label": "Tie",
+          "yes_ask": 0.24,
+          "yes_bid": 0.23,
+          "ask_size": 1620.0,
+          "bid_size": 4324.23,
+          "open_interest": 83.2,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.01,
+      "vig": 0.01,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-08T00:00:00+00:00",
+      "home": "FC Cincinnati",
+      "away": "U.N.A.M. - Pumas",
+      "status": "NS",
+      "lead_seconds": 92007
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG07CLTATL",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG07CLTATL-CLT",
+          "label": "Charlotte",
+          "yes_ask": 0.46,
+          "yes_bid": 0.45,
+          "ask_size": 8569.09,
+          "bid_size": 4848.0,
+          "open_interest": 513.86,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG07CLTATL-ATL",
+          "label": "Atlas",
+          "yes_ask": 0.3,
+          "yes_bid": 0.29,
+          "ask_size": 6369.07,
+          "bid_size": 1141.24,
+          "open_interest": 1462.69,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG07CLTATL-TIE",
+          "label": "Tie",
+          "yes_ask": 0.25,
+          "yes_bid": 0.24,
+          "ask_size": 7171.66,
+          "bid_size": 2385.0,
+          "open_interest": 64.95,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.01,
+      "vig": 0.01,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-07T23:30:00+00:00",
+      "home": "Charlotte",
+      "away": "Atlas",
+      "status": "NS",
+      "lead_seconds": 90207
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG07CLBPAC",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG07CLBPAC-CLB",
+          "label": "Columbus",
+          "yes_ask": 0.43,
+          "yes_bid": 0.42,
+          "ask_size": 12216.24,
+          "bid_size": 4820.23,
+          "open_interest": 4988.35,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG07CLBPAC-PAC",
+          "label": "Pachuca",
+          "yes_ask": 0.33,
+          "yes_bid": 0.32,
+          "ask_size": 16812.26,
+          "bid_size": 657.37,
+          "open_interest": 2836.12,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG07CLBPAC-TIE",
+          "label": "Tie",
+          "yes_ask": 0.25,
+          "yes_bid": 0.24,
+          "ask_size": 1649.1,
+          "bid_size": 4557.4,
+          "open_interest": 72.42,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.01,
+      "vig": 0.01,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-07T23:30:00+00:00",
+      "home": "Columbus Crew",
+      "away": "CF Pachuca",
+      "status": "NS",
+      "lead_seconds": 90207
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG06PORPUE",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06PORPUE-POR",
+          "label": "Portland",
+          "yes_ask": 0.65,
+          "yes_bid": 0.64,
+          "ask_size": 10593.69,
+          "bid_size": 7801.28,
+          "open_interest": 26882.74,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06PORPUE-PUE",
+          "label": "Puebla",
+          "yes_ask": 0.18,
+          "yes_bid": 0.17,
+          "ask_size": 12258.07,
+          "bid_size": 7974.64,
+          "open_interest": 37323.93,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06PORPUE-TIE",
+          "label": "Tie",
+          "yes_ask": 0.19,
+          "yes_bid": 0.18,
+          "ask_size": 41666.07,
+          "bid_size": 127.39,
+          "open_interest": 6363.97,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.02,
+      "vig": 0.02,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-07T02:30:00+00:00",
+      "home": "Portland Timbers",
+      "away": "Puebla",
+      "status": "NS",
+      "lead_seconds": 14607
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG06AMESD",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06AMESD-AME",
+          "label": "America",
+          "yes_ask": 0.7,
+          "yes_bid": 0.69,
+          "ask_size": 91965.27,
+          "bid_size": 14116.33,
+          "open_interest": 89919.26,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06AMESD-SD",
+          "label": "San Diego FC",
+          "yes_ask": 0.14,
+          "yes_bid": 0.13,
+          "ask_size": 1109.69,
+          "bid_size": 6694.22,
+          "open_interest": 64713.44,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06AMESD-TIE",
+          "label": "Tie",
+          "yes_ask": 0.18,
+          "yes_bid": 0.17,
+          "ask_size": 54855.45,
+          "bid_size": 1280.46,
+          "open_interest": 7455.9,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.02,
+      "vig": 0.02,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-07T02:00:00+00:00",
+      "home": "Club America",
+      "away": "San Diego",
+      "status": "NS",
+      "lead_seconds": 12807
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG06ATXTIJ",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06ATXTIJ-ATX",
+          "label": "Austin",
+          "yes_ask": 0.36,
+          "yes_bid": 0.35,
+          "ask_size": 3473.32,
+          "bid_size": 2665.39,
+          "open_interest": 18284.05,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06ATXTIJ-TIJ",
+          "label": "Tijuana de Caliente",
+          "yes_ask": 0.38,
+          "yes_bid": 0.37,
+          "ask_size": 4053.11,
+          "bid_size": 11510.77,
+          "open_interest": 84166.75,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06ATXTIJ-TIE",
+          "label": "Tie",
+          "yes_ask": 0.27,
+          "yes_bid": 0.26,
+          "ask_size": 26302.65,
+          "bid_size": 759.35,
+          "open_interest": 5726.43,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.01,
+      "vig": 0.01,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-07T01:00:00+00:00",
+      "home": "Austin",
+      "away": "Club Tijuana",
+      "status": "NS",
+      "lead_seconds": 9207
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG06CHINCX",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06CHINCX-CHI",
+          "label": "Chicago Fire",
+          "yes_ask": 0.64,
+          "yes_bid": 0.63,
+          "ask_size": 50352.72,
+          "bid_size": 12583.85,
+          "open_interest": 64810.25,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06CHINCX-NCX",
+          "label": "Necaxa",
+          "yes_ask": 0.18,
+          "yes_bid": 0.17,
+          "ask_size": 66705.88,
+          "bid_size": 12470.09,
+          "open_interest": 92274.1,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06CHINCX-TIE",
+          "label": "Tie",
+          "yes_ask": 0.2,
+          "yes_bid": 0.19,
+          "ask_size": 42257.36,
+          "bid_size": 273.43,
+          "open_interest": 5812.87,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.02,
+      "vig": 0.02,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-07T00:30:00+00:00",
+      "home": "Chicago Fire",
+      "away": "Necaxa",
+      "status": "NS",
+      "lead_seconds": 7407
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG06CRAPHI",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06CRAPHI-CRA",
+          "label": "Cruz Azul",
+          "yes_ask": 0.4,
+          "yes_bid": 0.39,
+          "ask_size": 74209.96,
+          "bid_size": 30315.27,
+          "open_interest": 313186.75,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06CRAPHI-PHI",
+          "label": "Philadelphia",
+          "yes_ask": 0.36,
+          "yes_bid": 0.35,
+          "ask_size": 19933.48,
+          "bid_size": 5269.68,
+          "open_interest": 79964.95,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06CRAPHI-TIE",
+          "label": "Tie",
+          "yes_ask": 0.25,
+          "yes_bid": 0.24,
+          "ask_size": 30745.47,
+          "bid_size": 4131.56,
+          "open_interest": 12166.79,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.01,
+      "vig": 0.01,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-07T00:00:00+00:00",
+      "home": "Cruz Azul",
+      "away": "Philadelphia Union",
+      "status": "NS",
+      "lead_seconds": 5607
+    },
+    {
+      "event_ticker": "KXLEAGUESCUPGAME-26AUG06NYCSLA",
+      "legs": [
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06NYCSLA-NYC",
+          "label": "New York City",
+          "yes_ask": 0.62,
+          "yes_bid": 0.61,
+          "ask_size": 152839.57,
+          "bid_size": 12537.66,
+          "open_interest": 117263.9,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06NYCSLA-SLA",
+          "label": "Santos Laguna",
+          "yes_ask": 0.18,
+          "yes_bid": 0.17,
+          "ask_size": 1601.33,
+          "bid_size": 1109.43,
+          "open_interest": 68289.5,
+          "volume": null
+        },
+        {
+          "ticker": "KXLEAGUESCUPGAME-26AUG06NYCSLA-TIE",
+          "label": "Tie",
+          "yes_ask": 0.2,
+          "yes_bid": 0.19,
+          "ask_size": 23210.07,
+          "bid_size": 14808.45,
+          "open_interest": 13028.5,
+          "volume": null
+        }
+      ],
+      "n_legs": 3,
+      "n_asks": 3,
+      "three_way": true,
+      "all_legs_quoted": true,
+      "sum_of_asks": 1.0,
+      "vig": 0.0,
+      "why_no_sum": null,
+      "kickoff_utc": "2026-08-06T23:30:00+00:00",
+      "home": "New York City FC",
+      "away": "Santos Laguna",
+      "status": "NS",
+      "lead_seconds": 3807
+    }
+  ]
+}
