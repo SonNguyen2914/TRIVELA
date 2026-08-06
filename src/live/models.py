@@ -24,9 +24,49 @@ import uuid
 from sqlalchemy import (Boolean, CheckConstraint, Column, DateTime, Float,
                         ForeignKey, Index, Integer, String, Text,
                         UniqueConstraint, text)
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 
 LiveBase = declarative_base()
+
+# ---------------------------------------------------------------------
+# Relationships: two rules, both mechanical rather than advisory.
+#
+# RULE 1 — EVERY relationship is lazy="raise". Nothing on this file may
+# emit a query as a side effect of attribute access.
+#
+# This file had NO relationships at all until now, and that absence was
+# doing real work: every read in the live plane is an explicit query, so
+# there has never been a hidden SELECT, an N+1 in a T-10 sweep, or a
+# DetachedInstanceError from touching an attribute after a session
+# closed. Adding conveniences that lazy-load would have traded a
+# navigable model for exactly those three failure modes, inside a
+# fail-closed evidence platform where a silent extra query at T-10 is
+# the worst possible place to find one.
+#
+# `lazy="raise"` keeps the navigation and refuses the I/O: a caller must
+# say `selectinload(PersonalBet.executions)` and get its rows in one
+# planned query, or get a loud error. The convenience is opt-in; the
+# surprise is impossible. It is the same shape as everything else here —
+# the partial unique index, the execution guard, the alert gate — an
+# invariant the machine enforces rather than a habit the reader is
+# trusted to keep.
+#
+# RULE 2 — NO relationship may cross from the journal plane
+# (PersonalBet, PersonalBetExecution) to the paper plane (PaperSignal,
+# PaperFill, PaperEvaluationContext). PersonalBet's own docstring has
+# said "No join to PaperSignal/PaperFill exists or may be added" since
+# it was written, and until now that was prose in a file with no joins
+# to violate it. The moment relationships exist, the prohibition needs
+# teeth: `tests/test_models_relationships.py` walks every mapper and
+# fails if any relationship links the two planes.
+#
+# The reason is not tidiness. Journal rows are human-selected and carry
+# selection bias by construction; the paper ledger is mechanical and
+# retains its rejections. They can establish different things, and a
+# convenient `bet.paper_signal` is how one silently becomes evidence
+# for the other.
+# ---------------------------------------------------------------------
+_NO_IMPLICIT_IO = "raise"
 
 
 def _uuid() -> str:
@@ -63,6 +103,9 @@ class Team(LiveBase):
         UniqueConstraint("competition_slug", "canonical_name"),
     )
 
+    aliases = relationship("TeamAlias", back_populates="team",
+                           lazy=_NO_IMPLICIT_IO)
+
 
 class TeamAlias(LiveBase):
     """Identity bridge. Fuzzy matching can only PROPOSE (approved=False);
@@ -74,6 +117,9 @@ class TeamAlias(LiveBase):
     source = Column(String(24), nullable=False)   # kalshi|espn|apifootball
     approved = Column(Boolean, default=False, nullable=False)
     __table_args__ = (UniqueConstraint("source", "alias"),)
+
+    team = relationship("Team", back_populates="aliases",
+                        lazy=_NO_IMPLICIT_IO)
 
 
 class Fixture(LiveBase):
@@ -109,6 +155,16 @@ class Fixture(LiveBase):
               sqlite_where=text("provider_fixture_id IS NOT NULL")),
     )
 
+    # two FKs to the same table, so the join is stated explicitly rather
+    # than inferred — an ambiguous guess here is precisely the "fixture
+    # identity from names alone" class of error one level down
+    home_team = relationship("Team", foreign_keys=[home_team_id],
+                             lazy=_NO_IMPLICIT_IO)
+    away_team = relationship("Team", foreign_keys=[away_team_id],
+                             lazy=_NO_IMPLICIT_IO)
+    changes = relationship("FixtureChange", back_populates="fixture",
+                           lazy=_NO_IMPLICIT_IO)
+
 
 class FixtureChange(LiveBase):
     """Reschedules create history, never silent overwrite."""
@@ -119,6 +175,9 @@ class FixtureChange(LiveBase):
     old_value = Column(String(96))
     new_value = Column(String(96))
     observed_at = Column(DateTime(timezone=True), nullable=False)
+
+    fixture = relationship("Fixture", back_populates="changes",
+                           lazy=_NO_IMPLICIT_IO)
 
 
 class SourceObservation(LiveBase):
@@ -240,6 +299,9 @@ class LineupSnapshot(LiveBase):
     home_gk_player_id = Column(Integer, ForeignKey("player.id"))
     away_gk_player_id = Column(Integer, ForeignKey("player.id"))
 
+    entries = relationship("LineupEntry", back_populates="snapshot",
+                           lazy=_NO_IMPLICIT_IO)
+
 
 class LineupEntry(LiveBase):
     """One player's selection state within a lineup snapshot."""
@@ -253,6 +315,9 @@ class LineupEntry(LiveBase):
     is_goalkeeper = Column(Boolean)
     position = Column(String(8))
     jersey = Column(String(8))
+
+    snapshot = relationship("LineupSnapshot", back_populates="entries",
+                            lazy=_NO_IMPLICIT_IO)
 
 
 class ModelInputArtifact(LiveBase):
@@ -336,6 +401,9 @@ class PredictionRun(LiveBase):
                   "status = 'complete'")),
     )
 
+    contracts = relationship("PredictionContract", back_populates="run",
+                             lazy=_NO_IMPLICIT_IO)
+
 
 class PredictionContract(LiveBase):
     __tablename__ = "prediction_contract"
@@ -349,6 +417,8 @@ class PredictionContract(LiveBase):
     raw_probability = Column(Float, nullable=False)
     anchored_probability = Column(Float)
     market_quote_id = Column(Integer, ForeignKey("market_quote.id"))
+    run = relationship("PredictionRun", back_populates="contracts",
+                       lazy=_NO_IMPLICIT_IO)
     __table_args__ = (
         UniqueConstraint("prediction_run_id", "market_contract_id"),
         # SQL NULLs are pairwise-distinct, so the constraint above never
@@ -371,6 +441,10 @@ class MarketEvent(LiveBase):
     mapped_via = Column(String(24))                 # alias | manual
     mapping_approved = Column(Boolean, default=False, nullable=False)
 
+    contracts = relationship("MarketContract",
+                             back_populates="market_event",
+                             lazy=_NO_IMPLICIT_IO)
+
 
 class MarketContract(LiveBase):
     __tablename__ = "market_contract"
@@ -380,6 +454,9 @@ class MarketContract(LiveBase):
     ticker = Column(String(80), unique=True, nullable=False)
     side_label = Column(String(64))
     outcome_key = Column(String(32))                # home_win|draw|away_win
+
+    market_event = relationship("MarketEvent", back_populates="contracts",
+                                lazy=_NO_IMPLICIT_IO)
 
 
 class MarketSnapshot(LiveBase):
@@ -419,6 +496,9 @@ class MarketSnapshot(LiveBase):
     required_families_complete = Column(Boolean)
     execution_ready = Column(Boolean)
     failure_reason = Column(Text)
+
+    quotes = relationship("MarketQuote", back_populates="snapshot",
+                          lazy=_NO_IMPLICIT_IO)
 
 
 class MarketQuote(LiveBase):
@@ -470,6 +550,11 @@ class MarketQuote(LiveBase):
     price_level_structure = Column(String(32))   # e.g. linear_cent
     price_ranges_json = Column(Text)             # [{start,end,step}, ...]
 
+    snapshot = relationship("MarketSnapshot", back_populates="quotes",
+                            lazy=_NO_IMPLICIT_IO)
+    depth_levels = relationship("MarketDepthLevel", back_populates="quote",
+                                lazy=_NO_IMPLICIT_IO)
+
 
 class MarketDepthLevel(LiveBase):
     __tablename__ = "market_depth_level"
@@ -490,6 +575,9 @@ class MarketDepthLevel(LiveBase):
     # not independently auditable from published bytes.
     book_observation_id = Column(Integer,
                                  ForeignKey("source_observation.id"))
+
+    quote = relationship("MarketQuote", back_populates="depth_levels",
+                         lazy=_NO_IMPLICIT_IO)
 
 
 class PersonalBet(LiveBase):
@@ -557,6 +645,24 @@ class PersonalBet(LiveBase):
     # was cited or the citation was accepted — the difference between
     # "no quote offered" and "a quote refused" is never left implicit.
     quote_rejection_reason = Column(String(24))
+
+    # the execution-fidelity chain, the one traversal this pilot is
+    # actually about: which real fills attached to this view
+    executions = relationship("PersonalBetExecution",
+                              back_populates="bet",
+                              lazy=_NO_IMPLICIT_IO)
+    # the correction chain. `remote_side` is what tells SQLAlchemy which
+    # end of a SELF-referential FK is the "one": without it the mapper
+    # cannot tell `corrects` from `corrected_by` and guesses. A row
+    # points at the row it corrects; the corrected row lists the views
+    # that superseded it, and BOTH stay readable — the record of the
+    # mistake is part of the record.
+    corrects = relationship("PersonalBet", back_populates="corrected_by",
+                            remote_side=[id], foreign_keys=[corrects_bet_id],
+                            lazy=_NO_IMPLICIT_IO)
+    corrected_by = relationship("PersonalBet", back_populates="corrects",
+                                foreign_keys=[corrects_bet_id],
+                                lazy=_NO_IMPLICIT_IO)
 
     __table_args__ = (
         # journal-P1-G: correction chains stay LINEAR under CONCURRENCY.
@@ -642,6 +748,9 @@ class PersonalBetExecution(LiveBase):
     execution_payload_hash = Column(String(64))
     settlement_payload_hash = Column(String(64))
     reconciliation_payload_hash = Column(String(64))
+
+    bet = relationship("PersonalBet", back_populates="executions",
+                       lazy=_NO_IMPLICIT_IO)
 
 
 class BroadcastLog(LiveBase):
@@ -776,6 +885,9 @@ class PaperSignal(LiveBase):
                          name="uq_paper_signal_run_contract"),
     )
 
+    fills = relationship("PaperFill", back_populates="signal",
+                         lazy=_NO_IMPLICIT_IO)
+
 
 class PaperFill(LiveBase):
     """The simulated execution of a filled PaperSignal against the
@@ -814,6 +926,9 @@ class PaperFill(LiveBase):
     latency_ms = Column(Integer)         # recorded assumption
     reason = Column(String(48))          # filled | partial | no_depth
     created_at = Column(DateTime(timezone=True))
+
+    signal = relationship("PaperSignal", back_populates="fills",
+                          lazy=_NO_IMPLICIT_IO)
     # settlement, once the fixture is post
     status = Column(String(12), default="open")   # open | settled
     outcome_hit = Column(Boolean)
