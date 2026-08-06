@@ -335,8 +335,21 @@ def fixtures(key: str, season: int | None = None, days: int | None = None,
     from datetime import datetime, timedelta, timezone
     now = datetime.now(timezone.utc)
     now_iso = now.isoformat()
-    finished = [r for r in rows if (r.get("status") in FINISHED
-                                    or (r.get("kickoff_utc") or "") < now_iso)]
+    # A fixture past its kickoff is IN PLAY, not finished. Treating the
+    # timestamp alone as terminal made every live match vanish from the
+    # board at kickoff — the surface could not be used to watch the slate
+    # it had just briefed — and made `finished_hidden` count started
+    # matches as settled (helper finding, #68 2026-08-05 23:36Z).
+    #
+    # The timestamp clause still earns its place, because a feed can fail
+    # to flip a status and would otherwise strand a fixture on the board
+    # forever. It just needs a MATCH-LENGTH grace: 3.5h covers 90
+    # minutes, stoppage, extra time, penalties and a delayed start. Past
+    # that with no terminal status, the row is stale rather than live.
+    stale_cut = (now - timedelta(hours=3.5)).isoformat()
+    finished = [r for r in rows
+                if (r.get("status") in FINISHED
+                    or (r.get("kickoff_utc") or "") < stale_cut)]
     if not include_finished:
         ids = {id(r) for r in finished}
         rows = [r for r in rows if id(r) not in ids]

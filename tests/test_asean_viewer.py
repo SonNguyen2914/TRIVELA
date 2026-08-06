@@ -402,3 +402,56 @@ class TestNationalEloUnreachable:
         r = national_elo.lookup("Vietnam")
         assert not r["rated"] and r["reason"] == "provider_unreachable"
         assert "UNKNOWN" in r["reason_words"]
+
+
+# --- in-play fixtures must stay on the board --------------------------------
+
+class TestInPlayNotHidden:
+    """Past kickoff is IN PLAY, not finished. The old filter treated the
+    timestamp alone as terminal, so every live match vanished from the
+    board at kickoff and `finished_hidden` counted started matches as
+    settled (#68 2026-08-05)."""
+
+    @staticmethod
+    def _iso(minutes):
+        from datetime import datetime, timedelta, timezone
+        return (datetime.now(timezone.utc)
+                + timedelta(minutes=minutes)).isoformat()
+
+    def _run(self, monkeypatch, rows):
+        monkeypatch.setattr(competitions, "_fixtures_raw",
+                            lambda lid, s: rows)
+        monkeypatch.setattr(competitions, "_cache", {})
+        monkeypatch.setattr(competitions, "markets", lambda k: {})
+        monkeypatch.setattr(national_elo, "for_fixture",
+                            lambda f: {"available": False})
+        return competitions.fixtures("asean", days=30)
+
+    def _row(self, fid, ko, status="NS"):
+        return {"fixture_id": fid, "kickoff_utc": ko, "status": status,
+                "home": {"name": "A", "apif_team_id": 1},
+                "away": {"name": "B", "apif_team_id": 2},
+                "goals": {"home": None, "away": None}}
+
+    def test_a_match_that_kicked_off_20_minutes_ago_is_still_shown(
+            self, monkeypatch):
+        out = self._run(monkeypatch, [self._row(1, self._iso(-20), "1H")])
+        assert out["count"] == 1
+        assert out["finished_hidden"] == 0
+
+    def test_a_status_finished_match_is_hidden_however_recent(
+            self, monkeypatch):
+        out = self._run(monkeypatch, [self._row(1, self._iso(-20), "FT")])
+        assert out["count"] == 0 and out["finished_hidden"] == 1
+
+    def test_a_stale_row_past_the_match_length_grace_is_hidden(
+            self, monkeypatch):
+        # a feed that never flips status must not strand a row forever
+        out = self._run(monkeypatch, [self._row(1, self._iso(-300), "NS")])
+        assert out["count"] == 0 and out["finished_hidden"] == 1
+
+    def test_a_kickoff_the_feed_still_calls_NS_is_shown_not_hidden(
+            self, monkeypatch):
+        # this feed reported NS six minutes past two real kickoffs
+        out = self._run(monkeypatch, [self._row(1, self._iso(-6), "NS")])
+        assert out["count"] == 1
