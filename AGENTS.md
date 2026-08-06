@@ -158,17 +158,81 @@ backend's migrations live in `live_migrations/`, not `alembic/`
 
 ## 4. The deployment consequence you must know
 
-A push to a deployment branch deploys. That matters more here than
-usual: since the V9.5 remediations, **boot fails closed on approval**.
-A deploy leaves the model unapproved and shadow runs refused until an
-operator explicitly calls:
+A push to a deployment branch deploys. Boot still **fails closed on
+approval** — that part of the V9.5 remediations is intact and is not
+being weakened here. What changed is what counts as a reason to fail.
+
+> **CORRECTED 2026-08-06.** This section used to say a deploy leaves the
+> model unapproved and shadow runs refused until an operator calls
+> `POST /api/admin/mls/approval/activate`, and that a push therefore
+> **halts evidence collection** until a human intervenes.
+>
+> **That stopped being true on 2026-08-03 and the file was never
+> updated.** It was three days stale, and it was read at every session
+> start by every agent that touches this repo — which is how it came to
+> be cited, in good faith, as a reason to hold a merge on 2026-08-06.
+> A stale safety document is worse than a missing one: it produces
+> false caution now and false confidence on the day the thing it
+> describes actually changes.
+
+**What is actually true.** An approval decision records the
+`code_revision` it was made under. `engine_signature()` hashes the git
+revision, so *every* deploy moves the hash — including a migration or a
+docs commit that cannot touch the model. Strict hash equality therefore
+failed on any deploy and disarmed the plane: four times on
+2026-08-02/03, once from a **docs-only PR**. Boot now applies a two-arm
+test, and re-arms itself when either arm holds:
 
 ```text
-POST /api/admin/mls/approval/activate
+arm 1   the stored engine hash reproduces under the CURRENT revision
+        -> nothing moved
+arm 2   it reproduces under the revision THE DECISION RECORDED
+        -> only the repo moved, not the engine
 ```
 
-So a push to the deployment branch does not merely deploy — it **halts
-evidence collection** until a human intervenes.
+A genuine source, constant or runtime change fails **both** arms and the
+plane stays dark. So this narrows nothing: it distinguishes *the repo
+moved* from *the engine changed*, which strict equality could not.
+
+Two implementations of the one rule, and they live in different places —
+worth knowing before grepping for the wrong one:
+
+```text
+MLS          the two-arm check inside load_or_create_approval_decision
+             (src/live/model_eval.py, "REVISION-ONLY DRIFT is not an
+             engine change").  Landed in #59, 2026-08-03.
+replay       boot_shadow_flag(), src/live/model_eval.py:1370, called
+planes       from ligamx_plane.py and epl_plane.py.  Landed in #70,
+             2026-08-04.  It is NOT on the MLS path.
+```
+
+**What still requires an operator activation.** The fail-closed cases
+are unchanged, and any of these leaves the plane dark:
+
+- **no active approval decision at all** — boot LOADS, and may never
+  mint a replacement for itself (V9.5 eval H6);
+- **a genuine engine change** — different model/simulator source,
+  constant or runtime; fails both arms, which is the whole point;
+- **a decision row with no recorded `code_revision`** (written before
+  the column existed) — it has no second arm and falls through. Missing
+  evidence stays missing evidence;
+- **a change in the corpus binding** — publishing a corpus does not
+  retroactively bind a decision recorded against `corpus_version=null`;
+- **any error at all**, which prints `[boot-flag] … fail closed`.
+
+**Verify, do not assume — in either direction.** This paragraph will
+itself go stale one day. `GET /api/ready` answers it in one call, and
+the answer is in `live.shadow`:
+
+```text
+model_approved_for_shadow · approval_decision_present · shadow_ready
+blockers · shadow_blockers
+```
+
+Reproduced 2026-08-06 16:57Z, immediately after the #87 deploy and with
+no activation call: `ready: true`, `model_approved_for_shadow: true`,
+`approval_decision_present: true`, `shadow_ready: true`, both blocker
+lists empty.
 
 The rule is therefore about *which branch*, not about pushing at all:
 
@@ -243,10 +307,13 @@ Two settings are deliberate and should not be "tidied":
   tests for concurrent creation).
 - **`/api/health` is unconditional** — no DB, no approval check. Keep it
   that way. If Railway's probe is ever fixed, this is the right target
-  precisely *because* it is unconditional: a fail-closed boot still
-  reports healthy, so the deploy completes and an operator can reach
-  `/approval/activate`. A health endpoint coupled to approval would make
-  a fail-closed deploy fail its own healthcheck — no way to ship the fix.
+  precisely *because* it is unconditional: a boot that fails closed for
+  one of the reasons listed above still reports healthy, so the deploy
+  completes and an operator can reach `/approval/activate`. A health
+  endpoint coupled to approval would make such a boot fail its own
+  healthcheck — no way to ship the fix. (This bullet is unaffected by
+  the 2026-08-06 correction: those cases still exist, they are simply
+  no longer triggered by every deploy.)
 
 **Volume alerts are unavailable on this plan** (Teams/Pro only). The
 volume filled once already, silently, behind `{"created":0}`. Since the
