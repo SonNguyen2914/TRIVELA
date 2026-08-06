@@ -87,7 +87,20 @@ def market_points_share(book: dict | None) -> dict | None:
                      "is distributed, not a measurement")}
 
 
-def read_three_way(e: float, draw_rate: float) -> dict:
+# The FRIENDLIES provenance, and the default only because friendlies
+# were the first caller. A second competition supplying its own rate
+# must supply its own basis too: this string names a specific
+# measurement AND a specific rejected alternative, and publishing it
+# over another competition's number would be a false provenance claim.
+FRIENDLY_DRAW_BASIS = (
+    "our own measured friendly draw rate, constant by measurement — a "
+    "mismatch-dependent form was fitted and did NOT beat it out of "
+    "sample, so this says nothing about how evenly matched the clubs "
+    "are")
+
+
+def read_three_way(e: float, draw_rate: float,
+                   basis: str | None = None) -> dict:
     """Our own 1X2 from a points share and a measured draw rate.
 
     The decomposition has no free parameters once d is chosen:
@@ -95,6 +108,12 @@ def read_three_way(e: float, draw_rate: float) -> dict:
     win in E by definition. d is clipped to 2*min(E,1-E) so no leg goes
     negative — without that a 0.93 share and a flat 19% draw implies
     P(away) = -0.025.
+
+    `basis` is the provenance of THIS competition's rate and travels
+    with the numbers. It is a required piece of honesty rather than a
+    label: a constant rate is uniform across fixtures while real draw
+    rates are not, so the basis is where a caller says what its rate
+    was measured on and what it therefore cannot know.
     """
     d = max(0.0, min(draw_rate, 2 * min(e, 1 - e)))
     home, away = e - d / 2, 1 - e - d / 2
@@ -103,15 +122,13 @@ def read_three_way(e: float, draw_rate: float) -> dict:
             "away": round(max(away, 0.0), 4),
             "draw_rate_used": round(d, 4),
             "clipped": d < draw_rate - 1e-9,
-            "basis": ("our own measured friendly draw rate, constant by "
-                      "measurement — a mismatch-dependent form was fitted "
-                      "and did NOT beat it out of sample, so this says "
-                      "nothing about how evenly matched the clubs are")}
+            "basis": basis or FRIENDLY_DRAW_BASIS}
 
 
 def compare(strength: dict | None, book: dict | None,
             home_name: str = "", away_name: str = "",
-            draw_rate: float | None = None) -> dict:
+            draw_rate: float | None = None,
+            draw_basis: str | None = None) -> dict:
     """Market and read on one scale, plus the stated pick."""
     out = {"available": False, "note": DISAGREEMENT_NOTE}
     ours = None
@@ -126,7 +143,8 @@ def compare(strength: dict | None, book: dict | None,
             # Only where a draw rate has been MEASURED for this kind of
             # fixture. League surfaces pass none and stay two-way.
             if draw_rate is not None:
-                out["read_three_way"] = read_three_way(ours, draw_rate)
+                out["read_three_way"] = read_three_way(ours, draw_rate,
+                                                       basis=draw_basis)
 
     mk = market_points_share(book)
     theirs = None

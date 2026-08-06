@@ -35,6 +35,8 @@ from __future__ import annotations
 import threading
 import time
 
+import config as _config
+
 BY_DESIGN = "no_model_by_design"
 NOT_BUILT = "no_model_not_built"
 
@@ -87,6 +89,17 @@ class Viewer:
         # to worldclubratings: ClubElo is European club football only, so
         # consulting it there can only produce a false match.
         self.strength_sources = None
+        # A MEASURED draw rate for this competition, or None. The read is
+        # an expected POINTS share; turning it into a 1X2 needs a draw
+        # number, and neither ratings provider publishes one. So the rate
+        # must come from this competition's OWN settled results or not
+        # exist — None keeps the surface two-way and honestly silent on
+        # the Tie leg, which is where every competition starts.
+        self.draw_rate = None
+        # the provenance of that rate, published beside the legs it
+        # produces. A rate without its basis is a number nobody can
+        # audit; see config.LEAGUES_CUP_DRAW_BASIS for the shape.
+        self.draw_rate_basis = None
 
     def model_block(self) -> dict:
         return {
@@ -164,6 +177,15 @@ VIEWERS: dict[str, Viewer] = {
 # a false ClubElo match cannot even be attempted.
 for _k in ("leagues-cup", "brasileirao", "argentina", "usl"):
     VIEWERS[_k].strength_sources = ("worldclubratings",)
+
+# The ONE competition here whose draw rate has been measured on its own
+# settled results: 216 matches across three complete editions, pooled
+# 0.3009, CI [0.2407, 0.3611] (config.LEAGUES_CUP_DRAW_RATE carries the
+# full provenance and the rejected phase split). Every other viewer
+# competition keeps draw_rate=None and stays two-way — not because draws
+# are unlikely there, but because nobody has counted them.
+VIEWERS["leagues-cup"].draw_rate = _config.LEAGUES_CUP_DRAW_RATE
+VIEWERS["leagues-cup"].draw_rate_basis = _config.LEAGUES_CUP_DRAW_BASIS
 
 FRAMING = (
     "Fixtures, real Kalshi prices, and an EXTERNAL strength read. No model "
@@ -426,8 +448,14 @@ def fixtures(key: str, season: int | None = None, days: int | None = None,
                             "for more than one fixture; all are refused "
                             "rather than one attached")}
                     continue
+                # draw_rate is None for every competition whose draws
+                # nobody has counted, and compare() then leaves the read
+                # two-way — the Tie leg stays honestly unanswered rather
+                # than carrying an invented number.
                 r["market_vs_read"] = match_pick.compare(
-                    r.get("strength"), ev, hn, an)
+                    r.get("strength"), ev, hn, an,
+                    draw_rate=v.draw_rate,
+                    draw_basis=v.draw_rate_basis)
                 r["kalshi_event"] = ev.get("event_ticker")
     except Exception as exc:
         print(f"[comp {key}] market_vs_read: {exc}")
