@@ -23,11 +23,14 @@ must clear BOTH:
   1. the snapshot says the fixture had NOT started — `status` in
      {NS, TBD} with no goals recorded. A read taken beside a live
      scoreline is not a pre-kickoff read;
-  2. the snapshot FILE was written before the fixture's kickoff. The
-     payload carries no capture time, so mtime is the only independent
-     witness, and a witness that can only ever be too LATE is the safe
-     direction: a file written after kickoff is rejected even if its
-     contents look pre-match.
+  2. the snapshot was CAPTURED before the fixture's kickoff, witnessed
+     by the document's own `captured_at` when present and by the file's
+     mtime otherwise. GIT DOES NOT PRESERVE MTIME, so a snapshot
+     committed to survive the container returns from a clone with an
+     mtime of the checkout — after every past kickoff — and mtime alone
+     would reject every row in it. `captured_at` is written at fetch
+     time by scripts/capture_pre_kickoff.py; for a committed file the
+     git commit time is the independent upper bound on that claim.
 
 Condition 1 alone is not enough, and this slate proved why — on
 2026-08-05 the provider reported `NS` for two fixtures six minutes
@@ -111,8 +114,24 @@ def collect_pre(paths: list[str]) -> tuple[dict, list]:
     best, rejects = {}, []
     for p in paths:
         path = Path(p)
-        captured = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc)
         doc = json.loads(path.read_text())
+        # GIT DOES NOT PRESERVE MTIME. A snapshot committed so it
+        # survives the container comes back from a clone with an mtime
+        # of the checkout — i.e. now — which is after every past
+        # kickoff, so condition 2 would reject every row in it. Verified
+        # in this repo: a document committed 2026-08-05 04:22 PDT
+        # carried an mtime of 11:22 in a fresh container.
+        #
+        # So an explicit `captured_at`, written into the document by
+        # scripts/capture_pre_kickoff.py at fetch time, WINS over mtime.
+        # It is a claim by the writer rather than a filesystem fact —
+        # but for a committed file the git commit time is an independent
+        # upper bound to check it against, which mtime never was, since
+        # mtime can be set to anything by touching the file.
+        stated = _utc(doc.get("captured_at"))
+        captured = stated or datetime.fromtimestamp(
+            path.stat().st_mtime, timezone.utc)
+        witness = "captured_at" if stated else "file_mtime"
         for fx in (doc.get("fixtures") or []):
             k = _key(fx)
             ko = _utc(fx.get("kickoff_utc"))
@@ -130,8 +149,10 @@ def collect_pre(paths: list[str]) -> tuple[dict, list]:
                 continue
             if captured >= ko:
                 rejects.append({"file": path.name, "fixture": name,
-                                "why": f"file written {captured.isoformat()} "
-                                       f"at or after kickoff {ko.isoformat()}"})
+                                "why": f"captured {captured.isoformat()} "
+                                       f"at or after kickoff "
+                                       f"{ko.isoformat()} "
+                                       f"(witness: {witness})"})
                 continue
             r = _read_of(fx)
             if r is None:
@@ -148,6 +169,7 @@ def collect_pre(paths: list[str]) -> tuple[dict, list]:
                 "_read": r,
                 "kickoff_utc": ko.isoformat(),
                 "captured_at": captured.isoformat(),
+                "captured_at_witness": witness,
                 "source_file": path.name,
                 "lead_seconds": int((ko - captured).total_seconds()),
             }
@@ -216,7 +238,14 @@ def main() -> int:
             "the measurement lives in the script that reads it"),
         "admissibility": {
             "status_in_snapshot": sorted(NOT_STARTED),
-            "file_mtime_before_kickoff": True,
+            "capture_time_before_kickoff": True,
+            "capture_time_witness": (
+                "the document's own `captured_at` when present, else the "
+                "file's mtime. captured_at wins because GIT DOES NOT "
+                "PRESERVE MTIME — a committed snapshot returns from a "
+                "clone with an mtime of the checkout, which would reject "
+                "every row. For a committed file the git commit time is "
+                "the independent upper bound on the claim"),
             "why_both": (
                 "this feed reported NS six minutes past kickoff and PST for "
                 "matches that then played, on 2026-08-05 — its status is a "
