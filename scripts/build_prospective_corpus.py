@@ -186,6 +186,105 @@ def outcomes(path: str | None, api_base: str | None) -> dict:
     return {_key(f): f for f in (doc.get("fixtures") or []) if _key(f)}
 
 
+# the fields that make a row a piece of EVIDENCE rather than a label. If
+# two builds disagree on any of these for the same fixture, one of them
+# is wrong about a settled fact and the caller has to say which — the
+# same reason a journal resolution is immutable and a correction is a
+# new row citing the old one.
+_EVIDENCE_FIELDS = ("_read", "kickoff_utc", "goals", "final_status")
+
+
+def _rowkey(r: dict) -> str:
+    return str(r.get("fixture_id") or "")
+
+
+def _conflicts(old: dict, new: dict) -> list:
+    return [f for f in _EVIDENCE_FIELDS if old.get(f) != new.get(f)]
+
+
+def reconcile_with_existing(out: Path, rows: list, *, merge: bool,
+                            replace: bool) -> dict:
+    """Decide whether writing `rows` over `out` would destroy evidence.
+
+    Three outcomes, and the DEFAULT is the safe one:
+
+      no existing file, or the new rows cover everything it holds
+                        -> write, nothing is lost
+      rows would vanish, no flag
+                        -> REFUSE, naming every fixture that would go
+      --merge           -> union by fixture_id, still refusing a conflict
+      --replace         -> write anyway, naming what was discarded
+
+    A conflict is never resolved silently under any flag. Two builds
+    disagreeing about a settled score or a frozen read is not a retry;
+    it means one of them is wrong, and picking a winner by argument
+    order is how a corpus quietly acquires a false row.
+    """
+    new_by = {_rowkey(r): r for r in rows}
+    if not out.exists():
+        return {"rows": rows, "write_mode": "created"}
+    try:
+        existing = json.loads(out.read_text()).get("rows") or []
+    except (OSError, ValueError) as exc:
+        return {"refused": (f"the existing corpus at {out} could not be "
+                            f"read, so what writing would destroy is "
+                            f"unknown"),
+                "detail": f"{type(exc).__name__}: {str(exc)[:120]}",
+                "means": "fix or move the file deliberately; do not guess"}
+    old_by = {_rowkey(r): r for r in existing}
+
+    conflicts = []
+    for k in sorted(set(old_by) & set(new_by)):
+        diff = _conflicts(old_by[k], new_by[k])
+        if diff:
+            conflicts.append({"fixture_id": k, "fields": diff,
+                              "home": (old_by[k].get("home") or {}).get("name")})
+    if conflicts:
+        return {"refused": ("this build disagrees with the existing corpus "
+                            "about settled facts. One of them is wrong and "
+                            "this script will not pick"),
+                "conflicts": conflicts,
+                "means": ("re-check the inputs. If the OLD row is wrong, "
+                          "move it aside deliberately — do not let an "
+                          "argument order decide which evidence survives")}
+
+    lost = sorted(set(old_by) - set(new_by))
+    if not lost:
+        return {"rows": rows, "write_mode": "rewrote_same_fixtures",
+                "reproduced": len(set(old_by) & set(new_by))}
+
+    named = [{"fixture_id": k,
+              "fixture": f"{(old_by[k].get('home') or {}).get('name')} v "
+                         f"{(old_by[k].get('away') or {}).get('name')}",
+              "kickoff_utc": old_by[k].get("kickoff_utc"),
+              "source_file": old_by[k].get("source_file")} for k in lost]
+
+    if replace:
+        return {"rows": rows, "write_mode": "replaced", "discarded": named,
+                "added": sorted(set(new_by) - set(old_by))}
+    if merge:
+        merged = existing + [r for k, r in new_by.items() if k not in old_by]
+        merged.sort(key=lambda r: r.get("kickoff_utc") or "")
+        return {"rows": merged, "write_mode": "merged",
+                "preserved": named,
+                "added": sorted(set(new_by) - set(old_by))}
+
+    return {"refused": (f"writing would DELETE {len(lost)} row(s) the "
+                        f"existing corpus holds and this run does not "
+                        f"reproduce"),
+            "would_be_lost": named,
+            "why_this_matters": (
+                "these rows may be the only surviving record of their "
+                "reads. Pre-kickoff snapshots taken before the durable "
+                "capture landed (#84) lived in session scratch and died "
+                "with their containers, so re-running cannot recreate "
+                "them"),
+            "means": ("--merge to keep them and add this run's rows, or "
+                      "--replace to discard them deliberately. There is "
+                      "no default, because the default would be a guess "
+                      "about irreplaceable evidence")}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--snapshot", action="append", required=True,
@@ -194,7 +293,31 @@ def main() -> int:
                     help="settled fixtures payload (default: live API)")
     ap.add_argument("--api-base", default=os.getenv("TRIVELA_API_BASE"))
     ap.add_argument("--out", default=None)
+    # WRITING THIS FILE CAN DESTROY EVIDENCE, so the default refuses.
+    #
+    # 2026-08-07: run exactly as documented, this script wrote 6 rows over
+    # a corpus holding 11 and would have deleted every matchday-1 and
+    # matchday-2 read. Those rows were the ONLY surviving record of those
+    # reads — their snapshots lived in session scratch and died with their
+    # containers, which is the fragility #84 fixed forward and could not
+    # fix backward. It was caught by diffing before staging, which is a
+    # habit rather than a guarantee.
+    #
+    # The corpus is prospective forecast evidence (AGENTS.md section 6),
+    # and "never rewrite historical evidence" is a hard invariant. A tool
+    # whose ordinary invocation silently drops it is a defect no amount of
+    # care fixes, because the next caller will not diff first.
+    ap.add_argument("--merge", action="store_true",
+                    help="combine with the existing --out corpus instead of "
+                         "replacing it; refuses on a conflicting row")
+    ap.add_argument("--replace", action="store_true",
+                    help="discard rows the existing --out corpus holds that "
+                         "this run does not reproduce. Names every one")
     a = ap.parse_args()
+    if a.merge and a.replace:
+        print(json.dumps({"error": "merge_and_replace", "built": False,
+                          "means": "these ask for opposite things; pick one"}))
+        return 2
 
     if not a.results and not a.api_base:
         print(json.dumps({"error": "no_results_source", "built": False,
@@ -267,11 +390,28 @@ def main() -> int:
         "rejected_count": len(rejects),
         "rows": rows,
     }
+    if a.out:
+        verdict = reconcile_with_existing(Path(a.out), rows,
+                                          merge=a.merge, replace=a.replace)
+        if verdict.get("refused"):
+            print(json.dumps({"built": False, **verdict}, indent=2))
+            return 2
+        rows = verdict["rows"]
+        doc["n_rows"] = len(rows)
+        doc["rows"] = rows
+        doc["write_mode"] = verdict["write_mode"]
+        if verdict.get("preserved") or verdict.get("discarded"):
+            doc["existing_corpus"] = {
+                k: verdict[k] for k in
+                ("preserved", "discarded", "added", "reproduced")
+                if k in verdict}
+
     text = json.dumps(doc, indent=2, ensure_ascii=False) + "\n"
     if a.out:
         Path(a.out).write_text(text, encoding="utf-8")
-        print(f"wrote {a.out}: {len(rows)} rows, {len(rejects)} rejected, "
-              f"{len(pending)} pending", file=sys.stderr)
+        print(f"wrote {a.out}: {len(rows)} rows ({verdict['write_mode']}), "
+              f"{len(rejects)} rejected, {len(pending)} pending",
+              file=sys.stderr)
     else:
         print(text)
     return 0
