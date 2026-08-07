@@ -206,6 +206,28 @@ planes       from ligamx_plane.py and epl_plane.py.  Landed in #70,
              2026-08-04.  It is NOT on the MLS path.
 ```
 
+> **A COROLLARY THAT WILL CATCH YOU.** `engine_signature()` sha256s the
+> SOURCE of four modules:
+>
+> ```text
+> src.live.model_mls · src.models.simulator
+> src.models.xg_model · src.models.features
+> ```
+>
+> Any byte changes the hash, and a changed hash fails **both** arms —
+> so a helper function, a docstring or a type hint in one of those files
+> buys a dark plane and a manual reactivation, exactly as a real
+> modelling change would. The guard cannot tell them apart and must not
+> try.
+>
+> **Treat those four as closed to anything that is not a deliberate
+> modelling change.** Put the helper in a sibling module and pin the two
+> equal by test. `tests/test_team_style.py` fails loudly if you forget,
+> and it tells you not to update its literals to make it pass — that
+> instruction is correct, and #90 is a worked example of obeying it
+> (`src/live/revision.py` exists as its own module for exactly this
+> reason).
+
 **What still requires an operator activation.** The fail-closed cases
 are unchanged, and any of these leaves the plane dark:
 
@@ -221,18 +243,33 @@ are unchanged, and any of these leaves the plane dark:
 - **any error at all**, which prints `[boot-flag] … fail closed`.
 
 **Verify, do not assume — in either direction.** This paragraph will
-itself go stale one day. `GET /api/ready` answers it in one call, and
-the answer is in `live.shadow`:
+itself go stale one day. `GET /api/ready` answers it in one call:
 
 ```text
-model_approved_for_shadow · approval_decision_present · shadow_ready
-blockers · shadow_blockers
+code_revision                          <- top level: WHICH code answered
+live.shadow.model_approved_for_shadow
+live.shadow.approval_decision_present
+live.shadow.shadow_ready
+live.shadow.blockers · shadow_blockers
 ```
+
+**Read `code_revision` first, and quote it beside the verdict.** Without
+it the reading is a fragment: `model_approved_for_shadow: true` a minute
+after a merge cannot distinguish *the new revision re-armed* from *the
+old container is still serving*, and concluding the former is the same
+error this section exists to prevent, one level up — treating a reading
+as evidence about something it does not observe. The field was added in
+#90 after that gap cost the coordinator three separate workarounds in a
+day, none of them recognised as workarounds at the time. It is `null`
+with a stated reason when `RAILWAY_GIT_COMMIT_SHA` is unset, so a local
+process cannot look like a deployed one.
 
 Reproduced 2026-08-06 16:57Z, immediately after the #87 deploy and with
 no activation call: `ready: true`, `model_approved_for_shadow: true`,
 `approval_decision_present: true`, `shadow_ready: true`, both blocker
-lists empty.
+lists empty. That reading is hours post-deploy, so it is unambiguous
+without the revision field; a first-minute reading is not, which is why
+the field now exists.
 
 The rule is therefore about *which branch*, not about pushing at all:
 
