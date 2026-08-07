@@ -15,7 +15,7 @@
     "why_not_AET": "AET goals include extra time, so the 90-minute result the read and the market both answer is unrecoverable",
     "duplicate_policy": "latest admissible read per fixture wins — the one closest to kickoff while still before it, which is the read the briefing published and the operator decided against"
   },
-  "n_rows": 11,
+  "n_rows": 17,
   "n_pre_kickoff_reads_collected": 51,
   "pending_not_yet_settled": [
     {
@@ -159,25 +159,6 @@
   "rejected_count": 15,
   "rows": [
     {
-      "fixture_id": "1530107",
-      "home": {
-        "name": "Charlotte"
-      },
-      "away": {
-        "name": "U.N.A.M. - Pumas"
-      },
-      "_read": 0.4267,
-      "kickoff_utc": "2026-08-05T00:00:00+00:00",
-      "captured_at": "2026-08-04T19:23:53.462500+00:00",
-      "source_file": "lc_pre.json",
-      "lead_seconds": 16566,
-      "goals": {
-        "home": 3,
-        "away": 0
-      },
-      "final_status": "FT"
-    },
-    {
       "fixture_id": "1530108",
       "home": {
         "name": "Columbus Crew"
@@ -212,6 +193,25 @@
       "goals": {
         "home": 3,
         "away": 1
+      },
+      "final_status": "FT"
+    },
+    {
+      "fixture_id": "1530107",
+      "home": {
+        "name": "Charlotte"
+      },
+      "away": {
+        "name": "U.N.A.M. - Pumas"
+      },
+      "_read": 0.4267,
+      "kickoff_utc": "2026-08-05T00:00:00+00:00",
+      "captured_at": "2026-08-04T19:23:53.462500+00:00",
+      "source_file": "lc_pre.json",
+      "lead_seconds": 16566,
+      "goals": {
+        "home": 3,
+        "away": 0
       },
       "final_status": "FT"
     },
@@ -254,25 +254,6 @@
       "final_status": "PEN"
     },
     {
-      "fixture_id": "1530113",
-      "home": {
-        "name": "FC Dallas"
-      },
-      "away": {
-        "name": "Club Queretaro"
-      },
-      "_read": 0.5545,
-      "kickoff_utc": "2026-08-06T00:30:00+00:00",
-      "captured_at": "2026-08-05T23:36:26.450326+00:00",
-      "source_file": "lc_win.json",
-      "lead_seconds": 3213,
-      "goals": {
-        "home": 2,
-        "away": 0
-      },
-      "final_status": "FT"
-    },
-    {
       "fixture_id": "1530114",
       "home": {
         "name": "Inter Miami"
@@ -292,25 +273,6 @@
       "final_status": "FT"
     },
     {
-      "fixture_id": "1530115",
-      "home": {
-        "name": "Los Angeles FC"
-      },
-      "away": {
-        "name": "Guadalajara Chivas"
-      },
-      "_read": 0.5715,
-      "kickoff_utc": "2026-08-06T02:30:00+00:00",
-      "captured_at": "2026-08-05T23:36:26.450326+00:00",
-      "source_file": "lc_win.json",
-      "lead_seconds": 10413,
-      "goals": {
-        "home": 1,
-        "away": 1
-      },
-      "final_status": "PEN"
-    },
-    {
       "fixture_id": "1530116",
       "home": {
         "name": "Monterrey"
@@ -326,6 +288,25 @@
       "goals": {
         "home": 1,
         "away": 2
+      },
+      "final_status": "FT"
+    },
+    {
+      "fixture_id": "1530113",
+      "home": {
+        "name": "FC Dallas"
+      },
+      "away": {
+        "name": "Club Queretaro"
+      },
+      "_read": 0.5545,
+      "kickoff_utc": "2026-08-06T00:30:00+00:00",
+      "captured_at": "2026-08-05T23:36:26.450326+00:00",
+      "source_file": "lc_win.json",
+      "lead_seconds": 3213,
+      "goals": {
+        "home": 2,
+        "away": 0
       },
       "final_status": "FT"
     },
@@ -366,6 +347,146 @@
         "away": 0
       },
       "final_status": "FT"
+    },
+    {
+      "fixture_id": "1530115",
+      "home": {
+        "name": "Los Angeles FC"
+      },
+      "away": {
+        "name": "Guadalajara Chivas"
+      },
+      "_read": 0.5715,
+      "kickoff_utc": "2026-08-06T02:30:00+00:00",
+      "captured_at": "2026-08-05T23:36:26.450326+00:00",
+      "source_file": "lc_win.json",
+      "lead_seconds": 10413,
+      "goals": {
+        "home": 1,
+        "away": 1
+      },
+      "final_status": "PEN"
+    },
+    {
+      "fixture_id": "1530122",
+      "home": {
+        "name": "New York City FC"
+      },
+      "away": {
+        "name": "Santos Laguna"
+      },
+      "_read": 0.6471,
+      "kickoff_utc": "2026-08-06T23:30:00+00:00",
+      "captured_at": "2026-08-06T22:26:21.417301+00:00",
+      "captured_at_witness": "captured_at",
+      "source_file": "leagues-cup-2026-08-06T2226Z.json",
+      "lead_seconds": 3818,
+      "goals": {
+        "home": 2,
+        "away": 0
+      },
+      "final_status": "FT"
+    },
+    {
+      "fixture_id": "1530121",
+      "home": {
+        "name": "Cruz Azul"
+      },
+      "away": {
+        "name": "Philadelphia Union"
+      },
+      "_read": 0.678,
+      "kickoff_utc": "2026-08-07T00:00:00+00:00",
+      "captured_at": "2026-08-06T22:26:21.417301+00:00",
+      "captured_at_witness": "captured_at",
+      "source_file": "leagues-cup-2026-08-06T2226Z.json",
+      "lead_seconds": 5618,
+      "goals": {
+        "home": 1,
+        "away": 0
+      },
+      "final_status": "FT"
+    },
+    {
+      "fixture_id": "1530120",
+      "home": {
+        "name": "Chicago Fire"
+      },
+      "away": {
+        "name": "Necaxa"
+      },
+      "_read": 0.4674,
+      "kickoff_utc": "2026-08-07T00:30:00+00:00",
+      "captured_at": "2026-08-06T22:26:21.417301+00:00",
+      "captured_at_witness": "captured_at",
+      "source_file": "leagues-cup-2026-08-06T2226Z.json",
+      "lead_seconds": 7418,
+      "goals": {
+        "home": 2,
+        "away": 0
+      },
+      "final_status": "FT"
+    },
+    {
+      "fixture_id": "1530119",
+      "home": {
+        "name": "Austin"
+      },
+      "away": {
+        "name": "Club Tijuana"
+      },
+      "_read": 0.4417,
+      "kickoff_utc": "2026-08-07T01:00:00+00:00",
+      "captured_at": "2026-08-06T22:26:21.417301+00:00",
+      "captured_at_witness": "captured_at",
+      "source_file": "leagues-cup-2026-08-06T2226Z.json",
+      "lead_seconds": 9218,
+      "goals": {
+        "home": 2,
+        "away": 0
+      },
+      "final_status": "FT"
+    },
+    {
+      "fixture_id": "1535054",
+      "home": {
+        "name": "Club America"
+      },
+      "away": {
+        "name": "San Diego"
+      },
+      "_read": 0.7121,
+      "kickoff_utc": "2026-08-07T02:00:00+00:00",
+      "captured_at": "2026-08-06T22:26:21.417301+00:00",
+      "captured_at_witness": "captured_at",
+      "source_file": "leagues-cup-2026-08-06T2226Z.json",
+      "lead_seconds": 12818,
+      "goals": {
+        "home": 3,
+        "away": 1
+      },
+      "final_status": "FT"
+    },
+    {
+      "fixture_id": "1530123",
+      "home": {
+        "name": "Portland Timbers"
+      },
+      "away": {
+        "name": "Puebla"
+      },
+      "_read": 0.6195,
+      "kickoff_utc": "2026-08-07T02:30:00+00:00",
+      "captured_at": "2026-08-06T22:26:21.417301+00:00",
+      "captured_at_witness": "captured_at",
+      "source_file": "leagues-cup-2026-08-06T2226Z.json",
+      "lead_seconds": 14618,
+      "goals": {
+        "home": 5,
+        "away": 2
+      },
+      "final_status": "FT"
     }
-  ]
+  ],
+  "merge_note": "MERGED, not rebuilt. build_prospective_corpus.py writes a corpus from the snapshots it is GIVEN, and the matchday-1/2 pre-kickoff snapshots no longer exist — they lived in session scratch and died with their containers, which is the exact fragility #84 fixed for later slates. So a naive re-run drops this file from 11 rows to 6 and destroys the only surviving record of those reads. Tonight's 6 rows were merged in by fixture_id instead. The script needs a merge mode or a refusal; filed, not fixed here."
 }
