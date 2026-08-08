@@ -236,6 +236,125 @@ def draw_rate(rows_by_season: dict[int, list[dict]]) -> dict:
     return out
 
 
+
+def home_outcome_rate(rows_by_season: dict[int, list[dict]],
+                      rosters: dict) -> dict:
+    """How often does the HOME side actually win?
+
+    Added 2026-08-07. The operator's strategy across three slates has
+    been, reconstructed from the record, "back the home side" — 23 of 23
+    journal rows are `home_win`. Nobody had measured the thing the money
+    was riding on, because everything measured to date scored the READ.
+
+    THIS IS A WIN RATE, NOT A POINTS SHARE, and the distinction is the
+    whole point. `cross_league_balance` above credits a draw 0.5, which
+    is right for a strength comparison. A Kalshi home leg pays on a WIN
+    and nothing else, so a draw is a LOSS to this rule. Reporting points
+    share here would flatter it by roughly half the draw rate — about
+    fifteen points on a competition that draws 30% of the time.
+
+    SPLIT BY PHASE, because they are not the same competition. The draw
+    rate above runs 0.222 in the group stage and 0.406 in knockouts;
+    a knockout tie is level at 90 minutes twice as often, and every one
+    of those is a losing home leg.
+
+    SPLIT BY HOST LEAGUE, because that is the live hypothesis. The
+    hosting-offset arm is trying to establish whether OUR READ misprices
+    home sides by league; this asks the simpler question of whether the
+    OUTCOME differs by league, which needs no read at all.
+
+    THE 2026 EDITION IS DELIBERATELY ABSENT. It is in progress, and it
+    is the sample the rule was reconstructed FROM. Pooling it into the
+    test of that rule would be circular — the archive says so by name
+    rather than leaving its absence to be noticed.
+    """
+    rng = random.Random(SEED)
+    out: dict = {
+        "what_this_is": (
+            "share of matches the HOME side won in 90 minutes — the "
+            "quantity a Kalshi home leg settles on. A draw is a LOSS "
+            "here, unlike in cross_league_balance which credits it 0.5"),
+        "what_this_is_NOT": (
+            "not an edge claim. A win rate is only half of one; the "
+            "other half is the price, and this measures no prices"),
+        "editions": {},
+    }
+    pooled: list[float] = []
+    pooled_phase: dict = {"group": [], "knockout": []}
+    pooled_host: dict = {"mls_hosted": [], "ligamx_hosted": [],
+                         "same_league_or_unresolved": []}
+    for season, rows in sorted(rows_by_season.items()):
+        ok = [r for r in rows if r.get("status") in TERMINAL]
+        ys = [1.0 if r["goals"]["home"] > r["goals"]["away"] else 0.0
+              for r in ok]
+        phase = {}
+        for label, pred in (
+                ("group", lambda r: str(r.get("round") or "")
+                 .startswith("Group")),
+                ("knockout", lambda r: not str(r.get("round") or "")
+                 .startswith("Group"))):
+            sub = [1.0 if r["goals"]["home"] > r["goals"]["away"] else 0.0
+                   for r in ok if pred(r)]
+            pooled_phase[label].extend(sub)
+            if sub:
+                phase[label] = {"n": len(sub),
+                                "home_win_rate": round(sum(sub) / len(sub), 4)}
+        host = {}
+        buckets: dict = {"mls_hosted": [], "ligamx_hosted": [],
+                         "same_league_or_unresolved": []}
+        for r in ok:
+            y = 1.0 if r["goals"]["home"] > r["goals"]["away"] else 0.0
+            hl, _ = club_league((r.get("home") or {}).get("name") or "",
+                               rosters)
+            al, _ = club_league((r.get("away") or {}).get("name") or "",
+                                rosters)
+            if hl and al and hl != al:
+                buckets["mls_hosted" if hl == "mls"
+                        else "ligamx_hosted"].append(y)
+            else:
+                buckets["same_league_or_unresolved"].append(y)
+        for k, v in buckets.items():
+            pooled_host[k].extend(v)
+            if v:
+                host[k] = {"n": len(v),
+                           "home_win_rate": round(sum(v) / len(v), 4)}
+        out["editions"][season] = {
+            "n": len(ys), "home_wins": int(sum(ys)),
+            "home_win_rate": round(sum(ys) / len(ys), 4) if ys else None,
+            "ci95": _ci(ys, rng) if len(ys) >= 20 else None,
+            "by_phase": phase, "by_host_league": host}
+        pooled.extend(ys)
+    out["pooled"] = {
+        "n": len(pooled), "home_wins": int(sum(pooled)),
+        "home_win_rate": (round(sum(pooled) / len(pooled), 4)
+                          if pooled else None),
+        "ci95": _ci(pooled, rng) if len(pooled) >= 20 else None,
+        "by_phase": {k: {"n": len(v),
+                         "home_win_rate": round(sum(v) / len(v), 4),
+                         "ci95": _ci(v, rng) if len(v) >= 20 else None}
+                     for k, v in pooled_phase.items() if v},
+        "by_host_league": {k: {"n": len(v),
+                               "home_win_rate": round(sum(v) / len(v), 4),
+                               "ci95": _ci(v, rng) if len(v) >= 20 else None}
+                           for k, v in pooled_host.items() if v},
+    }
+    # A rate is not a verdict. The price is the other half, and the
+    # break-even is the ONLY thing that turns one into the other.
+    out["break_even_reference"] = {
+        "what_this_is": (
+            "the strike rate a flat home-leg strategy must clear at a "
+            "given ask, fee included (0.07*P*(1-P), src/execution.py). "
+            "Compare the CI against these, never the point estimate"),
+        "asks": {f"{a:.2f}": round(a + 0.07 * a * (1 - a), 4)
+                 for a in (0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70)},
+    }
+    out["2026_edition_excluded"] = (
+        "IN PROGRESS, and it is the sample this rule was reconstructed "
+        "from. Pooling it into a test of the rule would be circular. "
+        "Measure it separately when the edition completes")
+    return out
+
+
 def cross_league_balance(rows_by_season: dict[int, list[dict]],
                          rosters: dict) -> dict:
     """MLS expected-points share in cross-league meetings, by hosting
@@ -400,6 +519,8 @@ def main() -> int:
         "rows_per_season": {y: len(r) for y, r in rows_by_season.items()},
         "league_rosters": roster_meta,
         "draw_rate_90min": draw_rate(rows_by_season),
+        "home_outcome_rate": home_outcome_rate(rows_by_season,
+                                               rosters),
         "cross_league_balance": cross_league_balance(rows_by_season,
                                                      rosters),
         "strength_read_scored": score_read(rows_by_season),
