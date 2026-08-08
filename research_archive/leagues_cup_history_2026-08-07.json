@@ -1,0 +1,435 @@
+{
+  "measured_at": "2026-08-08",
+  "measured_at_utc": "2026-08-08T06:07:32.554987+00:00",
+  "what_this_is": "three editions of the Leagues Cup measured for the three numbers the viewer surface runs on unmeasured",
+  "what_this_is_NOT": "an edge, a Tie-leg value claim, or a fitted constant. Descriptions carry CIs; constants need the evaluation this document would later be cited by",
+  "seasons_measured": [
+    2023,
+    2024,
+    2025
+  ],
+  "season_fetch_failures": {},
+  "rows_per_season": {
+    "2023": 77,
+    "2024": 77,
+    "2025": 62
+  },
+  "league_rosters": {
+    "mls_clubs": 30,
+    "ligamx_clubs": 18,
+    "source": "runtime read of our own standings surfaces"
+  },
+  "draw_rate_90min": {
+    "what_this_is": "share of matches level after 90 minutes plus stoppage \u2014 the quantity the Kalshi Tie leg settles on. PEN = a group/knockout shootout AFTER a 90-minute draw and counts as a draw",
+    "editions": {
+      "2023": {
+        "n": 77,
+        "draws": 23,
+        "draw_rate": 0.2987,
+        "ci95": [
+          0.1948,
+          0.4026
+        ],
+        "by_phase": {
+          "group": {
+            "n": 45,
+            "draw_rate": 0.2222
+          },
+          "knockout": {
+            "n": 32,
+            "draw_rate": 0.4062
+          }
+        }
+      },
+      "2024": {
+        "n": 77,
+        "draws": 24,
+        "draw_rate": 0.3117,
+        "ci95": [
+          0.2078,
+          0.4156
+        ],
+        "by_phase": {
+          "group": {
+            "n": 45,
+            "draw_rate": 0.3333
+          },
+          "knockout": {
+            "n": 32,
+            "draw_rate": 0.2812
+          }
+        }
+      },
+      "2025": {
+        "n": 62,
+        "draws": 18,
+        "draw_rate": 0.2903,
+        "ci95": [
+          0.1774,
+          0.4032
+        ],
+        "by_phase": {
+          "group": {
+            "n": 54,
+            "draw_rate": 0.2963
+          },
+          "knockout": {
+            "n": 8,
+            "draw_rate": 0.25
+          }
+        }
+      }
+    },
+    "pooled": {
+      "n": 216,
+      "draws": 65,
+      "draw_rate": 0.3009,
+      "ci95": [
+        0.2407,
+        0.3611
+      ]
+    },
+    "aet_excluded": {
+      "n": 0,
+      "why": "stored goals for an AET match include extra time, so the 90-minute result is not recoverable \u2014 excluded rather than miscounted"
+    }
+  },
+  "home_outcome_rate": {
+    "what_this_is": "share of matches the HOME side won in 90 minutes \u2014 the quantity a Kalshi home leg settles on. A draw is a LOSS here, unlike in cross_league_balance which credits it 0.5",
+    "what_this_is_NOT": "not an edge claim. A win rate is only half of one; the other half is the price, and this measures no prices",
+    "editions": {
+      "2023": {
+        "n": 77,
+        "home_wins": 29,
+        "home_win_rate": 0.3766,
+        "ci95": [
+          0.2727,
+          0.4805
+        ],
+        "by_phase": {
+          "group": {
+            "n": 45,
+            "home_win_rate": 0.4
+          },
+          "knockout": {
+            "n": 32,
+            "home_win_rate": 0.3438
+          }
+        },
+        "by_host_league": {
+          "mls_hosted": {
+            "n": 16,
+            "home_win_rate": 0.4375
+          },
+          "ligamx_hosted": {
+            "n": 29,
+            "home_win_rate": 0.3448
+          },
+          "same_league_or_unresolved": {
+            "n": 32,
+            "home_win_rate": 0.375
+          }
+        }
+      },
+      "2024": {
+        "n": 77,
+        "home_wins": 34,
+        "home_win_rate": 0.4416,
+        "ci95": [
+          0.3377,
+          0.5584
+        ],
+        "by_phase": {
+          "group": {
+            "n": 45,
+            "home_win_rate": 0.4
+          },
+          "knockout": {
+            "n": 32,
+            "home_win_rate": 0.5
+          }
+        },
+        "by_host_league": {
+          "mls_hosted": {
+            "n": 19,
+            "home_win_rate": 0.3684
+          },
+          "ligamx_hosted": {
+            "n": 20,
+            "home_win_rate": 0.2
+          },
+          "same_league_or_unresolved": {
+            "n": 38,
+            "home_win_rate": 0.6053
+          }
+        }
+      },
+      "2025": {
+        "n": 62,
+        "home_wins": 29,
+        "home_win_rate": 0.4677,
+        "ci95": [
+          0.3387,
+          0.5968
+        ],
+        "by_phase": {
+          "group": {
+            "n": 54,
+            "home_win_rate": 0.4444
+          },
+          "knockout": {
+            "n": 8,
+            "home_win_rate": 0.625
+          }
+        },
+        "by_host_league": {
+          "mls_hosted": {
+            "n": 34,
+            "home_win_rate": 0.5588
+          },
+          "ligamx_hosted": {
+            "n": 21,
+            "home_win_rate": 0.3333
+          },
+          "same_league_or_unresolved": {
+            "n": 7,
+            "home_win_rate": 0.4286
+          }
+        }
+      }
+    },
+    "pooled": {
+      "n": 216,
+      "home_wins": 92,
+      "home_win_rate": 0.4259,
+      "ci95": [
+        0.3611,
+        0.4907
+      ],
+      "by_phase": {
+        "group": {
+          "n": 144,
+          "home_win_rate": 0.4167,
+          "ci95": [
+            0.3333,
+            0.5
+          ]
+        },
+        "knockout": {
+          "n": 72,
+          "home_win_rate": 0.4444,
+          "ci95": [
+            0.3194,
+            0.5556
+          ]
+        }
+      },
+      "by_host_league": {
+        "mls_hosted": {
+          "n": 69,
+          "home_win_rate": 0.4783,
+          "ci95": [
+            0.3623,
+            0.5942
+          ]
+        },
+        "ligamx_hosted": {
+          "n": 70,
+          "home_win_rate": 0.3,
+          "ci95": [
+            0.2,
+            0.4
+          ]
+        },
+        "same_league_or_unresolved": {
+          "n": 77,
+          "home_win_rate": 0.4935,
+          "ci95": [
+            0.3896,
+            0.5974
+          ]
+        }
+      }
+    },
+    "break_even_reference": {
+      "what_this_is": "the strike rate a flat home-leg strategy must clear at a given ask, fee included (0.07*P*(1-P), src/execution.py). Compare the CI against these, never the point estimate",
+      "asks": {
+        "0.40": 0.4168,
+        "0.45": 0.4673,
+        "0.50": 0.5175,
+        "0.55": 0.5673,
+        "0.60": 0.6168,
+        "0.65": 0.6659,
+        "0.70": 0.7147
+      }
+    },
+    "2026_edition_excluded": "IN PROGRESS, and it is the sample this rule was reconstructed from. Pooling it into a test of the rule would be circular. Measure it separately when the edition completes"
+  },
+  "cross_league_balance": {
+    "what_this_is": "the MLS side's realised points share (win 1, draw 0.5, loss 0) in MLS-vs-LigaMX meetings, split by which league's club hosted. The empirical anchor for the unfitted MLS<->LigaMX scale conversion \u2014 a description of three editions, not a constant to apply",
+    "editions": {
+      "2023": {
+        "mls_hosted": {
+          "n": 16,
+          "mls_points_share": 0.5312,
+          "ci95": null
+        },
+        "ligamx_hosted": {
+          "n": 29,
+          "mls_points_share": 0.5,
+          "ci95": [
+            0.3621,
+            0.6552
+          ]
+        }
+      },
+      "2024": {
+        "mls_hosted": {
+          "n": 19,
+          "mls_points_share": 0.5789,
+          "ci95": null
+        },
+        "ligamx_hosted": {
+          "n": 20,
+          "mls_points_share": 0.65,
+          "ci95": [
+            0.475,
+            0.825
+          ]
+        }
+      },
+      "2025": {
+        "mls_hosted": {
+          "n": 34,
+          "mls_points_share": 0.6765,
+          "ci95": [
+            0.5441,
+            0.8088
+          ]
+        },
+        "ligamx_hosted": {
+          "n": 21,
+          "mls_points_share": 0.4524,
+          "ci95": [
+            0.2857,
+            0.619
+          ]
+        }
+      }
+    },
+    "unresolved": [
+      {
+        "season": 2023,
+        "home": "Austin",
+        "away": "Mazatl\u00e1n",
+        "reason": "home: matched; away: no roster match"
+      },
+      {
+        "season": 2023,
+        "home": "Mazatl\u00e1n",
+        "away": "FC Juarez",
+        "reason": "home: no roster match; away: matched"
+      },
+      {
+        "season": 2023,
+        "home": "FC Dallas",
+        "away": "Mazatl\u00e1n",
+        "reason": "home: matched; away: no roster match"
+      },
+      {
+        "season": 2024,
+        "home": "New England Revolution",
+        "away": "Mazatl\u00e1n",
+        "reason": "home: matched; away: no roster match"
+      },
+      {
+        "season": 2024,
+        "home": "Nashville SC",
+        "away": "Mazatl\u00e1n",
+        "reason": "home: matched; away: no roster match"
+      },
+      {
+        "season": 2024,
+        "home": "DC United",
+        "away": "Mazatl\u00e1n",
+        "reason": "home: matched; away: no roster match"
+      },
+      {
+        "season": 2024,
+        "home": "Cruz Azul",
+        "away": "Mazatl\u00e1n",
+        "reason": "home: matched; away: no roster match"
+      },
+      {
+        "season": 2024,
+        "home": "Philadelphia Union",
+        "away": "Mazatl\u00e1n",
+        "reason": "home: matched; away: no roster match"
+      },
+      {
+        "season": 2025,
+        "home": "Los Angeles FC",
+        "away": "Mazatl\u00e1n",
+        "reason": "home: matched; away: no roster match"
+      },
+      {
+        "season": 2025,
+        "home": "Houston Dynamo",
+        "away": "Mazatl\u00e1n",
+        "reason": "home: matched; away: no roster match"
+      },
+      {
+        "season": 2025,
+        "home": "Mazatl\u00e1n",
+        "away": "San Diego",
+        "reason": "home: no roster match; away: matched"
+      }
+    ],
+    "pooled": {
+      "mls_hosted": {
+        "n": 69,
+        "mls_points_share": 0.6159,
+        "ci95": [
+          0.5145,
+          0.7101
+        ]
+      },
+      "ligamx_hosted": {
+        "n": 70,
+        "mls_points_share": 0.5286,
+        "ci95": [
+          0.4357,
+          0.6286
+        ]
+      },
+      "all_venues": {
+        "n": 139,
+        "mls_points_share": 0.5719,
+        "ci95": [
+          0.5,
+          0.6403
+        ],
+        "caveat": "venue mix is not balanced by design \u2014 read the per-host rows before this one"
+      }
+    },
+    "same_league_pairings_excluded": 66,
+    "unresolved_count": 11
+  },
+  "strength_read_scored": {
+    "refused": {
+      "2023_and_2024": "the ratings provider serves CURRENT ratings; a rating read today contains two years of outcomes including the ones it would be scored on. Temporal leakage, AGENTS.md \u00a713 \u2014 refused rather than reported"
+    },
+    "evidence_class": "contaminated_retrospective",
+    "contamination": "2025 outcomes are ~a year inside today's ratings. This score is CONTEXT for the prospective 2026 corpus, never grounds for a constant",
+    "n_2025_scored": 59,
+    "coverage": 0.9516,
+    "brier_read": 0.1507,
+    "brier_home_rate_baseline": 0.165,
+    "brier_coin_flip": 0.1737,
+    "home_rate_2025": 0.5932
+  },
+  "REFUSED_draw_rate_by_closeness": {
+    "why": "measuring the draw rate conditional on how even the match was needs a PRE-MATCH evenness number per historical fixture. None exists without leakage: no books were captured for 2023-2025, and today's ratings contain those outcomes. A closeness bucket built from either would answer the question by peeking at it",
+    "where_it_lives_instead": "the 2026 prospective corpus \u2014 T-60 devigged books are frozen publicly per slate (issue #68) before kickoff. Bucket THOSE by |home_leg - away_leg| and this question becomes measurable, cleanly, in one tournament's time"
+  }
+}
